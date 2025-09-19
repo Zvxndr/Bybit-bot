@@ -166,7 +166,7 @@ class Config(BaseModel):
     risk: RiskConfig = Field(default_factory=RiskConfig)
     tax: TaxConfig = Field(default_factory=TaxConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    dashboard: DashboardConfig = Field(default_factory=DashboardConfig)
+    dashboard: DashboardConfig = Field(default_factory=lambda: DashboardConfig(port=8501))
     monitoring: Dict = Field(default_factory=dict)
     development: Dict = Field(default_factory=dict)
 

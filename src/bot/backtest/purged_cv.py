@@ -86,15 +86,15 @@ class PurgedTimeSeriesSplit(BaseCrossValidator):
         """
         # Handle DataFrame input
         if hasattr(X, 'index'):
-            n_samples = len(X)
+            n_samples = len(X)  # type: ignore
             
             # Sort by time if DataFrame
             if hasattr(X, self.time_column):
-                sorted_indices = X.sort_values(self.time_column).index.values
+                sorted_indices = X.sort_values(self.time_column).index.values  # type: ignore
             else:
-                sorted_indices = X.index.values
+                sorted_indices = X.index.values  # type: ignore
         else:
-            n_samples = X.shape[0]
+            n_samples = X.shape[0]  # type: ignore
             sorted_indices = np.arange(n_samples)
         
         # Calculate split parameters
@@ -147,11 +147,11 @@ class PurgedTimeSeriesSplit(BaseCrossValidator):
             
             # Convert to positions in original array if needed
             if hasattr(X, 'index'):
-                train_pos = np.array([np.where(X.index == idx)[0][0] for idx in train_indices if idx in X.index])
-                test_pos = np.array([np.where(X.index == idx)[0][0] for idx in test_indices if idx in X.index])
+                train_pos = np.array([np.where(X.index == idx)[0][0] for idx in train_indices if idx in X.index])  # type: ignore
+                test_pos = np.array([np.where(X.index == idx)[0][0] for idx in test_indices if idx in X.index])  # type: ignore
             else:
-                train_pos = train_indices
-                test_pos = test_indices
+                train_pos = train_indices  # type: ignore
+                test_pos = test_indices  # type: ignore
             
             if len(train_pos) == 0 or len(test_pos) == 0:
                 continue
@@ -160,15 +160,15 @@ class PurgedTimeSeriesSplit(BaseCrossValidator):
     
     def _apply_group_purging(self, X, train_indices, test_indices):
         """Apply group-based purging to prevent information leakage."""
-        if not hasattr(X, self.group_column):
+        if self.group_column is None or not hasattr(X, self.group_column):
             return train_indices, test_indices
         
         # Get groups in test set
-        test_groups = set(X.loc[test_indices, self.group_column].unique())
+        test_groups = set(X.loc[test_indices, self.group_column].unique())  # type: ignore
         
         # Remove training observations from same groups
-        train_mask = ~X.loc[train_indices, self.group_column].isin(test_groups)
-        purged_train_indices = train_indices[train_mask.values]
+        train_mask = ~X.loc[train_indices, self.group_column].isin(test_groups)  # type: ignore
+        purged_train_indices = train_indices[train_mask.values]  # type: ignore
         
         return purged_train_indices, test_indices
     
@@ -204,7 +204,7 @@ class PurgedCVResult:
         # Calculate mean and std
         for metric, scores in all_scores.items():
             self.mean_scores[metric] = np.mean(scores)
-            self.std_scores[metric] = np.std(scores)
+            self.std_scores[metric] = float(np.std(scores))
         
         # Calculate feature importance summary
         if all(fold.get('feature_importance') is not None for fold in self.fold_results):

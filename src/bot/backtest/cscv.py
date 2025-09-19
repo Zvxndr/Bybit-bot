@@ -70,9 +70,12 @@ class CSCVResult:
         
         # Statistical test for PBO > 0.5 (indicating overfitting)
         # Binomial test: H0: p = 0.5, H1: p > 0.5
-        self.pbo_test_statistic, self.pbo_p_value = stats.binom_test(
+        from scipy.stats import binomtest
+        result = binomtest(
             n_degraded, n_total, 0.5, alternative='greater'
         )
+        self.pbo_test_statistic = float(result.statistic)
+        self.pbo_p_value = float(result.pvalue)
         
         # Overfitting detected if PBO significantly > 0.5
         self.overfitting_detected = self.pbo_p_value < 0.05 and self.pbo > 0.5
@@ -83,12 +86,12 @@ class CSCVResult:
             'n_degraded': n_degraded,
             'pbo': self.pbo,
             'pbo_p_value': self.pbo_p_value,
-            'mean_is_performance': np.mean(self.is_performance),
-            'mean_oos_performance': np.mean(self.oos_performance),
-            'mean_degradation': np.mean(self.performance_degradation),
-            'std_degradation': np.std(self.performance_degradation),
-            'max_degradation': np.max(self.performance_degradation) if self.performance_degradation else 0,
-            'is_oos_correlation': np.corrcoef(self.is_performance, self.oos_performance)[0, 1] if len(self.is_performance) > 1 else 0,
+            'mean_is_performance': float(np.mean(self.is_performance)),
+            'mean_oos_performance': float(np.mean(self.oos_performance)),
+            'mean_degradation': float(np.mean(self.performance_degradation)),
+            'std_degradation': float(np.std(self.performance_degradation)),
+            'max_degradation': float(np.max(self.performance_degradation)) if self.performance_degradation else 0.0,
+            'is_oos_correlation': float(np.corrcoef(self.is_performance, self.oos_performance)[0, 1]) if len(self.is_performance) > 1 else 0.0,
         }
 
 
@@ -122,7 +125,7 @@ class CSCVValidator:
         data: pd.DataFrame,
         strategy_func: Callable,
         param_grid: Dict[str, List],
-        optimization_metric: str = None
+        optimization_metric: Optional[str] = None
     ) -> CSCVResult:
         """
         Run Combinatorial Symmetric Cross-Validation analysis.
@@ -306,7 +309,7 @@ class CSCVValidator:
     def validate_strategy(
         self,
         cscv_result: CSCVResult,
-        pbo_threshold: float = None
+        pbo_threshold: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Validate strategy based on CSCV results.

@@ -96,7 +96,7 @@ class DatabaseManager:
         db_path = config.get('path', './data/trading_bot.db')
         
         # Ensure data directory exists
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        os.makedirs(os.path.dirname(str(db_path)), exist_ok=True)
         
         # Create DuckDB engine
         url = f"duckdb:///{db_path}"
@@ -213,7 +213,7 @@ class DatabaseManager:
             import shutil
             config = self.config.development
             db_path = config.get('path', './data/trading_bot.db')
-            shutil.copy2(db_path, backup_path)
+            shutil.copy2(str(db_path), str(backup_path))
             logger.info(f"DuckDB backup created: {backup_path}")
         else:
             # For PostgreSQL, use pg_dump

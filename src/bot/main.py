@@ -103,9 +103,11 @@ def main(
         config = Config.from_file(config_path)
         
         # Override mode if specified
-        if mode:
-            config.trading.mode = mode
+        if mode and mode in ["conservative", "aggressive"]:
+            config.trading.mode = mode  # type: ignore
             logger.info(f"Trading mode overridden to: {mode}")
+        elif mode:
+            logger.warning(f"Invalid trading mode '{mode}'. Using default: {config.trading.mode}")
         
         # Override debug setting
         if debug:
@@ -156,6 +158,7 @@ async def run_bot(
     """
     Main async function to run the trading bot.
     """
+    bot = None
     try:
         # Initialize the trading bot
         bot = TradingBot(
@@ -186,8 +189,11 @@ async def run_bot(
         raise
     finally:
         # Ensure cleanup
-        if 'bot' in locals():
-            await bot.shutdown()
+        if bot is not None:
+            try:
+                await bot.shutdown()
+            except Exception as e:
+                logger.error(f"Error during bot shutdown: {e}")
 
 
 if __name__ == "__main__":

@@ -278,9 +278,14 @@ api:
 # Database
 DB_PASSWORD=your_secure_password
 
-# Exchange API Keys
-BYBIT_API_KEY=your_bybit_api_key
-BYBIT_API_SECRET=your_bybit_api_secret
+# Exchange API Keys - ENVIRONMENT SPECIFIC
+# TESTNET CREDENTIALS (for development/staging environments)
+BYBIT_TESTNET_API_KEY=your_testnet_api_key
+BYBIT_TESTNET_API_SECRET=your_testnet_api_secret
+
+# LIVE TRADING CREDENTIALS (for production - REAL MONEY AT RISK!)
+BYBIT_LIVE_API_KEY=your_live_api_key
+BYBIT_LIVE_API_SECRET=your_live_api_secret
 
 # Monitoring
 EMAIL_USERNAME=your_email@gmail.com
@@ -296,6 +301,21 @@ REDIS_URL=redis://localhost:6379/0
 PROMETHEUS_URL=http://localhost:9090
 ```
 
+## ⚠️ CRITICAL: API Credential Security
+
+### Environment-Specific Credentials
+
+**THE SYSTEM NOW REQUIRES SEPARATE API CREDENTIALS FOR EACH ENVIRONMENT:**
+
+- **DEVELOPMENT/STAGING**: Uses `BYBIT_TESTNET_API_KEY` and `BYBIT_TESTNET_API_SECRET`
+- **PRODUCTION**: Uses `BYBIT_LIVE_API_KEY` and `BYBIT_LIVE_API_SECRET`
+
+### Safety Measures
+
+1. **Never mix credentials**: Testnet keys should never be used in production and vice versa
+2. **Environment validation**: The system validates credentials match the environment on startup
+3. **Clear logging**: Environment and credential type are clearly logged on startup
+
 ### Configuration Validation
 
 ```bash
@@ -305,6 +325,9 @@ python -m src.bot.config_manager --validate
 # Test configuration in different environments
 python -m src.bot.config_manager --environment development --validate
 python -m src.bot.config_manager --environment production --validate
+
+# Check current environment credentials
+python -c "from src.bot.config_manager import ConfigurationManager; cm = ConfigurationManager(); cm.load_config(); print(f'Environment: {cm.config.environment.value}'); print(f'Is Testnet: {cm.is_testnet}')"
 ```
 
 ---

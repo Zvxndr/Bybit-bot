@@ -101,8 +101,12 @@ services:
       - ENVIRONMENT=production
       - DATABASE_URL=postgresql://trading_user:${POSTGRES_PASSWORD}@postgres:5432/trading_bot
       - REDIS_URL=redis://redis:6379/0
-      - BYBIT_API_KEY=${BYBIT_API_KEY}
-      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
+      # Production Trading - LIVE CREDENTIALS (REAL MONEY)
+      - BYBIT_LIVE_API_KEY=${BYBIT_LIVE_API_KEY}
+      - BYBIT_LIVE_API_SECRET=${BYBIT_LIVE_API_SECRET}
+      # Testnet credentials (for staging/development environments)
+      - BYBIT_TESTNET_API_KEY=${BYBIT_TESTNET_API_KEY}
+      - BYBIT_TESTNET_API_SECRET=${BYBIT_TESTNET_API_SECRET}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
     volumes:
@@ -608,11 +612,13 @@ echo "🚀 Starting Kubernetes deployment..."
 # Apply namespace first
 kubectl apply -f deployment/kubernetes/namespace.yaml
 
-# Create secrets (you need to update these with actual values)
+# Create secrets with environment-specific credentials
 echo "🔐 Creating secrets..."
 kubectl create secret generic trading-bot-secrets \\
-    --from-literal=BYBIT_API_KEY="$BYBIT_API_KEY" \\
-    --from-literal=BYBIT_API_SECRET="$BYBIT_API_SECRET" \\
+    --from-literal=BYBIT_LIVE_API_KEY="$BYBIT_LIVE_API_KEY" \\
+    --from-literal=BYBIT_LIVE_API_SECRET="$BYBIT_LIVE_API_SECRET" \\
+    --from-literal=BYBIT_TESTNET_API_KEY="$BYBIT_TESTNET_API_KEY" \\
+    --from-literal=BYBIT_TESTNET_API_SECRET="$BYBIT_TESTNET_API_SECRET" \\
     --from-literal=DATABASE_PASSWORD="$DATABASE_PASSWORD" \\
     --from-literal=JWT_SECRET="$JWT_SECRET" \\
     --namespace=trading-bot \\
@@ -858,9 +864,14 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \\
 # Environment
 ENVIRONMENT=production
 
-# Exchange API Keys (REQUIRED)
-BYBIT_API_KEY=your_api_key_here
-BYBIT_API_SECRET=your_api_secret_here
+# Exchange API Keys - ENVIRONMENT SPECIFIC (REQUIRED)
+# TESTNET CREDENTIALS (for development/staging)
+BYBIT_TESTNET_API_KEY=your_testnet_api_key_here
+BYBIT_TESTNET_API_SECRET=your_testnet_api_secret_here
+
+# LIVE TRADING CREDENTIALS (for production - REAL MONEY!)
+BYBIT_LIVE_API_KEY=your_live_api_key_here
+BYBIT_LIVE_API_SECRET=your_live_api_secret_here
 
 # Database
 DATABASE_URL=postgresql://trading_user:your_db_password@localhost:5432/trading_bot
@@ -1000,9 +1011,11 @@ docker-compose logs -f trading-bot
 
 ### 1. Prepare Environment
 ```bash
-# Set environment variables
-export BYBIT_API_KEY="your_api_key"
-export BYBIT_API_SECRET="your_api_secret"
+# Set environment variables with environment-specific credentials
+export BYBIT_TESTNET_API_KEY="your_testnet_api_key"
+export BYBIT_TESTNET_API_SECRET="your_testnet_api_secret"
+export BYBIT_LIVE_API_KEY="your_live_api_key"
+export BYBIT_LIVE_API_SECRET="your_live_api_secret"
 export DATABASE_PASSWORD="your_db_password"
 export JWT_SECRET="your_jwt_secret"
 ```
@@ -1019,10 +1032,17 @@ kubectl get pods -n trading-bot
 ## Configuration
 
 ### Environment Variables
-- `BYBIT_API_KEY`: Your Bybit API key
-- `BYBIT_API_SECRET`: Your Bybit API secret
+
+#### API Credentials (Environment-Specific)
+- `BYBIT_TESTNET_API_KEY`: Your Bybit testnet API key (for development/staging)
+- `BYBIT_TESTNET_API_SECRET`: Your Bybit testnet API secret (for development/staging)
+- `BYBIT_LIVE_API_KEY`: Your Bybit live API key (for production - REAL MONEY!)
+- `BYBIT_LIVE_API_SECRET`: Your Bybit live API secret (for production - REAL MONEY!)
+
+#### Other Configuration
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret for JWT token generation
+- `ENVIRONMENT`: Deployment environment (development, staging, production)
 
 ### Configuration Files
 - `config/config_production.yaml`: Main configuration

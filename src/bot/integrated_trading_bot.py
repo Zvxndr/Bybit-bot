@@ -125,8 +125,17 @@ class IntegratedTradingBot:
     production-ready trading bot with enterprise-grade capabilities.
     """
     
-    def __init__(self, config: Optional[BotConfiguration] = None):
+    def __init__(self, config_manager: Optional['ConfigurationManager'] = None, config: Optional[BotConfiguration] = None):
         """Initialize the unified trading bot"""
+        # Import here to avoid circular imports
+        from config_manager import ConfigurationManager, ConfigurationError
+        
+        # Use configuration manager if provided, otherwise create one
+        self.config_manager = config_manager or ConfigurationManager()
+        if not self.config_manager.config:
+            self.config_manager.load_config()
+        
+        # Legacy support for old BotConfiguration
         self.config = config or BotConfiguration()
         self.status = BotStatus.INITIALIZING
         self.start_time = None
@@ -135,7 +144,10 @@ class IntegratedTradingBot:
         # Initialize logging
         self._setup_logging()
         self.logger = logging.getLogger(__name__)
-        self.logger.info("Initializing IntegratedTradingBot with Phase 1-6 capabilities")
+        self.logger.info(f"Initializing IntegratedTradingBot in {self.config_manager.config.environment.value} environment")
+        
+        # Validate environment credentials before initializing components
+        self._validate_credentials()
         
         # Initialize all phase components
         self._initialize_components()
@@ -164,13 +176,42 @@ class IntegratedTradingBot:
             ]
         )
     
+    def _validate_credentials(self):
+        """Validate environment-specific credentials"""
+        try:
+            credentials = self.config_manager.get_current_credentials()
+            env_name = self.config_manager.config.environment.value
+            
+            # Validate credentials exist
+            if not credentials.api_key or not credentials.api_secret:
+                raise ConfigurationError(f"Missing API credentials for {env_name} environment")
+            
+            # Log environment and safety information
+            if credentials.is_testnet:
+                self.logger.info(f"✅ TESTNET MODE - Environment: {env_name}")
+                self.logger.info(f"✅ Safe to trade - Using testnet credentials")
+            else:
+                self.logger.warning(f"⚠️  LIVE TRADING MODE - Environment: {env_name}")
+                self.logger.warning(f"⚠️  REAL MONEY AT RISK - Using live credentials")
+            
+            self.logger.info(f"Base URL: {credentials.base_url}")
+            self.logger.info(f"API Key: {credentials.api_key[:8]}...")
+            
+        except Exception as e:
+            self.logger.error(f"Credential validation failed: {e}")
+            raise
+    
     def _initialize_components(self):
         """Initialize all phase components"""
         try:
             self.logger.info("Initializing Phase 1: Core Trading Engine")
-            # Phase 1: Core Trading Engine
+            # Phase 1: Core Trading Engine - use environment-specific credentials
+            exchange_credentials = self.config_manager.get_current_credentials()
             self.trading_engine = TradingEngine(
-                exchange=self.config.exchange,
+                exchange_name=exchange_credentials.base_url,
+                api_key=exchange_credentials.api_key,
+                api_secret=exchange_credentials.api_secret,
+                is_testnet=exchange_credentials.is_testnet,
                 api_rate_limit=self.config.api_rate_limit
             )
             self.market_data_manager = MarketDataManager(

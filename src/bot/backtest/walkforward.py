@@ -91,14 +91,14 @@ class WalkForwardResult:
         
         # Basic return statistics
         self.summary_stats.update({
-            'total_periods': len(self.oos_returns),
-            'oos_mean_return': np.mean(oos_returns),
-            'oos_std_return': np.std(oos_returns),
-            'oos_sharpe_ratio': np.mean(oos_returns) / np.std(oos_returns) if np.std(oos_returns) > 0 else 0,
-            'oos_cumulative_return': np.prod(1 + oos_returns) - 1,
-            'is_mean_return': np.mean(is_returns),
-            'is_std_return': np.std(is_returns),
-            'is_sharpe_ratio': np.mean(is_returns) / np.std(is_returns) if np.std(is_returns) > 0 else 0,
+            'total_periods': float(len(self.oos_returns)),
+            'oos_mean_return': float(np.mean(oos_returns)),
+            'oos_std_return': float(np.std(oos_returns)),
+            'oos_sharpe_ratio': float(np.mean(oos_returns) / np.std(oos_returns)) if np.std(oos_returns) > 0 else 0.0,
+            'oos_cumulative_return': float(np.prod(1 + oos_returns) - 1),
+            'is_mean_return': float(np.mean(is_returns)),
+            'is_std_return': float(np.std(is_returns)),
+            'is_sharpe_ratio': float(np.mean(is_returns) / np.std(is_returns)) if np.std(is_returns) > 0 else 0.0,
         })
         
         # Drawdown calculations
@@ -107,8 +107,8 @@ class WalkForwardResult:
         drawdowns = (cumulative_oos - running_max) / running_max
         
         self.summary_stats.update({
-            'max_drawdown': np.min(drawdowns),
-            'avg_drawdown': np.mean(drawdowns[drawdowns < 0]) if np.any(drawdowns < 0) else 0,
+            'max_drawdown': float(np.min(drawdowns)),
+            'avg_drawdown': float(np.mean(drawdowns[drawdowns < 0])) if np.any(drawdowns < 0) else 0.0,
         })
         
         # Win rate and profit factor
@@ -126,11 +126,18 @@ class WalkForwardResult:
         self.summary_stats['is_oos_correlation'] = is_oos_correlation if not np.isnan(is_oos_correlation) else 0
         
         # Statistical significance (t-test against zero)
-        t_stat, p_value = stats.ttest_1samp(oos_returns, 0)
+        try:
+            result = stats.ttest_1samp(oos_returns, 0)
+            t_stat = float(result[0])  # type: ignore
+            p_value = float(result[1])  # type: ignore
+        except (ValueError, TypeError, IndexError):
+            t_stat = 0.0
+            p_value = 1.0
+            
         self.summary_stats.update({
             't_statistic': t_stat,
             'p_value': p_value,
-            'statistically_significant': p_value < 0.05,
+            'statistically_significant': 1.0 if p_value < 0.05 else 0.0,
         })
 
 
@@ -229,11 +236,12 @@ class WalkForwardAnalyzer:
                 f"Parameter grid too large ({len(param_combinations)}), "
                 f"sampling {self.config['max_params_combinations']} combinations"
             )
-            param_combinations = np.random.choice(
-                param_combinations, 
+            indices = np.random.choice(
+                len(param_combinations), 
                 self.config['max_params_combinations'], 
                 replace=False
-            ).tolist()
+            )
+            param_combinations = [param_combinations[i] for i in indices]
         
         # Generate walk-forward periods
         periods = self._generate_wf_periods(data)

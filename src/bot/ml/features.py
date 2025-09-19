@@ -76,19 +76,19 @@ class TechnicalIndicators:
                 
                 # RSI
                 if period <= 50:  # RSI typically uses shorter periods
-                    features[f'rsi_{period}'] = talib.RSI(data['close'].values, timeperiod=period)
+                    features[f'rsi_{period}'] = talib.RSI(data['close'].values.astype(np.float64), timeperiod=period)
                 
                 # Rate of Change
-                features[f'roc_{period}'] = talib.ROC(data['close'].values, timeperiod=period)
+                features[f'roc_{period}'] = talib.ROC(data['close'].values.astype(np.float64), timeperiod=period)
                 
                 # Williams %R
                 if period <= 50 and all(col in data.columns for col in ['high', 'low', 'close']):
                     features[f'willr_{period}'] = talib.WILLR(
-                        data['high'].values, data['low'].values, data['close'].values, timeperiod=period
+                        data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), timeperiod=period
                     )
             
             # MACD family
-            macd, macd_signal, macd_hist = talib.MACD(data['close'].values)
+            macd, macd_signal, macd_hist = talib.MACD(data['close'].values.astype(np.float64))
             features['macd'] = macd
             features['macd_signal'] = macd_signal
             features['macd_histogram'] = macd_hist
@@ -96,13 +96,13 @@ class TechnicalIndicators:
             # Stochastic oscillators
             if all(col in data.columns for col in ['high', 'low', 'close']):
                 slowk, slowd = talib.STOCH(
-                    data['high'].values, data['low'].values, data['close'].values
+                    data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64)
                 )
                 features['stoch_k'] = slowk
                 features['stoch_d'] = slowd
                 
                 # Stochastic RSI
-                fastk, fastd = talib.STOCHRSI(data['close'].values)
+                fastk, fastd = talib.STOCHRSI(data['close'].values.astype(np.float64))
                 features['stochrsi_k'] = fastk
                 features['stochrsi_d'] = fastd
             
@@ -142,16 +142,16 @@ class TechnicalIndicators:
                 # Average Directional Index (ADX)
                 if period <= 50 and all(col in data.columns for col in ['high', 'low', 'close']):
                     adx = talib.ADX(
-                        data['high'].values, data['low'].values, data['close'].values, timeperiod=period
+                        data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), timeperiod=period
                     )
                     features[f'adx_{period}'] = adx
                     
                     # Directional Movement
                     plus_di = talib.PLUS_DI(
-                        data['high'].values, data['low'].values, data['close'].values, timeperiod=period
+                        data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), timeperiod=period
                     )
                     minus_di = talib.MINUS_DI(
-                        data['high'].values, data['low'].values, data['close'].values, timeperiod=period
+                        data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), timeperiod=period
                     )
                     features[f'plus_di_{period}'] = plus_di
                     features[f'minus_di_{period}'] = minus_di
@@ -159,7 +159,7 @@ class TechnicalIndicators:
             
             # Parabolic SAR
             if all(col in data.columns for col in ['high', 'low']):
-                features['sar'] = talib.SAR(data['high'].values, data['low'].values)
+                features['sar'] = talib.SAR(data['high'].values.astype(np.float64), data['low'].values.astype(np.float64))
                 features['sar_signal'] = np.where(data['close'] > features['sar'], 1, -1)
             
             # Linear regression slope
@@ -183,7 +183,7 @@ class TechnicalIndicators:
         try:
             # Calculate returns for volatility measures
             returns = data['close'].pct_change()
-            log_returns = np.log(data['close'] / data['close'].shift(1))
+            log_returns = pd.Series(np.log(data['close'] / data['close'].shift(1)), index=data.index)
             
             for period in self.config['volatility_periods']:
                 # Historical volatility
@@ -192,7 +192,7 @@ class TechnicalIndicators:
                 
                 # Parkinson volatility (using high-low)
                 if all(col in data.columns for col in ['high', 'low']):
-                    hl_ratio = np.log(data['high'] / data['low'])
+                    hl_ratio = pd.Series(np.log(data['high'] / data['low']), index=data.index)
                     features[f'parkinson_vol_{period}d'] = (
                         hl_ratio.rolling(window=period).apply(lambda x: np.sqrt(np.mean(x**2) / (4 * np.log(2))))
                     )
@@ -201,7 +201,7 @@ class TechnicalIndicators:
                 if all(col in data.columns for col in ['high', 'low', 'open', 'close']):
                     gk_term1 = np.log(data['high'] / data['close']) * np.log(data['high'] / data['open'])
                     gk_term2 = np.log(data['low'] / data['close']) * np.log(data['low'] / data['open'])
-                    gk_vol = gk_term1 + gk_term2
+                    gk_vol = pd.Series(gk_term1 + gk_term2, index=data.index)
                     features[f'gk_volatility_{period}d'] = np.sqrt(gk_vol.rolling(window=period).mean())
                 
                 # Rolling min/max
@@ -217,7 +217,7 @@ class TechnicalIndicators:
             
             # Bollinger Bands
             for period in [20, 50]:
-                bb_upper, bb_middle, bb_lower = talib.BBANDS(data['close'].values, timeperiod=period)
+                bb_upper, bb_middle, bb_lower = talib.BBANDS(data['close'].values.astype(np.float64), timeperiod=period)
                 features[f'bb_upper_{period}'] = bb_upper
                 features[f'bb_lower_{period}'] = bb_lower
                 features[f'bb_width_{period}'] = (bb_upper - bb_lower) / bb_middle
@@ -226,7 +226,7 @@ class TechnicalIndicators:
             # Average True Range
             if all(col in data.columns for col in ['high', 'low', 'close']):
                 for period in [14, 21]:
-                    atr = talib.ATR(data['high'].values, data['low'].values, data['close'].values, timeperiod=period)
+                    atr = talib.ATR(data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), timeperiod=period)
                     features[f'atr_{period}'] = atr
                     features[f'atr_ratio_{period}'] = atr / data['close']
             
@@ -262,7 +262,7 @@ class TechnicalIndicators:
                     features[f'price_to_vwap_{period}'] = data['close'] / features[f'vwap_{period}'] - 1
                 
                 # On-Balance Volume
-                obv = talib.OBV(data['close'].values, data['volume'].values)
+                obv = talib.OBV(data['close'].values.astype(np.float64), data['volume'].values.astype(np.float64))
                 features['obv'] = obv
                 features[f'obv_ma_{period}'] = pd.Series(obv, index=data.index).rolling(window=period).mean()
                 
@@ -274,18 +274,18 @@ class TechnicalIndicators:
             
             # Accumulation/Distribution Line
             if all(col in data.columns for col in ['high', 'low', 'close', 'volume']):
-                ad_line = talib.AD(data['high'].values, data['low'].values, data['close'].values, data['volume'].values)
+                ad_line = talib.AD(data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), data['volume'].values.astype(np.float64))
                 features['ad_line'] = ad_line
                 
                 # Chaikin A/D Oscillator
                 features['chaikin_ad'] = talib.ADOSC(
-                    data['high'].values, data['low'].values, data['close'].values, data['volume'].values
+                    data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), data['volume'].values.astype(np.float64)
                 )
             
             # Money Flow Index
             if all(col in data.columns for col in ['high', 'low', 'close', 'volume']):
                 features['mfi'] = talib.MFI(
-                    data['high'].values, data['low'].values, data['close'].values, data['volume'].values
+                    data['high'].values.astype(np.float64), data['low'].values.astype(np.float64), data['close'].values.astype(np.float64), data['volume'].values.astype(np.float64)
                 )
             
             self.logger.debug(f"Calculated {len(features.columns)} volume features")
@@ -503,8 +503,8 @@ class FeatureEngineer:
         
         # Volatility regime
         volatility = data['close'].pct_change().rolling(window=20).std()
-        vol_threshold_high = volatility.rolling(window=252).quantile(0.75)
-        vol_threshold_low = volatility.rolling(window=252).quantile(0.25)
+        vol_threshold_high = float(volatility.rolling(window=252).quantile(0.75).iloc[-1])
+        vol_threshold_low = float(volatility.rolling(window=252).quantile(0.25).iloc[-1])
         
         features['vol_regime'] = pd.cut(
             volatility,
@@ -524,9 +524,9 @@ class FeatureEngineer:
         features['stress_regime'] = np.where(rolling_var > var_threshold, 1, 0)
         
         # Time-based regimes
-        features['hour'] = data.index.hour if hasattr(data.index, 'hour') else 0
-        features['day_of_week'] = data.index.dayofweek if hasattr(data.index, 'dayofweek') else 0
-        features['month'] = data.index.month if hasattr(data.index, 'month') else 0
+        features['hour'] = pd.to_datetime(data.index).hour if hasattr(data.index, 'hour') else 0
+        features['day_of_week'] = pd.to_datetime(data.index).dayofweek if hasattr(data.index, 'dayofweek') else 0
+        features['month'] = pd.to_datetime(data.index).month if hasattr(data.index, 'month') else 0
         
         # Regime interactions with key features
         key_features = ['close', 'volume'] if 'volume' in data.columns else ['close']
@@ -597,9 +597,9 @@ class FeatureEngineer:
     def _handle_missing_values(self, features: pd.DataFrame) -> pd.DataFrame:
         """Handle missing values in features."""
         if self.config['fill_method'] == 'forward':
-            features = features.fillna(method='ffill')
+            features = features.ffill()
         elif self.config['fill_method'] == 'backward':
-            features = features.fillna(method='bfill')
+            features = features.bfill()
         elif self.config['fill_method'] == 'interpolate':
             features = features.interpolate()
         
@@ -618,7 +618,7 @@ class FeatureEngineer:
         numeric_features = features.select_dtypes(include=[np.number])
         
         # Calculate z-scores
-        z_scores = np.abs(stats.zscore(numeric_features))
+        z_scores = np.abs(stats.zscore(numeric_features.values, nan_policy='omit'))  # type: ignore
         
         # Remove rows with outliers
         outlier_mask = (z_scores < self.config['outlier_threshold']).all(axis=1)

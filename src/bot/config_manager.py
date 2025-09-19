@@ -40,22 +40,65 @@ class ConfigurationError(Exception):
 
 
 @dataclass
-class ExchangeConfig:
-    """Exchange connection configuration"""
-    name: str = "bybit"
+class EnvironmentCredentials:
+    """Environment-specific exchange credentials"""
     api_key: str = ""
     api_secret: str = ""
-    testnet: bool = True
+    is_testnet: bool = True
+    base_url: str = ""
+    
+    def validate(self):
+        if not self.api_key or not self.api_secret:
+            raise ConfigurationError("API key and secret are required")
+        if not self.base_url:
+            raise ConfigurationError("Base URL is required")
+
+
+@dataclass
+class ExchangeConfig:
+    """Exchange connection configuration with environment-specific credentials"""
+    name: str = "bybit"
+    environments: Dict[str, EnvironmentCredentials] = field(default_factory=dict)
     rate_limit: int = 10
     timeout: int = 30
     max_retries: int = 3
     retry_delay: float = 1.0
     
+    def __post_init__(self):
+        # Initialize default environments if not provided
+        if not self.environments:
+            self.environments = {
+                "development": EnvironmentCredentials(
+                    is_testnet=True,
+                    base_url="https://api-testnet.bybit.com"
+                ),
+                "staging": EnvironmentCredentials(
+                    is_testnet=True,
+                    base_url="https://api-testnet.bybit.com"
+                ),
+                "production": EnvironmentCredentials(
+                    is_testnet=False,
+                    base_url="https://api.bybit.com"
+                )
+            }
+    
+    def get_credentials(self, environment: str) -> EnvironmentCredentials:
+        """Get credentials for specific environment"""
+        env_name = environment.lower()
+        if env_name not in self.environments:
+            raise ConfigurationError(f"Environment '{environment}' not configured")
+        return self.environments[env_name]
+    
     def validate(self):
-        if not self.api_key or not self.api_secret:
-            raise ConfigurationError("API key and secret are required")
         if self.rate_limit <= 0:
             raise ConfigurationError("Rate limit must be positive")
+        
+        # Validate all environment credentials
+        for env_name, credentials in self.environments.items():
+            try:
+                credentials.validate()
+            except ConfigurationError as e:
+                raise ConfigurationError(f"Environment '{env_name}': {e}")
 
 
 @dataclass 
@@ -299,11 +342,8 @@ class ConfigurationManager:
         self.config: Optional[ComprehensiveConfig] = None
         self.config_hash = ""
         
-        # Environment variable mappings
+        # Environment variable mappings for environment-specific credentials
         self.env_mappings = {
-            "BYBIT_API_KEY": "exchange.api_key",
-            "BYBIT_API_SECRET": "exchange.api_secret",
-            "BYBIT_TESTNET": "exchange.testnet",
             "INITIAL_CAPITAL": "trading.initial_capital",
             "MAX_DAILY_LOSS": "risk_management.max_daily_loss",
             "DATABASE_URL": "database.database_url",
@@ -349,6 +389,9 @@ class ConfigurationManager:
             
             # Apply environment variable overrides
             self._apply_env_overrides()
+            
+            # Load environment-specific API credentials
+            self._load_environment_credentials()
             
             # Apply environment-specific settings
             self._apply_environment_settings()
@@ -466,35 +509,74 @@ class ConfigurationManager:
         
         setattr(current, parts[-1], value)
     
+    def _load_environment_credentials(self):
+        """Load environment-specific API credentials from environment variables"""
+        if not self.config:
+            return
+        
+        env_name = self.config.environment.value
+        
+        # Load testnet credentials (for development and staging)
+        testnet_key = os.getenv("BYBIT_TESTNET_API_KEY")
+        testnet_secret = os.getenv("BYBIT_TESTNET_API_SECRET")
+        
+        # Load live credentials (for production)
+        live_key = os.getenv("BYBIT_LIVE_API_KEY")
+        live_secret = os.getenv("BYBIT_LIVE_API_SECRET")
+        
+        # Apply credentials based on environment
+        if env_name in ["development", "staging", "testing"]:
+            if testnet_key and testnet_secret:
+                if env_name not in self.config.exchange.environments:
+                    self.config.exchange.environments[env_name] = EnvironmentCredentials()
+                self.config.exchange.environments[env_name].api_key = testnet_key
+                self.config.exchange.environments[env_name].api_secret = testnet_secret
+        
+        elif env_name == "production":
+            if live_key and live_secret:
+                if "production" not in self.config.exchange.environments:
+                    self.config.exchange.environments["production"] = EnvironmentCredentials()
+                self.config.exchange.environments["production"].api_key = live_key
+                self.config.exchange.environments["production"].api_secret = live_secret
+    
     def _apply_environment_settings(self):
         """Apply environment-specific configuration settings"""
+        if not self.config:
+            return
+            
         env = self.config.environment
         
         if env == Environment.DEVELOPMENT:
-            # Development settings
-            self.config.exchange.testnet = True
-            self.config.monitoring.log_level = "DEBUG"
-            self.config.api.cors_origins = ["*"]
-            self.config.database.echo = True
+            # Development settings - uses testnet credentials
+            if hasattr(self.config, 'monitoring') and self.config.monitoring:
+                self.config.monitoring.log_level = "DEBUG"
+            if hasattr(self.config, 'api') and self.config.api:
+                self.config.api.cors_origins = ["*"]
+            if hasattr(self.config, 'database') and self.config.database:
+                self.config.database.echo = True
             
         elif env == Environment.STAGING:
-            # Staging settings
-            self.config.exchange.testnet = True
-            self.config.monitoring.log_level = "INFO"
-            self.config.alerting.enable_email_alerts = True
+            # Staging settings - uses testnet credentials
+            if hasattr(self.config, 'monitoring') and self.config.monitoring:
+                self.config.monitoring.log_level = "INFO"
+            if hasattr(self.config, 'alerting') and self.config.alerting:
+                self.config.alerting.enable_email_alerts = True
             
         elif env == Environment.PRODUCTION:
-            # Production settings
-            self.config.exchange.testnet = False
-            self.config.monitoring.log_level = "INFO"
-            self.config.api.authentication_required = True
-            self.config.alerting.enable_email_alerts = True
+            # Production settings - uses live credentials
+            if hasattr(self.config, 'monitoring') and self.config.monitoring:
+                self.config.monitoring.log_level = "INFO"
+            if hasattr(self.config, 'api') and self.config.api:
+                self.config.api.authentication_required = True
+            if hasattr(self.config, 'alerting') and self.config.alerting:
+                self.config.alerting.enable_email_alerts = True
             
         elif env == Environment.TESTING:
-            # Testing settings
-            self.config.exchange.testnet = True
-            self.config.monitoring.log_level = "DEBUG"
-            self.config.database.database_url = "sqlite:///:memory:"
+            # Testing settings - uses testnet credentials
+            if hasattr(self.config, 'monitoring') and self.config.monitoring:
+                self.config.monitoring.log_level = "DEBUG"
+            if hasattr(self.config, 'database') and self.config.database:
+                self.config.database.database_url = "sqlite:///:memory:"
     
     def save_config(self, config_path: Optional[str] = None):
         """Save current configuration to file"""
@@ -593,17 +675,14 @@ class ConfigurationManager:
             
             # Apply environment-specific defaults
             if env == Environment.DEVELOPMENT:
-                config.exchange.testnet = True
                 config.trading.initial_capital = 1000.0
                 config.monitoring.log_level = "DEBUG"
                 
             elif env == Environment.STAGING:
-                config.exchange.testnet = True
                 config.trading.initial_capital = 5000.0
                 config.alerting.enable_email_alerts = True
                 
             elif env == Environment.PRODUCTION:
-                config.exchange.testnet = False
                 config.trading.initial_capital = 10000.0
                 config.api.authentication_required = True
                 config.alerting.enable_email_alerts = True
@@ -649,12 +728,28 @@ class ConfigurationManager:
     @property
     def is_production(self) -> bool:
         """Check if running in production environment"""
-        return self.config and self.config.environment == Environment.PRODUCTION
+        return bool(self.config and self.config.environment == Environment.PRODUCTION)
     
     @property
     def is_testnet(self) -> bool:
-        """Check if using testnet"""
-        return self.config and self.config.exchange.testnet
+        """Check if using testnet based on current environment"""
+        if not self.config:
+            return True  # Default to testnet for safety
+        
+        env_name = self.config.environment.value
+        try:
+            credentials = self.config.exchange.get_credentials(env_name)
+            return credentials.is_testnet
+        except ConfigurationError:
+            return True  # Default to testnet for safety
+    
+    def get_current_credentials(self) -> EnvironmentCredentials:
+        """Get credentials for the current environment"""
+        if not self.config:
+            raise ConfigurationError("No configuration loaded")
+        
+        env_name = self.config.environment.value
+        return self.config.exchange.get_credentials(env_name)
 
 
 # Example usage

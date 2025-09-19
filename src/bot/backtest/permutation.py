@@ -54,35 +54,35 @@ class PermutationResult:
         # Calculate p-value (two-tailed)
         n_better = np.sum(perm_array >= self.actual_value)
         n_worse = np.sum(perm_array <= self.actual_value)
-        self.p_value = 2 * min(n_better, n_worse) / len(perm_array)
+        self.p_value = float(2 * min(n_better, n_worse) / len(perm_array))
         
         # Calculate percentile rank
-        self.percentile_rank = stats.percentileofscore(perm_array, self.actual_value) / 100
+        self.percentile_rank = float(stats.percentileofscore(perm_array, self.actual_value) / 100)
         
         # Calculate z-score
         perm_mean = np.mean(perm_array)
         perm_std = np.std(perm_array)
         if perm_std > 0:
-            self.z_score = (self.actual_value - perm_mean) / perm_std
+            self.z_score = float((self.actual_value - perm_mean) / perm_std)
         
         # Calculate confidence interval
         alpha = 1 - confidence_level
         lower_percentile = (alpha / 2) * 100
         upper_percentile = (1 - alpha / 2) * 100
         self.confidence_interval = (
-            np.percentile(perm_array, lower_percentile),
-            np.percentile(perm_array, upper_percentile)
+            float(np.percentile(perm_array, lower_percentile)),
+            float(np.percentile(perm_array, upper_percentile))
         )
         
         # Distribution statistics
         self.distribution_stats = {
-            'mean': perm_mean,
-            'std': perm_std,
-            'min': np.min(perm_array),
-            'max': np.max(perm_array),
-            'median': np.median(perm_array),
-            'skewness': stats.skew(perm_array),
-            'kurtosis': stats.kurtosis(perm_array)
+            'mean': float(perm_mean),
+            'std': float(perm_std),
+            'min': float(np.min(perm_array)),
+            'max': float(np.max(perm_array)),
+            'median': float(np.median(perm_array)),
+            'skewness': float(stats.skew(perm_array)),
+            'kurtosis': float(stats.kurtosis(perm_array))
         }
         
         # Significance test
@@ -123,8 +123,8 @@ class PermutationTester:
         data: pd.DataFrame,
         strategy_func: Callable,
         strategy_params: Dict,
-        metrics_to_test: List[str] = None,
-        method: str = None
+        metrics_to_test: Optional[List[str]] = None,
+        method: Optional[str] = None
     ) -> Dict[str, PermutationResult]:
         """
         Test statistical significance of strategy performance.
@@ -298,7 +298,7 @@ class PermutationTester:
         
         # Shuffle returns
         returns = data['returns'].values[1:]  # Skip first NaN
-        np.random.shuffle(returns)
+        np.random.shuffle(np.array(returns))
         
         # Reconstruct prices from shuffled returns
         new_prices = [data['close'].iloc[0]]  # Start with original first price
@@ -321,7 +321,7 @@ class PermutationTester:
         
         # Calculate price changes
         price_changes = data['close'].diff().fillna(0).values[1:]
-        np.random.shuffle(price_changes)
+        np.random.shuffle(np.array(price_changes))
         
         # Reconstruct prices
         new_closes = [data['close'].iloc[0]]

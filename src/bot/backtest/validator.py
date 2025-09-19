@@ -17,7 +17,7 @@ robustness before live deployment.
 
 import warnings
 from typing import Dict, List, Optional, Tuple, Any, Callable, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -111,10 +111,10 @@ class ValidationResult:
     confidence_level: str = "LOW"
     
     # Detailed analysis
-    validation_scores: Dict[str, float] = None
-    warnings: List[str] = None
-    recommendations: List[str] = None
-    risk_assessment: Dict[str, Any] = None
+    validation_scores: Dict[str, float] = field(default_factory=dict)
+    warnings: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+    risk_assessment: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         if self.validation_scores is None:
@@ -404,7 +404,7 @@ class StrategyValidator:
         
         # Calculate weighted average score
         if scores:
-            result.score = np.average(scores, weights=weights[:len(scores)])
+            result.score = float(np.average(scores, weights=weights[:len(scores)]))
         else:
             result.score = 0.0
         

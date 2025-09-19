@@ -29,14 +29,29 @@ trading:
     var_daily_limit: 0.03
     consistency_min: 0.60
 
-# Exchange configuration
+# Exchange configuration with environment-specific credentials
 exchange:
   name: bybit
-  api_key: ${BYBIT_API_KEY}
-  api_secret: ${BYBIT_API_SECRET}
-  sandbox: true  # Set to false for live trading
-  testnet_url: https://api-testnet.bybit.com
-  mainnet_url: https://api.bybit.com
+  
+  # Environment-specific API credentials
+  environments:
+    development:
+      api_key: ${BYBIT_TESTNET_API_KEY}
+      api_secret: ${BYBIT_TESTNET_API_SECRET}
+      is_testnet: true
+      base_url: https://api-testnet.bybit.com
+      
+    staging:
+      api_key: ${BYBIT_TESTNET_API_KEY}
+      api_secret: ${BYBIT_TESTNET_API_SECRET}
+      is_testnet: true
+      base_url: https://api-testnet.bybit.com
+      
+    production:
+      api_key: ${BYBIT_LIVE_API_KEY}
+      api_secret: ${BYBIT_LIVE_API_SECRET}
+      is_testnet: false
+      base_url: https://api.bybit.com
   
   # Trading pairs and timeframes
   symbols:
