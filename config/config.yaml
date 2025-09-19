@@ -1,0 +1,263 @@
+# Bybit Trading Bot Configuration
+# This configuration supports dual-mode operation: conservative and aggressive
+
+# Core trading settings
+trading:
+  mode: aggressive  # Options: 'conservative' or 'aggressive'
+  base_balance: 1000  # Base balance in USDT for risk scaling
+  
+  # Dynamic risk parameters for aggressive mode
+  aggressive_mode:
+    max_risk_ratio: 0.02  # Max risk per trade (2%) for small accounts
+    min_risk_ratio: 0.005  # Min risk per trade (0.5%) for large accounts
+    portfolio_drawdown_limit: 0.40
+    strategy_drawdown_limit: 0.25
+    sharpe_ratio_min: 0.5
+    var_daily_limit: 0.05
+    consistency_min: 0.50
+    balance_thresholds:
+      low: 1000  # Balance below this uses max risk
+      high: 10000  # Balance above this uses min risk
+    risk_decay: exponential  # Options: 'linear' or 'exponential'
+  
+  # Conservative mode parameters
+  conservative_mode:
+    risk_ratio: 0.01  # Fixed 1% risk per trade
+    portfolio_drawdown_limit: 0.25
+    strategy_drawdown_limit: 0.15
+    sharpe_ratio_min: 0.8
+    var_daily_limit: 0.03
+    consistency_min: 0.60
+
+# Exchange configuration
+exchange:
+  name: bybit
+  api_key: ${BYBIT_API_KEY}
+  api_secret: ${BYBIT_API_SECRET}
+  sandbox: true  # Set to false for live trading
+  testnet_url: https://api-testnet.bybit.com
+  mainnet_url: https://api.bybit.com
+  
+  # Trading pairs and timeframes
+  symbols:
+    - BTCUSDT
+    - ETHUSDT
+    - SOLUSDT
+    - XRPUSDT
+  
+  timeframes:
+    primary: 1h
+    secondary: 4h
+    daily: 1d
+  
+  # Order execution settings
+  order_type: limit  # Options: 'market', 'limit'
+  max_slippage: 0.001  # 0.1%
+  order_timeout: 30  # seconds
+
+# Database configuration
+database:
+  # Development (local)
+  development:
+    dialect: duckdb
+    path: ./data/trading_bot.db
+    
+  # Production (cloud)
+  production:
+    dialect: postgresql
+    host: ${DB_HOST}
+    port: ${DB_PORT:5432}
+    name: ${DB_NAME}
+    user: ${DB_USER}
+    password: ${DB_PASSWORD}
+    
+  # Connection settings
+  pool_size: 10
+  max_overflow: 20
+  echo: false  # Set to true for SQL debugging
+
+# Machine learning configuration
+ml:
+  # Feature engineering
+  feature_engineering:
+    lookback_periods: [5, 10, 20, 50]
+    technical_indicators:
+      - sma
+      - ema
+      - rsi
+      - macd
+      - bollinger_bands
+      - atr
+    statistical_features:
+      - returns
+      - volatility
+      - skewness
+      - kurtosis
+  
+  # Model training
+  models:
+    lightgbm:
+      n_estimators: 1000
+      learning_rate: 0.1
+      max_depth: 6
+      feature_fraction: 0.8
+      bagging_fraction: 0.8
+      random_state: 42
+    
+    xgboost:
+      n_estimators: 1000
+      learning_rate: 0.1
+      max_depth: 6
+      subsample: 0.8
+      colsample_bytree: 0.8
+      random_state: 42
+  
+  # Cross-validation settings
+  cross_validation:
+    n_splits: 5
+    test_size: 0.2
+    purge_days: 1  # Days to purge between train/test
+    embargo_days: 1  # Days to embargo after test
+
+# Backtesting configuration
+backtesting:
+  # Walk-forward analysis
+  walk_forward:
+    initial_window: 252  # Initial training days (1 year)
+    step_size: 21  # Retraining frequency (3 weeks)
+    oos_period: 21  # Out-of-sample testing period
+    min_trades: 30  # Minimum trades for valid backtest
+  
+  # Validation thresholds
+  validation:
+    conservative:
+      min_sharpe: 0.8
+      max_drawdown: 0.15
+      min_win_rate: 0.45
+      min_profit_factor: 1.2
+    
+    aggressive:
+      min_sharpe: 0.5
+      max_drawdown: 0.25
+      min_win_rate: 0.40
+      min_profit_factor: 1.1
+  
+  # Transaction costs
+  costs:
+    maker_fee: 0.0001  # 0.01%
+    taker_fee: 0.0006  # 0.06%
+    slippage: 0.0005  # 0.05%
+
+# Risk management
+risk:
+  # Portfolio-level limits
+  portfolio:
+    max_strategies: 10
+    max_correlation: 0.7
+    rebalance_frequency: daily
+  
+  # Strategy-level limits
+  strategy:
+    max_position_size: 0.1  # 10% of portfolio per strategy
+    stop_loss: 0.05  # 5% stop loss
+    take_profit: 0.15  # 15% take profit
+  
+  # Circuit breakers
+  circuit_breakers:
+    daily_loss_limit: 0.05  # 5% daily portfolio loss
+    volatility_threshold: 3.0  # 3x normal volatility
+    news_blackout_hours: 2  # Hours to pause after major news
+
+# Tax configuration (Australia)
+tax:
+  country: australia
+  financial_year_end: "06-30"  # June 30th
+  
+  # AUD conversion
+  rba_api:
+    base_url: https://www.rba.gov.au/rss/rss-cb.xml
+    cache_duration: 3600  # 1 hour cache
+  
+  # CGT calculation
+  cgt:
+    method: fifo  # First-in-first-out
+    discount_rate: 0.5  # 50% CGT discount for assets held > 12 months
+    include_fees: true
+
+# Logging configuration
+logging:
+  level: INFO  # Options: DEBUG, INFO, WARNING, ERROR
+  format: json  # Options: 'json', 'text'
+  
+  # File logging
+  file:
+    enabled: true
+    path: ./logs/trading_bot.log
+    max_size: 100MB
+    backup_count: 10
+    rotation: daily
+  
+  # Console logging
+  console:
+    enabled: true
+    level: INFO
+  
+  # Structured logging fields
+  fields:
+    - timestamp
+    - level
+    - message
+    - strategy_id
+    - symbol
+    - mode
+    - balance
+
+# Dashboard configuration
+dashboard:
+  host: 0.0.0.0
+  port: 8501
+  title: "Bybit Trading Bot Dashboard"
+  
+  # Performance metrics
+  metrics:
+    refresh_interval: 30  # seconds
+    chart_periods:
+      - 1D
+      - 1W
+      - 1M
+      - 3M
+      - 1Y
+  
+  # Mode switching
+  mode_switching:
+    confirmation_required: true
+    cooldown_period: 3600  # 1 hour between mode changes
+
+# Monitoring and alerts
+monitoring:
+  enabled: true
+  
+  # Email alerts
+  email:
+    enabled: false
+    smtp_server: ${SMTP_SERVER}
+    smtp_port: ${SMTP_PORT:587}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    from_address: ${EMAIL_FROM}
+    to_addresses:
+      - ${ALERT_EMAIL}
+  
+  # Alert conditions
+  alerts:
+    portfolio_drawdown: 0.10  # 10% drawdown alert
+    strategy_failure: true  # Alert on strategy validation failure
+    connection_loss: true  # Alert on exchange connection loss
+    daily_performance: true  # Daily performance summary
+
+# Development settings
+development:
+  debug: true
+  profiling: false
+  test_data_path: ./tests/data/
+  mock_exchange: true  # Use mock exchange for testing
