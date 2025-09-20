@@ -67,6 +67,7 @@ class TradingBotSetupWizard:
             self.check_system_requirements()
             self.setup_environment()
             self.configure_api_keys()
+            self.configure_data_apis()
             self.configure_trading_settings()
             self.choose_deployment_method()
             self.validate_setup()
@@ -87,6 +88,7 @@ class TradingBotSetupWizard:
         welcome_text.append("This wizard will help you:\n", style="white")
         welcome_text.append("✅ Set up your development environment\n", style="green")
         welcome_text.append("✅ Configure API keys securely\n", style="green")
+        welcome_text.append("✅ Set up enhanced data sources (optional)\n", style="green")
         welcome_text.append("✅ Customize trading settings\n", style="green")
         welcome_text.append("✅ Choose deployment method\n", style="green")
         welcome_text.append("✅ Validate your setup\n\n", style="green")
@@ -327,6 +329,166 @@ class TradingBotSetupWizard:
                 self.console.print(f"Error: {str(e)}", style="red")
                 return False
     
+    def configure_data_apis(self):
+        """Configure optional data and sentiment APIs for enhanced trading"""
+        self.console.print("\n📊 Data & Sentiment APIs (Optional)", style="blue")
+        
+        # Explain the benefits
+        api_info = Panel(
+            "🚀 **Enhanced Trading Features**\n\n"
+            "The bot can use additional data sources to improve trading decisions:\n\n"
+            "📰 **CryptoPanic API**: Real-time crypto news sentiment analysis\n"
+            "📈 **Fear & Greed Index**: Market sentiment indicator (free)\n"
+            "📊 **Multi-Exchange Data**: Price data from Binance & OKX (free)\n\n"
+            "✅ **Benefits**: Better market timing, sentiment-aware risk management\n"
+            "⚠️  **Note**: CryptoPanic requires paid API key, others are free\n"
+            "🔄 **Skip**: Bot works fine with just Bybit data",
+            title="📊 Enhanced Data Sources",
+            border_style="cyan"
+        )
+        self.console.print(api_info)
+        
+        if not Confirm.ask("🤔 Would you like to configure enhanced data sources?", default=False):
+            self.console.print("⏭️  Skipping enhanced data sources (you can add them later)", style="yellow")
+            return
+        
+        # CryptoPanic API (optional, paid)
+        self.console.print("\n📰 CryptoPanic News API:")
+        cryptopanic_info = Panel(
+            "CryptoPanic provides real-time cryptocurrency news sentiment analysis.\n\n"
+            "📝 **How to get CryptoPanic API key:**\n"
+            "1. Go to https://cryptopanic.com/developers/api/\n"
+            "2. Sign up for an account\n"
+            "3. Choose a paid plan (starts at $19/month)\n"
+            "4. Get your API auth token\n\n"
+            "💡 **Benefits**: Real-time news sentiment, trading halt detection\n"
+            "💸 **Cost**: Paid service required for API access",
+            title="📰 CryptoPanic Configuration",
+            border_style="yellow"
+        )
+        self.console.print(cryptopanic_info)
+        
+        if Confirm.ask("Do you have a CryptoPanic API key?", default=False):
+            cryptopanic_key = Prompt.ask("CryptoPanic API Key (auth_token)", password=False)
+            if cryptopanic_key and len(cryptopanic_key) > 10:
+                # Test CryptoPanic API
+                if self.test_cryptopanic_api(cryptopanic_key):
+                    self.config['cryptopanic_api_key'] = cryptopanic_key
+                    self.console.print("✅ CryptoPanic API configured successfully!", style="green")
+                else:
+                    self.console.print("❌ CryptoPanic API test failed - skipping", style="red")
+        else:
+            self.console.print("⏭️  Skipping CryptoPanic (can be added later)", style="yellow")
+        
+        # Fear & Greed Index (free, no API key needed)
+        self.console.print("\n📈 Fear & Greed Index:")
+        fear_greed_info = Panel(
+            "The Fear & Greed Index measures market sentiment from 0-100.\n\n"
+            "📊 **Data Source**: Alternative.me (free API)\n"
+            "🔄 **Updates**: Daily market sentiment scores\n"
+            "📈 **Usage**: Adjusts risk based on market psychology\n\n"
+            "✅ **Free**: No API key required\n"
+            "🎯 **Recommended**: Helps with market timing",
+            title="📈 Fear & Greed Index",
+            border_style="green"
+        )
+        self.console.print(fear_greed_info)
+        
+        if Confirm.ask("Enable Fear & Greed Index data?", default=True):
+            if self.test_fear_greed_api():
+                self.config['enable_fear_greed'] = True
+                self.console.print("✅ Fear & Greed Index enabled!", style="green")
+            else:
+                self.console.print("⚠️  Fear & Greed API test failed, but will retry later", style="yellow")
+                self.config['enable_fear_greed'] = True  # Enable anyway, API might be temporary down
+        else:
+            self.config['enable_fear_greed'] = False
+        
+        # Multi-exchange data (free)
+        self.console.print("\n🔄 Multi-Exchange Data:")
+        multi_exchange_info = Panel(
+            "Collect price data from multiple exchanges for better accuracy.\n\n"
+            "🏢 **Exchanges**: Binance, OKX (read-only data)\n"
+            "📊 **Benefits**: Cross-exchange arbitrage detection, better price discovery\n"
+            "💸 **Cost**: Free (no API keys needed for public data)\n\n"
+            "⚡ **Performance**: Slightly more bandwidth usage\n"
+            "🎯 **Recommended**: Improves trading accuracy",
+            title="🔄 Multi-Exchange Data",
+            border_style="green"
+        )
+        self.console.print(multi_exchange_info)
+        
+        if Confirm.ask("Enable multi-exchange data collection?", default=True):
+            self.config['enable_multi_exchange'] = True
+            self.console.print("✅ Multi-exchange data enabled!", style="green")
+        else:
+            self.config['enable_multi_exchange'] = False
+    
+    def test_cryptopanic_api(self, api_key: str) -> bool:
+        """Test CryptoPanic API connection"""
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=self.console,
+        ) as progress:
+            task = progress.add_task("Testing CryptoPanic API...", total=None)
+            
+            try:
+                response = requests.get(
+                    f"https://cryptopanic.com/api/v1/posts/?auth_token={api_key}&public=true&limit=1",
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'results' in data and isinstance(data['results'], list):
+                        progress.update(task, description="✅ CryptoPanic API working!")
+                        return True
+                    else:
+                        progress.update(task, description="❌ Invalid CryptoPanic response!")
+                        return False
+                else:
+                    progress.update(task, description="❌ CryptoPanic API failed!")
+                    self.console.print(f"Error {response.status_code}: {response.text}", style="red")
+                    return False
+                    
+            except Exception as e:
+                progress.update(task, description="❌ CryptoPanic connection failed!")
+                self.console.print(f"Error: {str(e)}", style="red")
+                return False
+    
+    def test_fear_greed_api(self) -> bool:
+        """Test Fear & Greed Index API connection"""
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=self.console,
+        ) as progress:
+            task = progress.add_task("Testing Fear & Greed API...", total=None)
+            
+            try:
+                response = requests.get("https://api.alternative.me/fng/", timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'data' in data and len(data['data']) > 0 and 'value' in data['data'][0]:
+                        progress.update(task, description="✅ Fear & Greed API working!")
+                        current_value = data['data'][0]['value']
+                        classification = data['data'][0]['value_classification']
+                        self.console.print(f"📊 Current Fear & Greed: {current_value} ({classification})", style="cyan")
+                        return True
+                    else:
+                        progress.update(task, description="❌ Invalid Fear & Greed response!")
+                        return False
+                else:
+                    progress.update(task, description="❌ Fear & Greed API failed!")
+                    return False
+                    
+            except Exception as e:
+                progress.update(task, description="❌ Fear & Greed connection failed!")
+                self.console.print(f"Error: {str(e)}", style="red")
+                return False
+    
     def configure_trading_settings(self):
         """Configure trading preferences and risk settings"""
         self.console.print("\n⚙️  Trading Configuration", style="blue")
@@ -564,6 +726,16 @@ BYBIT_API_KEY={self.config['api_key']}
 BYBIT_API_SECRET={self.config['api_secret']}
 ENVIRONMENT={self.config['environment']}
 
+# Enhanced Data Sources (Optional)
+CRYPTOPANIC_API_KEY={self.config.get('cryptopanic_api_key', '')}
+ENABLE_FEAR_GREED={'true' if self.config.get('enable_fear_greed', False) else 'false'}
+ENABLE_MULTI_EXCHANGE={'true' if self.config.get('enable_multi_exchange', False) else 'false'}
+
+# Trading Configuration
+TRADING_PAIRS={','.join(self.config.get('trading_pairs', ['BTCUSDT']))}
+RISK_PER_TRADE={self.config.get('max_risk_per_trade', 0.02)}
+MAX_DAILY_LOSS={self.config.get('max_daily_loss', 0.05)}
+
 # Database
 DATABASE_URL=postgresql://postgres:password@localhost:5432/trading_bot
 REDIS_URL=redis://localhost:6379/0
@@ -655,8 +827,21 @@ LOG_FORMAT=json
         
         completion_text.append("📂 Generated Files:\n", style="white")
         completion_text.append(f"• Configuration: config/{self.config['environment']}.yaml\n", style="green")
-        completion_text.append(f"• Environment: .env\n", style="green")
+        completion_text.append(f"• Environment: .env (with API keys)\n", style="green")
         completion_text.append(f"• Setup record: config/setup_wizard_config.yaml\n\n", style="green")
+        
+        # Show configured features
+        features_text = "🎯 Configured Features:\n"
+        features_text += f"• Trading Environment: {self.config['environment'].upper()}\n"
+        features_text += f"• Trading Pairs: {', '.join(self.config.get('trading_pairs', ['BTCUSDT']))}\n"
+        if self.config.get('cryptopanic_api_key'):
+            features_text += "• News Sentiment: CryptoPanic API ✅\n"
+        if self.config.get('enable_fear_greed'):
+            features_text += "• Market Sentiment: Fear & Greed Index ✅\n"
+        if self.config.get('enable_multi_exchange'):
+            features_text += "• Multi-Exchange Data: Binance + OKX ✅\n"
+        features_text += "\n"
+        completion_text.append(features_text, style="cyan")
         
         completion_text.append("🚀 Next Steps:\n", style="yellow")
         

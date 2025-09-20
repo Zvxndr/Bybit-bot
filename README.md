@@ -86,6 +86,7 @@ python setup_wizard.py
 
 The wizard will guide you through:
 - ✅ API credentials configuration
+- ✅ Enhanced data sources (news, sentiment, multi-exchange)
 - ✅ Trading parameters setup
 - ✅ Risk management settings
 - ✅ Deployment options
@@ -419,9 +420,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **Data Sources & APIs**
 - **Primary Exchange:** Bybit (execution)
-- **Secondary Exchanges:** Binance, OKX (data only)
-- **Sentiment:** CryptoPanic API or TheTIE
-- **Market Sentiment:** Alternative.me Fear & Greed Index
+- **Secondary Exchanges:** Binance, OKX (data only) 🆓
+- **News Sentiment:** CryptoPanic API (optional) 💰
+- **Market Sentiment:** Alternative.me Fear & Greed Index 🆓
+- **Multi-Exchange Data:** Cross-exchange arbitrage detection 🆓
 - **On-Chain:** Glassnode or CryptoQuant (optional)
 
 ### **ML Model Stack**
