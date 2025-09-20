@@ -1,32 +1,54 @@
-# Trading Bot API Reference
+# ML Trading Bot API Reference
 
 ## Overview
 
-The Trading Bot API provides comprehensive REST and WebSocket interfaces for system management, monitoring, and control. This document covers all available endpoints, authentication methods, and integration examples.
+The ML Trading Bot provides a comprehensive FastAPI-based REST and WebSocket interface for real-time predictions, system management, and monitoring. This production-ready API includes advanced ML model serving, authentication, rate limiting, and comprehensive health monitoring.
 
-## Base URL
+**Features:**
+- **Real-time ML Predictions**: Advanced ensemble models with confidence scores
+- **WebSocket Streaming**: Live prediction feeds with sub-second latency
+- **Authentication & Security**: JWT-based authentication with role-based access
+- **Model Management**: Dynamic model selection, retraining, and versioning
+- **Production Monitoring**: Health checks, metrics, and performance analytics
+
+## Base URLs
 
 - **Development**: `http://localhost:8000`
-- **Production**: `https://your-domain.com`
+- **Production**: `https://your-production-domain.com`
+- **Kubernetes**: `https://trading-bot.cluster.local` (internal)
 
 ## Authentication
 
-### API Key Authentication
+### JWT Token Authentication (Primary)
 
-API keys are the preferred method for programmatic access:
+JWT tokens provide secure, stateless authentication for all API access:
 
 ```bash
-curl -H "Authorization: Bearer tb_your_api_key_here" \
-     https://api.tradingbot.com/status
+# Login to get JWT token
+curl -X POST "http://localhost:8000/auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{"username": "your_username", "password": "your_password"}'
+
+# Use JWT token for API calls
+curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+     "http://localhost:8000/predict"
 ```
 
-### JWT Token Authentication
+### API Key Authentication (Service-to-Service)
 
-JWT tokens are used for web applications:
+API keys are used for programmatic access and service integration:
 
 ```bash
-curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-     https://api.tradingbot.com/status
+curl -H "X-API-Key: your_api_key_here" \
+     "http://localhost:8000/health"
+```
+
+### WebSocket Authentication
+
+WebSocket connections require JWT token authentication:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/predictions?token=eyJ0eXAiOiJKV1QiLCJh...');
 ```
 
 ## Rate Limits
@@ -75,11 +97,178 @@ X-RateLimit-Reset: 1642694400
 }
 ```
 
-## System Endpoints
+## 🤖 Core Prediction Endpoints
 
-### Health Check
+### Real-time ML Prediction
 
-Check basic system health.
+Get real-time trading predictions from ensemble ML models.
+
+**Endpoint**: `POST /predict`  
+**Authentication**: JWT token required  
+**Rate Limit**: 100/minute
+
+#### Request
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+     -H "Authorization: Bearer your_jwt_token" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "symbol": "BTCUSDT",
+       "timeframe": "1h",
+       "features": {
+         "rsi": 65.2,
+         "macd": 0.015,
+         "volume_ratio": 1.2,
+         "sentiment_score": 0.3
+       }
+     }'
+```
+
+#### Response
+
+```json
+{
+  "prediction": {
+    "signal": "buy",
+    "confidence": 0.85,
+    "expected_return": 0.023,
+    "risk_score": 0.15,
+    "model_ensemble": {
+      "lightgbm": {"prediction": 0.025, "weight": 0.4},
+      "xgboost": {"prediction": 0.021, "weight": 0.3},
+      "neural_network": {"prediction": 0.024, "weight": 0.3}
+    },
+    "feature_importance": {
+      "sentiment_score": 0.35,
+      "rsi": 0.25,
+      "volume_ratio": 0.20,
+      "macd": 0.20
+    }
+  },
+  "metadata": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "model_version": "v1.2.3",
+    "processing_time_ms": 45,
+    "request_id": "pred_123abc"
+  }
+}
+```
+
+### Batch Predictions
+
+Process multiple predictions in a single request for efficiency.
+
+**Endpoint**: `POST /predict/batch`  
+**Authentication**: JWT token required  
+**Rate Limit**: 10/minute
+
+#### Request
+
+```bash
+curl -X POST "http://localhost:8000/predict/batch" \
+     -H "Authorization: Bearer your_jwt_token" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "requests": [
+         {
+           "symbol": "BTCUSDT",
+           "timeframe": "1h",
+           "features": {"rsi": 65.2, "macd": 0.015}
+         },
+         {
+           "symbol": "ETHUSDT", 
+           "timeframe": "1h",
+           "features": {"rsi": 72.1, "macd": -0.008}
+         }
+       ]
+     }'
+```
+
+#### Response
+
+```json
+{
+  "predictions": [
+    {
+      "symbol": "BTCUSDT",
+      "prediction": {
+        "signal": "buy",
+        "confidence": 0.85,
+        "expected_return": 0.023
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "prediction": {
+        "signal": "sell", 
+        "confidence": 0.78,
+        "expected_return": -0.018
+      }
+    }
+  ],
+  "metadata": {
+    "total_requests": 2,
+    "successful": 2,
+    "failed": 0,
+    "processing_time_ms": 127
+  }
+}
+```
+
+### WebSocket Streaming Predictions
+
+Subscribe to real-time prediction streams via WebSocket.
+
+**Endpoint**: `WS /ws/predictions`  
+**Authentication**: JWT token in query parameter  
+**Rate Limit**: 1 connection per user
+
+#### Connection
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/predictions?token=your_jwt_token');
+
+ws.onopen = function(event) {
+    // Subscribe to specific symbols
+    ws.send(JSON.stringify({
+        "action": "subscribe",
+        "symbols": ["BTCUSDT", "ETHUSDT"],
+        "timeframe": "1m"
+    }));
+};
+
+ws.onmessage = function(event) {
+    const prediction = JSON.parse(event.data);
+    console.log('New prediction:', prediction);
+};
+```
+
+#### Message Format
+
+```json
+{
+  "type": "prediction",
+  "symbol": "BTCUSDT",
+  "prediction": {
+    "signal": "buy",
+    "confidence": 0.82,
+    "expected_return": 0.019,
+    "timestamp": "2024-01-15T10:30:15Z"
+  },
+  "market_data": {
+    "price": 42500.50,
+    "volume": 1250000,
+    "change_24h": 0.025
+  }
+}
+```
+
+## 🏥 System Health Endpoints
+
+### Comprehensive Health Check
+
+Check detailed system health including all components.
 
 **Endpoint**: `GET /health`  
 **Authentication**: None required  
@@ -88,7 +277,7 @@ Check basic system health.
 #### Request
 
 ```bash
-curl https://api.tradingbot.com/health
+curl "http://localhost:8000/health"
 ```
 
 #### Response
@@ -96,41 +285,108 @@ curl https://api.tradingbot.com/health
 ```json
 {
   "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0.0",
+  "components": {
+    "api": {"status": "healthy", "response_time_ms": 12},
+    "database": {"status": "healthy", "connection_pool": "8/20"},
+    "ml_models": {"status": "healthy", "loaded_models": 4},
+    "exchange_api": {"status": "healthy", "latency_ms": 45},
+    "redis_cache": {"status": "healthy", "memory_usage": "45%"},
+    "prediction_service": {"status": "healthy", "queue_size": 3}
+  },
+  "metrics": {
+    "predictions_per_minute": 25.3,
+    "api_requests_per_minute": 120.5,
+    "system_cpu_percent": 35.8,
+    "system_memory_percent": 62.4
+  }
 }
 ```
 
-### System Status
+### System Information
 
-Get comprehensive system status information.
+Get comprehensive system information and configuration.
 
-**Endpoint**: `GET /status`  
-**Authentication**: Read-only permission required  
+**Endpoint**: `GET /info`  
+**Authentication**: JWT token required  
 **Rate Limit**: 100/hour
 
 #### Request
 
 ```bash
-curl -H "Authorization: Bearer your_token" \
-     https://api.tradingbot.com/status
+curl -H "Authorization: Bearer your_jwt_token" \
+     "http://localhost:8000/info"
 ```
 
 #### Response
 
 ```json
 {
-  "status": "healthy",
-  "uptime_seconds": 86400.5,
-  "timestamp": "2024-01-15T10:30:00Z",
-  "components": {
-    "trading_engine": "healthy",
-    "risk_manager": "healthy",
-    "database": "healthy",
-    "exchange_connection": "healthy"
+  "system": {
+    "name": "ML Trading Bot",
+    "version": "1.0.0",
+    "environment": "production",
+    "uptime_seconds": 86400.5,
+    "start_time": "2024-01-14T10:30:00Z"
   },
-  "active_alerts": 2,
-  "message": "System operational with minor alerts"
+  "api": {
+    "version": "v1",
+    "docs_url": "/docs",
+    "openapi_url": "/openapi.json"
+  },
+  "ml_models": {
+    "ensemble_version": "v1.2.3",
+    "models_loaded": 4,
+    "last_training": "2024-01-15T08:00:00Z",
+    "model_types": ["lightgbm", "xgboost", "neural_network", "transformer"]
+  },
+  "data_sources": {
+    "exchanges": ["bybit", "binance", "okx"],
+    "sentiment": ["cryptopanic", "fear_greed_index"],
+    "features": 127
+  }
 }
+```
+
+## 📊 Metrics & Monitoring
+
+### Prometheus Metrics
+
+Get Prometheus-formatted metrics for monitoring integration.
+
+**Endpoint**: `GET /metrics`  
+**Authentication**: None required (internal endpoint)  
+**Rate Limit**: 1000/hour
+
+#### Request
+
+```bash
+curl "http://localhost:8000/metrics"
+```
+
+#### Response (Prometheus Format)
+
+```
+# HELP predictions_total Total number of predictions made
+# TYPE predictions_total counter
+predictions_total{model="ensemble"} 15420
+
+# HELP prediction_latency_seconds Time taken to generate predictions
+# TYPE prediction_latency_seconds histogram
+prediction_latency_seconds_bucket{le="0.01"} 1245
+prediction_latency_seconds_bucket{le="0.05"} 12890
+prediction_latency_seconds_bucket{le="0.1"} 15420
+
+# HELP api_requests_total Total API requests
+# TYPE api_requests_total counter
+api_requests_total{endpoint="/predict",method="POST",status="200"} 12458
+
+# HELP model_accuracy Current model accuracy
+# TYPE model_accuracy gauge
+model_accuracy{model="lightgbm"} 0.847
+model_accuracy{model="xgboost"} 0.832
+model_accuracy{model="neural_network"} 0.856
 ```
 
 ### System Metrics
@@ -189,15 +445,246 @@ curl -H "Authorization: Bearer your_token" \
 }
 ```
 
-## Alert Endpoints
+## 🔐 Authentication Endpoints
 
-### Get Alerts
+### User Login
 
-Retrieve system alerts.
+Authenticate user and receive JWT access token.
 
-**Endpoint**: `GET /alerts`  
-**Authentication**: Read-only permission required  
+**Endpoint**: `POST /auth/login`  
+**Authentication**: None required  
+**Rate Limit**: 10/minute per IP
+
+#### Request
+
+```bash
+curl -X POST "http://localhost:8000/auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "username": "your_username",
+       "password": "your_password"
+     }'
+```
+
+#### Response
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "bearer",
+  "expires_in": 3600,
+  "user": {
+    "id": "user_123",
+    "username": "your_username",
+    "role": "trader",
+    "permissions": ["predict", "monitor", "models"]
+  }
+}
+```
+
+### Refresh Access Token
+
+Get a new access token using refresh token.
+
+**Endpoint**: `POST /auth/refresh`  
+**Authentication**: Valid refresh token required  
 **Rate Limit**: 100/hour
+
+#### Request
+
+```bash
+curl -X POST "http://localhost:8000/auth/refresh" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+     }'
+```
+
+#### Response
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "bearer",
+  "expires_in": 3600
+}
+```
+
+### Get Current User
+
+Get information about the currently authenticated user.
+
+**Endpoint**: `GET /auth/me`  
+**Authentication**: JWT token required  
+**Rate Limit**: 100/hour
+
+#### Request
+
+```bash
+curl -H "Authorization: Bearer your_jwt_token" \
+     "http://localhost:8000/auth/me"
+```
+
+#### Response
+
+```json
+{
+  "user": {
+    "id": "user_123",
+    "username": "your_username",
+    "email": "user@example.com",
+    "role": "trader",
+    "permissions": ["predict", "monitor", "models"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "last_login": "2024-01-15T10:30:00Z"
+  },
+  "session": {
+    "token_issued_at": "2024-01-15T10:30:00Z",
+    "token_expires_at": "2024-01-15T11:30:00Z",
+    "requests_made": 45
+  }
+}
+```
+
+## 🤖 Model Management Endpoints
+
+### List Available Models
+
+Get information about all available ML models.
+
+**Endpoint**: `GET /models`  
+**Authentication**: JWT token required  
+**Rate Limit**: 100/hour
+
+#### Request
+
+```bash
+curl -H "Authorization: Bearer your_jwt_token" \
+     "http://localhost:8000/models"
+```
+
+#### Response
+
+```json
+{
+  "models": [
+    {
+      "id": "lightgbm_v1.2.3",
+      "name": "LightGBM Ensemble",
+      "type": "lightgbm",
+      "version": "1.2.3",
+      "status": "active",
+      "accuracy": 0.847,
+      "training_date": "2024-01-15T08:00:00Z",
+      "features_count": 127,
+      "weight_in_ensemble": 0.4
+    },
+    {
+      "id": "xgboost_v1.2.3",
+      "name": "XGBoost Classifier",
+      "type": "xgboost", 
+      "version": "1.2.3",
+      "status": "active",
+      "accuracy": 0.832,
+      "training_date": "2024-01-15T08:00:00Z",
+      "features_count": 127,
+      "weight_in_ensemble": 0.3
+    }
+  ],
+  "ensemble": {
+    "version": "v1.2.3",
+    "models_count": 4,
+    "combined_accuracy": 0.891,
+    "last_updated": "2024-01-15T08:00:00Z"
+  }
+}
+```
+
+### Get Model Performance
+
+Get detailed performance metrics for a specific model.
+
+**Endpoint**: `GET /models/{model_id}/metrics`  
+**Authentication**: JWT token required  
+**Rate Limit**: 100/hour
+
+#### Request
+
+```bash
+curl -H "Authorization: Bearer your_jwt_token" \
+     "http://localhost:8000/models/lightgbm_v1.2.3/metrics"
+```
+
+#### Response
+
+```json
+{
+  "model": {
+    "id": "lightgbm_v1.2.3",
+    "name": "LightGBM Ensemble",
+    "version": "1.2.3"
+  },
+  "performance": {
+    "accuracy": 0.847,
+    "precision": 0.852,
+    "recall": 0.843,
+    "f1_score": 0.847,
+    "auc_roc": 0.891,
+    "sharpe_ratio": 1.84,
+    "max_drawdown": 0.12
+  },
+  "predictions": {
+    "total_predictions": 15420,
+    "correct_predictions": 13056,
+    "accuracy_trend_7d": 0.851,
+    "predictions_per_hour": 24.3
+  },
+  "feature_importance": {
+    "sentiment_score": 0.35,
+    "rsi_14": 0.25,
+    "volume_ratio": 0.20,
+    "macd_signal": 0.20
+  }
+}
+```
+
+### Trigger Model Retraining
+
+Start the model retraining process with latest data.
+
+**Endpoint**: `POST /models/retrain`  
+**Authentication**: Admin role required  
+**Rate Limit**: 5/hour
+
+#### Request
+
+```bash
+curl -X POST "http://localhost:8000/models/retrain" \
+     -H "Authorization: Bearer your_admin_jwt_token" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "models": ["lightgbm", "xgboost"],
+       "training_data_days": 30,
+       "validation_split": 0.2,
+       "notify_completion": true
+     }'
+```
+
+#### Response
+
+```json
+{
+  "training_job": {
+    "id": "train_job_456",
+    "status": "started",
+    "models": ["lightgbm", "xgboost"],
+    "started_at": "2024-01-15T10:30:00Z",
+    "estimated_completion": "2024-01-15T12:30:00Z"
+  },
+  "message": "Model retraining started. Check job status at /models/training/{job_id}"
+}
+```
 
 #### Parameters
 

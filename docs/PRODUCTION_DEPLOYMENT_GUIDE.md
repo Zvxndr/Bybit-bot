@@ -1,53 +1,625 @@
-# 🚀 Production Deployment Guide
+# 🚀 Production Deployment Guide - ML Trading Bot
 
 ## Overview
 
-This guide covers deploying the Bybit Trading Bot to production environments, including cloud platforms, VPS servers, and containerized deployments. It provides step-by-step instructions for secure, scalable, and maintainable production deployments.
+This guide covers deploying the production-ready ML Trading Bot to enterprise environments using modern container orchestration and CI/CD practices. The system is designed for Kubernetes deployment with comprehensive monitoring, security, and auto-scaling capabilities.
+
+**Production Stack**: FastAPI + Streamlit + Kubernetes + CI/CD + Monitoring
+**Infrastructure**: Container-native with horizontal scaling and zero-downtime deployments
 
 ## 📋 Table of Contents
 
-1. [Pre-Production Checklist](#pre-production-checklist)
-2. [Infrastructure Planning](#infrastructure-planning)
-3. [Environment Setup](#environment-setup)
-4. [Docker Deployment](#docker-deployment)
-5. [Cloud Platform Deployment](#cloud-platform-deployment)
-6. [Database Setup](#database-setup)
-7. [Security Configuration](#security-configuration)
-8. [Monitoring & Alerting](#monitoring--alerting)
-9. [CI/CD Pipeline](#cicd-pipeline)
-10. [Maintenance & Updates](#maintenance--updates)
-11. [Disaster Recovery](#disaster-recovery)
+1. [🎯 Quick Production Deployment](#quick-production-deployment)
+2. [☸️ Kubernetes Production Setup](#kubernetes-production-setup)
+3. [🔧 Configuration Management](#configuration-management)
+4. [🛡️ Security & Secrets Management](#security--secrets-management)
+5. [📊 Monitoring & Observability](#monitoring--observability)
+6. [🔄 CI/CD Pipeline Setup](#cicd-pipeline-setup)
+7. [📈 Scaling & Performance](#scaling--performance)
+8. [🚨 Disaster Recovery & Backup](#disaster-recovery--backup)
+9. [🔧 Maintenance & Operations](#maintenance--operations)
+10. [🐛 Troubleshooting Guide](#troubleshooting-guide)
 
 ---
 
-## ✅ Pre-Production Checklist
+## 🎯 Quick Production Deployment
 
-### **Development Validation**
-- [ ] Bot runs successfully in development for 2+ weeks
-- [ ] All unit and integration tests pass
-- [ ] Paper trading performance meets expectations
-- [ ] Risk management systems tested thoroughly
-- [ ] Error handling and recovery procedures validated
-- [ ] Monitoring and alerting systems configured
-- [ ] Documentation complete and up-to-date
+### **⚡ 5-Minute Production Setup**
 
-### **Security Audit**
-- [ ] API keys and credentials properly secured
-- [ ] Database access restricted and encrypted
-- [ ] Network security configured (firewalls, VPN)
-- [ ] SSL/TLS certificates installed
-- [ ] Access logs and audit trails enabled
-- [ ] Backup and recovery procedures tested
+**Prerequisites**: Kubernetes cluster, kubectl, docker
 
-### **Performance Testing**
-- [ ] Load testing completed under expected volumes
-- [ ] Memory and CPU usage optimized
-- [ ] Database performance tuned
-- [ ] Network latency minimized
-- [ ] Failover scenarios tested
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/Bybit-bot.git
+cd Bybit-bot
 
-### **Compliance & Legal**
-- [ ] Regulatory requirements understood and met
+# 2. Configure production environment
+cp config/production.yaml.template config/production.yaml
+cp config/secrets.yaml.template config/secrets.yaml
+
+# 3. Set up secrets in Kubernetes
+python deploy.py setup-secrets --environment production
+
+# 4. Deploy to Kubernetes
+python deploy.py deploy --environment production
+
+# 5. Verify deployment
+python deploy.py health-check --environment production
+```
+
+**Access your deployment**:
+- **API**: `https://your-domain.com/docs`
+- **Dashboard**: `https://your-domain.com/dashboard`
+- **Monitoring**: `https://your-domain.com/grafana`
+
+### **🔧 Quick Configuration**
+
+```yaml
+# config/production.yaml
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  
+ml_models:
+  ensemble_weight:
+    lightgbm: 0.4
+    xgboost: 0.3
+    neural_network: 0.2
+    transformer: 0.1
+    
+kubernetes:
+  replicas: 3
+  auto_scaling: true
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+```
+
+---
+
+## ☸️ Kubernetes Production Setup
+
+### **📦 Container Registry Setup**
+
+```bash
+# Build and push production images
+docker build -t your-registry/ml-trading-bot:latest .
+docker push your-registry/ml-trading-bot:latest
+
+# Update deployment with your registry
+sed -i 's|ml-trading-bot:latest|your-registry/ml-trading-bot:latest|g' k8s/deployment.yaml
+```
+
+### **🔐 Secrets Management**
+
+```bash
+# Create Kubernetes secrets
+kubectl create secret generic ml-trading-bot-secrets \
+  --from-literal=BYBIT_API_KEY="your-api-key" \
+  --from-literal=BYBIT_API_SECRET="your-api-secret" \
+  --from-literal=DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  --from-literal=REDIS_URL="redis://redis:6379/0" \
+  --from-literal=JWT_SECRET="your-jwt-secret"
+
+# Or use the automated script
+python scripts/setup_k8s_secrets.py --environment production
+```
+
+### **📊 Deploy Core Services**
+
+```bash
+# Deploy in order
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/redis.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# Or use the deployment script
+python deploy.py deploy --environment production --wait-ready
+```
+
+### **🎯 Production Deployment Manifest**
+
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-trading-bot
+  namespace: trading-bot
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ml-trading-bot
+  template:
+    metadata:
+      labels:
+        app: ml-trading-bot
+        version: v1.0.0
+    spec:
+      containers:
+      - name: api
+        image: ml-trading-bot:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        envFrom:
+        - secretRef:
+            name: ml-trading-bot-secrets
+        - configMapRef:
+            name: ml-trading-bot-config
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+```
+
+### **⚖️ Auto-scaling Configuration**
+
+```yaml
+# k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ml-trading-bot-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-trading-bot
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: predictions_per_second
+      target:
+        type: AverageValue
+        averageValue: "50"
+```
+
+### **🌐 Ingress & Load Balancing**
+
+```yaml
+# k8s/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ml-trading-bot-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "60s"
+spec:
+  tls:
+  - hosts:
+    - api.your-domain.com
+    secretName: ml-trading-bot-tls
+  rules:
+  - host: api.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ml-trading-bot-service
+            port:
+              number: 8000
+```
+
+---
+
+## 🔄 CI/CD Pipeline Setup
+
+### **🚀 GitHub Actions Production Pipeline**
+
+```yaml
+# .github/workflows/production-deploy.yml
+name: Production Deployment
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run tests
+      run: |
+        pytest tests/ --cov=src --cov-report=xml
+        
+    - name: Security scan
+      run: |
+        bandit -r src/
+        safety check
+        
+    - name: Code quality
+      run: |
+        pylint src/
+        mypy src/
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          
+    - name: Build and push
+      id: build
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        
+    - name: Deploy to Kubernetes
+      run: |
+        # Update image in deployment
+        kubectl set image deployment/ml-trading-bot \
+          api=${{ needs.build-and-push.outputs.image }}@${{ needs.build-and-push.outputs.digest }}
+          
+        # Wait for rollout
+        kubectl rollout status deployment/ml-trading-bot --timeout=300s
+        
+        # Run health checks
+        python scripts/health_check.py --environment production --wait-ready
+```
+
+### **🔧 Automated Deployment Scripts**
+
+```python
+# deploy.py - Production deployment automation
+import click
+import subprocess
+import yaml
+from pathlib import Path
+
+@click.group()
+def cli():
+    """ML Trading Bot Deployment CLI"""
+    pass
+
+@cli.command()
+@click.option('--environment', default='production', help='Deployment environment')
+@click.option('--wait-ready', is_flag=True, help='Wait for deployment to be ready')
+def deploy(environment, wait_ready):
+    """Deploy to Kubernetes cluster"""
+    click.echo(f"🚀 Deploying to {environment}")
+    
+    # Apply Kubernetes manifests
+    manifests = [
+        'k8s/namespace.yaml',
+        'k8s/configmap.yaml', 
+        'k8s/postgres.yaml',
+        'k8s/redis.yaml',
+        'k8s/deployment.yaml',
+        'k8s/service.yaml',
+        'k8s/ingress.yaml',
+        'k8s/hpa.yaml'
+    ]
+    
+    for manifest in manifests:
+        click.echo(f"Applying {manifest}")
+        subprocess.run(['kubectl', 'apply', '-f', manifest], check=True)
+    
+    if wait_ready:
+        click.echo("⏳ Waiting for deployment to be ready...")
+        subprocess.run([
+            'kubectl', 'rollout', 'status', 
+            'deployment/ml-trading-bot', '--timeout=300s'
+        ], check=True)
+        
+        # Run health checks
+        subprocess.run([
+            'python', 'scripts/health_check.py',
+            '--environment', environment,
+            '--wait-ready'
+        ], check=True)
+        
+    click.echo("✅ Deployment completed successfully!")
+
+@cli.command()
+@click.option('--environment', default='production')
+def health_check(environment):
+    """Run comprehensive health checks"""
+    click.echo(f"🏥 Running health checks for {environment}")
+    
+    # Check API health
+    subprocess.run([
+        'kubectl', 'exec', 'deployment/ml-trading-bot', '--',
+        'curl', '-f', 'http://localhost:8000/health'
+    ], check=True)
+    
+    # Check database connectivity
+    subprocess.run([
+        'python', 'scripts/health_check.py',
+        '--check', 'database',
+        '--environment', environment
+    ], check=True)
+    
+    click.echo("✅ All health checks passed!")
+
+if __name__ == '__main__':
+    cli()
+```
+
+---
+
+## 📊 Monitoring & Observability
+
+### **📈 Prometheus Monitoring Setup**
+
+```yaml
+# k8s/monitoring/prometheus.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+    - job_name: 'ml-trading-bot'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: ml-trading-bot
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+    rule_files:
+    - "alert_rules.yml"
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets: ['alertmanager:9093']
+```
+
+### **📊 Grafana Dashboard Configuration**
+
+```json
+{
+  "dashboard": {
+    "title": "ML Trading Bot - Production Dashboard",
+    "panels": [
+      {
+        "title": "Predictions Per Minute",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(predictions_total[5m])*60",
+            "legendFormat": "Predictions/min"
+          }
+        ]
+      },
+      {
+        "title": "Model Accuracy",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "model_accuracy",
+            "legendFormat": "{{model}}"
+          }
+        ]
+      },
+      {
+        "title": "API Response Time",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### **🚨 Alerting Rules**
+
+```yaml
+# k8s/monitoring/alert-rules.yaml
+groups:
+- name: ml-trading-bot-alerts
+  rules:
+  - alert: HighErrorRate
+    expr: rate(api_requests_total{status=~"5.."}[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value }} errors per second"
+      
+  - alert: ModelAccuracyDrop
+    expr: model_accuracy < 0.75
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Model accuracy has dropped"
+      description: "Model {{ $labels.model }} accuracy is {{ $value }}"
+      
+  - alert: PodMemoryHigh
+    expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pod memory usage high"
+      description: "Pod {{ $labels.pod }} memory usage is {{ $value | humanizePercentage }}"
+```
+
+---
+
+## 🛡️ Security & Secrets Management
+
+### **🔐 Production Security Configuration**
+
+```bash
+# Generate production secrets
+python scripts/generate_secrets.py --environment production
+
+# Create Kubernetes secrets with proper labels
+kubectl create secret generic ml-trading-bot-secrets \
+  --from-env-file=config/.env.production \
+  --dry-run=client -o yaml | \
+  kubectl label --local -f - environment=production app=ml-trading-bot -o yaml | \
+  kubectl apply -f -
+```
+
+### **🔒 Network Security Policies**
+
+```yaml
+# k8s/security/network-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ml-trading-bot-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: ml-trading-bot
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+```
 - [ ] Tax reporting systems configured
 - [ ] Trading permissions and licenses obtained
 - [ ] Insurance and liability coverage reviewed

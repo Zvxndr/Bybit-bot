@@ -1,15 +1,15 @@
-```markdown
-# Copilot Instructions: Crypto Trading Bot Development
+# Copilot Instructions: Production-Ready ML Trading Bot
 
 ## Project Overview
-This is a sophisticated algorithmic trading system for cryptocurrency perpetual swaps on Bybit. The bot emphasizes statistical rigor, dynamic risk management, and automated strategy validation with a toggleable aggressive mode for rapid growth of small accounts.
+This is a production-ready, enterprise-grade algorithmic trading system that combines multiple data sources (cross-exchange, sentiment, on-chain) with advanced machine learning models for cryptocurrency trading on Bybit. The system has completed all 4 implementation phases and includes comprehensive infrastructure, monitoring, and deployment capabilities.
 
 ## Architecture Philosophy
-- **Modular Design:** Each component (data, strategies, risk, execution) should be independent and replaceable
-- **Event-Driven Core:** The main trading loop should be state-based with clear transitions
-- **Database-Centric:** All actions, decisions, and results must be persisted for audit trails
-- **Configurable Behavior:** All parameters should be configurable without code changes
+- **Multi-Data Integration:** Combine exchange data, sentiment, and alternative data sources
+- **Model Diversity:** Use different ML models that make uncorrelated errors
+- **Data Quality First:** Robust monitoring and fallbacks for all external data
+- **Uncertainty Awareness:** Prefer models that provide confidence estimates
 - **Statistical First:** Every decision must be backed by statistical evidence
+- **Database-Centric:** All actions, decisions, and results must be persisted for audit trails
 
 ## Code Style & Quality Guidelines
 
@@ -84,57 +84,221 @@ class StrategyPerformance(Base):
     risk_parameters = Column(JSON)  # Snapshot of parameters used
 ```
 
-## Critical Implementation Details
+## Data Implementation Guidelines
 
-### Data Sanitization (src/bot/data/sanitizer.py)
-- Implement checks for: missing data, outliers, volume anomalies, constant prices
-- Compare with secondary data source (e.g., Binance) for validation
-- Use interpolation for small gaps (< 3 candles), exclude periods with large gaps
-- Always work with UTC timestamps and ensure proper timezone handling
-
-### Walk-Forward Optimization (src/bot/backtest/walkforward.py)
-- Use expanding window approach for maximum data utilization
-- Implement warm_start for efficient parameter optimization
-- Store all OOS results to build continuous equity curve
-- Include transaction costs and slippage in all calculations
-
-### Machine Learning Implementation (src/bot/ml_engine/)
-- Always use purged cross-validation to avoid lookahead bias
-- Feature engineering must use only lagged values (min 1-period lag)
-- Validate models with financial metrics (Sharpe, Calmar, Sortino) not just accuracy
-- Implement feature importance analysis for model interpretability
-
-### Dynamic Risk Management (src/bot/risk/dynamic_risk.py)
+### Multi-Exchange Data (`src/bot/data/multi_exchange_fetcher.py`)
 ```python
-def calculate_risk_parameters(self, current_balance: float) -> Dict[str, float]:
-    """
-    Calculate dynamic risk parameters based on current balance and mode.
+class MultiExchangeDataFetcher:
+    def __init__(self, config):
+        self.exchanges = {
+            'bybit': ccxt.bybit(config['bybit']),
+            'binance': ccxt.binance(config['binance']),
+            'okx': ccxt.okx(config['okx'])
+        }
     
-    Uses exponential decay for risk reduction between threshold boundaries.
-    """
-    if self.mode == 'conservative':
-        return self.conservative_params
-    
-    # Calculate risk scaling factor
-    if current_balance <= self.low_threshold:
-        scale = 1.0  # Maximum risk
-    elif current_balance >= self.high_threshold:
-        scale = 0.0  # Minimum risk
-    else:
-        # Exponential decay between thresholds
-        normalized = (current_balance - self.low_threshold) / (self.high_threshold - self.low_threshold)
-        scale = math.exp(-2.5 * normalized)  # Adjust decay rate as needed
-    
-    # Interpolate parameters
-    params = {}
-    for key in self.aggressive_base_params:
-        if key.endswith('_limit') or key.endswith('_ratio'):
-            conservative_val = self.conservative_params[key]
-            aggressive_val = self.aggressive_base_params[key]
-            params[key] = conservative_val + (aggressive_val - conservative_val) * scale
-    
-    return params
+    def fetch_cross_exchange_features(self, symbol: str, timeframe: str) -> Dict[str, float]:
+        """
+        Fetch data from multiple exchanges and calculate comparative features.
+        """
+        features = {}
+        data = {}
+        
+        # Fetch data from all exchanges in parallel
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                exchange: executor.submit(
+                    self.exchanges[exchange].fetch_ohlcv, symbol, timeframe
+                )
+                for exchange in self.exchanges
+            }
+            for exchange, future in futures.items():
+                try:
+                    data[exchange] = self._process_ohlcv(future.result())
+                except Exception as e:
+                    logging.warning(f"Failed to fetch from {exchange}: {e}")
+                    data[exchange] = None
+        
+        # Calculate cross-exchange features
+        if all(data.values()):
+            features['volume_ratio_binance_bybit'] = (
+                data['binance']['volume'] / data['bybit']['volume']
+            )
+            features['price_discrepancy_okx_bybit'] = (
+                data['okx']['close'] / data['bybit']['close'] - 1
+            )
+        
+        return features
 ```
+
+### Sentiment Data Integration (`src/bot/data/sentiment_fetcher.py`)
+```python
+class SentimentDataFetcher:
+    def __init__(self, config):
+        self.cryptopanic_api_key = config['cryptopanic']['api_key']
+        self.fear_greed_url = "https://api.alternative.me/fng/"
+    
+    def fetch_sentiment_features(self) -> Dict[str, float]:
+        """
+        Fetch sentiment data from various sources.
+        """
+        features = {}
+        
+        # Fetch from CryptoPanic
+        try:
+            response = requests.get(
+                f"https://cryptopanic.com/api/v1/posts/?auth_token={self.cryptopanic_api_key}&currencies=BTC"
+            )
+            news_data = response.json()
+            features['news_sentiment_score'] = self._calculate_sentiment_score(news_data)
+            features['news_volume_24h'] = len(news_data['results'])
+        except Exception as e:
+            logging.warning(f"Failed to fetch CryptoPanic data: {e}")
+        
+        # Fetch Fear & Greed Index
+        try:
+            response = requests.get(self.fear_greed_url)
+            fgi_data = response.json()
+            features['fear_greed_index'] = float(fgi_data['data'][0]['value'])
+            features['fear_greed_classification'] = fgi_data['data'][0]['value_classification']
+        except Exception as e:
+            logging.warning(f"Failed to fetch Fear & Greed Index: {e}")
+        
+        return features
+```
+
+## Machine Learning Implementation
+
+### Model Diversity Strategy
+Implement multiple model types that capture different patterns:
+
+1. **LightGBM/XGBoost:** For tabular feature-based predictions
+2. **Temporal Convolutional Networks:** For multivariate time series patterns
+3. **Transformers:** For complex long-range dependencies in sequential data
+4. **Gaussian Processes:** For uncertainty-aware predictions
+
+### Example Multi-Model Setup (`src/bot/ml_engine/model_factory.py`)
+```python
+class ModelFactory:
+    def create_model(self, model_type: str, config: Dict) -> BaseModel:
+        if model_type == 'lightgbm':
+            return LightGBMModel(config)
+        elif model_type == 'tcn':
+            return TCNModel(config)
+        elif model_type == 'transformer':
+            return TransformerModel(config)
+        elif model_type == 'gaussian_process':
+            return GaussianProcessModel(config)
+        else:
+            raise ValueError(f"Unknown model type: {model_type}")
+
+class BaseModel(ABC):
+    @abstractmethod
+    def train(self, X: pd.DataFrame, y: pd.Series):
+        pass
+    
+    @abstractmethod
+    def predict(self, X: pd.DataFrame) -> Tuple[float, float]:
+        """Return prediction and confidence estimate"""
+        pass
+```
+
+## Risk Management with Sentiment Integration
+
+### Sentiment-Aware Risk Management (`src/bot/risk/sentiment_risk.py`)
+```python
+class SentimentAwareRiskManager:
+    def adjust_risk_parameters(self, sentiment_data: Dict, base_params: Dict) -> Dict:
+        """
+        Adjust risk parameters based on market sentiment.
+        """
+        adjusted_params = base_params.copy()
+        
+        # Adjust based on Fear & Greed Index
+        fgi = sentiment_data.get('fear_greed_index', 50)
+        if fgi > 75:  # Extreme greed
+            adjusted_params['risk_per_trade'] *= 0.5  # Reduce position size
+            adjusted_params['max_drawdown_limit'] *= 0.8  # Tighter drawdown
+        elif fgi < 25:  # Extreme fear
+            adjusted_params['risk_per_trade'] *= 1.2  # Increase position size cautiously
+            adjusted_params['var_daily_limit'] *= 1.2  # Slightly higher daily risk
+        
+        # Adjust based on news sentiment
+        news_sentiment = sentiment_data.get('news_sentiment_score', 0)
+        if news_sentiment < -0.5:  # Very negative news
+            adjusted_params['risk_per_trade'] *= 0.7
+        elif news_sentiment > 0.5:  # Very positive news
+            adjusted_params['risk_per_trade'] *= 0.8
+        
+        return adjusted_params
+```
+
+## Data Quality & Monitoring
+
+### API Health Monitoring (`src/bot/monitoring/api_health.py`)
+```python
+class APIHealthMonitor:
+    def __init__(self):
+        self.api_status = {
+            'bybit': {'status': 'healthy', 'last_check': None},
+            'binance': {'status': 'healthy', 'last_check': None},
+            'cryptopanic': {'status': 'healthy', 'last_check': None}
+        }
+    
+    def check_api_health(self):
+        """Regularly check all API endpoints"""
+        for api_name in self.api_status:
+            try:
+                response_time = self._ping_api(api_name)
+                self.api_status[api_name] = {
+                    'status': 'healthy',
+                    'response_time': response_time,
+                    'last_check': datetime.now()
+                }
+            except Exception as e:
+                self.api_status[api_name] = {
+                    'status': 'unhealthy',
+                    'error': str(e),
+                    'last_check': datetime.now()
+                }
+                logging.error(f"API {api_name} is unhealthy: {e}")
+    
+    def get_fallback_strategy(self, api_name: str) -> Dict:
+        """Get fallback strategy for unhealthy APIs"""
+        fallbacks = {
+            'binance': {'use': 'okx', 'weight': 0.7},
+            'cryptopanic': {'use': 'fear_greed_only', 'weight': 0.5}
+        }
+        return fallbacks.get(api_name, {})
+```
+
+## ✅ Production Implementation Status
+
+### ✅ Completed Phases
+1. **✅ Multi-Exchange Data Pipeline:** Complete cross-exchange features with Bybit, Binance, OKX integration
+2. **✅ Sentiment Integration:** Fear & Greed Index, CryptoPanic API, and social sentiment fully integrated
+3. **✅ Advanced ML Models:** LightGBM, XGBoost, Neural Networks, and Transformer models deployed
+4. **✅ Production Infrastructure:** FastAPI service, Streamlit dashboard, Kubernetes deployment, CI/CD pipelines
+
+### 🏗️ Current Architecture
+- **Production API**: FastAPI with WebSocket streaming, JWT authentication, rate limiting
+- **Monitoring Dashboard**: Real-time Streamlit dashboard with performance analytics
+- **Container Orchestration**: Kubernetes deployment with auto-scaling and health checks
+- **CI/CD Pipeline**: Automated testing, security scanning, and deployment
+- **Configuration Management**: Environment-based configuration with encrypted secrets
+
+## Testing Strategy
+
+1. **Data Quality Tests:** Verify all API endpoints and data freshness
+2. **Cross-Validation with Multiple Data Sources:** Ensure models work with partial data
+3. **Fallback Testing:** Test all failure scenarios and fallback mechanisms
+4. **Sentiment Impact Analysis:** Measure how sentiment features affect model performance
+
+## Monitoring & Alerting
+
+1. **API Health Dashboard:** Monitor all external data sources
+2. **Feature Importance Tracking:** Monitor which features are driving predictions
+3. **Model Performance Comparison:** Track which models perform best in which conditions
+4. **Sentiment-Risk Correlation:** Monitor how sentiment affects risk adjustments
 
 ### Tax Calculation (Australia Specific) (src/bot/tax/cgt_calculator.py)
 - Use FIFO method for CGT calculations (required by ATO)
@@ -149,12 +313,12 @@ def calculate_risk_parameters(self, current_balance: float) -> Dict[str, float]:
 ```yaml
 trading:
   mode: aggressive
-  base_balance: 1000
+  base_balance: 10000
   max_risk_ratio: 0.02
   min_risk_ratio: 0.005
   balance_thresholds:
-    low: 1000
-    high: 10000
+    low: 10000
+    high: 100000
   risk_decay: exponential
 
 exchange:
@@ -232,39 +396,45 @@ database:
 with DatabaseSession() as session:
     result = session.query(Trade).filter_by(strategy_id=strategy_id).all()
 
-# Use type hints and validation
-def calculate_position_size(risk_amount: float, volatility: float) -> float:
-    if risk_amount <= 0:
-        raise ValueError("Risk amount must be positive")
-    return risk_amount / volatility
+## 🚀 Production-Ready System Guidelines
 
-# Use configuration objects instead of global variables
-def init_risk_engine(config: RiskConfig) -> RiskEngine:
-    return RiskEngine(config)
+### Current System Architecture
+The system is now production-ready with enterprise-grade infrastructure:
+
+```
+Production Stack:
+├── FastAPI Prediction Service (src/bot/api/)
+├── Streamlit Monitoring Dashboard (src/bot/dashboard/)
+├── Kubernetes Deployment (k8s/)
+├── CI/CD Pipelines (.github/workflows/)
+├── Configuration Management (config/)
+└── Health Monitoring & Alerting (scripts/)
 ```
 
-### Avoid This:
-```python
-# Don't use global state
-global current_balance  # ❌ Bad
+### Production Development Guidelines
+1. **Maintain Production Standards**: All code must meet enterprise-grade standards
+2. **Security First**: Encrypted secrets, JWT authentication, secure API endpoints
+3. **Monitoring Required**: All new features must include health checks and metrics
+4. **Container Ready**: New services must be containerized and Kubernetes-ready
+5. **CI/CD Integration**: All changes must pass automated testing and security scanning
 
-# Don't ignore errors
-try:
-    place_order(order)
-except Exception:
-    pass  # ❌ Very bad
+### Production Deployment Commands
+```bash
+# Health Check
+python scripts/health_check.py --environment production
 
-# Don't hardcode parameters
-position_size = balance * 0.02  # ❌ Should be configurable
+# Deploy to Kubernetes
+python deploy.py deploy --environment production
+
+# Monitor System Health
+kubectl get pods -l app=trading-bot
+kubectl logs -f deployment/trading-bot-api
 ```
 
-## Performance Optimization Guidelines
+### Production Monitoring
+- **API Health**: `/health` endpoint with comprehensive system checks
+- **Performance Metrics**: Prometheus metrics integration
+- **Real-time Dashboard**: Streamlit dashboard at port 8501
+- **Grafana Monitoring**: Advanced metrics visualization
 
-1. **Vectorize operations** with pandas/numpy instead of loops
-2. **Use database indexing** on frequently queried columns
-3. **Implement caching** for expensive calculations
-4. **Use appropriate data types** (e.g., integer timestamps)
-5. **Batch database operations** instead of individual commits
-
-This documentation should be updated regularly as the project evolves. Always refer to these guidelines when implementing new features or modifying existing code.
-```
+This system is now production-ready with enterprise-grade infrastructure, comprehensive monitoring, and automated deployment capabilities. All further development should maintain these production standards while adding new features and capabilities.
