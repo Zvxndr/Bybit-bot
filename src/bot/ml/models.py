@@ -51,10 +51,10 @@ class ModelResult:
     predictions: pd.Series
     probabilities: Optional[pd.DataFrame] = None
     feature_importance: Optional[pd.DataFrame] = None
-    validation_scores: Dict[str, float] = None
+    validation_scores: Optional[Dict[str, float]] = None
     training_time: float = 0.0
     prediction_time: float = 0.0
-    model_params: Dict[str, Any] = None
+    model_params: Optional[Dict[str, Any]] = None
     
     def __post_init__(self):
         if self.validation_scores is None:
@@ -140,7 +140,7 @@ class LightGBMTrader:
         self.feature_names = X.columns.tolist()
         
         # Encode target if necessary
-        if y.dtype == 'object' or pd.api.types.is_categorical_dtype(y):
+        if y.dtype == 'object' or isinstance(y.dtype, pd.CategoricalDtype):
             self.label_encoder = LabelEncoder()
             y_encoded = self.label_encoder.fit_transform(y)
         else:
@@ -201,7 +201,7 @@ class LightGBMTrader:
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Make predictions."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before prediction")
         
         predictions = self.model.predict(X, num_iteration=self.model.best_iteration)
@@ -218,7 +218,7 @@ class LightGBMTrader:
     
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict class probabilities."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before prediction")
         
         probabilities = self.model.predict(X, num_iteration=self.model.best_iteration)
@@ -231,7 +231,7 @@ class LightGBMTrader:
     
     def get_feature_importance(self, importance_type: str = 'gain') -> pd.DataFrame:
         """Get feature importance."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before getting feature importance")
         
         importance = self.model.feature_importance(importance_type=importance_type)
@@ -374,7 +374,7 @@ class XGBoostTrader:
         self.feature_names = X.columns.tolist()
         
         # Encode target if necessary
-        if y.dtype == 'object' or pd.api.types.is_categorical_dtype(y):
+        if y.dtype == 'object' or isinstance(y.dtype, pd.CategoricalDtype):
             self.label_encoder = LabelEncoder()
             y_encoded = self.label_encoder.fit_transform(y)
         else:
@@ -410,7 +410,7 @@ class XGBoostTrader:
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Make predictions."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before prediction")
         
         predictions = self.model.predict(X)
@@ -423,14 +423,14 @@ class XGBoostTrader:
     
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict class probabilities."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before prediction")
         
         return self.model.predict_proba(X)
     
     def get_feature_importance(self, importance_type: str = 'gain') -> pd.DataFrame:
         """Get feature importance."""
-        if not self.is_fitted:
+        if not self.is_fitted or self.model is None:
             raise ValueError("Model must be fitted before getting feature importance")
         
         importance = self.model.feature_importances_
@@ -538,7 +538,7 @@ class EnsembleTrader:
         total_weight = 0
         
         for model_name, predictions in model_predictions.items():
-            weight = self.ensemble_weights.get(model_name, 1.0)
+            weight = (self.ensemble_weights or {}).get(model_name, 1.0)
             
             if ensemble_probs is None:
                 ensemble_probs = weight * predictions

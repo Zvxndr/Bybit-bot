@@ -1,0 +1,71 @@
+# Testing Environment Configuration
+# Safe for version control - no secrets included
+
+database:
+  host: localhost
+  port: 5433  # Different port to avoid conflicts
+  database: trading_bot_test
+  username: test_trader
+  ssl_mode: disable
+  pool_size: 5
+  echo: true
+
+redis:
+  host: localhost
+  port: 6380  # Different port to avoid conflicts
+  database: 1
+  ssl: false
+
+api:
+  host: 127.0.0.1
+  port: 8001  # Different port to avoid conflicts
+  workers: 1
+  enable_auth: false
+  enable_docs: true
+  enable_metrics: false
+  enable_tracing: false
+  cors_origins:
+    - "*"
+  rate_limit_requests: 10000
+  rate_limit_window: 60
+
+dashboard:
+  host: 127.0.0.1
+  port: 8502  # Different port to avoid conflicts
+  api_base_url: http://localhost:8001
+  refresh_interval: 5
+  enable_realtime: false
+  enable_authentication: false
+
+logging:
+  level: DEBUG
+  enable_json: false
+  enable_structured: false
+  file_path: tests/logs/trading_bot_test.log
+  enable_metrics_logging: false
+  log_sql_queries: true
+  log_api_requests: false
+
+trading:
+  bybit_testnet: true
+  default_symbol: BTCUSDT
+  default_timeframe: 1m  # Faster for testing
+  max_position_size: 0.001
+  risk_per_trade: 0.001
+  enable_paper_trading: true
+  model_update_interval: 60
+  prediction_threshold: 0.5
+
+monitoring:
+  health_check_interval: 5
+  enable_prometheus: false
+  enable_alerting: false
+  drift_detection_interval: 60
+  drift_threshold: 0.2
+
+security:
+  enable_rate_limiting: false
+  enable_cors: true
+  enable_csrf_protection: false
+  jwt_expiration_hours: 1
+  enable_audit_logging: false

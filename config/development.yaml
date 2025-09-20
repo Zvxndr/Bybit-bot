@@ -1,0 +1,71 @@
+# Development Environment Configuration
+# Safe for version control - no secrets included
+
+database:
+  host: localhost
+  port: 5432
+  database: trading_bot_dev
+  username: trader
+  ssl_mode: disable
+  pool_size: 10
+  echo: true
+
+redis:
+  host: localhost
+  port: 6379
+  database: 0
+  ssl: false
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  workers: 1
+  enable_auth: false
+  enable_docs: true
+  enable_metrics: true
+  enable_tracing: true
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8501"
+  rate_limit_requests: 1000
+  rate_limit_window: 60
+
+dashboard:
+  host: 0.0.0.0
+  port: 8501
+  api_base_url: http://localhost:8000
+  refresh_interval: 10
+  enable_realtime: true
+  theme: dark
+  enable_authentication: false
+
+logging:
+  level: DEBUG
+  enable_json: false
+  enable_structured: true
+  log_sql_queries: true
+  log_api_requests: true
+
+trading:
+  bybit_testnet: true
+  default_symbol: BTCUSDT
+  default_timeframe: 1h
+  max_position_size: 0.01
+  risk_per_trade: 0.01
+  enable_paper_trading: true
+  model_update_interval: 300
+
+monitoring:
+  health_check_interval: 10
+  enable_prometheus: true
+  prometheus_port: 9090
+  drift_detection_interval: 600
+  drift_threshold: 0.15
+  enable_alerting: false
+
+security:
+  enable_rate_limiting: false
+  enable_cors: true
+  enable_csrf_protection: false
+  jwt_expiration_hours: 168  # 1 week for development
+  enable_audit_logging: false

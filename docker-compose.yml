@@ -1,7 +1,90 @@
 version: '3.8'
 
 services:
-  # Trading bot application
+
+
+  # ML Trading Bot API Service
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: tradingbot-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_WORKERS=4
+      
+      # Redis Configuration
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL_SECONDS=300
+      
+      # Database Configuration
+      - DATABASE_URL=postgresql://trader:${DB_PASSWORD}@postgres:5432/trading_bot
+      
+      # Bybit API Configuration
+      - BYBIT_API_KEY=${BYBIT_API_KEY}
+      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
+      
+      # Security
+      - API_ENABLE_AUTH=${API_ENABLE_AUTH:-true}
+      - API_SECRET_KEY=${API_SECRET_KEY:-your-secret-key-change-this}
+      
+      # Monitoring
+      - ENABLE_METRICS=true
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENVIRONMENT=production
+      
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./config:/app/config
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - trading-network
+
+  # Monitoring Dashboard Service
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: tradingbot-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      # Dashboard Configuration
+      - DASHBOARD_API_BASE_URL=http://api:8000
+      - DASHBOARD_REFRESH_INTERVAL=30
+      - DASHBOARD_ENABLE_REALTIME=true
+      
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs:ro
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - trading-network
+
+  # Trading bot application (legacy support)
   trading-bot:
     build: .
     container_name: bybit-trading-bot
@@ -23,8 +106,6 @@ services:
       - redis
     networks:
       - trading-network
-    ports:
-      - "8501:8501"  # Streamlit dashboard
     
   # PostgreSQL database for production
   postgres:

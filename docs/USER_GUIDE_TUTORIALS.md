@@ -389,7 +389,23 @@ daily_risk_config = {
 
 #### **Position Sizing Strategies**
 
-**Fixed Dollar Amount:**
+**🤖 Current Bot Configuration - Dynamic Risk Scaling:**
+```yaml
+# The bot automatically adjusts risk based on your balance
+Balance Range     | Risk Level      | Risk Per Trade
+------------------|-----------------|----------------
+< $10,000        | Maximum Risk    | 2.0%
+$10k - $100k     | Scaling Risk    | 2.0% → 0.5% (exponential decay)
+> $100,000       | Minimum Risk    | 0.5%
+```
+
+**How it works:**
+- **Small accounts** (under $10k): More aggressive with 2% risk per trade
+- **Growing accounts** ($10k-$100k): Gradually becomes more conservative  
+- **Large accounts** (over $100k): Conservative 0.5% risk per trade
+- **Mode**: Currently set to `aggressive` with exponential decay
+
+**Fixed Dollar Amount (Alternative):**
 ```python
 fixed_size_config = {
     "position_size_usd": 1000,  # Always trade $1000
@@ -397,7 +413,7 @@ fixed_size_config = {
 }
 ```
 
-**Percentage of Balance:**
+**Percentage of Balance (Alternative):**
 ```python
 percent_size_config = {
     "position_size_percent": 2.0,  # Always trade 2% of balance

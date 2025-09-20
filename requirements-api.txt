@@ -1,0 +1,43 @@
+# Production API Requirements
+# FastAPI and ASGI server
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# HTTP client and WebSocket support
+httpx>=0.25.2
+websockets>=12.0
+
+# Authentication and security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Data validation and serialization
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Caching and storage
+redis>=5.0.1
+aioredis>=2.0.1
+
+# Rate limiting and circuit breaker
+slowapi>=0.1.9
+pybreaker>=1.0.2
+
+# Monitoring and metrics
+prometheus-client>=0.19.0
+psutil>=5.9.6
+
+# Async support
+asyncio-mqtt>=0.13.0
+aiofiles>=23.2.1
+
+# CORS and middleware
+starlette>=0.27.0
+
+# Development dependencies
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+httpx>=0.25.2  # For testing FastAPI
+pytest-mock>=3.12.0

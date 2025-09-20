@@ -4,7 +4,7 @@
 # Core trading settings
 trading:
   mode: aggressive  # Options: 'conservative' or 'aggressive'
-  base_balance: 1000  # Base balance in USDT for risk scaling
+  base_balance: 10000  # Base balance in USDT for risk scaling
   
   # Dynamic risk parameters for aggressive mode
   aggressive_mode:
@@ -16,8 +16,8 @@ trading:
     var_daily_limit: 0.05
     consistency_min: 0.50
     balance_thresholds:
-      low: 1000  # Balance below this uses max risk
-      high: 10000  # Balance above this uses min risk
+      low: 10000  # Balance below this uses max risk
+      high: 100000  # Balance above this uses min risk
     risk_decay: exponential  # Options: 'linear' or 'exponential'
   
   # Conservative mode parameters

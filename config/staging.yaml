@@ -1,0 +1,88 @@
+# Staging Environment Configuration
+# Safe for version control - no secrets included
+
+database:
+  host: staging-db
+  port: 5432
+  database: trading_bot_staging
+  username: trader
+  ssl_mode: require
+  pool_size: 20
+  pool_timeout: 45
+  pool_recycle: 3600
+  echo: false
+
+redis:
+  host: staging-redis
+  port: 6379
+  database: 0
+  ssl: true
+  socket_timeout: 45
+  connection_pool_max_connections: 100
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+  enable_auth: true
+  enable_docs: true
+  enable_metrics: true
+  enable_tracing: true
+  cors_origins:
+    - "https://staging.your-domain.com"
+  rate_limit_requests: 200
+  rate_limit_window: 60
+  cache_ttl_seconds: 300
+  max_batch_size: 2000
+  prediction_timeout: 45
+
+dashboard:
+  host: 0.0.0.0
+  port: 8501
+  api_base_url: http://staging-api:8000
+  refresh_interval: 30
+  max_data_points: 2000
+  enable_realtime: true
+  theme: dark
+  enable_authentication: true
+  session_timeout: 3600
+
+logging:
+  level: INFO
+  enable_json: true
+  enable_structured: true
+  file_path: /app/logs/trading_bot.log
+  max_file_size: 100000000  # 100MB
+  backup_count: 10
+  enable_metrics_logging: true
+  log_sql_queries: false
+  log_api_requests: true
+
+trading:
+  bybit_testnet: true
+  default_symbol: BTCUSDT
+  default_timeframe: 1h
+  max_position_size: 0.1
+  risk_per_trade: 0.015
+  enable_paper_trading: true
+  model_update_interval: 1800
+  prediction_threshold: 0.6
+
+monitoring:
+  health_check_interval: 20
+  enable_prometheus: true
+  prometheus_port: 9090
+  metrics_retention_days: 30
+  enable_alerting: true
+  alert_channels:
+    - slack
+  drift_detection_interval: 1800
+  drift_threshold: 0.1
+  performance_threshold: 0.05
+
+security:
+  jwt_expiration_hours: 12
+  enable_rate_limiting: true
+  enable_cors: true
+  enable_csrf_protection: true
+  enable_audit_logging: true

@@ -53,7 +53,7 @@ class TradingConfig(BaseModel):
     """Main trading configuration."""
     
     mode: Literal["conservative", "aggressive"] = "aggressive"
-    base_balance: float = Field(1000, gt=0)
+    base_balance: float = Field(10000, gt=0)
     aggressive_mode: AggressiveModeConfig
     conservative_mode: ConservativeModeConfig
 

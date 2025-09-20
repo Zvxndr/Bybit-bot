@@ -312,14 +312,19 @@ class APIHealthMonitor:
 ### config/config.yaml Structure
 ```yaml
 trading:
-  mode: aggressive
+  mode: aggressive  # Active aggressive mode with dynamic risk scaling
   base_balance: 10000
-  max_risk_ratio: 0.02
-  min_risk_ratio: 0.005
-  balance_thresholds:
-    low: 10000
-    high: 100000
-  risk_decay: exponential
+  
+  aggressive_mode:
+    max_risk_ratio: 0.02      # 2% max risk per trade (small accounts)
+    min_risk_ratio: 0.005     # 0.5% min risk per trade (large accounts)
+    balance_thresholds:
+      low: 10000              # Risk decay starts at $10k
+      high: 100000            # Risk decay ends at $100k
+    risk_decay: exponential   # Smooth exponential transition
+    portfolio_drawdown_limit: 0.40
+    strategy_drawdown_limit: 0.25
+    var_daily_limit: 0.05
 
 exchange:
   name: bybit
@@ -333,6 +338,12 @@ database:
   port: 5432
   name: trading_bot
 ```
+
+### Risk Management Summary
+- **Current Mode**: Aggressive with dynamic risk scaling
+- **Risk Range**: 2.0% (small accounts) → 0.5% (large accounts)
+- **Scaling**: Exponential decay from $10k to $100k balance
+- **Safety**: Multi-layer protection with circuit breakers and drawdown limits
 
 ## Testing Requirements
 

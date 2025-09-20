@@ -1,0 +1,54 @@
+# Development Docker Compose Override
+# Use this file for development with hot-reload and debug settings
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      target: development
+    environment:
+      # Development API settings
+      - API_WORKERS=1
+      - LOG_LEVEL=DEBUG
+      - API_RELOAD=true
+      - ENABLE_DOCS=true
+      - API_ENABLE_AUTH=false
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/__pycache__
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # Debug port
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+      target: development
+    environment:
+      - DASHBOARD_REFRESH_INTERVAL=5
+      - DASHBOARD_ENABLE_REALTIME=true
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+    ports:
+      - "8501:8501"
+
+  # Use development database settings
+  postgres:
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    environment:
+      - POSTGRES_DB=trading_bot_dev
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=dev_password
+
+  redis:
+    ports:
+      - "6380:6379"  # Different port for development
+    command: redis-server --maxmemory 128mb

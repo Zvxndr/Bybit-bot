@@ -1,0 +1,99 @@
+# Production Docker Compose Override
+# Use this file to override settings for production deployment
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  api:
+    environment:
+      # Production API settings
+      - API_WORKERS=8
+      - LOG_LEVEL=WARNING
+      - ENABLE_DOCS=false
+      - API_ENABLE_AUTH=true
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  dashboard:
+    environment:
+      - DASHBOARD_THEME=dark
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  postgres:
+    environment:
+      - POSTGRES_SHARED_PRELOAD_LIBRARIES=pg_stat_statements
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  redis:
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Add Prometheus for production monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tradingbot-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - trading-network
+
+  # Add Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tradingbot-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - trading-network
+
+volumes:
+  prometheus_data:
+  grafana_data:

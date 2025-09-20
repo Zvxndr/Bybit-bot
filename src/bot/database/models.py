@@ -232,7 +232,7 @@ class RiskEvent(Base):
     resolved_at = Column(DateTime)
     
     # Additional context
-    metadata = Column(JSON)
+    event_metadata = Column(JSON)
     
     created_at = Column(DateTime, default=func.now())
     
