@@ -152,6 +152,10 @@ class IntegratedTradingBot:
         # Initialize all phase components
         self._initialize_components()
         
+        # Initialize Strategy Graduation Manager
+        from .strategy_graduation import StrategyGraduationManager
+        self.graduation_manager = StrategyGraduationManager(self.config_manager)
+        
         # Performance metrics
         self.performance_metrics = {}
         self.system_metrics = {}
@@ -162,6 +166,11 @@ class IntegratedTradingBot:
         self.trading_enabled = True
         self.risk_override = False
         self.maintenance_mode = False
+        
+        # Strategy management
+        self.active_strategies = {}  # strategy_id -> strategy instance
+        self.paper_strategies = {}   # strategies in paper trading
+        self.live_strategies = {}    # strategies in live trading
         
         self.logger.info("IntegratedTradingBot initialization complete")
     
@@ -414,6 +423,11 @@ class IntegratedTradingBot:
                 # 9. Portfolio optimization (Phase 6)
                 if self.portfolio_optimizer and self.trade_count % 10 == 0:
                     await self._optimize_portfolio()
+                
+                # 10. Strategy graduation evaluation (every 100 iterations or based on time)
+                current_loop_duration = time.time() - loop_start_time
+                if self.graduation_manager and (self.trade_count % 100 == 0 or current_loop_duration > 1800):
+                    await self.run_strategy_graduation_cycle()
                 
                 # Control loop timing
                 loop_duration = time.time() - loop_start_time
@@ -896,6 +910,227 @@ class IntegratedTradingBot:
         
         self.status = BotStatus.STOPPED
         self.logger.info("IntegratedTradingBot stopped successfully")
+    
+    # ===== STRATEGY GRADUATION METHODS =====
+    
+    async def register_strategy_for_graduation(
+        self,
+        strategy_id: str,
+        strategy_name: str,
+        strategy_instance: Any,
+        config: Dict[str, Any],
+        start_in_paper: bool = True
+    ):
+        """Register a new strategy for automatic graduation tracking"""
+        
+        from .strategy_graduation import StrategyStage
+        
+        # Register with graduation manager
+        initial_stage = StrategyStage.PAPER_VALIDATION if start_in_paper else StrategyStage.LIVE_TRADING
+        record = self.graduation_manager.register_strategy(
+            strategy_id=strategy_id,
+            name=strategy_name,
+            config=config,
+            initial_stage=initial_stage
+        )
+        
+        # Store strategy instance
+        self.active_strategies[strategy_id] = strategy_instance
+        
+        if start_in_paper:
+            self.paper_strategies[strategy_id] = strategy_instance
+            self.logger.info(f"Strategy {strategy_name} registered for paper trading validation")
+        else:
+            self.live_strategies[strategy_id] = strategy_instance
+            self.logger.info(f"Strategy {strategy_name} registered for live trading")
+        
+        return record
+    
+    async def run_strategy_graduation_cycle(self):
+        """Main strategy graduation evaluation cycle"""
+        
+        try:
+            self.logger.info("Starting strategy graduation evaluation cycle")
+            
+            # Update performance metrics for all active strategies
+            await self._update_strategy_performance_metrics()
+            
+            # Run graduation evaluation
+            decisions = await self.graduation_manager.evaluate_all_strategies()
+            
+            # Execute graduation decisions
+            for strategy_id, decision in decisions.items():
+                await self._handle_graduation_decision(strategy_id, decision)
+            
+            # Generate graduation report
+            graduation_report = self.graduation_manager.get_graduation_report()
+            self.logger.info(f"Graduation cycle complete. Active strategies: {graduation_report['summary']['active_strategies']}")
+            
+            return graduation_report
+            
+        except Exception as e:
+            self.logger.error(f"Error in strategy graduation cycle: {e}")
+            return None
+    
+    async def _update_strategy_performance_metrics(self):
+        """Update performance metrics for all active strategies"""
+        
+        from .strategy_graduation import PerformanceMetrics
+        
+        for strategy_id, strategy_instance in self.active_strategies.items():
+            try:
+                # Get strategy record
+                if strategy_id not in self.graduation_manager.strategies:
+                    continue
+                
+                record = self.graduation_manager.strategies[strategy_id]
+                
+                # Calculate current performance metrics
+                # This would integrate with your actual strategy performance tracking
+                metrics = await self._calculate_strategy_metrics(strategy_instance, record)
+                
+                # Update graduation manager
+                record.add_performance_snapshot(metrics)
+                
+            except Exception as e:
+                self.logger.error(f"Error updating metrics for strategy {strategy_id}: {e}")
+    
+    async def _calculate_strategy_metrics(self, strategy_instance: Any, record):
+        """Calculate performance metrics for a strategy"""
+        
+        from .strategy_graduation import PerformanceMetrics
+        
+        # This is a placeholder implementation
+        # In practice, you'd integrate with your actual strategy performance tracking
+        
+        # Get strategy performance data
+        # performance_data = await strategy_instance.get_performance_summary()
+        
+        # For now, create sample metrics
+        # Replace this with actual performance calculation
+        metrics = PerformanceMetrics(
+            total_return=0.05,  # 5% return
+            annualized_return=0.15,
+            sharpe_ratio=1.1,
+            sortino_ratio=1.3,
+            max_drawdown=0.08,
+            volatility=0.12,
+            win_rate=0.52,
+            profit_factor=1.25,
+            trades_count=45,
+            execution_success_rate=0.98,
+            validation_score=0.75,
+            confidence_level="MEDIUM"
+        )
+        
+        return metrics
+    
+    async def _handle_graduation_decision(self, strategy_id: str, decision):
+        """Handle graduation decision for a strategy"""
+        
+        from .strategy_graduation import GraduationDecision, StrategyStage
+        
+        if strategy_id not in self.active_strategies:
+            return
+        
+        strategy_instance = self.active_strategies[strategy_id]
+        record = self.graduation_manager.strategies[strategy_id]
+        
+        old_stage = record.current_stage
+        
+        # Execute the decision (already done in graduation manager)
+        # Now update our local strategy tracking
+        
+        new_stage = record.current_stage
+        
+        if old_stage != new_stage:
+            await self._move_strategy_between_stages(strategy_id, old_stage, new_stage)
+    
+    async def _move_strategy_between_stages(self, strategy_id: str, old_stage, new_stage):
+        """Move strategy between paper trading and live trading"""
+        
+        from .strategy_graduation import StrategyStage
+        
+        strategy_instance = self.active_strategies[strategy_id]
+        record = self.graduation_manager.strategies[strategy_id]
+        
+        # Remove from old stage tracking
+        if old_stage in [StrategyStage.PAPER_VALIDATION, StrategyStage.LIVE_CANDIDATE]:
+            if strategy_id in self.paper_strategies:
+                del self.paper_strategies[strategy_id]
+        elif old_stage in [StrategyStage.LIVE_TRADING, StrategyStage.UNDER_REVIEW]:
+            if strategy_id in self.live_strategies:
+                del self.live_strategies[strategy_id]
+        
+        # Add to new stage tracking
+        if new_stage in [StrategyStage.PAPER_VALIDATION, StrategyStage.LIVE_CANDIDATE]:
+            self.paper_strategies[strategy_id] = strategy_instance
+            await self._configure_strategy_for_paper_trading(strategy_instance)
+            
+        elif new_stage in [StrategyStage.LIVE_TRADING]:
+            self.live_strategies[strategy_id] = strategy_instance
+            await self._configure_strategy_for_live_trading(strategy_instance, record.allocated_capital)
+            
+        elif new_stage == StrategyStage.RETIRED:
+            # Remove from active strategies
+            if strategy_id in self.active_strategies:
+                await self._retire_strategy(strategy_instance)
+                del self.active_strategies[strategy_id]
+        
+        self.logger.info(f"Strategy {record.name} moved from {old_stage.value} to {new_stage.value}")
+    
+    async def _configure_strategy_for_paper_trading(self, strategy_instance):
+        """Configure strategy for paper trading mode"""
+        
+        # Set paper trading parameters
+        if hasattr(strategy_instance, 'set_trading_mode'):
+            await strategy_instance.set_trading_mode('paper')
+        
+        if hasattr(strategy_instance, 'set_api_credentials'):
+            # Use testnet credentials
+            if self.config_manager.config and hasattr(self.config_manager.config, 'exchange'):
+                testnet_creds = self.config_manager.config.exchange.get_credentials('development')
+                await strategy_instance.set_api_credentials(testnet_creds)
+        
+        self.logger.info(f"Strategy {strategy_instance} configured for paper trading")
+    
+    async def _configure_strategy_for_live_trading(self, strategy_instance, allocated_capital: float):
+        """Configure strategy for live trading mode"""
+        
+        # Set live trading parameters
+        if hasattr(strategy_instance, 'set_trading_mode'):
+            await strategy_instance.set_trading_mode('live')
+        
+        if hasattr(strategy_instance, 'set_api_credentials'):
+            # Use live credentials
+            if self.config_manager.config and hasattr(self.config_manager.config, 'exchange'):
+                live_creds = self.config_manager.config.exchange.get_credentials('production')
+                await strategy_instance.set_api_credentials(live_creds)
+        
+        if hasattr(strategy_instance, 'set_capital_allocation'):
+            await strategy_instance.set_capital_allocation(allocated_capital)
+        
+        self.logger.info(f"Strategy {strategy_instance} configured for live trading with ${allocated_capital:,.2f}")
+    
+    async def _retire_strategy(self, strategy_instance):
+        """Retire a strategy permanently"""
+        
+        if hasattr(strategy_instance, 'shutdown'):
+            await strategy_instance.shutdown()
+        
+        self.logger.info(f"Strategy {strategy_instance} retired")
+    
+    def get_strategy_graduation_status(self) -> Dict[str, Any]:
+        """Get current status of strategy graduation system"""
+        
+        return {
+            'graduation_report': self.graduation_manager.get_graduation_report(),
+            'paper_strategies_count': len(self.paper_strategies),
+            'live_strategies_count': len(self.live_strategies),
+            'total_strategies': len(self.active_strategies),
+            'paper_strategies': list(self.paper_strategies.keys()),
+            'live_strategies': list(self.live_strategies.keys())
+        }
     
     async def get_status(self) -> Dict[str, Any]:
         """Get comprehensive bot status"""
