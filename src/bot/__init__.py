@@ -1,44 +1,18 @@
 """
-Bybit Trading Bot
+Bybit Trading Bot - Main Package
 
-A sophisticated algorithmic trading system for cryptocurrency perpetual swaps
-with dynamic risk management and statistical validation.
+This package provides a comprehensive trading bot for Bybit exchange with:
+- Advanced backtesting capabilities (Phase 3)
+- Historical data pipeline (Phase 2) 
+- Strategy development framework
+- Risk management systems
 
-Core Features:
-- Dual-mode operation (conservative/aggressive)
-- Dynamic risk scaling based on account balance
-- Statistical strategy validation (WFO, CSCV, permutation testing)
-- Machine learning integration with purged cross-validation
-- Australian tax compliance and CGT calculation
-- Real-time dashboard and monitoring
-
-Architecture:
-- Event-driven core with state management
-- Modular design with replaceable components
-- Database-centric approach for audit trails
-- Configurable behavior without code changes
+Author: Trading Bot Team
+Version: 1.0.0
 """
 
 __version__ = "1.0.0"
-__author__ = "Trading Bot Developer"
-__email__ = "developer@example.com"
+__phase__ = "3"
 
-# Import main components for easy access
-from .config import Config
-from .database import DatabaseManager
-from .core import TradingBot
-
-# Note: These will be implemented in later phases
-# from .risk import RiskManager, DynamicRiskManager  
-# from .strategies import TradingStrategy
-# from .execution import ExecutionEngine
-
-__all__ = [
-    "Config",
-    "DatabaseManager",
-    "TradingBot",
-    # "RiskManager",
-    # "DynamicRiskManager", 
-    # "TradingStrategy",
-    # "ExecutionEngine",
-]
+# Only import what's needed for backtesting integration
+# Avoid importing TradingBot to prevent circular dependencies during testing

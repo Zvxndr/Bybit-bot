@@ -238,45 +238,205 @@ class TradingBotSetupWizard:
         info_panel = Panel(panel_text, title="API Key Setup", border_style="yellow")
         self.console.print(info_panel)
         
-        # Choose environment
-        env_choice = Prompt.ask(
-            "\n🌍 Which environment do you want to use?",
-            choices=["testnet", "mainnet"],
-            default="testnet"
+        # Professional dual-environment setup
+        dual_env_info = Panel(
+            "🚀 **Professional Trading Setup**\n\n"
+            "The bot uses a sophisticated dual-environment approach:\n\n"
+            "📊 **Testnet (Paper Trading)**:\n"
+            "• Strategy validation and backtesting\n"
+            "• Overfitting detection\n"
+            "• Risk-free model testing\n\n"
+            "💰 **Mainnet (Live Trading)**:\n"
+            "• Live trading only after testnet validation\n"
+            "• Strategies must pass performance thresholds\n"
+            "• Continuous validation against testnet results\n\n"
+            "✅ **Benefits**: Maximum safety with professional validation",
+            title="🎯 Dual Environment Strategy",
+            border_style="blue"
+        )
+        self.console.print(dual_env_info)
+        
+        # Choose configuration mode
+        config_mode = Prompt.ask(
+            "\n🎛️ How would you like to configure the trading environments?",
+            choices=["dual", "testnet-only", "mainnet-only"],
+            default="dual"
         )
         
-        if env_choice == "mainnet":
+        if config_mode == "dual":
+            self.console.print("\n🎯 Configuring dual-environment setup...", style="cyan")
+            self.configure_dual_environment()
+        elif config_mode == "testnet-only":
+            self.console.print("\n📊 Configuring testnet-only setup...", style="yellow")
+            self.configure_single_environment("testnet")
+        else:  # mainnet-only
             warning = Panel(
-                "⚠️  WARNING: You're configuring MAINNET (real money)!\n"
-                "Make sure you understand the risks and start with small amounts.",
-                title="⚠️  MAINNET WARNING",
+                "⚠️  WARNING: Mainnet-only mode bypasses safety validation!\n"
+                "This is not recommended for most users. Consider dual-environment setup.",
+                title="⚠️  ADVANCED USER WARNING",
                 border_style="red"
             )
             self.console.print(warning)
-            if not Confirm.ask("🤔 Are you sure you want to use mainnet?", default=False):
-                env_choice = "testnet"
-                self.console.print("✅ Switched to testnet for safety!", style="green")
+            if Confirm.ask("🤔 Are you an experienced trader who wants to skip validation?", default=False):
+                self.configure_single_environment("mainnet")
+            else:
+                self.console.print("✅ Switching to safer dual-environment setup!", style="green")
+                self.configure_dual_environment()
+    
+    def configure_dual_environment(self):
+        """Configure both testnet and mainnet for professional trading"""
+        self.config['environment'] = 'dual'
         
-        self.config['environment'] = env_choice
+        # Configure testnet
+        self.console.print("\n📊 TESTNET Configuration (Strategy Validation):", style="cyan")
+        testnet_info = Panel(
+            "Testnet is used for:\n"
+            "• Continuous strategy validation\n"
+            "• Overfitting detection\n"
+            "• Risk-free testing of new models\n"
+            "• Performance benchmarking\n\n"
+            "Get testnet API keys from: https://testnet.bybit.com/",
+            title="📊 Testnet Setup",
+            border_style="cyan"
+        )
+        self.console.print(testnet_info)
+        
+        testnet_key = Prompt.ask("Testnet API Key", password=False)
+        testnet_secret = getpass.getpass("Testnet API Secret (hidden): ")
+        
+        if not testnet_key or not testnet_secret:
+            self.console.print("❌ Testnet API keys are required for validation!", style="red")
+            sys.exit(1)
+        
+        # Test testnet connection
+        if not self.test_api_connection(testnet_key, testnet_secret, "testnet"):
+            self.console.print("❌ Testnet API connection failed!", style="red")
+            sys.exit(1)
+        
+        self.config['testnet_api_key'] = testnet_key
+        self.config['testnet_api_secret'] = testnet_secret
+        self.console.print("✅ Testnet configured successfully!", style="green")
+        
+        # Configure mainnet
+        self.console.print("\n💰 MAINNET Configuration (Live Trading):", style="yellow")
+        mainnet_info = Panel(
+            "⚠️  Mainnet is used for:\n"
+            "• Live trading with real money\n"
+            "• Only after testnet validation\n"
+            "• Strategies must meet performance thresholds\n"
+            "• Continuous risk monitoring\n\n"
+            "💡 Tip: Start with small amounts and scale up gradually\n"
+            "Get mainnet API keys from: https://www.bybit.com/",
+            title="💰 Mainnet Setup",
+            border_style="yellow"
+        )
+        self.console.print(mainnet_info)
+        
+        if Confirm.ask("🤔 Configure mainnet now? (You can add it later)", default=False):
+            mainnet_key = Prompt.ask("Mainnet API Key", password=False)
+            mainnet_secret = getpass.getpass("Mainnet API Secret (hidden): ")
+            
+            if mainnet_key and mainnet_secret:
+                if self.test_api_connection(mainnet_key, mainnet_secret, "mainnet"):
+                    self.config['mainnet_api_key'] = mainnet_key
+                    self.config['mainnet_api_secret'] = mainnet_secret
+                    self.console.print("✅ Mainnet configured successfully!", style="green")
+                else:
+                    self.console.print("❌ Mainnet API connection failed - skipping", style="red")
+            else:
+                self.console.print("⏭️  Skipping mainnet configuration", style="yellow")
+        else:
+            self.console.print("⏭️  Mainnet can be configured later in settings", style="yellow")
+        
+        # Configure validation thresholds
+        self.configure_validation_thresholds()
+    
+    def configure_single_environment(self, environment: str):
+        """Configure single environment (legacy mode)"""
+        self.config['environment'] = environment
+        
+        if environment == "mainnet":
+            warning = Panel(
+                "⚠️  SINGLE MAINNET MODE WARNING!\n\n"
+                "You're bypassing the safety validation system.\n"
+                "Strategies will trade with real money without testnet validation.\n\n"
+                "🚨 HIGH RISK: Only for experienced traders!",
+                title="⚠️  DANGER ZONE",
+                border_style="red"
+            )
+            self.console.print(warning)
+            if not Confirm.ask("🤔 I understand the risks and want to proceed", default=False):
+                self.console.print("✅ Switching to testnet-only mode for safety", style="green")
+                environment = "testnet"
+                self.config['environment'] = environment
         
         # Get API credentials
-        self.console.print(f"\n🔑 Please enter your {env_choice.upper()} API credentials:")
+        self.console.print(f"\n🔑 Please enter your {environment.upper()} API credentials:")
         
-        api_key = Prompt.ask("API Key", password=False)
-        api_secret = getpass.getpass("API Secret (hidden): ")
+        api_key = Prompt.ask(f"{environment.title()} API Key", password=False)
+        api_secret = getpass.getpass(f"{environment.title()} API Secret (hidden): ")
         
         if not api_key or not api_secret:
             self.console.print("❌ API key and secret are required!", style="red")
             sys.exit(1)
         
         # Test API connection
-        if self.test_api_connection(api_key, api_secret, env_choice):
-            self.config['api_key'] = api_key
-            self.config['api_secret'] = api_secret
-            self.console.print("✅ API keys configured and tested successfully!", style="green")
+        if self.test_api_connection(api_key, api_secret, environment):
+            self.config[f'{environment}_api_key'] = api_key
+            self.config[f'{environment}_api_secret'] = api_secret
+            self.console.print(f"✅ {environment.title()} configured successfully!", style="green")
         else:
-            self.console.print("❌ API connection failed!", style="red")
+            self.console.print(f"❌ {environment.title()} API connection failed!", style="red")
             sys.exit(1)
+    
+    def configure_validation_thresholds(self):
+        """Configure strategy validation thresholds"""
+        self.console.print("\n🎯 Strategy Validation Thresholds:", style="blue")
+        
+        validation_info = Panel(
+            "Configure the performance thresholds that strategies must meet\n"
+            "on testnet before being approved for live trading:\n\n"
+            "📊 **Sharpe Ratio**: Risk-adjusted returns (higher is better)\n"
+            "📉 **Max Drawdown**: Maximum acceptable loss (lower is better)\n"
+            "🎯 **Win Rate**: Percentage of profitable trades\n"
+            "⏱️  **Validation Period**: Days of testnet performance required",
+            title="🎯 Performance Validation",
+            border_style="green"
+        )
+        self.console.print(validation_info)
+        
+        min_sharpe = FloatPrompt.ask(
+            "Minimum Sharpe Ratio for live trading",
+            default=1.0,
+            show_default=True
+        )
+        
+        max_drawdown = FloatPrompt.ask(
+            "Maximum drawdown allowed (%)",
+            default=10.0,
+            show_default=True
+        ) / 100
+        
+        min_win_rate = FloatPrompt.ask(
+            "Minimum win rate required (%)",
+            default=55.0,
+            show_default=True
+        ) / 100
+        
+        validation_days = IntPrompt.ask(
+            "Validation period (days)",
+            default=7,
+            show_default=True
+        )
+        
+        self.config['validation_thresholds'] = {
+            'min_sharpe_ratio': min_sharpe,
+            'max_drawdown': max_drawdown,
+            'min_win_rate': min_win_rate,
+            'validation_days': validation_days
+        }
+        
+        self.console.print("✅ Validation thresholds configured!", style="green")
     
     def test_api_connection(self, api_key: str, api_secret: str, environment: str) -> bool:
         """Test API connection with provided credentials"""
@@ -718,13 +878,64 @@ class TradingBotSetupWizard:
     def create_config_files(self):
         """Create necessary configuration files"""
         # Create .env file
-        env_content = f"""# ML Trading Bot Environment Configuration
+        # Generate environment-specific configuration
+        if self.config['environment'] == 'dual':
+            env_content = f"""# ML Trading Bot Environment Configuration (Dual Environment)
 # Generated by Setup Wizard on {self.get_timestamp()}
 
-# API Configuration
-BYBIT_API_KEY={self.config['api_key']}
-BYBIT_API_SECRET={self.config['api_secret']}
+# Environment Mode
+ENVIRONMENT=dual
+
+# Testnet API Configuration (Strategy Validation)
+BYBIT_TESTNET_API_KEY={self.config.get('testnet_api_key', '')}
+BYBIT_TESTNET_API_SECRET={self.config.get('testnet_api_secret', '')}
+
+# Mainnet API Configuration (Live Trading)
+BYBIT_MAINNET_API_KEY={self.config.get('mainnet_api_key', '')}
+BYBIT_MAINNET_API_SECRET={self.config.get('mainnet_api_secret', '')}
+
+# Validation Thresholds
+MIN_SHARPE_RATIO={self.config.get('validation_thresholds', {}).get('min_sharpe_ratio', 1.0)}
+MAX_DRAWDOWN={self.config.get('validation_thresholds', {}).get('max_drawdown', 0.1)}
+MIN_WIN_RATE={self.config.get('validation_thresholds', {}).get('min_win_rate', 0.55)}
+VALIDATION_PERIOD_DAYS={self.config.get('validation_thresholds', {}).get('validation_days', 7)}
+
+# Enhanced Data Sources (Optional)
+CRYPTOPANIC_API_KEY={self.config.get('cryptopanic_api_key', '')}
+ENABLE_FEAR_GREED={'true' if self.config.get('enable_fear_greed', False) else 'false'}
+ENABLE_MULTI_EXCHANGE={'true' if self.config.get('enable_multi_exchange', False) else 'false'}
+
+# Trading Configuration
+TRADING_PAIRS={','.join(self.config.get('trading_pairs', ['BTCUSDT']))}
+RISK_PER_TRADE={self.config.get('max_risk_per_trade', 0.02)}
+MAX_DAILY_LOSS={self.config.get('max_daily_loss', 0.05)}
+
+# Database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/trading_bot
+REDIS_URL=redis://localhost:6379/0
+
+# Security
+JWT_SECRET_KEY=your-super-secret-jwt-key-change-this
+API_KEY_SECRET=your-api-key-encryption-secret
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+"""
+        else:
+            # Single environment configuration (legacy)
+            env_key = f"{self.config['environment']}_api_key"
+            env_secret = f"{self.config['environment']}_api_secret"
+            
+            env_content = f"""# ML Trading Bot Environment Configuration (Single Environment)
+# Generated by Setup Wizard on {self.get_timestamp()}
+
+# Environment Mode
 ENVIRONMENT={self.config['environment']}
+
+# API Configuration
+BYBIT_API_KEY={self.config.get(env_key, '')}
+BYBIT_API_SECRET={self.config.get(env_secret, '')}
 
 # Enhanced Data Sources (Optional)
 CRYPTOPANIC_API_KEY={self.config.get('cryptopanic_api_key', '')}
@@ -832,8 +1043,22 @@ LOG_FORMAT=json
         
         # Show configured features
         features_text = "🎯 Configured Features:\n"
-        features_text += f"• Trading Environment: {self.config['environment'].upper()}\n"
+        
+        if self.config['environment'] == 'dual':
+            features_text += "• Trading Mode: DUAL ENVIRONMENT (Professional) 🚀\n"
+            features_text += "  📊 Testnet: Strategy validation & overfitting detection\n"
+            features_text += "  💰 Mainnet: Live trading after validation\n"
+            
+            if self.config.get('validation_thresholds'):
+                thresholds = self.config['validation_thresholds']
+                features_text += f"• Validation: Sharpe≥{thresholds.get('min_sharpe_ratio', 1.0)}, "
+                features_text += f"Drawdown≤{thresholds.get('max_drawdown', 0.1)*100:.1f}%, "
+                features_text += f"WinRate≥{thresholds.get('min_win_rate', 0.55)*100:.1f}%\n"
+        else:
+            features_text += f"• Trading Environment: {self.config['environment'].upper()}\n"
+        
         features_text += f"• Trading Pairs: {', '.join(self.config.get('trading_pairs', ['BTCUSDT']))}\n"
+        
         if self.config.get('cryptopanic_api_key'):
             features_text += "• News Sentiment: CryptoPanic API ✅\n"
         if self.config.get('enable_fear_greed'):

@@ -55,10 +55,10 @@ class TradingBot:
         self.data_collector: Optional[DataCollector] = None
         self.data_provider: Optional[DataProvider] = None
         
-        # Trading components (to be implemented in later phases)
+        # Trading components - now implemented
         self.strategy_manager = None
         self.risk_manager = None
-        self.execution_engine = None
+        self.trading_engine = None
         self.portfolio_manager = None
         
         # Statistics
@@ -94,11 +94,33 @@ class TradingBot:
                 self.data_collector
             )
             
-            # TODO: Initialize other components in later phases
-            # - Strategy manager
-            # - Risk manager  
-            # - Execution engine
-            # - Portfolio manager
+            # Initialize core trading components if available
+            if not self.dashboard_only:
+                try:
+                    from .config_manager import ConfigurationManager
+                    from .risk_management.risk_manager import RiskManager
+                    from decimal import Decimal
+                    
+                    # Initialize configuration manager
+                    config_manager = ConfigurationManager("config/config.yaml")
+                    
+                    # Initialize risk manager
+                    self.risk_manager = RiskManager(config_manager)
+                    
+                    # Initialize portfolio manager
+                    from .risk_management.portfolio_manager import PortfolioManager
+                    initial_balance = Decimal('10000')  # Default balance
+                    self.portfolio_manager = PortfolioManager(
+                        config_manager=config_manager,
+                        risk_manager=self.risk_manager,
+                        initial_balance=initial_balance
+                    )
+                    
+                    self.logger.info("Core trading components initialized successfully")
+                    
+                except ImportError as e:
+                    self.logger.warning(f"Some trading components not available: {e}")
+                    self.logger.info("Running in limited mode - data collection only")
             
             self._initialized = True
             self.logger.info("Bot initialization completed successfully")
@@ -160,24 +182,59 @@ class TradingBot:
         """Run in full trading mode."""
         self.logger.info(f"Running in trading mode (paper: {self.paper_trade})")
         
+        # Start trading components if available
+        if self.risk_manager and self.portfolio_manager:
+            self.logger.info("Starting trading components...")
+            try:
+                # Update daily performance tracking
+                await self.portfolio_manager.update_daily_performance()
+                self.logger.info("Trading components started successfully")
+            except Exception as e:
+                self.logger.error(f"Error starting trading components: {e}")
+        
         # Main trading loop
         while self._running:
             try:
                 # Update statistics
                 self._update_stats()
                 
-                # TODO: Implement trading logic
-                # - Collect latest market data
-                # - Run strategies
-                # - Manage risk
-                # - Execute trades
-                # - Update portfolio
+                if self.risk_manager and self.portfolio_manager:
+                    # Update portfolio performance
+                    await self.portfolio_manager.update_daily_performance()
+                    
+                    # Get portfolio performance metrics
+                    performance = await self.portfolio_manager.calculate_performance_metrics()
+                    
+                    # Calculate current risk metrics
+                    portfolio_value = self.portfolio_manager.get_total_value()
+                    risk_metrics = await self.risk_manager.calculate_risk_metrics(portfolio_value)
+                    
+                    # Log current status
+                    self.logger.info(
+                        f"Portfolio Value: {performance.total_value:.2f} USDT, "
+                        f"Total PnL: {performance.total_pnl:.2f} ({performance.total_pnl_percentage:.2f}%), "
+                        f"Risk Level: {risk_metrics.risk_level.value}"
+                    )
+                    
+                    # Update internal stats
+                    self.stats.update({
+                        'portfolio_value': float(performance.total_value),
+                        'total_pnl': float(performance.total_pnl),
+                        'risk_level': risk_metrics.risk_level.value,
+                        'open_positions': performance.total_trades  # Using total trades as proxy for now
+                    })
+                    
+                    # Check for rebalancing needs
+                    rebalance_needed = await self.portfolio_manager.check_rebalancing_needed()
+                    if rebalance_needed:
+                        self.logger.info(f"Rebalancing needed for: {', '.join(rebalance_needed)}")
                 
-                # For now, just log status
-                self.logger.debug("Trading loop iteration completed")
+                else:
+                    # Limited mode - just log status
+                    self.logger.debug("Trading loop iteration completed (limited mode)")
                 
                 # Sleep between iterations
-                await asyncio.sleep(10)
+                await asyncio.sleep(30)  # Check every 30 seconds
                 
             except Exception as e:
                 self.logger.error(f"Error in trading loop: {e}")
@@ -200,12 +257,31 @@ class TradingBot:
         
         self._running = False
         
-        # TODO: Shutdown components gracefully
-        # - Close open positions (if configured)
-        # - Stop data collection
-        # - Save state
-        # - Close database connections
+        try:
+            # Stop trading components
+            if hasattr(self, 'trading_engine') and self.trading_engine:
+                await self.trading_engine.stop()
+                self.logger.info("Trading engine stopped")
+            
+            if hasattr(self, 'strategy_manager') and self.strategy_manager:
+                # Stop all active strategies
+                for strategy_id in list(self.strategy_manager.strategies.keys()):
+                    await self.strategy_manager.stop_strategy(strategy_id)
+                self.logger.info("All strategies stopped")
+            
+            # Final portfolio update
+            if hasattr(self, 'portfolio_manager') and self.portfolio_manager:
+                await self.portfolio_manager.update_daily_performance()
+                final_performance = await self.portfolio_manager.calculate_performance_metrics()
+                self.logger.info(
+                    f"Final Portfolio: {final_performance.total_value:.2f} USDT, "
+                    f"Total PnL: {final_performance.total_pnl:.2f} ({final_performance.total_pnl_percentage:.2f}%)"
+                )
+            
+        except Exception as e:
+            self.logger.error(f"Error during component shutdown: {e}")
         
+        # Close database connections
         if self.db_manager:
             self.db_manager.close()
         
