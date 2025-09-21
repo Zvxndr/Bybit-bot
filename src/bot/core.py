@@ -11,6 +11,14 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
+# Import unified configuration system
+try:
+    from .core.config.manager import UnifiedConfigurationManager
+    from .core.config.schema import UnifiedConfigurationSchema
+    UNIFIED_CONFIG_AVAILABLE = True
+except ImportError:
+    UNIFIED_CONFIG_AVAILABLE = False
+
 from .config import Config
 from .database import DatabaseManager
 from .data import DataProvider, DataCollector, DataSanitizer
@@ -31,20 +39,31 @@ class TradingBot:
     
     def __init__(
         self,
-        config: Config,
-        db_manager: DatabaseManager,
+        config: Optional[Config] = None,
+        unified_config: Optional[UnifiedConfigurationSchema] = None,
+        db_manager: DatabaseManager = None,
         paper_trade: bool = True,
         backtest_only: bool = False,
         dashboard_only: bool = False
     ):
-        self.config = config
+        # Configuration handling (unified config takes precedence)
+        if unified_config and UNIFIED_CONFIG_AVAILABLE:
+            self.unified_config = unified_config
+            self.config = None
+            self.logger = TradingLogger("TradingBot")
+            self.logger.info("TradingBot initialized with unified configuration")
+        elif config:
+            self.config = config
+            self.unified_config = None
+            self.logger = TradingLogger("TradingBot")
+            self.logger.info("TradingBot initialized with legacy configuration")
+        else:
+            raise ValueError("Either config or unified_config must be provided")
+        
         self.db_manager = db_manager
         self.paper_trade = paper_trade
         self.backtest_only = backtest_only
         self.dashboard_only = dashboard_only
-        
-        # Initialize logger
-        self.logger = TradingLogger("TradingBot")
         
         # Component initialization flags
         self._initialized = False

@@ -26,6 +26,18 @@ from datetime import datetime, timedelta
 import logging
 from abc import ABC, abstractmethod
 
+# Import unified configuration system
+try:
+    from src.bot.core.config import (
+        UnifiedConfigurationManager, UnifiedConfigurationSchema,
+        Environment, TradingMode
+    )
+    from src.bot.core.config.integrations import RiskManagementConfigAdapter
+except ImportError:
+    # Fallback if unified config not available
+    UnifiedConfigurationManager = None
+    RiskManagementConfigAdapter = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,6 +111,33 @@ class RiskParameters:
                 MarketRegime.TRENDING_UP: 1.1,
                 MarketRegime.TRENDING_DOWN: 0.9
             }
+    
+    @classmethod
+    def from_unified_config(cls, config: 'UnifiedConfigurationSchema') -> 'RiskParameters':
+        """Create RiskParameters from unified configuration"""
+        if not config:
+            return cls()
+        
+        # Get risk-specific configuration via adapter
+        if RiskManagementConfigAdapter:
+            adapter = RiskManagementConfigAdapter(config)
+            risk_config = adapter.get_risk_config()
+            compliance_config = adapter.get_australian_compliance_config()
+            
+            # Map unified config to risk parameters
+            return cls(
+                max_portfolio_risk=Decimal(str(risk_config.get('portfolio_drawdown_limit', 0.02))), 
+                max_position_size=Decimal('0.10'),  # Use default for now
+                max_correlation=0.7,  # Use default for now
+                cgt_discount_threshold=365,
+                tax_rate=Decimal('0.325'),
+                enable_tax_optimization=compliance_config.get('enable_tax_reporting', True),
+                volatility_lookback=30,
+                correlation_lookback=60,
+                regime_detection_window=90
+            )
+        
+        return cls()
 
 @dataclass
 class PositionRisk:
@@ -274,8 +313,20 @@ class UnifiedRiskManager:
     and dynamic risk adjustment capabilities.
     """
     
-    def __init__(self, risk_params: RiskParameters = None):
-        self.risk_params = risk_params or RiskParameters()
+    def __init__(self, risk_params: RiskParameters = None, unified_config: 'UnifiedConfigurationSchema' = None):
+        # Try to use unified configuration if available
+        if unified_config and not risk_params:
+            try:
+                self.risk_params = RiskParameters.from_unified_config(unified_config)
+                logger.info("Risk Manager initialized with unified configuration")
+            except Exception as e:
+                logger.warning(f"Failed to load unified configuration: {e}, using defaults")
+                self.risk_params = RiskParameters()
+        else:
+            self.risk_params = risk_params or RiskParameters()
+        
+        # Store unified config reference for runtime updates
+        self.unified_config = unified_config
         
         # Initialize position sizers
         self.sizers = {
@@ -295,7 +346,30 @@ class UnifiedRiskManager:
         self.position_risks: Dict[str, PositionRisk] = {}
         self.alerts: List[Dict[str, Any]] = []
         
-        logger.info("Unified Risk Manager initialized")
+        config_source = "unified configuration" if unified_config else "default parameters"
+        logger.info(f"Unified Risk Manager initialized with {config_source}")
+    
+    def reload_configuration(self, unified_config: 'UnifiedConfigurationSchema' = None):
+        """Reload configuration from unified configuration system"""
+        if unified_config:
+            self.unified_config = unified_config
+        
+        if self.unified_config:
+            try:
+                new_params = RiskParameters.from_unified_config(self.unified_config)
+                self.risk_params = new_params
+                
+                # Reinitialize components that depend on config
+                self.regime_detector = MarketRegimeDetector(
+                    self.risk_params.regime_detection_window
+                )
+                
+                # Update tax-optimized sizer with new parameters
+                self.sizers[PositionSizeMethod.TAX_OPTIMIZED] = TaxOptimizedSizer(self.risk_params)
+                
+                logger.info("Risk Manager configuration reloaded from unified system")
+            except Exception as e:
+                logger.error(f"Failed to reload configuration: {e}")
     
     async def calculate_position_size(self, symbol: str, side: str,
                                     portfolio_value: Decimal,
