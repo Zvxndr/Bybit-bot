@@ -1,0 +1,18 @@
+{
+  "deployment_id": "20250922_081253",
+  "timestamp": "2025-09-22T08:13:20.929403",
+  "platform": "Windows",
+  "python_version": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
+  "project_root": "C:\\Users\\willi\\Documents\\GitHub\\Bybit-bot",
+  "results": {
+    "prerequisites": false,
+    "environment_setup": true,
+    "dependencies": false,
+    "database": true,
+    "monitoring": true,
+    "docker_config": true,
+    "systemd_service": true,
+    "security_validation": true
+  },
+  "success": false
+}

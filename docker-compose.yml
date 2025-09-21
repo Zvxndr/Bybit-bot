@@ -1,208 +1,38 @@
 version: '3.8'
 
 services:
-
-
-  # ML Trading Bot API Service
-  api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
-    container_name: tradingbot-api
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      # API Configuration
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - API_WORKERS=4
-      
-      # Redis Configuration
-      - REDIS_URL=redis://redis:6379
-      - CACHE_TTL_SECONDS=300
-      
-      # Database Configuration
-      - DATABASE_URL=postgresql://trader:${DB_PASSWORD}@postgres:5432/trading_bot
-      
-      # Bybit API Configuration
-      - BYBIT_API_KEY=${BYBIT_API_KEY}
-      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
-      
-      # Security
-      - API_ENABLE_AUTH=${API_ENABLE_AUTH:-true}
-      - API_SECRET_KEY=${API_SECRET_KEY:-your-secret-key-change-this}
-      
-      # Monitoring
-      - ENABLE_METRICS=true
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - ENVIRONMENT=production
-      
-    volumes:
-      - ./data:/app/data
-      - ./models:/app/models
-      - ./logs:/app/logs
-      - ./config:/app/config
-    depends_on:
-      - postgres
-      - redis
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    networks:
-      - trading-network
-
-  # Monitoring Dashboard Service
-  dashboard:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dashboard
-    container_name: tradingbot-dashboard
-    restart: unless-stopped
-    ports:
-      - "8501:8501"
-    environment:
-      # Dashboard Configuration
-      - DASHBOARD_API_BASE_URL=http://api:8000
-      - DASHBOARD_REFRESH_INTERVAL=30
-      - DASHBOARD_ENABLE_REALTIME=true
-      
-    volumes:
-      - ./config:/app/config
-      - ./logs:/app/logs:ro
-    depends_on:
-      - api
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    networks:
-      - trading-network
-
-  # Trading bot application (legacy support)
   trading-bot:
     build: .
-    container_name: bybit-trading-bot
-    restart: unless-stopped
-    environment:
-      - ENVIRONMENT=production
-      - BYBIT_API_KEY=${BYBIT_API_KEY}
-      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
-      - DB_HOST=postgres
-      - DB_NAME=trading_bot
-      - DB_USER=trader
-      - DB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "8001:8001"
+      - "3000:3000"
     volumes:
-      - ./logs:/app/logs
       - ./data:/app/data
-      - ./config:/app/config
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - trading-network
-    
-  # PostgreSQL database for production
-  postgres:
-    image: postgres:15-alpine
-    container_name: trading-bot-db
-    restart: unless-stopped
+      - ./logs:/app/logs
+      - ./backups:/app/backups
     environment:
-      - POSTGRES_DB=trading_bot
-      - POSTGRES_USER=trader
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-    networks:
-      - trading-network
+      - TRADING_ENABLED=false
+      - MOCK_TRADING=true
+      - DEBUG=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: timescale/timescaledb:latest-pg14
     ports:
       - "5432:5432"
-    
-  # Redis for caching and session management
-  redis:
-    image: redis:7-alpine
-    container_name: trading-bot-redis
-    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=trading_data
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secure_password_change_me
     volumes:
-      - redis_data:/data
-    networks:
-      - trading-network
-    ports:
-      - "6379:6379"
-    
-  # Nginx reverse proxy (optional for production)
-  nginx:
-    image: nginx:alpine
-    container_name: trading-bot-nginx
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - trading-bot
-    networks:
-      - trading-network
-    profiles:
-      - production
 
-# Development override
-  # Development database (DuckDB is embedded, no separate service needed)
-  
-# Named volumes for data persistence
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-
-# Network configuration
-networks:
-  trading-network:
-    driver: bridge
-
----
-# Development compose override
-# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-version: '3.8'
-
-services:
-  trading-bot-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bybit-trading-bot-dev
-    restart: "no"
-    environment:
-      - ENVIRONMENT=development
-      - BYBIT_API_KEY=${BYBIT_API_KEY}
-      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
-    volumes:
-      - .:/app  # Mount entire project for development
-      - ./logs:/app/logs
-      - ./data:/app/data
-    ports:
-      - "8501:8501"  # Streamlit dashboard
-      - "5000:5000"  # Debug port
-    networks:
-      - trading-network
-    command: ["python", "-m", "src.bot.main", "--debug"]
-    
-  # Development uses DuckDB (no postgres needed)
-  # Redis still useful for development
-  redis-dev:
-    image: redis:7-alpine
-    container_name: trading-bot-redis-dev
-    restart: "no"
-    ports:
-      - "6379:6379"
-    networks:
-      - trading-network
