@@ -20,17 +20,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import unified configuration system
 try:
-    from bot.core.config.manager import UnifiedConfigurationManager
-    from bot.core.config.schema import UnifiedConfigurationSchema
+    from .core_components.config.manager import UnifiedConfigurationManager
+    from .core_components.config.schema import UnifiedConfigurationSchema
     UNIFIED_CONFIG_AVAILABLE = True
 except ImportError:
     logger.warning("Unified configuration system not available, falling back to legacy config")
-    from bot.config import Config
+    from .config import Config
     UNIFIED_CONFIG_AVAILABLE = False
 
-from bot.core import TradingBot
-from bot.database import DatabaseManager
-from bot.utils.logging import setup_logging
+from .core import TradingBot  # Import from core.py file
+from .database import DatabaseManager
+from .utils.logging import setup_logging
 
 
 class GracefulShutdown:
@@ -142,7 +142,7 @@ def main(
             except Exception as e:
                 logger.warning(f"Failed to load unified configuration: {e}")
                 logger.info("Falling back to legacy configuration...")
-                from bot.config import Config
+                from .config import Config
                 config = Config.from_file(config_path)
         else:
             # Fall back to legacy configuration
@@ -186,11 +186,16 @@ def main(
         logger.info("Initializing database...")
         if config:
             db_manager = DatabaseManager(config.database)
+        elif unified_config_schema and hasattr(unified_config_schema, 'database'):
+            # Use unified config database settings
+            db_manager = DatabaseManager(unified_config_schema.database)
         else:
-            # Use unified config database settings or defaults
-            db_manager = DatabaseManager(None)  # This will need to be updated when DatabaseManager supports unified config
+            # Create database manager with minimal config or skip if not needed
+            logger.warning("No database configuration available - database features will be disabled")
+            db_manager = None
         
-        db_manager.initialize()
+        if db_manager:
+            db_manager.initialize()
         
         # Create and run the trading bot
         asyncio.run(run_bot(

@@ -1,30 +1,27 @@
-""""""
-
-Unified API Initialization - Phase 3 API ConsolidationAPI Module Initialization
-
-
-
-This module provides the main entry point for the unified API system.This module provides the production-grade API layer for the cryptocurrency
-
-It orchestrates the initialization of all API components and providestrading bot, including real-time prediction serving, monitoring endpoints,
-
-a single interface for the trading bot to interact with Bybit APIs.and WebSocket streaming capabilities.
-
 """
+Unified API System - Phase 3 Implementation
+
+This module provides the main entry point for the unified API system.
+It orchestrates the initialization of all API components and provides
+a production-grade API layer for the cryptocurrency trading bot, including
+real-time prediction serving, monitoring endpoints, and unified access.
 
 Key Features:
-
-- Single initialization point for all API componentsfrom .prediction_service import create_app, run_server, PredictionAPI
-
-- Automatic component orchestration
-
-- Health monitoring and diagnostics__all__ = ['create_app', 'run_server', 'PredictionAPI']
+- Single initialization point for all API components
+- Automatic component orchestration  
+- Health monitoring and diagnostics
 - Error recovery and failover
 - Configuration validation
 - Connection management
 - Performance monitoring
 - Australian compliance integration
+- WebSocket streaming capabilities
 """
+
+# Prediction service import disabled for now - module needs reconstruction
+# from .prediction_service import create_app, run_server, PredictionAPI
+
+__all__ = ['UnifiedAPISystem', 'APISystemStatus', 'create_api_system']
 
 import asyncio
 import time

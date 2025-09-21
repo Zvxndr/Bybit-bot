@@ -21,7 +21,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Callable
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 import logging

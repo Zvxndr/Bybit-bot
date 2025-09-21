@@ -49,9 +49,9 @@ except ImportError:
 
 # Import unified configuration system
 try:
-    from ..core.config.manager import UnifiedConfigurationManager
-    from ..core.config.schema import UnifiedConfigurationSchema
-    from ..core.config.integrations import APISystemConfigAdapter
+    from ..core_components.config.manager import UnifiedConfigurationManager
+    from ..core_components.config.schema import UnifiedConfigurationSchema
+    from ..core_components.config.integrations import APISystemConfigAdapter
     UNIFIED_CONFIG_AVAILABLE = True
 except ImportError:
     UNIFIED_CONFIG_AVAILABLE = False

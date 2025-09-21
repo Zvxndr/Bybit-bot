@@ -45,9 +45,9 @@ except ImportError:
 
 # Import unified configuration system
 try:
-    from ..core.config.manager import UnifiedConfigurationManager
-    from ..core.config.schema import UnifiedConfigurationSchema
-    from ..core.config.integrations import MLIntegrationConfigAdapter
+    from ..core_components.config.manager import UnifiedConfigurationManager
+    from ..core_components.config.schema import UnifiedConfigurationSchema
+    from ..core_components.config.integrations import MLIntegrationConfigAdapter
     UNIFIED_CONFIG_AVAILABLE = True
 except ImportError:
     logger.warning("Unified configuration system not available")

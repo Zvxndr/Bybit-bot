@@ -28,11 +28,11 @@ from abc import ABC, abstractmethod
 
 # Import unified configuration system
 try:
-    from src.bot.core.config import (
+    from src.bot.core_components.config import (
         UnifiedConfigurationManager, UnifiedConfigurationSchema,
         Environment, TradingMode
     )
-    from src.bot.core.config.integrations import RiskManagementConfigAdapter
+    from src.bot.core_components.config.integrations import RiskManagementConfigAdapter
 except ImportError:
     # Fallback if unified config not available
     UnifiedConfigurationManager = None
