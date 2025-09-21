@@ -538,23 +538,244 @@ class BybitClient:
     
     # Trading Methods (Placeholder for Phase 3)
     
-    async def place_order(self, **kwargs) -> Optional[Dict[str, Any]]:
+    async def place_order(
+        self,
+        category: str,
+        symbol: str,
+        side: str,
+        order_type: str,
+        qty: str,
+        price: Optional[str] = None,
+        time_in_force: str = "GTC",
+        reduce_only: bool = False,
+        close_on_trigger: bool = False,
+        order_link_id: Optional[str] = None,
+        take_profit: Optional[str] = None,
+        stop_loss: Optional[str] = None,
+        tp_trigger_by: Optional[str] = None,
+        sl_trigger_by: Optional[str] = None,
+        position_idx: int = 0,
+        order_filter: str = "Order",
+        **kwargs
+    ) -> Optional[Dict[str, Any]]:
         """
-        Place a trading order.
+        Place a trading order on Bybit.
         
-        Note: Full implementation in Phase 3
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name (e.g., "BTCUSDT")
+            side: Buy or Sell
+            order_type: Market, Limit, etc.
+            qty: Order quantity
+            price: Order price (required for limit orders)
+            time_in_force: Time in force (GTC, IOC, FOK)
+            reduce_only: Reduce only flag
+            close_on_trigger: Close on trigger flag
+            order_link_id: Custom order ID
+            take_profit: Take profit price
+            stop_loss: Stop loss price
+            tp_trigger_by: Take profit trigger price type
+            sl_trigger_by: Stop loss trigger price type
+            position_idx: Position index (0 for one-way mode)
+            order_filter: Order filter type
+            
+        Returns:
+            Order response data or None on failure
         """
-        self.logger.warning("place_order method not fully implemented - Phase 3 feature")
-        return None
+        try:
+            # Build order parameters
+            params = {
+                "category": category,
+                "symbol": symbol,
+                "side": side,
+                "orderType": order_type,
+                "qty": qty,
+                "timeInForce": time_in_force,
+                "positionIdx": position_idx,
+                "orderFilter": order_filter
+            }
+            
+            # Add optional parameters
+            if price is not None:
+                params["price"] = price
+            if reduce_only:
+                params["reduceOnly"] = reduce_only
+            if close_on_trigger:
+                params["closeOnTrigger"] = close_on_trigger
+            if order_link_id:
+                params["orderLinkId"] = order_link_id
+            if take_profit:
+                params["takeProfit"] = take_profit
+            if stop_loss:
+                params["stopLoss"] = stop_loss
+            if tp_trigger_by:
+                params["tpTriggerBy"] = tp_trigger_by
+            if sl_trigger_by:
+                params["slTriggerBy"] = sl_trigger_by
+            
+            # Add any additional parameters
+            params.update(kwargs)
+            
+            self.logger.info(f"Placing {side} order for {qty} {symbol} at {price if price else 'market'}")
+            
+            response = await self._make_authenticated_request(
+                "POST",
+                "/v5/order/create",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                order_data = response.get("result", {})
+                self.logger.info(f"Order placed successfully: {order_data.get('orderId')}")
+                return order_data
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to place order: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception placing order: {e}")
+            return None
     
-    async def cancel_order(self, order_id: str, symbol: str) -> Optional[Dict[str, Any]]:
+    async def cancel_order(
+        self, 
+        category: str,
+        symbol: str,
+        order_id: Optional[str] = None,
+        order_link_id: Optional[str] = None,
+        order_filter: str = "Order"
+    ) -> Optional[Dict[str, Any]]:
         """
         Cancel a trading order.
         
-        Note: Full implementation in Phase 3
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name
+            order_id: Order ID (either order_id or order_link_id required)
+            order_link_id: Custom order ID
+            order_filter: Order filter type
+            
+        Returns:
+            Cancel response data or None on failure
         """
-        self.logger.warning("cancel_order method not fully implemented - Phase 3 feature")
-        return None
+        try:
+            if not order_id and not order_link_id:
+                self.logger.error("Either order_id or order_link_id must be provided")
+                return None
+            
+            params = {
+                "category": category,
+                "symbol": symbol,
+                "orderFilter": order_filter
+            }
+            
+            if order_id:
+                params["orderId"] = order_id
+            if order_link_id:
+                params["orderLinkId"] = order_link_id
+            
+            self.logger.info(f"Cancelling order {order_id or order_link_id} for {symbol}")
+            
+            response = await self._make_authenticated_request(
+                "POST",
+                "/v5/order/cancel",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                cancel_data = response.get("result", {})
+                self.logger.info(f"Order cancelled successfully: {cancel_data.get('orderId')}")
+                return cancel_data
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to cancel order: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception cancelling order: {e}")
+            return None
+    
+    async def modify_order(
+        self,
+        category: str,
+        symbol: str,
+        order_id: Optional[str] = None,
+        order_link_id: Optional[str] = None,
+        qty: Optional[str] = None,
+        price: Optional[str] = None,
+        take_profit: Optional[str] = None,
+        stop_loss: Optional[str] = None,
+        tp_trigger_by: Optional[str] = None,
+        sl_trigger_by: Optional[str] = None,
+        order_filter: str = "Order"
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Modify an existing order.
+        
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name
+            order_id: Order ID (either order_id or order_link_id required)
+            order_link_id: Custom order ID
+            qty: New order quantity
+            price: New order price
+            take_profit: New take profit price
+            stop_loss: New stop loss price
+            tp_trigger_by: Take profit trigger price type
+            sl_trigger_by: Stop loss trigger price type
+            order_filter: Order filter type
+            
+        Returns:
+            Modify response data or None on failure
+        """
+        try:
+            if not order_id and not order_link_id:
+                self.logger.error("Either order_id or order_link_id must be provided")
+                return None
+            
+            params = {
+                "category": category,
+                "symbol": symbol,
+                "orderFilter": order_filter
+            }
+            
+            if order_id:
+                params["orderId"] = order_id
+            if order_link_id:
+                params["orderLinkId"] = order_link_id
+            if qty:
+                params["qty"] = qty
+            if price:
+                params["price"] = price
+            if take_profit:
+                params["takeProfit"] = take_profit
+            if stop_loss:
+                params["stopLoss"] = stop_loss
+            if tp_trigger_by:
+                params["tpTriggerBy"] = tp_trigger_by
+            if sl_trigger_by:
+                params["slTriggerBy"] = sl_trigger_by
+            
+            self.logger.info(f"Modifying order {order_id or order_link_id} for {symbol}")
+            
+            response = await self._make_authenticated_request(
+                "POST",
+                "/v5/order/amend",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                modify_data = response.get("result", {})
+                self.logger.info(f"Order modified successfully: {modify_data.get('orderId')}")
+                return modify_data
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to modify order: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception modifying order: {e}")
+            return None
     
     # Utility Methods
     
@@ -592,6 +813,264 @@ class BybitClient:
         except Exception as e:
             self.logger.error(f"Credential validation failed: {e}")
             return False
+    
+    # Additional Trading Methods
+    
+    async def get_open_orders(
+        self,
+        category: str,
+        symbol: Optional[str] = None,
+        base_coin: Optional[str] = None,
+        settle_coin: Optional[str] = None,
+        order_id: Optional[str] = None,
+        order_link_id: Optional[str] = None,
+        order_filter: str = "Order",
+        limit: int = 20
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get open orders.
+        
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name
+            base_coin: Base coin (for spot)
+            settle_coin: Settle coin  
+            order_id: Order ID filter
+            order_link_id: Custom order ID filter
+            order_filter: Order filter type
+            limit: Limit for data size per page
+            
+        Returns:
+            Open orders data or None on failure
+        """
+        try:
+            params = {
+                "category": category,
+                "orderFilter": order_filter,
+                "limit": limit
+            }
+            
+            if symbol:
+                params["symbol"] = symbol
+            if base_coin:
+                params["baseCoin"] = base_coin
+            if settle_coin:
+                params["settleCoin"] = settle_coin
+            if order_id:
+                params["orderId"] = order_id
+            if order_link_id:
+                params["orderLinkId"] = order_link_id
+            
+            response = await self._make_authenticated_request(
+                "GET",
+                "/v5/order/realtime",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                return response.get("result", {})
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to get open orders: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception getting open orders: {e}")
+            return None
+    
+    async def get_positions(
+        self,
+        category: str,
+        symbol: Optional[str] = None,
+        base_coin: Optional[str] = None,
+        settle_coin: Optional[str] = None,
+        limit: int = 20
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get position information.
+        
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name
+            base_coin: Base coin (for spot)
+            settle_coin: Settle coin
+            limit: Limit for data size per page
+            
+        Returns:
+            Position data or None on failure
+        """
+        try:
+            params = {
+                "category": category,
+                "limit": limit
+            }
+            
+            if symbol:
+                params["symbol"] = symbol
+            if base_coin:
+                params["baseCoin"] = base_coin
+            if settle_coin:
+                params["settleCoin"] = settle_coin
+            
+            response = await self._make_authenticated_request(
+                "GET",
+                "/v5/position/list",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                return response.get("result", {})
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to get positions: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception getting positions: {e}")
+            return None
+    
+    async def get_wallet_balance(
+        self,
+        account_type: str,
+        coin: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get wallet balance.
+        
+        Args:
+            account_type: Account type (UNIFIED, CONTRACT, SPOT, etc.)
+            coin: Coin filter
+            
+        Returns:
+            Wallet balance data or None on failure
+        """
+        try:
+            params = {
+                "accountType": account_type
+            }
+            
+            if coin:
+                params["coin"] = coin
+            
+            response = await self._make_authenticated_request(
+                "GET",
+                "/v5/account/wallet-balance",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                return response.get("result", {})
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to get wallet balance: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception getting wallet balance: {e}")
+            return None
+    
+    async def cancel_all_orders(
+        self,
+        category: str,
+        symbol: Optional[str] = None,
+        base_coin: Optional[str] = None,
+        settle_coin: Optional[str] = None,
+        order_filter: str = "Order"
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Cancel all open orders.
+        
+        Args:
+            category: Product type (linear, inverse, spot, option)
+            symbol: Symbol name (if specified, cancel orders for this symbol only)
+            base_coin: Base coin (for spot)
+            settle_coin: Settle coin
+            order_filter: Order filter type
+            
+        Returns:
+            Cancel all response data or None on failure
+        """
+        try:
+            params = {
+                "category": category,
+                "orderFilter": order_filter
+            }
+            
+            if symbol:
+                params["symbol"] = symbol
+            if base_coin:
+                params["baseCoin"] = base_coin
+            if settle_coin:
+                params["settleCoin"] = settle_coin
+            
+            self.logger.info(f"Cancelling all orders for category: {category}")
+            
+            response = await self._make_authenticated_request(
+                "POST",
+                "/v5/order/cancel-all",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                cancel_data = response.get("result", {})
+                self.logger.info("All orders cancelled successfully")
+                return cancel_data
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to cancel all orders: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception cancelling all orders: {e}")
+            return None
+    
+    async def set_leverage(
+        self,
+        category: str,
+        symbol: str,
+        buy_leverage: str,
+        sell_leverage: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Set leverage for a symbol.
+        
+        Args:
+            category: Product type (linear, inverse)
+            symbol: Symbol name
+            buy_leverage: Buy leverage
+            sell_leverage: Sell leverage
+            
+        Returns:
+            Set leverage response data or None on failure
+        """
+        try:
+            params = {
+                "category": category,
+                "symbol": symbol,
+                "buyLeverage": buy_leverage,
+                "sellLeverage": sell_leverage
+            }
+            
+            self.logger.info(f"Setting leverage for {symbol}: buy={buy_leverage}, sell={sell_leverage}")
+            
+            response = await self._make_authenticated_request(
+                "POST",
+                "/v5/position/set-leverage",
+                params
+            )
+            
+            if response and response.get("retCode") == 0:
+                leverage_data = response.get("result", {})
+                self.logger.info(f"Leverage set successfully for {symbol}")
+                return leverage_data
+            else:
+                error_msg = response.get("retMsg", "Unknown error") if response else "No response"
+                self.logger.error(f"Failed to set leverage: {error_msg}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Exception setting leverage: {e}")
+            return None
 
 
 # Utility functions for common operations

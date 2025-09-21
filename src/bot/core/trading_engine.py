@@ -119,6 +119,7 @@ class TradingEngine:
         config_manager: ConfigurationManager,
         bybit_client: BybitClient,
         data_manager: DataManager,
+        risk_manager: Optional['UnifiedRiskManager'] = None,
         testnet: bool = True
     ):
         self.config = config_manager
@@ -127,11 +128,19 @@ class TradingEngine:
         self.testnet = testnet
         self.logger = TradingLogger("trading_engine")
         
+        # Unified Risk Management Integration
+        if risk_manager is None:
+            from ..risk_management import UnifiedRiskManager
+            self.risk_manager = UnifiedRiskManager(config_manager)
+        else:
+            self.risk_manager = risk_manager
+        
         # Trading state
         self.positions: Dict[str, Position] = {}
         self.orders: Dict[str, Order] = {}
         self.balance: Dict[str, Decimal] = {}
         self.is_running = False
+        self.emergency_stop = False
         
         # Performance tracking
         self.total_trades = 0
@@ -140,21 +149,21 @@ class TradingEngine:
         self.max_drawdown = Decimal('0')
         self.peak_balance = Decimal('0')
         
-        # Risk limits from config
+        # Risk limits from config (legacy - now handled by UnifiedRiskManager)
         self.max_position_size = Decimal(str(config_manager.get('trading.max_position_size', 0.1)))
         self.max_open_orders = config_manager.get('trading.max_open_orders', 10)
         
-        self.logger.info(f"TradingEngine initialized - Testnet: {testnet}")
+        self.logger.info(f"TradingEngine initialized with UnifiedRiskManager - Testnet: {testnet}")
     
     async def start(self) -> bool:
         """
-        Start the trading engine.
+        Start the trading engine with integrated risk monitoring.
         
         Returns:
             bool: True if started successfully
         """
         try:
-            self.logger.info("Starting trading engine...")
+            self.logger.info("Starting trading engine with UnifiedRiskManager...")
             
             # Initialize connection
             if not await self.client.connect():
@@ -167,8 +176,12 @@ class TradingEngine:
             # Load existing positions
             await self.update_positions()
             
+            # Start unified risk monitoring
+            await self.risk_manager.start_risk_monitoring()
+            
             self.is_running = True
-            self.logger.info("Trading engine started successfully")
+            self.emergency_stop = False
+            self.logger.info("Trading engine with risk monitoring started successfully")
             return True
             
         except Exception as e:
@@ -176,18 +189,21 @@ class TradingEngine:
             return False
     
     async def stop(self) -> None:
-        """Stop the trading engine."""
+        """Stop the trading engine and risk monitoring."""
         try:
-            self.logger.info("Stopping trading engine...")
+            self.logger.info("Stopping trading engine and risk monitoring...")
             
             # Cancel all pending orders
             await self.cancel_all_orders()
+            
+            # Stop risk monitoring
+            await self.risk_manager.stop_risk_monitoring()
             
             # Close WebSocket connections
             await self.client.disconnect()
             
             self.is_running = False
-            self.logger.info("Trading engine stopped")
+            self.logger.info("Trading engine and risk monitoring stopped")
             
         except Exception as e:
             self.logger.error(f"Error stopping trading engine: {e}")
@@ -465,7 +481,7 @@ class TradingEngine:
         price: Optional[Decimal]
     ) -> bool:
         """
-        Validate order before placing.
+        Validate order using Unified Risk Management before placing.
         
         Args:
             symbol: Trading symbol
@@ -475,7 +491,7 @@ class TradingEngine:
             price: Order price
             
         Returns:
-            bool: True if order is valid
+            bool: True if order is valid and safe to execute
         """
         try:
             # Check if engine is running
@@ -483,32 +499,68 @@ class TradingEngine:
                 self.logger.error("Trading engine is not running")
                 return False
             
-            # Check quantity is positive
+            # Check emergency stop
+            if self.emergency_stop:
+                self.logger.error("Emergency stop is active - no new orders allowed")
+                return False
+            
+            # Basic validation
             if quantity <= 0:
                 self.logger.error(f"Invalid quantity: {quantity}")
                 return False
             
-            # Check maximum open orders
+            # Get current market price if not provided
+            entry_price = price or await self._get_market_price(symbol)
+            
+            # Perform comprehensive risk assessment using UnifiedRiskManager
+            from ..risk_management import RiskAction
+            
+            risk_assessment = await self.risk_manager.assess_trade_risk(
+                symbol=symbol,
+                side=side.value,
+                size=quantity,
+                entry_price=entry_price,
+                stop_loss=None,  # Could be enhanced to include stop loss from order
+                take_profit=None  # Could be enhanced to include take profit from order
+            )
+            
+            # Check risk assessment results
+            if risk_assessment.recommended_action == RiskAction.HALT_TRADING:
+                self.logger.error(f"Risk management halted trading: {risk_assessment.risk_factors}")
+                return False
+            
+            if risk_assessment.recommended_action == RiskAction.EMERGENCY_EXIT:
+                self.logger.error(f"Risk management requires emergency exit: {risk_assessment.risk_factors}")
+                self.emergency_stop = True
+                return False
+            
+            # Log risk assessment results
+            self.logger.info(f"Risk Assessment - Level: {risk_assessment.risk_level.value}, "
+                           f"Risk: {risk_assessment.risk_percentage:.2%}, "
+                           f"Expected Value: {risk_assessment.expected_value:.2f}")
+            
+            # Apply position size recommendations
+            if (risk_assessment.position_size_recommendation > 0 and 
+                risk_assessment.position_size_recommendation < quantity):
+                
+                self.logger.warning(f"Risk manager recommends reducing position size from {quantity} "
+                                  f"to {risk_assessment.position_size_recommendation}")
+                # You could optionally auto-adjust the quantity here
+            
+            # Check circuit breakers
+            portfolio_value = await self._get_portfolio_value()
+            breakers = await self.risk_manager.check_circuit_breakers(portfolio_value)
+            
+            if breakers:
+                self.logger.error(f"Circuit breakers triggered: {breakers}")
+                return False
+            
+            # Legacy checks for backward compatibility
             if len(self.get_open_orders()) >= self.max_open_orders:
                 self.logger.error(f"Maximum open orders reached: {self.max_open_orders}")
                 return False
             
-            # Check balance for buy orders
-            if side == OrderSide.BUY:
-                required_balance = quantity * (price or await self._get_market_price(symbol))
-                usdt_balance = self.balance.get('USDT', Decimal('0'))
-                
-                if required_balance > usdt_balance:
-                    self.logger.error(f"Insufficient balance: {required_balance} > {usdt_balance}")
-                    return False
-            
-            # Check position size limits
-            current_position = self.positions.get(symbol)
-            if current_position:
-                new_size = current_position.size
-                if side == OrderSide.BUY:
-                    new_size += quantity
-                else:
+            return True
                     new_size -= quantity
                 
                 portfolio_value = self.get_portfolio_value()
@@ -550,3 +602,64 @@ class TradingEngine:
         except Exception as e:
             self.logger.error(f"Error getting market price for {symbol}: {e}")
             return Decimal('0')
+    
+    async def _get_portfolio_value(self) -> Decimal:
+        """
+        Get total portfolio value for risk management calculations.
+        
+        Returns:
+            Decimal: Total portfolio value in USDT
+        """
+        try:
+            total_value = Decimal('0')
+            
+            # Add cash balances
+            for coin, balance in self.balance.items():
+                if coin == 'USDT':
+                    total_value += balance
+                else:
+                    # Convert other coins to USDT value
+                    if balance > 0:
+                        try:
+                            price = await self._get_market_price(f"{coin}USDT")
+                            total_value += balance * price
+                        except:
+                            pass  # Skip if can't get price
+            
+            # Add unrealized PnL from positions
+            for symbol, position in self.positions.items():
+                total_value += position.unrealized_pnl
+            
+            return total_value
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating portfolio value: {e}")
+            return Decimal('10000')  # Default fallback value
+    
+    def get_risk_summary(self) -> Dict[str, Any]:
+        """
+        Get comprehensive risk management summary.
+        
+        Returns:
+            Dict containing risk metrics and status
+        """
+        try:
+            return {
+                "engine_status": {
+                    "running": self.is_running,
+                    "emergency_stop": self.emergency_stop,
+                    "total_trades": self.total_trades,
+                    "winning_trades": self.winning_trades,
+                    "win_rate": self.winning_trades / max(self.total_trades, 1),
+                    "total_pnl": float(self.total_pnl)
+                },
+                "portfolio_status": {
+                    "active_positions": len(self.positions),
+                    "open_orders": len(self.get_open_orders()),
+                    "balance": {k: float(v) for k, v in self.balance.items()}
+                },
+                "risk_management": self.risk_manager.get_risk_summary()
+            }
+        except Exception as e:
+            self.logger.error(f"Error generating risk summary: {e}")
+            return {"error": str(e)}
