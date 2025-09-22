@@ -1,0 +1,55 @@
+# User Guide
+
+## {{ title }}
+
+{{ description }}
+
+## Getting Started
+
+### Prerequisites
+- Python 3.8 or higher
+- Valid Bybit API credentials
+- Minimum 2GB RAM
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-repo/bybit-bot.git
+cd bybit-bot
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure your settings:
+```bash
+python setup.py configure
+```
+
+## Configuration
+
+### Basic Configuration
+
+The bot requires several configuration parameters:
+
+{% for config_key, config_value in configuration.items() %}
+- **{{ config_key }}**: {{ config_value.description or "Configuration option" }}
+  - Default: `{{ config_value.default or "None" }}`
+  - Required: {{ "Yes" if config_value.required else "No" }}
+{% endfor %}
+
+## Features
+
+{% for feature_name, feature_info in features.items() %}
+### {{ feature_name }}
+
+{{ feature_info.description }}
+
+**Usage Example:**
+```python
+{{ feature_info.example_code }}
+```
+{% endfor %}

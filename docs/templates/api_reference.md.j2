@@ -1,0 +1,35 @@
+# API Reference
+
+## {{ title }}
+
+{{ description }}
+
+{% for endpoint_path, endpoint in endpoints.items() %}
+### {{ endpoint.method }} {{ endpoint_path }}
+
+{{ endpoint.docstring or "No description available." }}
+
+**Parameters:**
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- `{{ param }}`: Parameter description
+{% endfor %}
+{% else %}
+No parameters
+{% endif %}
+
+**Example Request:**
+```bash
+curl -X {{ endpoint.method }} "{{ base_url }}{{ endpoint_path }}"
+```
+
+**Example Response:**
+```json
+{
+  "status": "success",
+  "data": {}
+}
+```
+
+---
+{% endfor %}

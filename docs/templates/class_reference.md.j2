@@ -1,0 +1,30 @@
+# Class Reference
+
+{% for class_name, class_info in classes.items() %}
+## {{ class_name }}
+
+{{ class_info.docstring or "No description available." }}
+
+**File:** `{{ class_info.file_path }}`
+
+{% if class_info.bases %}
+**Inherits from:** {{ class_info.bases | join(", ") }}
+{% endif %}
+
+### Methods
+
+{% for method in class_info.methods %}
+#### {{ method }}()
+
+Method description here.
+
+{% endfor %}
+
+### Attributes
+
+{% for attribute in class_info.attributes %}
+- `{{ attribute }}`
+{% endfor %}
+
+---
+{% endfor %}

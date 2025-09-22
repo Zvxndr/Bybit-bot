@@ -1,0 +1,41 @@
+# Troubleshooting Guide
+
+## Common Issues and Solutions
+
+{% for entry in troubleshooting_entries %}
+### {{ entry.title }}
+
+**Problem:** {{ entry.problem_description }}
+
+**Symptoms:**
+{% for symptom in entry.symptoms %}
+- {{ symptom }}
+{% endfor %}
+
+**Possible Causes:**
+{% for cause in entry.root_causes %}
+- {{ cause }}
+{% endfor %}
+
+**Solutions:**
+{% for solution in entry.solutions %}
+{{ loop.index }}. **{{ solution.title }}**
+   
+   {{ solution.description }}
+   
+   {% if solution.steps %}
+   Steps:
+   {% for step in solution.steps %}
+   - {{ step }}
+   {% endfor %}
+   {% endif %}
+   
+   {% if solution.code_example %}
+   ```{{ solution.language or "bash" }}
+   {{ solution.code_example }}
+   ```
+   {% endif %}
+{% endfor %}
+
+---
+{% endfor %}

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Bot Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+        h1, h2, h3 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+<p><h1>Troubleshooting Guide</h1></p><p><h2>Common Issues and Solutions</h2></p><p>
+<h3>API Connection Failed</h3></p><p><strong>Problem:</strong> Unable to connect to Bybit API</p><p><strong>Symptoms:</strong></p><p><ul><li>Connection timeout errors</li></p><p><li>401 Unauthorized responses</li></p><p><li>Network connection refused</li></p><p>
+<strong>Possible Causes:</strong></p><p><li>Invalid API credentials</li></p><p><li>Network connectivity issues</li></p><p><li>API rate limits exceeded</li></p><p><li>Bybit API maintenance</li></p><p>
+<strong>Solutions:</strong></p><p>1. <strong>Verify API Credentials</strong>
+   
+   Check that your API key and secret are correct and active
+   
+   
+   Steps:
+   
+   - Log into your Bybit account
+   
+   - Go to API Management
+   
+   - Verify your API key is active
+   
+   - Check API permissions (trading, read)
+   
+   - Regenerate API key if necessary
+   
+   
+   
+   
+   ``<code>bash
+   # Test API connection
+bot = TradingBot()
+try:
+    account_info = await bot.get_account_info()
+    print("API connection successful!")
+except Exception as e:
+    print(f"API connection failed: {e}")
+   </code>`<code>
+   </p><p>2. <strong>Check Network Connectivity</strong>
+   
+   Verify internet connection and firewall settings
+   
+   
+   Steps:
+   
+   - Test internet connectivity
+   
+   - Check firewall settings
+   
+   - Try different network if possible
+   
+   - Verify DNS resolution
+   
+   
+   
+   
+   </code>`<code>bash
+   import requests
+try:
+    response = requests.get("https://api.bybit.com/v5/market/time", timeout=10)
+    print(f"Bybit API accessible: {response.status_code}")
+except Exception as e:
+    print(f"Network issue: {e}")
+   </code>`<code>
+   </p><p>
+---</p><p><h3>Order Execution Failed</h3></p><p><strong>Problem:</strong> Orders are not being executed or are rejected</p><p><strong>Symptoms:</strong></p><p><li>Order status shows 'rejected'</li></p><p><li>Insufficient balance errors</li></p><p><li>Position size too small errors</li></p><p>
+<strong>Possible Causes:</strong></p><p><li>Insufficient account balance</li></p><p><li>Position size below minimum</li></p><p><li>Risk management rules violated</li></p><p><li>Market conditions (low liquidity)</li></p><p>
+<strong>Solutions:</strong></p><p>1. <strong>Check Account Balance</strong>
+   
+   Verify sufficient balance for the trade
+   
+   
+   Steps:
+   
+   - Check account balance
+   
+   - Consider trading fees
+   
+   - Verify margin requirements
+   
+   - Check for locked funds
+   
+   
+   
+   
+   </code>`<code>bash
+   balance = await bot.get_balance()
+print(f"Available balance: {balance['available']} USDT")
+print(f"Required for trade: {order_value + fees} USDT")
+   </code>`<code>
+   </p><p>2. <strong>Adjust Position Size</strong>
+   
+   Ensure position size meets minimum requirements
+   
+   
+   Steps:
+   
+   - Check minimum order size for the symbol
+   
+   - Adjust quantity to meet requirements
+   
+   - Consider price precision
+   
+   
+   
+   
+   </code>`<code>bash
+   # Get symbol info
+symbol_info = await bot.get_symbol_info("BTCUSDT")
+min_qty = symbol_info['min_order_qty']
+print(f"Minimum order quantity: {min_qty}")
+   </code>`<code>
+   </p><p>
+---</p><p><h3>Slow Performance or High Latency</h3></p><p><strong>Problem:</strong> Bot is running slowly or experiencing high latency</p><p><strong>Symptoms:</strong></p><p><li>Delayed order execution</li></p><p><li>High response times</li></p><p><li>Missed trading opportunities</li></p><p>
+<strong>Possible Causes:</strong></p><p><li>Network latency</li></p><p><li>Inefficient code execution</li></p><p><li>Resource constraints</li></p><p><li>API rate limiting</li></ul></p><p>
+<strong>Solutions:</strong></p><p>1. <strong>Optimize Network Connection</strong>
+   
+   Improve network performance and reduce latency
+   
+   
+   Steps:
+   
+   - Use a VPS close to Bybit servers
+   
+   - Optimize internet connection
+   
+   - Use wired instead of WiFi
+   
+   - Consider dedicated hosting
+   
+   
+   
+   </p><p>2. <strong>Enable Performance Optimizations</strong>
+   
+   Configure bot for optimal performance
+   
+   
+   Steps:
+   
+   - Enable caching for market data
+   
+   - Optimize indicator calculations
+   
+   - Use connection pooling
+   
+   - Reduce logging verbosity
+   
+   
+   
+   
+   </code>`<code>bash
+   # Enable performance optimizations
+bot = TradingBot({
+    'performance': {
+        'enable_caching': True,
+        'cache_duration': 1000,  # ms
+        'connection_pool_size': 10,
+        'async_processing': True
+    }
+})
+   </code>``
+   </p><p>
+---
+</p>
+</body>
+</html>
