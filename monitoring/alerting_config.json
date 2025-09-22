@@ -1,0 +1,20 @@
+{
+  "deployment_id": "deploy-20250922-143756",
+  "alerts": {
+    "health_check_failure": {
+      "enabled": true,
+      "threshold": 3,
+      "action": "auto_rollback"
+    },
+    "high_error_rate": {
+      "enabled": true,
+      "threshold": 5,
+      "action": "alert_team"
+    },
+    "resource_exhaustion": {
+      "enabled": true,
+      "threshold": 90,
+      "action": "scale_up"
+    }
+  }
+}
