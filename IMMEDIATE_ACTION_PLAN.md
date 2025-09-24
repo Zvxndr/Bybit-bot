@@ -5,6 +5,39 @@
 **Target**: Transform from simulation to actual trading system  
 **Current Status**: 85% Production Ready → 95% Production Ready
 
+## 🔑 **CRITICAL: API Keys Required for Testing**
+
+**⚠️ BEFORE STARTING IMPLEMENTATION:**
+1. **Set up Bybit API credentials** in `.env` file:
+   ```bash
+   # Add to .env (use testnet for initial testing)
+   BYBIT_API_KEY=your_testnet_api_key_here
+   BYBIT_API_SECRET=your_testnet_secret_here
+   BYBIT_TESTNET=true  # Start with testnet for safety
+   ```
+
+2. **Create Bybit testnet account** if not already done:
+   - Go to https://testnet.bybit.com
+   - Create account and generate API keys
+   - Fund testnet account with test USDT
+
+3. **Switch to mainnet only after thorough testnet validation**
+
+**🚨 NO MOCK DATA**: All testing must use real API connections to ensure actual functionality works correctly.
+
+### **🔒 API Key Safety Guidelines:**
+- ✅ **Always start with testnet** - Never use mainnet keys during development
+- ✅ **IP restrictions** - Restrict API keys to your development IP
+- ✅ **Limited permissions** - Only enable trading permissions needed
+- ✅ **Regular rotation** - Change API keys weekly during development
+- ❌ **Never commit** - Keep .env file in .gitignore
+- ❌ **No screenshots** - Avoid sharing screens with API keys visible
+
+### **🧪 Testnet vs Mainnet Strategy:**
+- **Weeks 1-3**: Testnet only for all development and testing
+- **Week 4**: Final testing on testnet before mainnet consideration
+- **Go-live**: Only switch to mainnet after 100% testnet validation
+
 ---
 
 ## 🎯 **Critical Issues Requiring Immediate Action**
@@ -200,10 +233,17 @@ class DataValidator:
 
 ### **This Week - Start Immediately:**
 
+**🔑 FIRST - API Setup (Do This NOW):**
+1. [ ] **Set up Bybit testnet account** at https://testnet.bybit.com
+2. [ ] **Generate API keys** (testnet for safety)
+3. [ ] **Add API credentials to .env file** (see top of document)
+4. [ ] **Verify API connection** with simple balance check
+
 **Monday:**
 1. [ ] Audit current `src/bot/main.py` - identify all mock implementations
 2. [ ] Review `src/bot/api/unified_bybit_client.py` - assess real trading capabilities
 3. [ ] Check `src/bot/ml/` directory - inventory actual vs mock models
+4. [ ] **Test API connection** with real testnet credentials
 
 **Tuesday:**
 1. [ ] Begin replacing mock market data with real WebSocket feeds
