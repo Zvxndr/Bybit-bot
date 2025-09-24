@@ -1,8 +1,0 @@
-{
-  "app_name": "bybit-bot",
-  "version": "1.0.0",
-  "deployment_id": "deploy-20250922-143506",
-  "build_timestamp": "2025-09-22T14:35:11.559682",
-  "build_host": "windows",
-  "python_version": "3.13.4"
-}
