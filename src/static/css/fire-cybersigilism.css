@@ -20,9 +20,9 @@
   --cyber-pink: #FF0080;
   
   /* Dark Cyber Base */
-  --bg-primary: rgba(0, 0, 0, 0.85);
-  --bg-secondary: rgba(20, 20, 20, 0.9);
-  --bg-glass: rgba(0, 0, 0, 0.2);
+  --bg-primary: rgba(0, 0, 0, 0.75);
+  --bg-secondary: rgba(20, 20, 20, 0.8);
+  --bg-glass: rgba(0, 0, 0, 0.1);
   --text-primary: #FFFFFF;
   --text-secondary: #CCCCCC;
   --text-muted: #888888;
@@ -42,9 +42,9 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-secondary);
-  /* Fire cybersigilism animated background - MAXIMUM visibility */
-  background: linear-gradient(45deg, rgba(0, 0, 0, 0.1), rgba(20, 20, 20, 0.2)),
-              url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJ0cnBuN2d4dTZvbXdoYjJ4NGhtZ3JvZjB3bXpsMGR1NmY4cXFkdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPEh5Lk3RGSIFEI/giphy.gif') no-repeat center center fixed;
+  /* Fire cybersigilism animated background - YOUR CUSTOM GIF */
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.05), rgba(20, 20, 20, 0.1)),
+              url('/static/wbknhket.abu.gif') no-repeat center center fixed;
   background-size: cover;
   background-attachment: fixed;
   color: var(--text-primary);

@@ -191,6 +191,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 response = {
                     "success": False,
                     "error": str(e),
+                    "timestamp": datetime.now().isoformat(),
                     "data": {
                         "testnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0},
                         "mainnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0}, 
