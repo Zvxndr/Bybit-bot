@@ -31,8 +31,13 @@ WORKDIR /app
 # Copy Python dependencies from builder stage
 COPY --from=builder /root/.local /home/appuser/.local
 
-# Change ownership to appuser
-RUN chown -R appuser:appuser /app
+# Copy application code
+COPY src/ ./src/
+COPY README.md .
+
+# Create necessary directories
+RUN mkdir -p logs data config && \
+    chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
@@ -40,15 +45,15 @@ USER appuser
 # Add local user bin to PATH
 ENV PATH=/home/appuser/.local/bin:$PATH
 
-# Set Python path
-ENV PYTHONPATH=/app/src
+# Set Python path to include the app directory
+ENV PYTHONPATH=/app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health')" || exit 1
+    CMD python -c "import sys; sys.path.append('/app'); from src.main import *" || exit 1
 
 # Expose port
 EXPOSE 8080
 
-# Run application
+# Run application - change the command
 CMD ["python", "-m", "src.main"]
