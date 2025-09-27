@@ -17,6 +17,16 @@ from threading import Thread
 import time
 from typing import List, Dict, Any
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ Environment variables loaded from .env file")
+except ImportError:
+    print("⚠️ python-dotenv not installed - install with: pip install python-dotenv")
+except Exception as e:
+    print(f"⚠️ Could not load .env file: {e}")
+
 # Add HTTP server imports
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
@@ -129,9 +139,41 @@ except ImportError as e1:
         
         shared_state = SharedState()
         
-        def get_bybit_client():
-            print("⚠️ Bybit client not available - running in offline mode")
-            return None
+        async def get_bybit_client():
+            """Get Bybit client from environment variables"""
+            api_key = os.getenv('BYBIT_TESTNET_API_KEY')
+            api_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
+            
+            if not api_key or not api_secret:
+                print("⚠️ Bybit API keys not found in environment - running in offline mode")
+                print("💡 Add BYBIT_TESTNET_API_KEY and BYBIT_TESTNET_API_SECRET to .env file")
+                return None
+            
+            try:
+                # Import pybit for Bybit API
+                from pybit.unified_trading import HTTP
+                
+                # Create client (testnet=True for testnet keys)
+                client = HTTP(
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    testnet=True  # Using testnet keys from environment
+                )
+                
+                # Test connection
+                account_info = client.get_wallet_balance(accountType="UNIFIED")
+                print(f"✅ Bybit client connected successfully!")
+                print(f"📊 Account type: UNIFIED (Testnet)")
+                
+                return client
+                
+            except ImportError:
+                print("⚠️ pybit not installed - install with: pip install pybit")
+                return None
+            except Exception as e:
+                print(f"⚠️ Bybit connection failed: {e}")
+                print("💡 Check your API keys and network connection")
+                return None
 
 # Speed Demon integration
 try:
