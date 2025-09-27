@@ -48,6 +48,22 @@ venv.bak/
 .DS_Store?
 ._*
 .Spotlight-V100
+
+# Generated Documentation
+docs/output/
+docs/archive/
+
+# Local Environment Files
+.env.local
+.env.test
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Audit Reports (keep latest only)
+*AUDIT*.md
+!COMPREHENSIVE_CODEBASE_AUDIT.md
 .Trashes
 ehthumbs.db
 Thumbs.db
