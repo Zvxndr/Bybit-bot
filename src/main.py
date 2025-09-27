@@ -141,29 +141,32 @@ except ImportError as e1:
         
         async def get_bybit_client():
             """Get Bybit client from environment variables"""
-            api_key = os.getenv('BYBIT_TESTNET_API_KEY')
-            api_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
+            # Check for both naming conventions
+            api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
+            is_testnet = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
             
             if not api_key or not api_secret:
                 print("⚠️ Bybit API keys not found in environment - running in offline mode")
-                print("💡 Add BYBIT_TESTNET_API_KEY and BYBIT_TESTNET_API_SECRET to .env file")
+                print("💡 Set BYBIT_API_KEY and BYBIT_API_SECRET in DigitalOcean environment variables")
                 return None
             
             try:
                 # Import pybit for Bybit API
                 from pybit.unified_trading import HTTP
                 
-                # Create client (testnet=True for testnet keys)
+                # Create client using your environment configuration
                 client = HTTP(
                     api_key=api_key,
                     api_secret=api_secret,
-                    testnet=True  # Using testnet keys from environment
+                    testnet=is_testnet
                 )
                 
                 # Test connection
                 account_info = client.get_wallet_balance(accountType="UNIFIED")
+                env_type = "Testnet" if is_testnet else "Mainnet"
                 print(f"✅ Bybit client connected successfully!")
-                print(f"📊 Account type: UNIFIED (Testnet)")
+                print(f"📊 Account type: UNIFIED ({env_type})")
                 
                 return client
                 
