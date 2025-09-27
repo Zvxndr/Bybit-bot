@@ -31,33 +31,93 @@ except Exception as e:
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
-# Import frontend server and shared state - FIXED FOR DEPLOYMENT (SAR Reference)
-# According to SAR: Container runs with PYTHONPATH=/app and entry point: python -m src.main
-# This means imports should be absolute from the /app root directory
+# Import frontend server and shared state - ENHANCED FOR RELIABLE DEPLOYMENT
+# Multiple import strategies to ensure proper loading in all environments
+frontend_handler = None
+shared_state = None
+get_bybit_client = None
+
+# Strategy 1: Try relative imports from current directory
 try:
-    # Primary import path for deployment environment (python -m src.main)
-    from src.frontend_server import FrontendHandler
-    from src.shared_state import shared_state
-    from src.bybit_api import get_bybit_client
+    import sys
+    from pathlib import Path
+    
+    # Add current src directory to path
+    current_dir = Path(__file__).parent
+    if str(current_dir) not in sys.path:
+        sys.path.insert(0, str(current_dir))
+    
+    from frontend_server import FrontendHandler
+    from shared_state import shared_state
+    from bybit_api import get_bybit_client
+    print("✅ Full frontend components loaded successfully")
+    
 except ImportError as e1:
+    # Strategy 2: Try absolute imports for deployment environment  
     try:
-        # Fallback for direct execution context (python src/main.py)
-        from frontend_server import FrontendHandler
-        from shared_state import shared_state  
-        from bybit_api import get_bybit_client
+        from src.frontend_server import FrontendHandler
+        from src.shared_state import shared_state
+        from src.bybit_api import get_bybit_client
+        print("✅ Full frontend components loaded via absolute imports")
+        
     except ImportError as e2:
-        # Final fallback - create minimal implementations for failed deployments
-        print(f"⚠️ Import errors: {e1}, {e2}")
-        print("🔧 Using minimal fallback implementations")
-        
-        class FrontendHandler(BaseHTTPRequestHandler):
-            def do_GET(self):
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write('🔥 Bybit Bot - Running with minimal frontend'.encode('utf-8'))
-        
-        class SharedState:
+        # Strategy 3: Try importing just the essential components
+        try:
+            import importlib.util
+            
+            # Load shared_state directly
+            shared_state_path = Path(__file__).parent / "shared_state.py"
+            spec = importlib.util.spec_from_file_location("shared_state", shared_state_path)
+            shared_state_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(shared_state_module)
+            shared_state = shared_state_module.shared_state
+            
+            # Load frontend_server directly  
+            frontend_path = Path(__file__).parent / "frontend_server.py"
+            spec = importlib.util.spec_from_file_location("frontend_server", frontend_path)
+            frontend_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(frontend_module)
+            FrontendHandler = frontend_module.FrontendHandler
+            
+            # Load bybit_api directly
+            bybit_path = Path(__file__).parent / "bybit_api.py"
+            spec = importlib.util.spec_from_file_location("bybit_api", bybit_path)
+            bybit_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(bybit_module)
+            get_bybit_client = bybit_module.get_bybit_client
+            
+            print("✅ Components loaded via direct file import")
+            
+        except Exception as e3:
+            print(f"⚠️ All import strategies failed: {e1}, {e2}, {e3}")
+            print("🔧 Using minimal fallback implementations")
+            
+            # Only create fallbacks if all imports failed
+            class FrontendHandler(BaseHTTPRequestHandler):
+                def do_GET(self):
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html')
+                    self.end_headers()
+                    html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><title>Bybit Bot - Minimal Mode</title></head>
+                    <body style="background:#000;color:#0ff;font-family:monospace;padding:20px;">
+                        <h1>🔥 Bybit Trading Bot - Minimal Frontend</h1>
+                        <p>✅ Bot is running in safe mode</p>
+                        <p>📊 <a href="/api/status" style="color:#0ff;">API Status</a></p>
+                        <p>💚 <a href="/health" style="color:#0ff;">Health Check</a></p>
+                        <p>⚠️ Full dashboard temporarily unavailable</p>
+                    </body>
+                    </html>
+                    """
+                    self.wfile.write(html.encode('utf-8'))
+            
+            class SharedState:
+                def __init__(self):
+                    self.data = {}
+                    self.logs = []
+                    self.system_status = "initializing"
             def __init__(self):
                 self.data = {}
                 self.logs = []
@@ -136,47 +196,48 @@ except ImportError as e1:
                 if hasattr(self, 'data') and name in self.data:
                     return self.data[name]
                 raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-        
-        shared_state = SharedState()
-        
-        async def get_bybit_client():
-            """Get Bybit client from environment variables"""
-            # Check for both naming conventions
-            api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
-            api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
-            is_testnet = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
             
-            if not api_key or not api_secret:
-                print("⚠️ Bybit API keys not found in environment - running in offline mode")
-                print("💡 Set BYBIT_API_KEY and BYBIT_API_SECRET in DigitalOcean environment variables")
-                return None
+            # Create fallback shared_state instance
+            shared_state = SharedState()
             
-            try:
-                # Import pybit for Bybit API
-                from pybit.unified_trading import HTTP
+            async def get_bybit_client():
+                """Get Bybit client from environment variables"""
+                # Check for both naming conventions
+                api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+                api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
+                is_testnet = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
                 
-                # Create client using your environment configuration
-                client = HTTP(
-                    api_key=api_key,
-                    api_secret=api_secret,
-                    testnet=is_testnet
-                )
+                if not api_key or not api_secret:
+                    print("⚠️ Bybit API keys not found in environment - running in offline mode")
+                    print("💡 Set BYBIT_API_KEY and BYBIT_API_SECRET in DigitalOcean environment variables")
+                    return None
                 
-                # Test connection
-                account_info = client.get_wallet_balance(accountType="UNIFIED")
-                env_type = "Testnet" if is_testnet else "Mainnet"
-                print(f"✅ Bybit client connected successfully!")
-                print(f"📊 Account type: UNIFIED ({env_type})")
-                
-                return client
-                
-            except ImportError:
-                print("⚠️ pybit not installed - install with: pip install pybit")
-                return None
-            except Exception as e:
-                print(f"⚠️ Bybit connection failed: {e}")
-                print("💡 Check your API keys and network connection")
-                return None
+                try:
+                    # Import pybit for Bybit API
+                    from pybit.unified_trading import HTTP
+                    
+                    # Create client using your environment configuration
+                    client = HTTP(
+                        api_key=api_key,
+                        api_secret=api_secret,
+                        testnet=is_testnet
+                    )
+                    
+                    # Test connection
+                    account_info = client.get_wallet_balance(accountType="UNIFIED")
+                    env_type = "Testnet" if is_testnet else "Mainnet"
+                    print(f"✅ Bybit client connected successfully!")
+                    print(f"📊 Account type: UNIFIED ({env_type})")
+                    
+                    return client
+                    
+                except ImportError:
+                    print("⚠️ pybit not installed - install with: pip install pybit")
+                    return None
+                except Exception as e:
+                    print(f"⚠️ Bybit connection failed: {e}")
+                    print("💡 Check your API keys and network connection")
+                    return None
 
 # Speed Demon integration
 try:
