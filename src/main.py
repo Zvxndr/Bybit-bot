@@ -23,6 +23,7 @@ import json
 # Import frontend server and shared state
 from .frontend_server import FrontendHandler
 from .shared_state import shared_state
+from .bybit_api import get_bybit_client
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -158,6 +159,7 @@ class TradingBotApplication:
                 logger.info("📱 Dashboard: http://localhost:8080")
                 logger.info("💚 Health: http://localhost:8080/health")
                 logger.info("📊 API: http://localhost:8080/api/status")
+                logger.info("💡 NOTE: If balance shows 0.00 USDT, add testnet funds at https://testnet.bybit.com/")
                 self.http_server.serve_forever()
             
             # Run HTTP server in background thread
@@ -178,6 +180,88 @@ class TradingBotApplication:
             "timestamp": datetime.now().isoformat()
         }
     
+    async def fetch_real_trading_data(self):
+        """Fetch real trading data from Bybit API"""
+        try:
+            client = await get_bybit_client()
+            
+            # Fetch account balance
+            balance_result = await client.get_account_balance()
+            if balance_result["success"]:
+                balance_data = balance_result["data"]
+                total_balance = balance_data["total_wallet_balance"]
+                available_balance = balance_data["total_available_balance"]
+                used_margin = balance_data["total_used_margin"]
+                
+                # Get USDT balance specifically
+                usdt_balance = "0.00"
+                for coin in balance_data["coins"]:
+                    if coin["coin"] == "USDT":
+                        usdt_balance = f"{coin['wallet_balance']:.2f}"
+                        break
+                
+                # Check for zero balance and provide guidance
+                if usdt_balance == "0.00" and total_balance == "0.00":
+                    balance_display = "0.00 USDT - Add testnet funds manually"
+                    logger.warning("⚠️  Zero balance detected! Add testnet funds at https://testnet.bybit.com/")
+                    shared_state.add_log_entry("WARNING", "Zero balance - Manual testnet funding required")
+                else:
+                    balance_display = f"{usdt_balance} USDT" if usdt_balance != "0.00" else f"{total_balance} USDT"
+            else:
+                balance_display = f"API Error: {balance_result['message']}"
+                available_balance = "0.00"
+                used_margin = "0.00"
+            
+            # Fetch positions
+            positions_result = await client.get_positions()
+            positions_count = 0
+            total_pnl = 0.0
+            
+            if positions_result["success"]:
+                positions = positions_result["data"]["positions"]
+                positions_count = len(positions)
+                
+                # Calculate total PnL
+                for pos in positions:
+                    try:
+                        pnl_value = float(pos["pnl"])
+                        total_pnl += pnl_value
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Update shared state with positions
+                shared_state.update_positions(positions)
+            
+            # Update trading data in shared state
+            shared_state.update_trading_data(
+                strategies_active=3,  # This would come from your strategy manager
+                balance=balance_display,
+                daily_pnl=f"{total_pnl:+.2f} USDT",
+                margin_used=f"{used_margin} USDT",
+                margin_available=f"{available_balance} USDT",
+                positions_count=positions_count
+            )
+            
+            logger.info(f"📊 Real balance: {balance_display}")
+            shared_state.add_log_entry("INFO", f"Real balance: {balance_display}")
+            
+            if positions_count > 0:
+                logger.info(f"📈 Active positions: {positions_count}, PnL: {total_pnl:+.2f} USDT")
+                shared_state.add_log_entry("INFO", f"Active positions: {positions_count}, PnL: {total_pnl:+.2f} USDT")
+            
+        except Exception as e:
+            logger.error(f"❌ Error fetching trading data: {str(e)}")
+            shared_state.add_log_entry("ERROR", f"Error fetching trading data: {str(e)}")
+            
+            # Fallback data
+            shared_state.update_trading_data(
+                strategies_active=0,
+                balance="API Connection Error",
+                daily_pnl="0.00 USDT",
+                margin_used="0.00 USDT",
+                margin_available="0.00 USDT"
+            )
+    
     async def run(self):
         """Main application loop"""
         self.running = True
@@ -185,15 +269,13 @@ class TradingBotApplication:
         
         while self.running:
             try:
-                # Simulate trading operations
+                # Fetch real trading data from Bybit API
                 logger.info("📊 Processing market data...")
                 shared_state.add_log_entry("INFO", "Processing market data...")
-                # Update some trading data
-                shared_state.update_trading_data(
-                    strategies_active=3,
-                    balance="10,000.00 USDT",
-                    daily_pnl="+125.50 USDT"
-                )
+                
+                # Fetch real balance and positions from Bybit
+                await self.fetch_real_trading_data()
+                
                 await asyncio.sleep(10)
                 
                 logger.info("🤖 Executing trading strategies...")

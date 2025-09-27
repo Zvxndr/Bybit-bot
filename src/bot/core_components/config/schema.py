@@ -223,7 +223,7 @@ class ConservativeModeConfig(TradingModeConfig):
 class TradingConfig(BaseModel):
     """Trading configuration"""
     mode: TradingMode = Field(default=TradingMode.CONSERVATIVE, description="Trading mode")
-    base_balance: float = Field(default=10000, description="Base balance in USDT")
+    base_balance: float = Field(default=0, description="Base balance in USDT - will be fetched from API")
     
     # Mode-specific configurations
     aggressive_mode: AggressiveModeConfig = Field(default=None)
@@ -235,7 +235,7 @@ class TradingConfig(BaseModel):
     order_timeout: int = Field(default=30, description="Order timeout in seconds")
     
     # Trading pairs and timeframes
-    symbols: List[str] = Field(default_factory=lambda: ["BTCUSDT", "ETHUSDT"])
+    symbols: List[str] = Field(default_factory=lambda: [], description="Trading symbols - will be configured via API")
     timeframes: Dict[str, str] = Field(default_factory=lambda: {
         "primary": "1h",
         "secondary": "4h", 

@@ -364,7 +364,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 </div>
                 <div class="metric">
                     <span>Strategies</span>
-                    <span class="metric-value" id="strategies">3 Active</span>
+                    <span class="metric-value" id="strategies">Loading...</span>
                 </div>
             </div>
             
@@ -372,23 +372,23 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 <h3>💰 Portfolio</h3>
                 <div class="metric">
                     <span>Balance</span>
-                    <span class="metric-value" id="balance">10,000.00 USDT</span>
+                    <span class="metric-value" id="balance">Loading...</span>
                 </div>
                 <div class="metric">
                     <span>Daily P&L</span>
-                    <span class="metric-value positive" id="daily-pnl">+125.50 USDT</span>
+                    <span class="metric-value neutral" id="daily-pnl">Loading...</span>
                 </div>
                 <div class="metric">
                     <span>Open Positions</span>
-                    <span class="metric-value" id="positions">1</span>
+                    <span class="metric-value" id="positions">Loading...</span>
                 </div>
                 <div class="metric">
                     <span>Margin Used</span>
-                    <span class="metric-value" id="margin-used">650.00 USDT</span>
+                    <span class="metric-value" id="margin-used">Loading...</span>
                 </div>
                 <div class="metric">
                     <span>Available</span>
-                    <span class="metric-value positive" id="margin-available">9,350.00 USDT</span>
+                    <span class="metric-value neutral" id="margin-available">Loading...</span>
                 </div>
             </div>
             

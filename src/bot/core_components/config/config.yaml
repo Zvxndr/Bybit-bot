@@ -50,7 +50,7 @@ database:
 # ============================================================================
 trading:
   mode: conservative  # conservative, aggressive, hybrid
-  base_balance: 10000.0
+  base_balance: 0.0  # Will be fetched from Bybit API
   
   # Conservative mode configuration
   conservative_mode:
