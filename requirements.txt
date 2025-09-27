@@ -46,6 +46,7 @@ pyyaml>=6.0
 click>=8.1.0
 python-dotenv>=1.0.0
 loguru>=0.7.0
+psutil>=5.9.0
 
 # Statistics and finance
 statsmodels>=0.14.0

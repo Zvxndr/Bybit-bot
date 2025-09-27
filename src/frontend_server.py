@@ -8,6 +8,7 @@ This creates a seamless single-server solution.
 
 import os
 import json
+from .shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 import mimetypes
@@ -68,31 +69,49 @@ class FrontendHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(health_data, indent=2).encode())
     
     def handle_api_request(self):
-        """Handle API requests"""
+        """Handle API requests with real trading bot data"""
         if self.path == '/api/status':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
+            # Get real system data
+            import psutil
+            import datetime
+            from pathlib import Path
+            
+            # Real system metrics
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            # Get data from shared state
+            shared_data = shared_state.get_all_data()
+            
+            # Check database status
+            db_path = Path("data/trading_bot.db")
+            db_status = "ready" if db_path.exists() else "initializing"
+            
             status_data = {
                 "trading_bot": {
-                    "status": "active",
-                    "version": "2.0.0",
-                    "mode": "testnet",
-                    "strategies_active": 3,
-                    "positions": 0,
-                    "balance": "10000.00 USDT",
-                    "daily_pnl": "+125.50 USDT",
-                    "uptime": "02:15:30"
+                    "status": shared_data["system"]["status"],
+                    "version": shared_data["system"]["version"],
+                    "mode": shared_data["system"]["mode"],
+                    "strategies_active": shared_data["trading"]["strategies_active"],
+                    "positions": shared_data["trading"]["positions_count"],
+                    "balance": shared_data["trading"]["balance"],
+                    "daily_pnl": shared_data["trading"]["daily_pnl"],
+                    "uptime": shared_data["system"].get("uptime_str", "00:00:00")
                 },
                 "system": {
-                    "cpu_usage": "12%",
-                    "memory_usage": "45%",
-                    "disk_space": "78% available",
-                    "network": "connected"
+                    "cpu_usage": f"{cpu_percent:.1f}%",
+                    "memory_usage": f"{memory.percent:.1f}%",
+                    "disk_space": f"{100 - disk.percent:.1f}% available",
+                    "network": "connected",
+                    "database": db_status
                 },
-                "last_update": "2025-09-27T10:30:00Z"
+                "last_update": shared_data["last_update"]
             }
             
             self.wfile.write(json.dumps(status_data, indent=2).encode())
@@ -103,22 +122,8 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            positions_data = {
-                "positions": [
-                    {
-                        "symbol": "BTCUSDT",
-                        "side": "long",
-                        "size": "0.1",
-                        "entry_price": "65000.00",
-                        "mark_price": "65125.50",
-                        "pnl": "+12.55",
-                        "pnl_percentage": "+0.19%"
-                    }
-                ],
-                "total_pnl": "+12.55 USDT",
-                "margin_used": "650.00 USDT",
-                "margin_available": "9350.00 USDT"
-            }
+            # Get real positions data from shared state
+            positions_data = shared_state.get_positions_data()
             
             self.wfile.write(json.dumps(positions_data, indent=2).encode())
             

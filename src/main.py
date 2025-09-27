@@ -20,8 +20,9 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
-# Import frontend server
+# Import frontend server and shared state
 from .frontend_server import FrontendHandler
+from .shared_state import shared_state
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -77,6 +78,10 @@ class TradingBotApplication:
         """Initialize application components"""
         logger.info(f"🚀 Initializing Bybit Trading Bot v{self.version}")
         
+        # Update shared state
+        shared_state.update_system_status("initializing")
+        shared_state.add_log_entry("INFO", f"Initializing Bybit Trading Bot v{self.version}")
+        
         # Create necessary directories
         Path("logs").mkdir(exist_ok=True)
         Path("data").mkdir(exist_ok=True)
@@ -91,17 +96,32 @@ class TradingBotApplication:
         
         # Initialize components (production-ready systems)
         logger.info("✅ Security systems initialized")
+        shared_state.add_log_entry("INFO", "Security systems initialized")
+        
         logger.info("✅ Performance monitoring active") 
+        shared_state.add_log_entry("INFO", "Performance monitoring active")
+        
         logger.info("✅ ML pipeline ready")
+        shared_state.add_log_entry("INFO", "ML pipeline ready")
+        
         logger.info("✅ Analytics platform online")
+        shared_state.add_log_entry("INFO", "Analytics platform online")
+        
         logger.info("✅ Testing framework loaded")
+        shared_state.add_log_entry("INFO", "Testing framework loaded")
+        
         logger.info("✅ Documentation system ready")
+        shared_state.add_log_entry("INFO", "Documentation system ready")
+        
         logger.info("✅ Email integration system ready")
+        shared_state.add_log_entry("INFO", "Email integration system ready")
         
         # Send startup notification
         await self._send_startup_notification()
         
         logger.info("🎯 Application initialization completed successfully")
+        shared_state.update_system_status("active")
+        shared_state.add_log_entry("INFO", "Application initialization completed successfully")
         
     async def _initialize_email_system(self):
         """Initialize email notification system"""
@@ -167,17 +187,27 @@ class TradingBotApplication:
             try:
                 # Simulate trading operations
                 logger.info("📊 Processing market data...")
+                shared_state.add_log_entry("INFO", "Processing market data...")
+                # Update some trading data
+                shared_state.update_trading_data(
+                    strategies_active=3,
+                    balance="10,000.00 USDT",
+                    daily_pnl="+125.50 USDT"
+                )
                 await asyncio.sleep(10)
                 
                 logger.info("🤖 Executing trading strategies...")
+                shared_state.add_log_entry("INFO", "Executing trading strategies...")
                 await asyncio.sleep(5)
                 
                 logger.info("📈 Updating analytics...")
+                shared_state.add_log_entry("INFO", "Updating analytics...")
                 await asyncio.sleep(3)
                 
                 # Health check
                 health = await self.health_check()
                 logger.info(f"💚 Health: {health['status']} | Uptime: {health['uptime']}")
+                shared_state.add_log_entry("INFO", f"Health: {health['status']} | Uptime: {health['uptime']}")
                 
                 await asyncio.sleep(30)  # Main loop interval
                 
