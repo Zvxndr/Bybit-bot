@@ -31,11 +31,6 @@ WORKDIR /app
 # Copy Python dependencies from builder stage
 COPY --from=builder /root/.local /home/appuser/.local
 
-# Copy application code
-COPY src/ ./src/
-COPY setup.py .
-COPY README.md .
-
 # Change ownership to appuser
 RUN chown -R appuser:appuser /app
 
