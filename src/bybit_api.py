@@ -44,12 +44,13 @@ class BybitAPIClient:
         if self.session:
             await self.session.close()
     
-    def _generate_signature(self, timestamp: str, params: str) -> str:
+    def _generate_signature(self, timestamp: str, recv_window: str, params: str) -> str:
         """Generate API signature for authenticated requests"""
         if not self.api_secret:
             return ""
-            
-        param_str = f"{timestamp}{self.api_key}{params}"
+        
+        # Bybit signature format: timestamp + api_key + recv_window + params
+        param_str = f"{timestamp}{self.api_key}{recv_window}{params}"
         return hmac.new(
             self.api_secret.encode('utf-8'),
             param_str.encode('utf-8'),
@@ -59,16 +60,17 @@ class BybitAPIClient:
     def _get_headers(self, params: str = "") -> Dict[str, str]:
         """Get headers for API requests"""
         timestamp = str(int(time.time() * 1000))
+        recv_window = "5000"
         
         headers = {
             "Content-Type": "application/json",
             "X-BAPI-API-KEY": self.api_key or "",
             "X-BAPI-TIMESTAMP": timestamp,
-            "X-BAPI-RECV-WINDOW": "5000"
+            "X-BAPI-RECV-WINDOW": recv_window
         }
         
         if self.api_key and self.api_secret:
-            signature = self._generate_signature(timestamp, params)
+            signature = self._generate_signature(timestamp, recv_window, params)
             headers["X-BAPI-SIGN"] = signature
             
         return headers
