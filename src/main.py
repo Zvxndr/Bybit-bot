@@ -306,11 +306,11 @@ class TradingBotApplication:
         
     async def initialize(self):
         """Initialize application components"""
-        logger.info(f"🚀 Initializing Bybit Trading Bot v{self.version}")
+        logger.info(f"🚀 Initializing Open Alpha v{self.version}")
         
         # Update shared state
         shared_state.update_system_status("initializing")
-        shared_state.add_log_entry("INFO", f"Initializing Bybit Trading Bot v{self.version}")
+        shared_state.add_log_entry("INFO", f"Initializing Open Alpha v{self.version}")
         
         # Create necessary directories
         Path("logs").mkdir(exist_ok=True)
@@ -633,6 +633,24 @@ class TradingBotApplication:
                                             order_id = order_result["data"]["orderId"]
                                             logger.info(f"✅ TESTNET ORDER PLACED: {action.upper()} {order_qty} {symbol} (Order ID: {order_id})")
                                             shared_state.add_log_entry("SUCCESS", f"Testnet order: {action.upper()} {symbol}")
+                                            
+                                            # Add position to shared state
+                                            position = {
+                                                "symbol": symbol,
+                                                "side": action.upper(),
+                                                "size": str(order_qty),
+                                                "entry_price": "0.00",  # Would be filled by real API
+                                                "mark_price": "0.00",
+                                                "pnl": "0.00",
+                                                "order_id": order_id,
+                                                "timestamp": datetime.now().isoformat()
+                                            }
+                                            
+                                            # Get current positions and add new one
+                                            current_positions = shared_state._state.get("positions", [])
+                                            current_positions.append(position)
+                                            shared_state.update_positions(current_positions)
+                                            
                                         else:
                                             error_msg = order_result.get("message", "Unknown error")
                                             logger.warning(f"❌ Order failed: {error_msg}")
@@ -738,7 +756,7 @@ def signal_handler(signum, frame):
 
 async def main():
     """Main entry point"""
-    logger.info("🚀 Starting Bybit Trading Bot Application")
+    logger.info("🚀 Starting Open Alpha Application")
     
     try:
         # Set up signal handlers
