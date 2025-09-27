@@ -48,6 +48,18 @@ yfinance>=0.2.0
 # Development and testing
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
+
+# Australian Trust Security & Infrastructure (Phase 1 additions)
+python-digitalocean>=1.17.0
+sendgrid>=6.10.0
+redis>=4.5.0
+cryptography>=41.0.0
+pyotp>=2.8.0
+qrcode[pil]>=7.4.0
+schedule>=1.2.0
+flask>=2.3.0
+gunicorn>=21.2.0
+structlog>=23.1.0
 pytest-cov>=4.1.0
 black>=23.9.0
 flake8>=6.1.0

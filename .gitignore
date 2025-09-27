@@ -107,3 +107,19 @@ tax_reports/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+# Production specific
+.secrets_key
+deployment_logs/
+production_configs/
+backup/
+*.backup
+# Monitoring and logs
+monitoring_data/
+audit_logs/
+performance_logs/
+# Trading specific
+live_trading_data/
+positions_backup/
+trading_logs/
+# Archive
+archive/development/
