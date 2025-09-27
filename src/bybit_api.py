@@ -44,20 +44,28 @@ class BybitAPIClient:
         if self.session:
             await self.session.close()
     
-    def _generate_signature(self, timestamp: str, recv_window: str, params: str) -> str:
+    def _generate_signature(self, timestamp: str, recv_window: str, params: str, method: str = "GET") -> str:
         """Generate API signature for authenticated requests"""
         if not self.api_secret:
             return ""
         
-        # Bybit signature format: timestamp + api_key + recv_window + params
-        param_str = f"{timestamp}{self.api_key}{recv_window}{params}"
+        # Bybit signature format varies by method:
+        # GET: timestamp + api_key + recv_window + params (query string)
+        # POST: timestamp + api_key + recv_window + JSON_body
+        if method == "POST":
+            # For POST requests, params is the JSON body
+            param_str = f"{timestamp}{self.api_key}{recv_window}{params}"
+        else:
+            # For GET requests, params is the query string
+            param_str = f"{timestamp}{self.api_key}{recv_window}{params}"
+            
         return hmac.new(
             self.api_secret.encode('utf-8'),
             param_str.encode('utf-8'),
             hashlib.sha256
         ).hexdigest()
     
-    def _get_headers(self, params: str = "") -> Dict[str, str]:
+    def _get_headers(self, params: str = "", method: str = "GET") -> Dict[str, str]:
         """Get headers for API requests"""
         timestamp = str(int(time.time() * 1000))
         recv_window = "5000"
@@ -70,7 +78,7 @@ class BybitAPIClient:
         }
         
         if self.api_key and self.api_secret:
-            signature = self._generate_signature(timestamp, recv_window, params)
+            signature = self._generate_signature(timestamp, recv_window, params, method)
             headers["X-BAPI-SIGN"] = signature
             
         return headers
@@ -299,12 +307,12 @@ class BybitAPIClient:
             if order_type.lower() == "limit" and price:
                 order_params["price"] = price
             
-            # Convert to query string for signature
-            import urllib.parse
-            params_str = urllib.parse.urlencode(sorted(order_params.items()))
+            # For POST requests, use JSON body directly
+            import json
+            params_str = json.dumps(order_params, separators=(',', ':'))
             
             url = f"{self.base_url}{endpoint}"
-            headers = self._get_headers(params_str)
+            headers = self._get_headers(params_str, method="POST")
             
             async with self.session.post(url, json=order_params, headers=headers) as response:
                 data = await response.json()
