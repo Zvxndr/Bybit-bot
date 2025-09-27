@@ -361,10 +361,25 @@ def load_api_credentials() -> tuple[Optional[str], Optional[str]]:
     except Exception as e:
         logger.warning(f"Could not load config file: {e}")
     
-    # Try environment variables
+    # Try environment variables (support strategy graduation system)
     import os
-    api_key = os.getenv('BYBIT_API_KEY')
-    api_secret = os.getenv('BYBIT_API_SECRET')
+    
+    # For strategy graduation system:
+    # - BYBIT_TESTNET_* for paper trading validation
+    # - BYBIT_LIVE_* for graduated strategies  
+    # - BYBIT_API_* as generic fallback
+    
+    # Check if we're in testnet mode (default for strategy validation)
+    testnet_mode = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
+    
+    if testnet_mode:
+        # Paper trading mode - use testnet credentials
+        api_key = os.getenv('BYBIT_TESTNET_API_KEY') or os.getenv('BYBIT_API_KEY')
+        api_secret = os.getenv('BYBIT_TESTNET_API_SECRET') or os.getenv('BYBIT_API_SECRET')
+    else:
+        # Live trading mode - use live credentials for graduated strategies
+        api_key = os.getenv('BYBIT_LIVE_API_KEY') or os.getenv('BYBIT_API_KEY')
+        api_secret = os.getenv('BYBIT_LIVE_API_SECRET') or os.getenv('BYBIT_API_SECRET')
     
     return api_key, api_secret
 
@@ -372,15 +387,20 @@ def load_api_credentials() -> tuple[Optional[str], Optional[str]]:
 _bybit_client = None
 
 async def get_bybit_client() -> BybitAPIClient:
-    """Get or create Bybit API client"""
+    """Get or create Bybit API client with strategy graduation support"""
     global _bybit_client
     
     if _bybit_client is None:
+        import os
         api_key, api_secret = load_api_credentials()
+        
+        # Determine testnet mode for strategy graduation system
+        testnet_mode = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
+        
         _bybit_client = BybitAPIClient(
             api_key=api_key,
             api_secret=api_secret,
-            testnet=True  # Set to False for mainnet
+            testnet=testnet_mode  # Dynamic based on strategy graduation
         )
         await _bybit_client.__aenter__()
     

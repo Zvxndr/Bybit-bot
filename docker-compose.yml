@@ -10,6 +10,15 @@ services:
     environment:
       - ENV=production
       - LOG_LEVEL=info
+      # Strategy Graduation System API Keys
+      - BYBIT_TESTNET=${BYBIT_TESTNET:-true}
+      - BYBIT_TESTNET_API_KEY=${BYBIT_TESTNET_API_KEY}
+      - BYBIT_TESTNET_API_SECRET=${BYBIT_TESTNET_API_SECRET}
+      - BYBIT_LIVE_API_KEY=${BYBIT_LIVE_API_KEY}
+      - BYBIT_LIVE_API_SECRET=${BYBIT_LIVE_API_SECRET}
+      # Generic fallback
+      - BYBIT_API_KEY=${BYBIT_API_KEY}
+      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
