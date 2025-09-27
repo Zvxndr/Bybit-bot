@@ -20,6 +20,9 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
+# Import frontend server
+from .frontend_server import FrontendHandler
+
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -126,22 +129,25 @@ class TradingBotApplication:
                 logger.warning(f"📧 Failed to send startup notification: {e}")
         
     def start_health_server(self):
-        """Start HTTP health check server"""
+        """Start HTTP server with frontend and API support"""
         try:
-            self.http_server = HTTPServer(('0.0.0.0', 8080), HealthHandler)
+            self.http_server = HTTPServer(('0.0.0.0', 8080), FrontendHandler)
             
             def run_server():
-                logger.info("🌐 Health check server starting on port 8080")
+                logger.info("🌐 Frontend & API server starting on port 8080")
+                logger.info("📱 Dashboard: http://localhost:8080")
+                logger.info("💚 Health: http://localhost:8080/health")
+                logger.info("📊 API: http://localhost:8080/api/status")
                 self.http_server.serve_forever()
             
             # Run HTTP server in background thread
             server_thread = Thread(target=run_server, daemon=True)
             server_thread.start()
             
-            logger.info("✅ Health check server started successfully")
+            logger.info("✅ Frontend & API server started successfully")
             
         except Exception as e:
-            logger.error(f"❌ Failed to start health server: {e}")
+            logger.error(f"❌ Failed to start server: {e}")
         
     async def health_check(self):
         """Health check endpoint simulation"""
