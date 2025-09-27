@@ -102,21 +102,29 @@ class BybitAPIClient:
                 if response.status == 200 and data.get("retCode") == 0:
                     wallet_data = data["result"]["list"][0] if data["result"]["list"] else {}
                     
-                    # Process balance data
-                    total_wallet = float(wallet_data.get("totalWalletBalance", "0"))
-                    total_available = float(wallet_data.get("totalAvailableBalance", "0"))
-                    total_used = float(wallet_data.get("totalMarginBalance", "0")) - total_available
+                    # Safe float conversion helper
+                    def safe_float(value, default=0.0):
+                        try:
+                            return float(value) if value and str(value).strip() else default
+                        except (ValueError, TypeError):
+                            return default
+                    
+                    # Process balance data with safe conversion
+                    total_wallet = safe_float(wallet_data.get("totalWalletBalance"))
+                    total_available = safe_float(wallet_data.get("totalAvailableBalance"))
+                    total_margin = safe_float(wallet_data.get("totalMarginBalance"))
+                    total_used = max(0, total_margin - total_available)
                     
                     # Get individual coin balances
                     coins = []
                     for coin_data in wallet_data.get("coin", []):
-                        wallet_balance = float(coin_data.get("walletBalance", "0"))
+                        wallet_balance = safe_float(coin_data.get("walletBalance"))
                         if wallet_balance > 0:
                             coins.append({
                                 "coin": coin_data.get("coin"),
                                 "wallet_balance": wallet_balance,
-                                "available_balance": float(coin_data.get("availableToWithdraw", "0")),
-                                "used_margin": float(coin_data.get("totalOrderIM", "0"))
+                                "available_balance": safe_float(coin_data.get("availableToWithdraw")),
+                                "used_margin": safe_float(coin_data.get("totalOrderIM"))
                             })
                     
                     return {
@@ -174,18 +182,29 @@ class BybitAPIClient:
                 data = await response.json()
                 
                 if response.status == 200 and data.get("retCode") == 0:
+                    # Safe float conversion helper
+                    def safe_float(value, default=0.0):
+                        try:
+                            return float(value) if value and str(value).strip() else default
+                        except (ValueError, TypeError):
+                            return default
+                    
                     positions = []
                     for pos in data["result"]["list"]:
-                        size = float(pos.get("size", "0"))
+                        size = safe_float(pos.get("size"))
                         if size > 0:  # Only active positions
+                            unrealised_pnl = safe_float(pos.get("unrealisedPnl"))
+                            position_value = safe_float(pos.get("positionValue"), 1.0)
+                            pnl_percentage = (unrealised_pnl / position_value * 100) if position_value > 0 else 0
+                            
                             positions.append({
                                 "symbol": pos.get("symbol"),
-                                "side": pos.get("side").lower(),
-                                "size": pos.get("size"),
+                                "side": pos.get("side", "").lower(),
+                                "size": str(size),
                                 "entry_price": pos.get("avgPrice"),
                                 "mark_price": pos.get("markPrice"),
-                                "pnl": pos.get("unrealisedPnl"),
-                                "pnl_percentage": f"{float(pos.get('unrealisedPnl', '0')) / float(pos.get('positionValue', '1')) * 100:.2f}%"
+                                "pnl": str(unrealised_pnl),
+                                "pnl_percentage": f"{pnl_percentage:.2f}%"
                             })
                     
                     return {
