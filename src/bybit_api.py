@@ -273,6 +273,68 @@ class BybitAPIClient:
                 "message": f"Connection error: {str(e)}",
                 "data": {"symbols": []}
             }
+    
+    async def place_order(self, symbol: str, side: str, order_type: str, qty: str, price: str = None) -> Dict[str, Any]:
+        """Place a trading order on Bybit"""
+        try:
+            if not self.api_key or not self.api_secret:
+                return {
+                    "success": False,
+                    "message": "API credentials not configured",
+                    "data": {}
+                }
+            
+            endpoint = "/v5/order/create"
+            
+            # Build order parameters
+            order_params = {
+                "category": "linear",
+                "symbol": symbol,
+                "side": side.capitalize(),  # Buy or Sell
+                "orderType": order_type.capitalize(),  # Market or Limit
+                "qty": qty
+            }
+            
+            # Add price for limit orders
+            if order_type.lower() == "limit" and price:
+                order_params["price"] = price
+            
+            # Convert to query string for signature
+            import urllib.parse
+            params_str = urllib.parse.urlencode(sorted(order_params.items()))
+            
+            url = f"{self.base_url}{endpoint}"
+            headers = self._get_headers(params_str)
+            
+            async with self.session.post(url, json=order_params, headers=headers) as response:
+                data = await response.json()
+                
+                if response.status == 200 and data.get("retCode") == 0:
+                    return {
+                        "success": True,
+                        "data": {
+                            "order_id": data["result"]["orderId"],
+                            "symbol": symbol,
+                            "side": side,
+                            "qty": qty,
+                            "order_type": order_type,
+                            "status": "submitted"
+                        }
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Order failed: {data.get('retMsg', 'Unknown error')}",
+                        "data": {}
+                    }
+                    
+        except Exception as e:
+            logger.error(f"Error placing order: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Connection error: {str(e)}",
+                "data": {}
+            }
 
 def load_api_credentials() -> tuple[Optional[str], Optional[str]]:
     """Load API credentials from config or environment"""

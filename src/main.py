@@ -323,12 +323,41 @@ class TradingBotApplication:
                         logger.info(f"💡 ML Signals generated: {len(trading_signals)} opportunities")
                         shared_state.add_log_entry("INFO", f"ML generated {len(trading_signals)} trading signals")
                         
-                        # Process trading signals (paper trading for now)
+                        # Process trading signals - PLACE ACTUAL TESTNET ORDERS
                         for signal in trading_signals:
                             action = signal.get('action', 'hold')
                             symbol = signal.get('symbol', 'BTCUSDT')
                             confidence = signal.get('confidence', 0.0)
                             logger.info(f"📊 ML Signal: {action.upper()} {symbol} (confidence: {confidence:.2f})")
+                            
+                            # Place actual testnet orders for high-confidence signals
+                            if confidence > 0.75 and action in ['buy', 'sell']:
+                                try:
+                                    # Calculate order size (small testnet amounts)
+                                    order_qty = "0.001" if symbol == "BTCUSDT" else "0.01"
+                                    
+                                    client = await get_bybit_client()
+                                    async with client:
+                                        order_result = await client.place_order(
+                                            symbol=symbol,
+                                            side=action,
+                                            order_type="market",
+                                            qty=order_qty
+                                        )
+                                        
+                                        if order_result["success"]:
+                                            order_id = order_result["data"]["order_id"]
+                                            logger.info(f"✅ TESTNET ORDER PLACED: {action.upper()} {order_qty} {symbol} (Order ID: {order_id})")
+                                            shared_state.add_log_entry("SUCCESS", f"Testnet order: {action.upper()} {symbol}")
+                                        else:
+                                            logger.warning(f"❌ Order failed: {order_result['message']}")
+                                            shared_state.add_log_entry("WARNING", f"Order failed: {order_result['message']}")
+                                            
+                                except Exception as order_error:
+                                    logger.error(f"❌ Order placement error: {str(order_error)}")
+                                    shared_state.add_log_entry("ERROR", f"Order error: {str(order_error)}")
+                            else:
+                                logger.info(f"📊 Signal logged (confidence {confidence:.2f} < 0.75, no order placed)")
                     else:
                         logger.info("📊 ML Analysis: No trading opportunities detected")
                         shared_state.add_log_entry("INFO", "ML Analysis: Market conditions not favorable")
