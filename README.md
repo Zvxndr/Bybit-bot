@@ -6,7 +6,19 @@
 
 **Enterprise-grade discretionary trust trading system with advanced security, compliance, and Australian regulatory features.**
 
-## 🚀 Quick Start
+## � Docker Quick Start (5 minutes)
+
+```bash
+# Clone and run with Docker (easiest method)
+git clone https://github.com/Zvxndr/Bybit-bot.git
+cd Bybit-bot
+cp .env.example .env  # Add your API keys
+docker-compose up -d
+```
+
+**Your bot is now running at `http://localhost:8080`** 🎉
+
+## 🚀 Other Deployment Options
 
 ```bash
 # Option 1: Quick deployment (30 minutes)
