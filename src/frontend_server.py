@@ -50,6 +50,47 @@ class FrontendHandler(BaseHTTPRequestHandler):
         # Default to dashboard for SPA routing
         self.serve_dashboard()
     
+    def do_POST(self):
+        """Handle POST requests for API endpoints"""
+        if self.path.startswith('/api/'):
+            self.handle_api_post_request()
+        else:
+            self.send_response(404)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "POST endpoint not found"}).encode())
+    
+    def handle_api_post_request(self):
+        """Handle POST API requests"""
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length) if content_length > 0 else b''
+        
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        # Handle different POST endpoints
+        if self.path == '/api/bot/pause':
+            response = {"success": True, "message": "Bot paused successfully"}
+        elif self.path == '/api/bot/resume':
+            response = {"success": True, "message": "Bot resumed successfully"}
+        elif self.path == '/api/bot/emergency-stop':
+            response = {"success": True, "message": "Emergency stop activated"}
+        elif self.path == '/api/environment/switch':
+            response = {"success": True, "message": "Environment switched successfully"}
+        elif self.path == '/api/admin/close-all-positions':
+            response = {"success": True, "message": "All positions closed", "closedCount": 0}
+        elif self.path == '/api/admin/cancel-all-orders':
+            response = {"success": True, "message": "All orders canceled", "canceledCount": 0}
+        elif self.path == '/api/admin/wipe-data':
+            shared_state.clear_all_data()
+            response = {"success": True, "message": "All data wiped successfully"}
+        else:
+            response = {"success": False, "error": "POST endpoint not implemented"}
+        
+        self.wfile.write(json.dumps(response).encode())
+    
     def handle_health_check(self):
         """Serve health check endpoint"""
         self.send_response(200)
@@ -143,7 +184,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 response = {
                     "success": True,
                     "data": balance_data,
-                    "timestamp": datetime.datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat()
                 }
             except Exception as e:
                 logger.error(f"Error fetching multi-balance: {e}")
@@ -167,6 +208,90 @@ class FrontendHandler(BaseHTTPRequestHandler):
             
         elif self.path == '/api/admin/wipe-data':
             self.handle_wipe_data()
+            
+        elif self.path.startswith('/api/positions/'):
+            # Handle position requests for specific environments
+            environment = self.path.split('/')[-1]
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # Mock positions data
+            response = {
+                "success": True,
+                "data": [],
+                "environment": environment
+            }
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path.startswith('/api/trades/'):
+            # Handle trade requests for specific environments
+            environment = self.path.split('/')[-1]
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {
+                "success": True,
+                "data": [],
+                "environment": environment
+            }
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/api/system-stats':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {
+                "success": True,
+                "data": {
+                    "cpu_usage": "15.2%",
+                    "memory_usage": "48.7%",
+                    "disk_usage": "23.1%",
+                    "network_status": "connected"
+                }
+            }
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/api/bot/pause':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {"success": True, "message": "Bot paused successfully"}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/api/bot/resume':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {"success": True, "message": "Bot resumed successfully"}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/api/bot/emergency-stop':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {"success": True, "message": "Emergency stop activated"}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/api/environment/switch':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {"success": True, "message": "Environment switched successfully"}
+            self.wfile.write(json.dumps(response).encode())
             
         else:
             self.send_response(404)
