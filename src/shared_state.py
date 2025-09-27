@@ -159,6 +159,31 @@ class SharedState:
             
         # Log the reset
         self.add_log_entry("INFO", "🔥 All trading data cleared - System reset to defaults")
+    
+    def get_multi_environment_balance(self) -> Dict[str, Any]:
+        """Get balance data for all environments (testnet, mainnet, paper)"""
+        with self._lock:
+            # For now, return mock data - this would be populated by real API calls
+            return {
+                "testnet": {
+                    "total": 55116.84,
+                    "available": 55116.84,
+                    "used": 0.00,
+                    "unrealized": 0.00
+                },
+                "mainnet": {
+                    "total": 0.00,
+                    "available": 0.00,
+                    "used": 0.00,
+                    "unrealized": 0.00
+                },
+                "paper": {
+                    "total": 100000.00,
+                    "available": 100000.00,
+                    "used": 0.00,
+                    "unrealized": 0.00
+                }
+            }
 
 # Global shared state instance
 shared_state = SharedState()

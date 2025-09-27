@@ -42,8 +42,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-secondary);
-  /* Fire cybersigilism animated background - use a dynamic fire/cyber GIF from web */
-  background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(20, 20, 20, 0.8)),
+  /* Fire cybersigilism animated background - enhanced visibility */
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.4), rgba(20, 20, 20, 0.5)),
               url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJ0cnBuN2d4dTZvbXdoYjJ4NGhtZ3JvZjB3bXpsMGR1NmY4cXFkdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPEh5Lk3RGSIFEI/giphy.gif') no-repeat center center fixed;
   background-size: cover;
   background-attachment: fixed;

@@ -164,14 +164,28 @@ class FireDashboard {
 
     async fetchMultiBalance() {
         try {
+            console.log('🔥 Fetching multi-environment balance...');
             const response = await fetch('/api/multi-balance');
-            const result = await response.json();
             
-            if (result.success) {
+            if (!response.ok) {
+                console.warn(`⚠️ Balance API returned ${response.status}: ${response.statusText}`);
+                this.showToast('⚠️ Balance data temporarily unavailable', 'warning');
+                return;
+            }
+            
+            const result = await response.json();
+            console.log('📊 Balance response:', result);
+            
+            if (result.success && result.data) {
                 this.updateMultiEnvironmentBalance(result.data);
+                console.log('✅ Multi-environment balance updated');
+            } else {
+                console.warn('⚠️ Balance API returned unsuccessful response:', result);
+                this.showToast('⚠️ Unable to fetch live balance data', 'warning');
             }
         } catch (error) {
-            console.error('Error fetching multi-balance:', error);
+            console.error('❌ Error fetching multi-balance:', error);
+            this.showToast('🔥 Using cached balance data - connection issue', 'info');
         }
     }
 

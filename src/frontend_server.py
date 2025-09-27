@@ -131,6 +131,34 @@ class FrontendHandler(BaseHTTPRequestHandler):
             
             self.wfile.write(json.dumps(positions_data, indent=2).encode())
             
+        elif self.path == '/api/multi-balance':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # Get multi-environment balance data
+            try:
+                balance_data = shared_state.get_multi_environment_balance()
+                response = {
+                    "success": True,
+                    "data": balance_data,
+                    "timestamp": datetime.datetime.now().isoformat()
+                }
+            except Exception as e:
+                logger.error(f"Error fetching multi-balance: {e}")
+                response = {
+                    "success": False,
+                    "error": str(e),
+                    "data": {
+                        "testnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0},
+                        "mainnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0}, 
+                        "paper": {"total": 100000, "available": 100000, "used": 0, "unrealized": 0}
+                    }
+                }
+            
+            self.wfile.write(json.dumps(response, indent=2).encode())
+            
         elif self.path == '/api/admin/close-all-positions':
             self.handle_close_all_positions()
             

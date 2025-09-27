@@ -118,7 +118,25 @@ class BybitAPIClient:
             
             session = await self.get_session()
             async with session.get(url, headers=headers) as response:
-                data = await response.json()
+                # Enhanced error handling for None responses in balance method
+                try:
+                    data = await response.json()
+                except Exception as json_error:
+                    logger.error(f"Failed to parse JSON response in get_account_balance: {json_error}")
+                    data = None
+                
+                if data is None:
+                    logger.error(f"Bybit API returned None response in balance check. Status: {response.status}")
+                    return {
+                        "success": False,
+                        "message": f"API returned empty response (Status: {response.status})",
+                        "data": {
+                            "total_wallet_balance": "API Error",
+                            "total_available_balance": "API Error",
+                            "total_used_margin": "API Error",
+                            "coins": []
+                        }
+                    }
                 
                 if response.status == 200 and data.get("retCode") == 0:
                     wallet_data = data["result"]["list"][0] if data["result"]["list"] else {}

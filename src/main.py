@@ -248,13 +248,22 @@ except ImportError:
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Configure logging
+# Configure logging with Windows Unicode fix
+import sys
+import io
+
+# Create Unicode-safe stdout for Windows
+if sys.platform.startswith('win'):
+    # Fix Windows Unicode issues by setting UTF-8 encoding
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/app.log', mode='a') if Path('logs').exists() else logging.NullHandler()
+        logging.FileHandler('logs/app.log', mode='a', encoding='utf-8') if Path('logs').exists() else logging.NullHandler()
     ]
 )
 
