@@ -545,7 +545,7 @@ class TradingBotApplication:
                             logger.info(f"📊 ML Signal: {action.upper()} {symbol} (confidence: {confidence:.2f})")
                             
                             # Place actual testnet orders for high-confidence signals
-                            if confidence > 0.75 and action in ['buy', 'sell']:
+                            if confidence >= 0.75 and action in ['buy', 'sell']:
                                 try:
                                     # Calculate order size (small testnet amounts)
                                     order_qty = "0.001" if symbol == "BTCUSDT" else "0.01"
@@ -571,7 +571,7 @@ class TradingBotApplication:
                                     logger.error(f"❌ Order placement error: {str(order_error)}")
                                     shared_state.add_log_entry("ERROR", f"Order error: {str(order_error)}")
                             else:
-                                logger.info(f"📊 Signal logged (confidence {confidence:.2f} < 0.75, no order placed)")
+                                logger.info(f"📊 Signal logged (confidence {confidence:.2f} below threshold, no order placed)")
                     else:
                         logger.info("📊 ML Analysis: No trading opportunities detected")
                         shared_state.add_log_entry("INFO", "ML Analysis: Market conditions not favorable")
