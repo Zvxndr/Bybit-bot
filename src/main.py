@@ -50,10 +50,34 @@ except ImportError as e1:
         class SharedState:
             def __init__(self):
                 self.data = {}
+                self.logs = []
+                self.system_status = "initializing"
+                
             def get(self, key, default=None):
                 return self.data.get(key, default)
+                
             def set(self, key, value):
                 self.data[key] = value
+                
+            def add_log_entry(self, level, message):
+                """Add log entry to shared state"""
+                self.logs.append({
+                    'timestamp': time.time(),
+                    'level': level,
+                    'message': message
+                })
+                # Keep only last 1000 logs
+                if len(self.logs) > 1000:
+                    self.logs = self.logs[-1000:]
+                    
+            def update_system_status(self, status):
+                """Update system status"""
+                self.system_status = status
+                self.data['system_status'] = status
+                
+            def get_system_status(self):
+                """Get current system status"""
+                return self.system_status
         
         shared_state = SharedState()
         
