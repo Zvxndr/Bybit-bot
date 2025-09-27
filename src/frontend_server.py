@@ -9,7 +9,7 @@ This creates a seamless single-server solution.
 import os
 import json
 import logging
-from datetime import datetime
+from datetime import datetime as dt
 from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
@@ -184,14 +184,14 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 response = {
                     "success": True,
                     "data": balance_data,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": dt.now().isoformat()
                 }
             except Exception as e:
                 logger.error(f"Error fetching multi-balance: {e}")
                 response = {
                     "success": False,
                     "error": str(e),
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": dt.now().isoformat(),
                     "data": {
                         "testnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0},
                         "mainnet": {"total": 0, "available": 0, "used": 0, "unrealized": 0}, 
@@ -1212,7 +1212,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                     "success": True,
                     "closedCount": 0,  # Would be actual count from API
                     "message": "All positions closed successfully",
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": dt.now().isoformat()
                 }
                 
                 logger.info("🔄 Close all positions request processed")
@@ -1247,7 +1247,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 "success": True,
                 "canceledCount": 0,  # Would be actual count from API
                 "message": "All pending orders canceled",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": dt.now().isoformat()
             }
             
             logger.info("🔄 Cancel all orders request processed")
@@ -1281,7 +1281,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
             response_data = {
                 "success": True,
                 "message": "All data wiped successfully",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": dt.now().isoformat()
             }
             
             logger.info("🔥 Data wipe request processed")
