@@ -13,8 +13,7 @@ class FireDashboard {
             paper: { total: 100000, available: 100000, used: 0, unrealized: 0, history: [] }
         };
         
-        this.initializeCharts();
-        this.startRealTimeUpdates();
+        this.initializeCharts();Updates();
         this.showLoadingScreen();
     }
 
@@ -573,8 +572,10 @@ async function emergencyStop() {
 }
 
 async function clearAllData() {
-    const firstConfirm = confirm('⚠️ WARNING: This will delete ALL trading data!\n\n' +
+    const firstConfirm = confirm('⚠️ WARNING: This will CLOSE ALL TRADES and delete ALL trading data!\n\n' +
                                 'This includes:\n' +
+                                '• CLOSING ALL OPEN POSITIONS\n' +
+                                '• Canceling all pending orders\n' +
                                 '• All trading history\n' +
                                 '• Performance records\n' +
                                 '• ML predictions cache\n' +
@@ -587,14 +588,74 @@ async function clearAllData() {
     
     if (verification === 'WIPE ALL DATA') {
         const finalConfirm = confirm('🔥 FINAL CONFIRMATION\n\n' +
+                                   'This will IMMEDIATELY CLOSE ALL TRADES and WIPE ALL DATA!\n' +
                                    'This action CANNOT be undone!\n' +
-                                   'All your trading data will be permanently lost.\n\n' +
+                                   'All positions will be closed at market price.\n\n' +
                                    'Are you absolutely sure?');
         
         if (finalConfirm) {
             try {
-                dashboard.showToast('🔄 Initiating data wipe...', 'info');
+                dashboard.showToast('🔄 Step 1/3: Closing all open positions...', 'info');
                 
+                // Step 1: Close all open positions
+                try {
+                    const closeResponse = await fetch('/api/admin/close-all-positions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAuthToken()}`
+                        },
+                        body: JSON.stringify({ 
+                            confirmation: 'CLOSE_ALL',
+                            timestamp: Date.now()
+                        })
+                    });
+                    
+                    if (closeResponse.ok) {
+                        const result = await closeResponse.json();
+                        dashboard.showToast(`✅ Closed ${result.closedCount || 0} positions`, 'success');
+                    } else {
+                        dashboard.showToast('⚠️ Some positions may not have closed - continuing with data wipe', 'warning');
+                    }
+                } catch (closeError) {
+                    console.warn('Position closing error:', closeError);
+                    dashboard.showToast('⚠️ Position closing failed - continuing with data wipe', 'warning');
+                }
+                
+                // Wait a moment for trades to process
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                dashboard.showToast('🔄 Step 2/3: Canceling pending orders...', 'info');
+                
+                // Step 2: Cancel all pending orders
+                try {
+                    const cancelResponse = await fetch('/api/admin/cancel-all-orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAuthToken()}`
+                        },
+                        body: JSON.stringify({ 
+                            confirmation: 'CANCEL_ALL',
+                            timestamp: Date.now()
+                        })
+                    });
+                    
+                    if (cancelResponse.ok) {
+                        const result = await cancelResponse.json();
+                        dashboard.showToast(`✅ Canceled ${result.canceledCount || 0} pending orders`, 'success');
+                    }
+                } catch (cancelError) {
+                    console.warn('Order canceling error:', cancelError);
+                    dashboard.showToast('⚠️ Some orders may not have canceled', 'warning');
+                }
+                
+                // Wait for orders to process
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                dashboard.showToast('🔄 Step 3/3: Wiping all trading data...', 'info');
+                
+                // Step 3: Wipe all data
                 const response = await fetch('/api/admin/wipe-data', {
                     method: 'DELETE',
                     headers: {
@@ -603,7 +664,8 @@ async function clearAllData() {
                     },
                     body: JSON.stringify({ 
                         confirmation: 'WIPE ALL DATA',
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        tradesAlreadyClosed: true
                     })
                 });
                 

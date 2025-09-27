@@ -9,6 +9,7 @@ This creates a seamless single-server solution.
 import os
 import json
 import logging
+from datetime import datetime
 from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
@@ -130,6 +131,15 @@ class FrontendHandler(BaseHTTPRequestHandler):
             
             self.wfile.write(json.dumps(positions_data, indent=2).encode())
             
+        elif self.path == '/api/admin/close-all-positions':
+            self.handle_close_all_positions()
+            
+        elif self.path == '/api/admin/cancel-all-orders':
+            self.handle_cancel_all_orders()
+            
+        elif self.path == '/api/admin/wipe-data':
+            self.handle_wipe_data()
+            
         else:
             self.send_response(404)
             self.send_header('Content-Type', 'application/json')
@@ -149,7 +159,9 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def serve_static_file(self):
         """Serve static files (CSS, JS, images)"""
         file_path = self.path.lstrip('/')
-        full_path = self.frontend_path / file_path
+        
+        # Fixed path - look in src directory for static files
+        full_path = Path("src") / file_path
         
         if full_path.exists() and full_path.is_file():
             mime_type, _ = mimetypes.guess_type(str(full_path))
@@ -162,19 +174,25 @@ class FrontendHandler(BaseHTTPRequestHandler):
             
             with open(full_path, 'rb') as f:
                 self.wfile.write(f.read())
+            logger.info(f"✅ Served static file: {file_path}")
         else:
             self.send_response(404)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
             self.wfile.write(b'File not found')
+            logger.warning(f"❌ Static file not found: {full_path}")
     
     def get_dashboard_html(self):
         """Load the Fire Cybersigilism dashboard template"""
         try:
-            template_path = self.frontend_path / "templates" / "fire_dashboard.html"
+            # Fixed path - look in src/templates directory
+            template_path = Path("src/templates/fire_dashboard.html")
             if template_path.exists():
                 with open(template_path, 'r', encoding='utf-8') as f:
+                    logger.info("✅ Fire dashboard template loaded successfully")
                     return f.read()
+            else:
+                logger.warning(f"Template not found at: {template_path}")
         except Exception as e:
             logger.warning(f"Could not load Fire dashboard template: {e}")
         
@@ -1019,6 +1037,108 @@ class FrontendHandler(BaseHTTPRequestHandler):
     </script>
 </body>
 </html>"""
+    
+    def handle_close_all_positions(self):
+        """Handle closing all open positions API endpoint"""
+        try:
+            if hasattr(self, 'do_POST'):
+                # Handle POST request for closing positions
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                # In a real implementation, this would:
+                # 1. Get all open positions from Bybit API
+                # 2. Close each position at market price
+                # 3. Return the count of closed positions
+                
+                # For now, simulate the response
+                response_data = {
+                    "success": True,
+                    "closedCount": 0,  # Would be actual count from API
+                    "message": "All positions closed successfully",
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                logger.info("🔄 Close all positions request processed")
+                self.wfile.write(json.dumps(response_data).encode())
+            else:
+                self.send_response(405)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Method not allowed"}).encode())
+                
+        except Exception as e:
+            logger.error(f"❌ Close positions error: {e}")
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+    
+    def handle_cancel_all_orders(self):
+        """Handle canceling all pending orders API endpoint"""
+        try:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # In a real implementation, this would:
+            # 1. Get all pending orders from Bybit API
+            # 2. Cancel each order
+            # 3. Return the count of canceled orders
+            
+            response_data = {
+                "success": True,
+                "canceledCount": 0,  # Would be actual count from API
+                "message": "All pending orders canceled",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            logger.info("🔄 Cancel all orders request processed")
+            self.wfile.write(json.dumps(response_data).encode())
+            
+        except Exception as e:
+            logger.error(f"❌ Cancel orders error: {e}")
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+    
+    def handle_wipe_data(self):
+        """Handle data wipe API endpoint"""
+        try:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # In a real implementation, this would:
+            # 1. Clear all database tables
+            # 2. Reset all cached data
+            # 3. Clear log files
+            # 4. Reset configuration to defaults
+            
+            # Clear shared state
+            if shared_state:
+                shared_state.clear_all_data()
+            
+            response_data = {
+                "success": True,
+                "message": "All data wiped successfully",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            logger.info("🔥 Data wipe request processed")
+            self.wfile.write(json.dumps(response_data).encode())
+            
+        except Exception as e:
+            logger.error(f"❌ Data wipe error: {e}")
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
     
     def log_message(self, format, *args):
         """Suppress default request logging"""

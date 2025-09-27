@@ -123,6 +123,42 @@ class SharedState:
                 "margin_available": self._state["trading"]["margin_available"],
                 "last_update": self._state["last_update"]
             }
+    
+    def clear_all_data(self):
+        """Clear all trading data and reset to defaults"""
+        with self._lock:
+            # Reset to initial state
+            self._start_time = time.time()
+            
+            self._state = {
+                "system": {
+                    "status": "initializing",
+                    "start_time": self._start_time,
+                    "version": "2.0.0",
+                    "mode": "testnet",
+                    "uptime": 0
+                },
+                "trading": {
+                    "strategies_active": 0,
+                    "positions_count": 0,
+                    "balance": "0.00 USDT",
+                    "daily_pnl": "0.00 USDT",
+                    "margin_used": "0.00",
+                    "margin_available": "0.00"
+                },
+                "positions": [],
+                "performance": {
+                    "total_trades": 0,
+                    "win_rate": 0.0,
+                    "avg_profit": 0.0,
+                    "max_drawdown": 0.0
+                },
+                "logs": [],
+                "last_update": datetime.now().isoformat()
+            }
+            
+        # Log the reset
+        self.add_log_entry("INFO", "🔥 All trading data cleared - System reset to defaults")
 
 # Global shared state instance
 shared_state = SharedState()
