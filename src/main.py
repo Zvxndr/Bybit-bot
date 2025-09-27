@@ -78,6 +78,48 @@ except ImportError as e1:
             def get_system_status(self):
                 """Get current system status"""
                 return self.system_status
+                
+            def update_trading_data(self, data):
+                """Update trading data in shared state"""
+                self.data['trading_data'] = data
+                self.data['last_update'] = time.time()
+                
+            def get_trading_data(self):
+                """Get current trading data"""
+                return self.data.get('trading_data', {})
+                
+            def update_balance(self, balance_data):
+                """Update balance information"""
+                self.data['balance'] = balance_data
+                
+            def get_balance(self):
+                """Get current balance"""
+                return self.data.get('balance', {})
+                
+            def update_positions(self, positions_data):
+                """Update positions information"""
+                self.data['positions'] = positions_data
+                
+            def get_positions(self):
+                """Get current positions"""
+                return self.data.get('positions', {})
+                
+            def __setattr__(self, name, value):
+                """Allow dynamic attribute setting for compatibility"""
+                if name in ['data', 'logs', 'system_status']:
+                    super().__setattr__(name, value)
+                else:
+                    # Store dynamic attributes in data dict
+                    if hasattr(self, 'data'):
+                        self.data[name] = value
+                    else:
+                        super().__setattr__(name, value)
+                        
+            def __getattr__(self, name):
+                """Allow dynamic attribute getting for compatibility"""
+                if hasattr(self, 'data') and name in self.data:
+                    return self.data[name]
+                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         
         shared_state = SharedState()
         
