@@ -612,21 +612,24 @@ class TradingBotApplication:
                                     order_qty = "0.001" if symbol == "BTCUSDT" else "0.01"
                                     
                                     client = await get_bybit_client()
-                                    async with client:
-                                        order_result = await client.place_order(
+                                    if client:
+                                        # Use direct HTTP API for placing orders
+                                        order_result = await client.place_market_order(
                                             symbol=symbol,
-                                            side=action,
-                                            order_type="market",
+                                            side="Buy" if action == "buy" else "Sell",
                                             qty=order_qty
                                         )
                                         
-                                        if order_result["success"]:
-                                            order_id = order_result["data"]["order_id"]
+                                        if order_result.get("success"):
+                                            order_id = order_result["data"]["orderId"]
                                             logger.info(f"✅ TESTNET ORDER PLACED: {action.upper()} {order_qty} {symbol} (Order ID: {order_id})")
                                             shared_state.add_log_entry("SUCCESS", f"Testnet order: {action.upper()} {symbol}")
                                         else:
-                                            logger.warning(f"❌ Order failed: {order_result['message']}")
-                                            shared_state.add_log_entry("WARNING", f"Order failed: {order_result['message']}")
+                                            error_msg = order_result.get("message", "Unknown error")
+                                            logger.warning(f"❌ Order failed: {error_msg}")
+                                            shared_state.add_log_entry("WARNING", f"Order failed: {error_msg}")
+                                    else:
+                                        logger.warning("❌ No API client available for order placement")
                                             
                                 except Exception as order_error:
                                     logger.error(f"❌ Order placement error: {str(order_error)}")

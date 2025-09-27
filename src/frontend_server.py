@@ -8,10 +8,13 @@ This creates a seamless single-server solution.
 
 import os
 import json
+import logging
 from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 import mimetypes
+
+logger = logging.getLogger(__name__)
 
 class FrontendHandler(BaseHTTPRequestHandler):
     """Handle frontend requests through Python backend"""
@@ -166,7 +169,16 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'File not found')
     
     def get_dashboard_html(self):
-        """Generate the advanced dashboard HTML with comprehensive trading interface"""
+        """Load the Fire Cybersigilism dashboard template"""
+        try:
+            template_path = self.frontend_path / "templates" / "fire_dashboard.html"
+            if template_path.exists():
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+        except Exception as e:
+            logger.warning(f"Could not load Fire dashboard template: {e}")
+        
+        # Fallback to minimal dashboard if template fails
         return """<!DOCTYPE html>
 <html lang="en">
 <head>

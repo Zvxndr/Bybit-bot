@@ -32,7 +32,19 @@ class BybitAPIClient:
         else:
             self.base_url = "https://api.bybit.com"
             
+        # Session management - create once, reuse
         self.session = None
+        self._session_lock = asyncio.Lock()
+        
+    async def get_session(self):
+        """Get or create aiohttp session with proper management"""
+        if self.session is None or self.session.closed:
+            async with self._session_lock:
+                if self.session is None or self.session.closed:
+                    self.session = aiohttp.ClientSession(
+                        timeout=aiohttp.ClientTimeout(total=30)
+                    )
+        return self.session
         
     async def __aenter__(self):
         """Async context manager entry"""
@@ -104,7 +116,8 @@ class BybitAPIClient:
             
             headers = self._get_headers(params)
             
-            async with self.session.get(url, headers=headers) as response:
+            session = await self.get_session()
+            async with session.get(url, headers=headers) as response:
                 data = await response.json()
                 
                 if response.status == 200 and data.get("retCode") == 0:
@@ -186,7 +199,8 @@ class BybitAPIClient:
             
             headers = self._get_headers(params)
             
-            async with self.session.get(url, headers=headers) as response:
+            session = await self.get_session()
+            async with session.get(url, headers=headers) as response:
                 data = await response.json()
                 
                 if response.status == 200 and data.get("retCode") == 0:
@@ -233,6 +247,62 @@ class BybitAPIClient:
                 "message": f"Connection error: {str(e)}",
                 "data": {"positions": []}
             }
+    
+    async def place_market_order(self, symbol: str, side: str, qty: str) -> Dict[str, Any]:
+        """Place a market order"""
+        try:
+            if not self.api_key:
+                return {
+                    "success": False,
+                    "message": "API credentials not configured"
+                }
+            
+            endpoint = "/v5/order/create"
+            
+            # Create request body
+            request_body = {
+                "category": "linear",
+                "symbol": symbol,
+                "side": side,
+                "orderType": "Market",
+                "qty": qty,
+                "timeInForce": "IOC"
+            }
+            
+            # Convert to JSON string for signature
+            body_str = json.dumps(request_body, separators=(',', ':'))
+            url = f"{self.base_url}{endpoint}"
+            
+            headers = self._get_headers(body_str, method="POST")
+            headers["Content-Type"] = "application/json"
+            
+            session = await self.get_session()
+            async with session.post(url, headers=headers, data=body_str) as response:
+                data = await response.json()
+                
+                if response.status == 200 and data.get("retCode") == 0:
+                    return {
+                        "success": True,
+                        "data": data["result"]
+                    }
+                else:
+                    error_msg = data.get("retMsg", f"HTTP {response.status}")
+                    return {
+                        "success": False,
+                        "message": f"Order failed: {error_msg}"
+                    }
+                    
+        except Exception as e:
+            logger.error(f"Error placing order: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Connection error: {str(e)}"
+            }
+    
+    async def close(self):
+        """Clean shutdown of the client"""
+        if self.session and not self.session.closed:
+            await self.session.close()
     
     async def get_active_symbols(self, category: str = "linear") -> Dict[str, Any]:
         """Get all active trading symbols/pairs"""

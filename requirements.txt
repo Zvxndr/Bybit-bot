@@ -8,7 +8,6 @@ requests>=2.31.0
 aiohttp>=3.8.0
 websockets>=11.0.0
 ccxt>=4.0.0
-pybit>=5.11.0
 python-dotenv>=1.0.0
 
 # Security and MFA
