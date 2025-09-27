@@ -1,9 +1,44 @@
-# Health Check and Monitoring Scripts
+# Trading Bot Scripts
 
-Collection of health check and monitoring scripts for production deployment
-of the ML trading bot system.
+Collection of deployment, health check, and monitoring scripts for the Bybit Trading Bot system.
 
-## Scripts Overview
+## 🔥 Speed Demon Deployment Scripts
+
+### speed_demon_deploy.py ⚡ **NEW - 14-Day Deployment**
+**Cloud-optimized rapid deployment script for Speed Demon strategy.**
+
+**Purpose**: Automatically download historical data and initialize trading strategies for rapid 14-day deployment.
+
+**Key Features**:
+- **Automatic data downloading**: 2-3 years of BTCUSDT/ETHUSDT historical data
+- **Cloud storage optimization**: Minimal local device space usage
+- **Progress monitoring**: Real-time status tracking and validation
+- **Resume capability**: Can restart interrupted downloads
+- **Strategy preparation**: ML-ready data structures for immediate backtesting
+
+**Usage**:
+```bash
+# Standard deployment (2 years, testnet)
+python scripts/speed_demon_deploy.py
+
+# Extended deployment (3 years, mainnet)
+python scripts/speed_demon_deploy.py --years 3 --mainnet
+
+# Force redownload 
+python scripts/speed_demon_deploy.py --force
+
+# Check deployment status
+python scripts/speed_demon_deploy.py --status
+```
+
+**Automatic Execution**: This script runs automatically when deploying via Docker, triggered by the container startup sequence.
+
+**Expected Timeline**:
+- Data download: 15-30 minutes
+- Strategy initialization: 5-10 minutes  
+- First backtesting results: 30-45 minutes
+
+## Health Check and Monitoring Scripts
 
 ### health_check.py
 Comprehensive health check script that validates:

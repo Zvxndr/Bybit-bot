@@ -1,0 +1,500 @@
+/* 🔥 FIRE CYBERSIGILISM THEME - Main Stylesheet */
+
+/* Import cyber fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+/* Fire Cybersigilism Color Palette */
+:root {
+  /* Fire Base Colors */
+  --fire-primary: #FF6B35;
+  --fire-secondary: #F7931E;  
+  --fire-accent: #FF0000;
+  --fire-ember: #FFB74D;
+  --fire-dark: #B71C1C;
+  
+  /* Cyber Neon Colors */
+  --cyber-cyan: #00FFFF;
+  --cyber-purple: #9C27B0;
+  --cyber-green: #00FF41;
+  --cyber-blue: #0066FF;
+  --cyber-pink: #FF0080;
+  
+  /* Dark Cyber Base */
+  --bg-primary: rgba(0, 0, 0, 0.85);
+  --bg-secondary: rgba(20, 20, 20, 0.9);
+  --bg-glass: rgba(0, 0, 0, 0.6);
+  --text-primary: #FFFFFF;
+  --text-secondary: #CCCCCC;
+  --text-muted: #888888;
+  
+  /* Glow Effects */
+  --glow-fire: 0 0 20px var(--fire-primary), 0 0 40px var(--fire-accent);
+  --glow-cyber: 0 0 15px var(--cyber-cyan), 0 0 30px var(--cyber-blue);
+  --glow-ember: 0 0 10px var(--fire-ember);
+  
+  /* Fonts */
+  --font-primary: 'Orbitron', monospace;
+  --font-secondary: 'Rajdhani', sans-serif;
+}
+
+/* Animated GIF Background */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-secondary);
+  /* Fire cybersigilism animated background - use a dynamic fire/cyber GIF from web */
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(20, 20, 20, 0.8)),
+              url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJ0cnBuN2d4dTZvbXdoYjJ4NGhtZ3JvZjB3bXpsMGR1NmY4cXFkdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPEh5Lk3RGSIFEI/giphy.gif') no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  overflow-x: hidden;
+  /* Fallback: Fire-themed gradient */
+  background-color: #1a0000;
+}
+
+/* Alternative: CSS-only fire animation if GIF fails */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 0, 0, 0.4) 0%, transparent 70%);
+  animation: fire-wave 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes fire-wave {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Glass morphism overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  backdrop-filter: blur(2px);
+  z-index: -2;
+}
+
+/* Fire Cyber Typography */
+.cyber-title {
+  font-family: var(--font-primary);
+  font-weight: 900;
+  background: linear-gradient(45deg, var(--fire-primary), var(--fire-accent), var(--cyber-cyan));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: var(--glow-fire);
+  animation: fire-glow 2s ease-in-out infinite alternate;
+}
+
+.fire-text {
+  color: var(--fire-primary);
+  text-shadow: var(--glow-fire);
+  font-family: var(--font-primary);
+}
+
+.cyber-text {
+  color: var(--cyber-cyan);
+  text-shadow: var(--glow-cyber);
+  font-family: var(--font-primary);
+}
+
+/* Fire Glow Animation */
+@keyframes fire-glow {
+  0% {
+    text-shadow: 0 0 10px var(--fire-primary), 0 0 20px var(--fire-accent);
+    background-position: 0% 50%;
+  }
+  100% {
+    text-shadow: 0 0 20px var(--fire-accent), 0 0 40px var(--fire-primary);
+    background-position: 100% 50%;
+  }
+}
+
+/* Cyber Pulse Animation */
+@keyframes cyber-pulse {
+  0% {
+    box-shadow: 0 0 5px var(--cyber-cyan);
+  }
+  50% {
+    box-shadow: var(--glow-cyber);
+  }
+  100% {
+    box-shadow: 0 0 5px var(--cyber-cyan);
+  }
+}
+
+/* Fire Button Styles */
+.fire-btn {
+  background: linear-gradient(45deg, var(--fire-primary), var(--fire-accent));
+  border: 2px solid var(--fire-ember);
+  color: var(--text-primary);
+  padding: 12px 24px;
+  font-family: var(--font-primary);
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fire-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.fire-btn:hover {
+  box-shadow: var(--glow-fire);
+  transform: translateY(-2px);
+}
+
+.fire-btn:hover::before {
+  left: 100%;
+}
+
+/* Cyber Button Styles */
+.cyber-btn {
+  background: transparent;
+  border: 2px solid var(--cyber-cyan);
+  color: var(--cyber-cyan);
+  padding: 12px 24px;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.cyber-btn:hover {
+  background: var(--cyber-cyan);
+  color: var(--bg-primary);
+  box-shadow: var(--glow-cyber);
+  animation: cyber-pulse 1s infinite;
+}
+
+/* Glass Panel Styles */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fire-primary), transparent);
+  animation: scan-line 3s linear infinite;
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+/* Fire Status Indicators */
+.status-fire {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+}
+
+.status-fire.active {
+  background: radial-gradient(circle, var(--fire-primary), var(--fire-accent));
+  box-shadow: var(--glow-fire);
+  animation: fire-pulse 1.5s ease-in-out infinite;
+}
+
+.status-fire.paused {
+  background: radial-gradient(circle, var(--fire-ember), var(--fire-secondary));
+  box-shadow: var(--glow-ember);
+}
+
+.status-fire.stopped {
+  background: radial-gradient(circle, var(--text-muted), var(--bg-secondary));
+  box-shadow: 0 0 5px var(--text-muted);
+}
+
+@keyframes fire-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Cyber Input Fields */
+.cyber-input {
+  background: var(--bg-secondary);
+  border: 2px solid var(--cyber-cyan);
+  border-radius: 4px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.cyber-input:focus {
+  outline: none;
+  border-color: var(--fire-primary);
+  box-shadow: 0 0 10px var(--fire-primary);
+}
+
+.cyber-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Fire Progress Bar */
+.fire-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fire-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fire-accent), var(--fire-primary), var(--fire-ember));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.fire-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progress-shine 2s linear infinite;
+}
+
+@keyframes progress-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  
+  .glass-panel {
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .fire-btn, .cyber-btn {
+    width: 100%;
+    margin: 4px 0;
+  }
+}
+
+/* Loading Screen */
+.fire-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+.fire-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--bg-secondary);
+  border-top: 4px solid var(--fire-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Notification Toast */
+.fire-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--glass-panel);
+  backdrop-filter: blur(10px);
+  border-left: 4px solid var(--fire-primary);
+  border-radius: 8px;
+  padding: 16px 20px;
+  max-width: 400px;
+  transform: translateX(500px);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.fire-toast.show {
+  transform: translateX(0);
+}
+
+.fire-toast.success {
+  border-left-color: var(--cyber-green);
+}
+
+.fire-toast.error {
+  border-left-color: var(--fire-accent);
+}
+
+.fire-toast.warning {
+  border-left-color: var(--fire-ember);
+}
+
+/* Chart Container */
+.chart-container {
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+/* Fire Glow Card */
+.fire-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--fire-primary);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fire-card:hover {
+  box-shadow: var(--glow-fire);
+  transform: translateY(-4px);
+  border-color: var(--fire-accent);
+}
+
+.fire-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+  transition: left 0.8s;
+}
+
+.fire-card:hover::after {
+  left: 100%;
+}
+
+/* Balance Card Styles */
+.balance-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.balance-card:hover {
+  border-color: var(--fire-primary);
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+}
+
+/* Environment Button Styles */
+.environment-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.environment-btn.active {
+  background: var(--fire-primary);
+  color: var(--bg-primary);
+  border-color: var(--fire-accent);
+  box-shadow: var(--glow-fire);
+}
+
+.environment-btn:not(.active):hover {
+  border-color: var(--fire-primary);
+  color: var(--fire-primary);
+}

@@ -18,6 +18,9 @@ class SharedState:
         self._lock = threading.RLock()
         self._start_time = time.time()
         
+        # Speed Demon deployment status
+        self.speed_demon_status = None
+        
         # Initialize default state
         self._state = {
             "system": {

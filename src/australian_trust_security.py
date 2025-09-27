@@ -260,21 +260,6 @@ class AustralianTrustSecurityManager:
                             'expires_at': session.expires_at.isoformat(),
                             'permissions': ['admin', 'trading', 'reports', 'settings']
                         }
-    
-    def _generate_admin_password(self) -> str:
-        """Generate secure admin password if not set in environment."""
-        import secrets
-        import string
-        
-        # Generate 20-character secure password
-        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-        password = ''.join(secrets.choice(alphabet) for _ in range(20))
-        
-        # Log warning about generated password
-        logger.warning("🔐 Generated secure admin password. Set ADMIN_PASSWORD environment variable!")
-        logger.warning("🚨 SAVE THIS PASSWORD - it won't be shown again!")
-        
-        return password
                     else:
                         logger.warning(f"❌ MFA verification failed for: {username}")
                         return {'authenticated': False, 'error': 'Invalid MFA token'}
@@ -295,6 +280,21 @@ class AustralianTrustSecurityManager:
         except Exception as e:
             logger.error(f"❌ Authentication error: {str(e)}")
             return {'authenticated': False, 'error': str(e)}
+    
+    def _generate_admin_password(self) -> str:
+        """Generate secure admin password if not set in environment."""
+        import secrets
+        import string
+        
+        # Generate 20-character secure password
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(secrets.choice(alphabet) for _ in range(20))
+        
+        # Log warning about generated password
+        logger.warning("🔐 Generated secure admin password. Set ADMIN_PASSWORD environment variable!")
+        logger.warning("🚨 SAVE THIS PASSWORD - it won't be shown again!")
+        
+        return password
     
     def setup_admin_mfa(self, username: str) -> Dict[str, Any]:
         """

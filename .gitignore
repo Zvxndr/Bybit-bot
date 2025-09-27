@@ -123,3 +123,11 @@ positions_backup/
 trading_logs/
 # Archive
 archive/development/
+# Private Use - Security
+config/secrets.yaml
+config/private_*.yaml
+*.env
+logs/private_*.log
+data/private/
+backups/
+.vscode/settings.json

@@ -31,13 +31,15 @@ WORKDIR /app
 # Copy Python dependencies from builder stage
 COPY --from=builder /root/.local /home/appuser/.local
 
-# Copy application code
+# Copy application code and scripts
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 COPY README.md .
 
-# Create necessary directories
-RUN mkdir -p logs data config && \
-    chown -R appuser:appuser /app
+# Create necessary directories with cloud optimization
+RUN mkdir -p logs data config /tmp/speed_demon_data && \
+    chown -R appuser:appuser /app && \
+    chown -R appuser:appuser /tmp/speed_demon_data
 
 # Switch to non-root user
 USER appuser
@@ -48,12 +50,15 @@ ENV PATH=/home/appuser/.local/bin:$PATH
 # Set Python path to include the app directory
 ENV PYTHONPATH=/app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+# Set cloud data path for Speed Demon
+ENV CLOUD_DATA_PATH=/tmp/speed_demon_data
+
+# Health check (updated for speed demon compatibility)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python -c "import sys; sys.path.append('/app'); from src.main import *" || exit 1
 
 # Expose port
 EXPOSE 8080
 
-# Run application - change the command
-CMD ["python", "-m", "src.main"]
+# Speed Demon startup script - downloads data then starts main application
+CMD ["sh", "-c", "python scripts/speed_demon_deploy.py --years 2 --testnet && python -m src.main"]

@@ -22,9 +22,15 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
 # Import frontend server and shared state
-from .frontend_server import FrontendHandler
-from .shared_state import shared_state
-from .bybit_api import get_bybit_client
+from frontend_server import FrontendHandler
+from shared_state import shared_state
+from bybit_api import get_bybit_client
+
+# Speed Demon integration
+try:
+    from bot.speed_demon_integration import speed_demon_integration
+except ImportError:
+    speed_demon_integration = None
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -93,6 +99,9 @@ class TradingBotApplication:
         # Initialize email integration
         await self._initialize_email_system()
         
+        # Initialize Speed Demon integration (14-day deployment)
+        await self._initialize_speed_demon()
+        
         # Start HTTP health server
         self.start_health_server()
         
@@ -140,6 +149,59 @@ class TradingBotApplication:
         except Exception as e:
             logger.warning(f"📧 Email system initialization failed: {e}")
             self.email_manager = None
+    
+    async def _initialize_speed_demon(self):
+        """Initialize Speed Demon 14-day deployment system"""
+        try:
+            if speed_demon_integration:
+                logger.info("🔥 Initializing Speed Demon deployment...")
+                shared_state.add_log_entry("INFO", "Initializing Speed Demon deployment...")
+                
+                # Initialize Speed Demon integration
+                speed_result = await speed_demon_integration.initialize()
+                
+                if speed_result.get('status') == 'ready':
+                    logger.info("✅ Speed Demon ready - strategies initialized")
+                    shared_state.add_log_entry("SUCCESS", f"Speed Demon ready: {speed_result.get('strategies_ready', 0)} strategies")
+                    
+                    # Auto-start backtesting in 60 seconds
+                    logger.info("⏰ Auto-starting strategy backtesting in 60 seconds...")
+                    asyncio.create_task(self._delayed_backtest_start())
+                    
+                elif speed_result.get('status') == 'waiting_for_data':
+                    logger.info("⏳ Speed Demon waiting for data download...")
+                    shared_state.add_log_entry("INFO", "Waiting for historical data download to complete")
+                    
+                else:
+                    logger.warning(f"⚠️ Speed Demon initialization incomplete: {speed_result.get('status')}")
+                
+                # Store speed demon status in shared state
+                shared_state.speed_demon_status = speed_result
+                
+            else:
+                logger.info("📊 Standard deployment mode (Speed Demon not available)")
+                
+        except Exception as e:
+            logger.error(f"💥 Speed Demon initialization failed: {e}")
+            shared_state.add_log_entry("ERROR", f"Speed Demon failed: {e}")
+    
+    async def _delayed_backtest_start(self):
+        """Start backtesting after a delay to allow full system initialization"""
+        await asyncio.sleep(60)  # Wait 60 seconds
+        
+        try:
+            if speed_demon_integration:
+                logger.info("🚀 Auto-starting Speed Demon backtesting...")
+                backtest_result = await speed_demon_integration.start_speed_demon_backtesting()
+                
+                if backtest_result.get('status') == 'started':
+                    logger.info("✅ Speed Demon backtesting started successfully")
+                    shared_state.add_log_entry("SUCCESS", "Automated backtesting started")
+                else:
+                    logger.warning(f"⚠️ Backtesting start failed: {backtest_result}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to auto-start backtesting: {e}")
     
     async def _send_startup_notification(self):
         """Send startup notification email"""
