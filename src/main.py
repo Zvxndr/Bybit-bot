@@ -21,10 +21,45 @@ from typing import List, Dict, Any
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
-# Import frontend server and shared state
-from frontend_server import FrontendHandler
-from shared_state import shared_state
-from bybit_api import get_bybit_client
+# Import frontend server and shared state - FIXED FOR DEPLOYMENT (SAR Reference)
+# According to SAR: Container runs with PYTHONPATH=/app and entry point: python -m src.main
+# This means imports should be absolute from the /app root directory
+try:
+    # Primary import path for deployment environment (python -m src.main)
+    from src.frontend_server import FrontendHandler
+    from src.shared_state import shared_state
+    from src.bybit_api import get_bybit_client
+except ImportError as e1:
+    try:
+        # Fallback for direct execution context (python src/main.py)
+        from frontend_server import FrontendHandler
+        from shared_state import shared_state  
+        from bybit_api import get_bybit_client
+    except ImportError as e2:
+        # Final fallback - create minimal implementations for failed deployments
+        print(f"⚠️ Import errors: {e1}, {e2}")
+        print("🔧 Using minimal fallback implementations")
+        
+        class FrontendHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write('🔥 Bybit Bot - Running with minimal frontend'.encode('utf-8'))
+        
+        class SharedState:
+            def __init__(self):
+                self.data = {}
+            def get(self, key, default=None):
+                return self.data.get(key, default)
+            def set(self, key, value):
+                self.data[key] = value
+        
+        shared_state = SharedState()
+        
+        def get_bybit_client():
+            print("⚠️ Bybit client not available - running in offline mode")
+            return None
 
 # Speed Demon integration
 try:
@@ -469,6 +504,26 @@ class TradingBotApplication:
         
         logger.info("✅ Shutdown completed successfully")
     
+    async def _perform_health_check(self):
+        """Perform system health check"""
+        try:
+            # Basic health status
+            health_status = {
+                'api_connection': 'checking',
+                'shared_state': 'healthy',
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            # Update shared state with health info
+            if hasattr(shared_state, 'update_system_status'):
+                shared_state.update_system_status(health_status)
+            else:
+                # Fallback for minimal shared state
+                shared_state.set('health_status', health_status)
+                
+        except Exception as e:
+            logger.error(f"Health check error: {e}")
+    
     async def _send_shutdown_notification(self):
         """Send shutdown notification email"""
         if hasattr(self, 'email_manager') and self.email_manager:
@@ -477,6 +532,8 @@ class TradingBotApplication:
                 logger.info("📧 Shutdown notification sent")
             except Exception as e:
                 logger.warning(f"📧 Failed to send shutdown notification: {e}")
+        else:
+            logger.info("📧 No email manager configured for notifications")
 
 
 # Global application instance

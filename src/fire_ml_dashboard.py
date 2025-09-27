@@ -11,6 +11,7 @@ Features:
 - Performance attribution visualizations
 - Ensemble model confidence meters
 - Cyberpunk-styled ML insights
+- COMPREHENSIVE CONTROL CENTER with settings, pause, and data wipe
 
 Author: Trading Bot Team
 Version: 1.0.0 - Fire Cybersigilism Edition
@@ -25,6 +26,16 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 from typing import Dict, Any, List, Optional
+
+# Import our control center
+try:
+    from .trading_bot_control_center import TradingBotControlCenter
+except:
+    # Fallback import
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from trading_bot_control_center import TradingBotControlCenter
 
 # Custom Fire Cybersigilism styling
 FIRE_COLORS = {
@@ -121,11 +132,156 @@ def apply_fire_cybersigilism_theme():
 
 
 class FireMLDashboard:
-    """Fire Cybersigilism ML Dashboard Components"""
+    """Fire Cybersigilism ML Dashboard Components with Control Center"""
     
     def __init__(self):
         self.fire_colors = FIRE_COLORS
+        self.control_center = TradingBotControlCenter()
         apply_fire_cybersigilism_theme()
+    
+    def render_complete_dashboard(self):
+        """Render the complete Fire ML dashboard with control center."""
+        
+        # Main header
+        st.markdown("""
+        <div style='text-align: center; padding: 30px; background: linear-gradient(45deg, rgba(255,69,0,0.2) 0%, rgba(148,0,211,0.2) 100%); border-radius: 20px; margin-bottom: 30px; border: 3px solid #FF4500; box-shadow: 0 0 50px rgba(255,69,0,0.5);'>
+            <h1 style='color: #FF4500; margin: 0; font-family: "Orbitron", sans-serif; text-shadow: 0 0 30px #FF4500; font-size: 2.5em;'>
+                🔥 FIRE CYBERSIGILISM AI TRADING BOT 🔥
+            </h1>
+            <p style='color: #00FFFF; margin: 15px 0 0 0; font-weight: bold; font-size: 1.2em;'>
+                Private Use • Real-Time ML • Complete Control Center • Live Trading
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Create tabs for different sections
+        tabs = st.tabs([
+            "🔥 ML PREDICTIONS", 
+            "🎓 STRATEGY GRADUATION", 
+            "📊 LIVE TRADING", 
+            "🤖 CONTROL CENTER",
+            "📈 PERFORMANCE ANALYTICS"
+        ])
+        
+        with tabs[0]:
+            self.render_ml_predictions_section()
+            
+        with tabs[1]:
+            self.render_strategy_graduation_section()
+            
+        with tabs[2]:
+            self.render_live_trading_section()
+            
+        with tabs[3]:
+            # Render the comprehensive control center
+            st.markdown("## 🤖 COMPREHENSIVE BOT CONTROL CENTER")
+            self.control_center.render_control_center()
+            
+        with tabs[4]:
+            self.render_performance_analytics_section()
+    
+    def render_ml_predictions_section(self):
+        """Render ML predictions section."""
+        # Mock data for demonstration
+        predictions_data = self._get_mock_ml_predictions()
+        self.display_ml_predictions(predictions_data)
+    
+    def render_strategy_graduation_section(self):
+        """Render strategy graduation section."""
+        graduation_data = self._get_mock_graduation_data()
+        self.display_strategy_graduation(graduation_data)
+    
+    def render_live_trading_section(self):
+        """Render live trading section."""
+        trading_data = self._get_mock_trading_data()
+        self.display_live_trading_decisions(trading_data)
+    
+    def render_performance_analytics_section(self):
+        """Render performance analytics section."""
+        performance_data = self._get_mock_performance_data()
+        self.display_performance_attribution(performance_data)
+    
+    def _get_mock_ml_predictions(self):
+        """Generate mock ML predictions data."""
+        return {
+            'real_time_signals': [
+                {
+                    'symbol': 'BTCUSDT',
+                    'prediction': 'BUY',
+                    'confidence': 0.85,
+                    'price_target': 67500.0,
+                    'model_consensus': 'STRONG_BUY'
+                },
+                {
+                    'symbol': 'ETHUSDT', 
+                    'prediction': 'SELL',
+                    'confidence': 0.72,
+                    'price_target': 2380.0,
+                    'model_consensus': 'MODERATE_SELL'
+                }
+            ],
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _get_mock_graduation_data(self):
+        """Generate mock strategy graduation data."""
+        return {
+            'strategies': [
+                {
+                    'name': 'Fire Momentum',
+                    'status': 'paper_trading',
+                    'win_rate': 78.5,
+                    'graduation_threshold': 75.0,
+                    'progress': 0.94
+                },
+                {
+                    'name': 'Cyber Scalper',
+                    'status': 'graduated',
+                    'win_rate': 82.1,
+                    'graduation_threshold': 75.0,
+                    'progress': 1.0
+                }
+            ]
+        }
+    
+    def _get_mock_trading_data(self):
+        """Generate mock trading data."""
+        return {
+            'active_positions': [
+                {
+                    'symbol': 'BTCUSDT',
+                    'side': 'LONG',
+                    'entry_price': 66750.0,
+                    'current_price': 67125.0,
+                    'pnl': 375.0,
+                    'ml_confidence': 0.88
+                }
+            ],
+            'recent_trades': [
+                {
+                    'symbol': 'ETHUSDT',
+                    'side': 'SHORT',
+                    'profit': 245.80,
+                    'ml_predicted': True,
+                    'timestamp': datetime.now() - timedelta(minutes=15)
+                }
+            ]
+        }
+    
+    def _get_mock_performance_data(self):
+        """Generate mock performance data."""
+        return {
+            'ml_vs_traditional': {
+                'ml_profit': 15750.0,
+                'traditional_profit': 8340.0,
+                'ml_advantage': 88.7
+            },
+            'daily_performance': pd.DataFrame({
+                'date': pd.date_range(start='2024-01-01', periods=30, freq='D'),
+                'ml_pnl': np.random.normal(50, 150, 30).cumsum(),
+                'traditional_pnl': np.random.normal(25, 100, 30).cumsum()
+            })
+        }
     
     def display_ml_predictions(self, predictions_data: Dict[str, Any]):
         """Display real-time ML predictions with fire/cyber styling."""

@@ -8,7 +8,7 @@ This creates a seamless single-server solution.
 
 import os
 import json
-from .shared_state import shared_state
+from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 import mimetypes
