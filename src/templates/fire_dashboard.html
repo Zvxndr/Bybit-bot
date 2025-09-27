@@ -267,5 +267,12 @@
 
     <!-- Fire Cybersigilism JavaScript -->
     <script src="/static/js/fire-dashboard-clean.js"></script>
+    <script>
+        // Initialize the Fire Dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', function() {
+            dashboard = new FireDashboard();
+        });
+    </script>
 </body>
 </html>

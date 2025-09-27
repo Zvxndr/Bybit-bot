@@ -3,6 +3,7 @@
 
 class FireDashboard {
     constructor() {
+        console.log('🔥 FireDashboard constructor started');
         this.isAdminPanelOpen = false;
         this.botStatus = 'active';
         this.charts = {};
@@ -13,7 +14,14 @@ class FireDashboard {
             paper: { total: 100000, available: 100000, used: 0, unrealized: 0, history: [] }
         };
         
-        this.initializeCharts();Updates();
+        try {
+            this.initializeCharts();
+            this.startRealTimeUpdates();
+            console.log('✅ Dashboard components initialized successfully');
+        } catch (error) {
+            console.error('⚠️ Error initializing components:', error);
+        }
+        
         this.showLoadingScreen();
     }
 
@@ -21,11 +29,14 @@ class FireDashboard {
         const loadingScreen = document.getElementById('loadingScreen');
         const mainDashboard = document.getElementById('mainDashboard');
         
+        console.log('🔥 Initializing Fire Dashboard...');
+        
         setTimeout(() => {
+            console.log('✅ Loading complete, showing main dashboard');
             loadingScreen.style.display = 'none';
             mainDashboard.style.display = 'block';
             this.playFireAnimation();
-        }, 3000);
+        }, 2000);
     }
 
     playFireAnimation() {
