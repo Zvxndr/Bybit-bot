@@ -238,8 +238,10 @@ class AustralianTrustSecurityManager:
                 return {'authenticated': False, 'error': 'Security system not initialized'}
             
             # Basic authentication (integrate with your existing auth system)
-            # This is a placeholder - replace with your actual authentication
-            if username == "admin" and password == "secure_admin_password":
+            # Use environment variable for admin password
+            import os
+            admin_password = os.getenv('ADMIN_PASSWORD') or self._generate_admin_password()
+            if username == "admin" and password == admin_password:
                 
                 if mfa_token and self.mfa_manager:
                     # Verify MFA token
@@ -258,6 +260,21 @@ class AustralianTrustSecurityManager:
                             'expires_at': session.expires_at.isoformat(),
                             'permissions': ['admin', 'trading', 'reports', 'settings']
                         }
+    
+    def _generate_admin_password(self) -> str:
+        """Generate secure admin password if not set in environment."""
+        import secrets
+        import string
+        
+        # Generate 20-character secure password
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(secrets.choice(alphabet) for _ in range(20))
+        
+        # Log warning about generated password
+        logger.warning("🔐 Generated secure admin password. Set ADMIN_PASSWORD environment variable!")
+        logger.warning("🚨 SAVE THIS PASSWORD - it won't be shown again!")
+        
+        return password
                     else:
                         logger.warning(f"❌ MFA verification failed for: {username}")
                         return {'authenticated': False, 'error': 'Invalid MFA token'}

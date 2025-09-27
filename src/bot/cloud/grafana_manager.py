@@ -155,13 +155,15 @@ class DashboardTime:
 class GrafanaDashboardManager:
     """Grafana dashboard management system."""
     
-    def __init__(self, grafana_url: str = "http://localhost:3000", username: str = "admin", password: str = "admin123"):
+    def __init__(self, grafana_url: str = "http://localhost:3000", username: str = "admin", password: str = None):
         self.config_manager = ConfigurationManager()
         self.logger = TradingLogger()
         
         self.grafana_url = grafana_url.rstrip('/')
         self.username = username
-        self.password = password
+        # Use environment variable or generate secure password
+        import os
+        self.password = password or os.getenv('GRAFANA_ADMIN_PASSWORD') or self._generate_secure_password()
         
         # Dashboard management
         self.dashboards: Dict[str, Dict[str, Any]] = {}
@@ -176,6 +178,19 @@ class GrafanaDashboardManager:
         self.auth_headers: Dict[str, str] = {}
         
         self.logger.info("GrafanaDashboardManager initialized")
+    
+    def _generate_secure_password(self) -> str:
+        """Generate a secure random password for Grafana admin."""
+        import secrets
+        import string
+        
+        # Generate 16-character password with letters, digits, and symbols
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(secrets.choice(alphabet) for _ in range(16))
+        
+        # Log that a password was generated (don't log the actual password)
+        self.logger.warning("Generated secure Grafana admin password. Please save it!")
+        return password
     
     async def initialize(self):
         """Initialize Grafana connection."""

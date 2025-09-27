@@ -150,7 +150,7 @@ class MonitoringStack:
                 'enabled': True,
                 'port': 3000,
                 'admin_user': 'admin',
-                'admin_password': 'admin123'
+                'admin_password': self._get_secure_grafana_password()
             },
             'alertmanager': {
                 'enabled': True,
@@ -171,6 +171,25 @@ class MonitoringStack:
                 'sampling_rate': 0.1
             }
         }
+        
+    def _get_secure_grafana_password(self) -> str:
+        """Get secure Grafana password from environment or generate one."""
+        import os
+        import secrets
+        import string
+        
+        # Try environment variable first
+        env_password = os.getenv('GRAFANA_ADMIN_PASSWORD')
+        if env_password:
+            return env_password
+            
+        # Generate secure password
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(secrets.choice(alphabet) for _ in range(16))
+        
+        # Log that password was generated (don't log actual password)
+        self.logger.warning("Generated secure Grafana password. Set GRAFANA_ADMIN_PASSWORD env var to customize.")
+        return password
         
         # Prometheus metrics registry
         self.metrics_registry = CollectorRegistry()

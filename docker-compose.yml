@@ -19,6 +19,20 @@ services:
       # Generic fallback
       - BYBIT_API_KEY=${BYBIT_API_KEY}
       - BYBIT_API_SECRET=${BYBIT_API_SECRET}
+      # Database and Redis
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      # Security Keys
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - SERVICE_API_KEY=${SERVICE_API_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - PASSWORD_SALT=${PASSWORD_SALT}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      # Admin Credentials
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - DASHBOARD_API_KEY=${DASHBOARD_API_KEY}
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
@@ -52,7 +66,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
