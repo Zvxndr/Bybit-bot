@@ -79,9 +79,15 @@ except ImportError as e1:
                 """Get current system status"""
                 return self.system_status
                 
-            def update_trading_data(self, data):
+            def update_trading_data(self, data=None, **kwargs):
                 """Update trading data in shared state"""
-                self.data['trading_data'] = data
+                if data is not None:
+                    self.data['trading_data'] = data
+                
+                # Handle keyword arguments
+                for key, value in kwargs.items():
+                    self.data[key] = value
+                    
                 self.data['last_update'] = time.time()
                 
             def get_trading_data(self):
