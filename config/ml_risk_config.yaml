@@ -1,0 +1,245 @@
+# ML Risk Management Configuration Template
+# This configuration extends the main config.yaml with ML-specific risk management settings
+
+# ML Risk Management Settings
+ml_risk_management:
+  # ML Risk Thresholds
+  ml_risk_thresholds:
+    min_confidence_threshold: 0.6            # Minimum ML confidence for execution (60%)
+    max_uncertainty_threshold: 0.4           # Maximum model uncertainty allowed (40%)
+    min_ensemble_agreement: 0.7              # Minimum agreement between models (70%)
+    confidence_scaling_factor: 2.0           # How much confidence affects position size
+    prediction_stability_threshold: 0.6      # Minimum prediction stability required
+    feature_importance_threshold: 0.3        # Minimum feature importance score
+    
+    # Dynamic thresholds based on market conditions
+    high_volatility_confidence_boost: 0.1    # Require 10% higher confidence in volatile markets
+    low_volume_confidence_boost: 0.05        # Require 5% higher confidence in low volume
+    correlation_breakdown_threshold: 0.3     # Correlation threshold for risk adjustment
+
+  # Circuit Breakers
+  circuit_breakers:
+    daily_loss_limit: 0.03                   # 3% daily loss triggers circuit breaker
+    volatility_spike_multiplier: 3.0         # 3x normal volatility triggers breaker
+    model_performance_threshold: 0.4         # < 40% accuracy triggers breaker
+    execution_failure_rate_threshold: 0.2    # > 20% execution failures
+    data_quality_threshold: 0.8              # > 80% data quality issues
+    correlation_breakdown_threshold: 0.3     # Correlation drops below 0.3
+    
+    # Recovery settings
+    auto_recovery_enabled: true
+    recovery_check_interval_minutes: 5
+    minimum_recovery_wait_minutes: 15
+    
+    # Escalation settings
+    escalate_after_minutes: 60               # Escalate to emergency stop after 1 hour
+    max_consecutive_triggers: 3              # Max consecutive triggers before escalation
+
+  # Emergency Stops
+  emergency_stops:
+    # Automatic triggers
+    max_consecutive_losses: 5
+    max_portfolio_drawdown: 0.10             # 10% portfolio drawdown
+    max_position_drawdown: 0.20              # 20% single position drawdown
+    model_complete_failure_threshold: 0.1    # < 10% model accuracy
+    
+    # Manual override settings
+    require_override_code: true
+    override_code_length: 8
+    auto_recovery_enabled: false             # Emergency stops require manual recovery
+    
+    # Alert settings
+    send_immediate_alerts: true
+    alert_cooldown_minutes: 5                # Minimum time between alerts
+
+  # Position Monitoring
+  position_monitoring:
+    check_interval_seconds: 30               # Check positions every 30 seconds
+    max_concurrent_positions: 10             # Maximum concurrent positions
+    
+    # Risk monitoring thresholds
+    stop_loss_percentage: 0.05               # 5% stop loss
+    take_profit_percentage: 0.15             # 15% take profit
+    drawdown_alert_threshold: 0.03           # 3% drawdown alert
+    
+    # Auto-exit conditions
+    enable_auto_exit: true
+    max_holding_period_hours: 24             # Maximum holding period
+    confidence_degradation_threshold: 0.3    # Exit if confidence drops below 30%
+    
+    # Correlation monitoring
+    correlation_monitoring_enabled: true
+    correlation_alert_threshold: 0.8        # Alert if correlation > 80%
+    max_correlated_positions: 3             # Max positions with >80% correlation
+
+  # Execution Configuration
+  execution:
+    default_timeout_seconds: 30
+    retry_attempts: 3
+    retry_delay_seconds: 5
+    
+    # Execution strategies
+    enable_vwap: true
+    enable_twap: true
+    enable_iceberg: true
+    
+    # Risk-based execution parameters
+    high_risk_force_limit_orders: true       # Force limit orders for high risk trades
+    low_confidence_reduce_size: true         # Reduce size for low confidence trades
+    
+    # Market impact limits
+    max_market_impact_bps: 20                # Maximum 20 basis points market impact
+    max_adv_percentage: 0.05                 # Maximum 5% of average daily volume
+    
+    # Slippage tolerance
+    default_slippage_tolerance: 0.005        # 0.5% default slippage tolerance
+    high_volatility_slippage_tolerance: 0.01 # 1% in high volatility
+    low_liquidity_slippage_tolerance: 0.002  # 0.2% in low liquidity
+
+# Environment-specific overrides
+environments:
+  development:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.5        # More relaxed for testing
+      circuit_breakers:
+        daily_loss_limit: 0.05               # Higher limit for development
+        auto_recovery_enabled: true
+      emergency_stops:
+        auto_recovery_enabled: true
+        
+  staging:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.65       # Balanced for staging
+      circuit_breakers:
+        daily_loss_limit: 0.03               # Production-like limits
+        auto_recovery_enabled: true
+      emergency_stops:
+        auto_recovery_enabled: false         # Manual recovery required
+        
+  production:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.8        # Maximum safety for production
+        max_uncertainty_threshold: 0.2       # Lower uncertainty tolerance
+      circuit_breakers:
+        daily_loss_limit: 0.02               # Tight daily loss limit
+        auto_recovery_enabled: false         # Manual recovery only
+      emergency_stops:
+        max_consecutive_losses: 3            # Fewer losses before emergency stop
+        max_portfolio_drawdown: 0.05         # Tighter drawdown limit
+        auto_recovery_enabled: false         # Manual recovery required
+
+# Trading mode-specific adjustments
+trading_modes:
+  paper_trading:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.5        # Allow experimentation
+      circuit_breakers:
+        auto_recovery_enabled: true
+      emergency_stops:
+        auto_recovery_enabled: true
+        
+  conservative:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.8        # High confidence required
+        max_uncertainty_threshold: 0.2       # Low uncertainty tolerance
+      circuit_breakers:
+        daily_loss_limit: 0.015              # 1.5% daily loss limit
+      emergency_stops:
+        max_portfolio_drawdown: 0.03         # 3% portfolio drawdown
+        
+  aggressive:
+    ml_risk_management:
+      ml_risk_thresholds:
+        min_confidence_threshold: 0.6        # Lower confidence acceptable
+        max_uncertainty_threshold: 0.4       # Higher uncertainty tolerance
+      circuit_breakers:
+        daily_loss_limit: 0.04               # 4% daily loss limit
+      emergency_stops:
+        max_portfolio_drawdown: 0.08         # 8% portfolio drawdown
+
+# Alerting and Monitoring
+monitoring:
+  ml_risk_alerts:
+    enabled: true
+    
+    # Alert channels
+    channels:
+      email:
+        enabled: false
+        recipients:
+          - "admin@example.com"
+      
+      webhook:
+        enabled: false
+        url: "https://hooks.slack.com/services/..."
+      
+      log:
+        enabled: true
+        level: "WARNING"
+    
+    # Alert conditions
+    conditions:
+      trade_blocked: true                    # Alert when trades are blocked
+      circuit_breaker_triggered: true       # Alert when circuit breakers trigger
+      emergency_stop_activated: true        # Alert when emergency stop activates
+      high_risk_trade_detected: true        # Alert for high risk trades
+      model_performance_degraded: true      # Alert when model performance drops
+      
+    # Alert thresholds
+    thresholds:
+      block_rate_threshold: 0.3             # Alert if >30% of trades blocked
+      consecutive_failures_threshold: 5     # Alert after 5 consecutive failures
+      
+  # Performance monitoring
+  performance_tracking:
+    enabled: true
+    metrics_retention_days: 30
+    
+    # Metrics to track
+    track_execution_times: true
+    track_slippage: true  
+    track_model_accuracy: true
+    track_risk_adjusted_returns: true
+    
+  # Audit logging
+  audit:
+    enabled: true
+    log_all_validations: true              # Log all trade validations
+    log_blocked_trades: true               # Log blocked trades with reasons
+    log_circuit_breaker_events: true       # Log circuit breaker events
+    log_emergency_stops: true              # Log emergency stop events
+    
+    # Log retention
+    retention_days: 365                    # Keep audit logs for 1 year
+    
+    # Log format
+    format: "json"                         # JSON format for structured logging
+    include_ml_metadata: true              # Include ML prediction metadata
+
+# Integration with existing systems
+integration:
+  # Dashboard integration
+  dashboard:
+    show_risk_metrics: true
+    show_circuit_breaker_status: true
+    show_emergency_stop_status: true
+    show_blocked_trades: true
+    real_time_alerts: true
+  
+  # Database integration  
+  database:
+    store_risk_assessments: true
+    store_execution_results: true
+    store_circuit_breaker_events: true
+    store_emergency_stop_events: true
+  
+  # API integration
+  api:
+    expose_risk_endpoints: true
+    require_authentication: true
+    rate_limiting: true

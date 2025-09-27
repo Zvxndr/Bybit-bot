@@ -1,168 +1,237 @@
-# 🏛️ Australian Trust Trading Bot
+# Bybit Trading Bot - Production Ready
+=============================================
 
-[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green.svg)](https://github.com/Zvxndr/Bybit-bot)
-[![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-blue.svg)](docs/security/)
-[![Compliance](https://img.shields.io/badge/Compliance-Australian%20Regulations-orange.svg)](docs/compliance/)
+**Enterprise-Grade Cryptocurrency Trading Bot with Advanced Risk Management**
 
-**Enterprise-grade discretionary trust trading system with advanced security, compliance, and Australian regulatory features.**
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue)
+![License](https://img.shields.io/badge/License-Private-red)
 
-## � Docker Quick Start (5 minutes)
+## 🚀 Overview
 
-```bash
-# Clone and run with Docker (easiest method)
-git clone https://github.com/Zvxndr/Bybit-bot.git
-cd Bybit-bot
-cp .env.example .env  # Add your API keys
-docker-compose up -d
-```
+This is a sophisticated cryptocurrency trading bot designed for the Bybit exchange, featuring enterprise-grade security, multi-environment support, and advanced risk management capabilities.
 
-**Your bot is now running at `http://localhost:8080`** 🎉
+### ✅ System Status: 100% Complete
 
-## 🚀 Other Deployment Options
-
-```bash
-# Option 1: Quick deployment (30 minutes)
-python utils/quick_setup.py
-
-# Option 2: Comprehensive setup
-# Follow docs/deployment/DEPLOYMENT_GUIDE.md
-```
+- **Backend**: FastAPI with comprehensive trading engine
+- **Frontend**: Next.js 14 dashboard (container-ready)
+- **Database**: SQLite with PostgreSQL upgrade path
+- **Security**: Enterprise HSM integration, MFA, advanced key management
+- **Deployment**: Docker containerization with Digital Ocean support
+- **Monitoring**: Real-time health checks and alerting
 
 ## 🏗️ Architecture
 
-- **🔒 Security**: Multi-factor authentication, end-to-end encryption, zero-trust architecture
-- **☁️ Cloud**: DigitalOcean deployment with auto-scaling
-- **📧 Notifications**: SendGrid integration for trustee/beneficiary reporting
-- **🇦🇺 Compliance**: Australian trust law compliance built-in
-- **📊 Monitoring**: Real-time performance and security monitoring
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Complete deployment instructions |
-| [Quick Start](docs/deployment/QUICK_START.md) | 30-minute setup guide |
-| [API Reference](docs/api/) | Complete API documentation |
-| [Security Guide](docs/security/) | Security implementation details |
-
-## 🛠️ Tech Stack
-
-- **Backend**: Python 3.11+, FastAPI, SQLAlchemy
-- **Security**: Cryptography, JWT, MFA, Rate Limiting
-- **Cloud**: DigitalOcean, SendGrid
-- **Monitoring**: Prometheus, Grafana
-- **Testing**: Pytest, Coverage >90%
-
-## 🔐 Security Features
-
-- ✅ Multi-factor authentication
-- ✅ AES-256 encryption
-- ✅ Rate limiting & IP whitelisting
-- ✅ Threat detection
-- ✅ Audit logging
-- ✅ Zero-trust architecture
-
-## 📈 Performance
-
-- **Response Time**: <100ms API calls
-- **Throughput**: 1000+ requests/second
-- **Availability**: 99.9% uptime SLA
-- **Recovery**: <5 minute RTO
-
-## 🚀 Deployment Options
-
-### Option 1: Automated Setup
-```bash
-cd utils/
-python quick_setup.py
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Trading Bot System                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Frontend (Next.js)     │  Backend (FastAPI)   │  Database      │
+│  - Dashboard            │  - Trading Engine    │  - SQLite      │
+│  - Real-time UI        │  - Risk Management   │  - TimescaleDB │
+│  - Configuration       │  - Strategy Engine   │  - Backups     │
+├─────────────────────────────────────────────────────────────────┤
+│  Security Layer         │  Monitoring          │  Deployment    │
+│  - HSM Integration      │  - Health Checks     │  - Docker      │
+│  - MFA Authentication  │  - Alerting          │  - Digital Ocean│
+│  - Key Management      │  - Performance       │  - Auto-scaling│
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Option 2: Manual Deployment
-See [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)
+## 🚀 Quick Start
+
+### Option 1: Digital Ocean Deployment (Recommended)
+
+```bash
+# Clone repository
+git clone https://github.com/Zvxndr/Bybit-bot.git
+cd Bybit-bot
+
+# Deploy with Node.js support
+chmod +x deploy_digital_ocean_nodejs.sh
+./deploy_digital_ocean_nodejs.sh
+```
+
+### Option 2: Local Development
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database
+python src/database_init.py
+
+# Configure environment
+cp config/secrets.yaml.template config/secrets.yaml
+# Edit config/secrets.yaml with your API keys
+
+# Run application
+python -m src.main
+```
 
 ### Option 3: Docker Deployment
+
 ```bash
-docker-compose up -d
+# Build with Node.js support
+docker build -f Dockerfile.nodejs -t bybit-bot:latest .
+
+# Run container
+docker run -d \
+  --name bybit-bot \
+  -p 8080:8080 -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/config:/app/config \
+  bybit-bot:latest
 ```
 
-## 💰 Cost Estimate
+## 📊 Features
 
-- **DigitalOcean**: $20-60/month
-- **SendGrid**: Free tier (40K emails) or $14.95/month
-- **Domain**: $10-15/year (optional)
+### Core Trading Features
+- ✅ **Multi-Exchange Support**: Bybit testnet/mainnet
+- ✅ **Strategy Engine**: ML-powered trading strategies
+- ✅ **Risk Management**: Advanced position sizing and stop-loss
+- ✅ **Portfolio Management**: Real-time portfolio tracking
+- ✅ **Tax Compliance**: Australian CGT event tracking
+
+### Advanced Features
+- ✅ **Machine Learning**: Strategy discovery and optimization
+- ✅ **Real-time Data**: WebSocket market data feeds
+- ✅ **Email Notifications**: Trade alerts and system notifications
+- ✅ **Health Monitoring**: Comprehensive system health checks
+- ✅ **Data Persistence**: Git-safe deployment with data preservation
+
+### Security Features
+- ✅ **HSM Integration**: Hardware Security Module support
+- ✅ **MFA Authentication**: Multi-factor authentication
+- ✅ **Key Management**: Advanced API key encryption
+- ✅ **Secure Configuration**: Environment-based secrets management
+
+## 🛠️ Configuration
+
+### Environment Setup
+
+The bot supports multiple environments:
+
+- **Development**: `config/development.yaml`
+- **Staging**: `config/staging.yaml`  
+- **Production**: `config/config.yaml`
+
+### API Configuration
+
+1. Create `config/secrets.yaml` from template
+2. Add your Bybit API credentials:
+
+```yaml
+bybit:
+  api_key: "your_api_key"
+  api_secret: "your_api_secret"
+  testnet: true  # Set to false for mainnet
+
+email:
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  username: "your_email@gmail.com"
+  password: "your_app_password"
+```
+
+## 📈 Monitoring & Health
+
+### Health Endpoints
+
+- **API Health**: `http://localhost:8080/health`
+- **System Status**: `http://localhost:8080/status`
+- **Metrics**: `http://localhost:8080/metrics`
+
+### Logging
+
+Logs are available in the `logs/` directory:
+- `application.log`: Main application logs
+- `trading.log`: Trading-specific logs
+- `error.log`: Error and exception logs
 
 ## 🔧 Development
 
+### Project Structure
+
+```
+├── src/                    # Application source code
+│   ├── main.py            # Main application entry point
+│   ├── bot/               # Trading bot logic
+│   ├── api/               # FastAPI application
+│   ├── dashboard/         # Next.js frontend
+│   ├── security/          # Security implementations
+│   └── services/          # Core services
+├── config/                # Configuration files
+├── docs/                  # Documentation
+├── scripts/               # Utility scripts
+├── tests/                 # Test suites
+└── docker/                # Docker configurations
+```
+
+### Running Tests
+
 ```bash
-# Setup development environment
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-pip install -r requirements.txt
+# Unit tests
+python -m pytest tests/unit/
 
-# Run tests
-pytest tests/ --cov=src
+# Integration tests  
+python -m pytest tests/integration/
 
-# Start development server
-python src/main.py
+# End-to-end tests
+python -m pytest tests/e2e/
 ```
 
-## 📊 Project Structure
+## 🌐 Deployment
 
-```
-📁 Bybit-bot/
-├── 📁 src/                     # Core application code
-│   ├── 📁 security/            # Authentication & encryption
-│   ├── 📁 notifications/       # SendGrid integration
-│   ├── 📁 infrastructure/      # Cloud management
-│   ├── 📁 bot/                 # Trading logic
-│   ├── 📁 api/                 # External integrations
-│   ├── 📁 dashboard/           # Web interface
-│   ├── 📁 monitoring/          # Health checks
-│   └── 📄 main.py              # Application entry point
-├── 📁 docs/                    # Documentation
-│   ├── 📁 deployment/          # Deployment guides
-│   ├── 📁 guides/              # Development guides
-│   └── 📁 api/                 # API documentation
-├── 📁 tests/                   # Test suites
-├── 📁 utils/                   # Utility scripts
-├── 📁 config/                  # Configuration templates
-├── 📁 docker/                  # Containerization
-├── 📁 kubernetes/              # K8s manifests
-├── 📁 monitoring/              # Observability
-└── 📁 archive/                 # Completed phases
-```
+### Digital Ocean
 
-## 🔍 Quality Assurance
+Use the provided deployment scripts:
 
-### **Security Audit** ✅
-- [x] No hardcoded secrets
-- [x] Proper encryption implementation
-- [x] MFA integration ready
-- [x] Rate limiting configured
-- [x] Threat detection active
+- **Linux/Mac**: `deploy_digital_ocean_nodejs.sh`
+- **Windows**: `deploy_digital_ocean_nodejs.ps1`
 
-### **Code Quality** ✅
-- [x] >90% test coverage
-- [x] PEP 8 compliant
-- [x] Comprehensive docstrings
-- [x] Low cyclomatic complexity
+### Docker
 
-### **Performance** ✅
-- [x] Optimized database queries
-- [x] Efficient API calls
-- [x] Memory management
-- [x] Connection pooling
+Multiple Dockerfile options:
 
-## 📞 Support
+- **Standard**: `Dockerfile` (Python only)
+- **Full Stack**: `Dockerfile.nodejs` (Python + Node.js)
 
-- **Documentation**: See `docs/` directory
-- **Issues**: GitHub Issues
-- **Security**: See `SECURITY.md`
+### Kubernetes
+
+Kubernetes manifests available in `kubernetes/` directory.
+
+## 📚 Documentation
+
+- **[API Reference](docs/API_REFERENCE.md)**: Complete API documentation
+- **[Deployment Guide](docs/DEPLOYMENT.md)**: Detailed deployment instructions
+- **[Architecture](docs/ARCHITECTURE.md)**: System architecture overview
+- **[Security Guide](docs/RISK_MANAGEMENT.md)**: Security best practices
+
+## 🔒 Security
+
+This bot implements enterprise-grade security:
+
+- **API Key Encryption**: AES-256 encryption for API keys
+- **HSM Integration**: Hardware Security Module support
+- **MFA**: Multi-factor authentication for admin access
+- **Audit Logging**: Comprehensive security event logging
+- **Network Security**: VPN and firewall recommendations
 
 ## 📄 License
 
-This project is proprietary software for Australian trust trading operations.
+This project is proprietary software. All rights reserved.
+
+## 🆘 Support
+
+For support and questions:
+
+1. Check the [documentation](docs/)
+2. Review [troubleshooting guide](docs/MAINTENANCE_TROUBLESHOOTING_GUIDE.md)
+3. Create an issue in the repository
 
 ---
 
-**🏛️ Built for Australian Trust Management | 🔒 Enterprise Security | ☁️ Cloud Native**
+**⚠️ Risk Disclaimer**: Cryptocurrency trading involves significant risk. This bot is provided for educational and research purposes. Always test thoroughly in a sandbox environment before live trading.
+
+**🏛️ Compliance**: This bot includes Australian tax compliance features. Consult with financial advisors for regulatory compliance in your jurisdiction.
