@@ -10,6 +10,7 @@ import os
 import base64
 import hashlib
 import secrets
+from typing import List, Dict, Optional, Any
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
