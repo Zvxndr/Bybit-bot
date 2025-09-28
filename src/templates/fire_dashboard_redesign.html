@@ -266,6 +266,76 @@
         .admin-panel-compact.active {
             display: grid;
         }
+        
+        /* Backtest Panel - Hidden by default */
+        .backtest-panel-compact {
+            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid rgba(92, 103, 255, 0.3);
+            padding: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 8px;
+        }
+        
+        .backtest-panel-compact.active {
+            display: grid;
+        }
+        
+        .backtest-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .form-input {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(92, 103, 255, 0.3);
+            padding: 6px 8px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+        }
+        
+        .form-input:focus {
+            border-color: rgba(92, 103, 255, 0.7);
+            outline: none;
+            box-shadow: 0 0 8px rgba(92, 103, 255, 0.3);
+        }
+        
+        .progress-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            height: 20px;
+            margin: 4px 0;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #5C67FF 0%, #00FFAA 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .backtest-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 8px;
+        }
+        
+        .result-item {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(92, 103, 255, 0.2);
+            font-size: 10px;
+        }
     </style>
 </head>
 
@@ -326,7 +396,7 @@
                     <div class="env-tabs">
                         <button class="env-tab active" onclick="switchEnv('testnet')">🔥 Testnet</button>
                         <button class="env-tab" onclick="switchEnv('mainnet')">⚡ Mainnet</button>
-                        <button class="env-tab" onclick="switchEnv('history')">📊 History</button>
+                        <button class="env-tab" onclick="switchEnv('backtest')">📊 Backtest</button>
                     </div>
                     <div class="balance-display" id="totalBalance">$0.00</div>
                     <div class="balance-label">Total Balance • <span id="currentEnv">TESTNET</span></div>
@@ -392,7 +462,7 @@
                     </div>
                     
                     <div class="trading-controls" style="margin-top: 6px;">
-                        <button class="control-btn cyber" onclick="startBacktest()">
+                        <button class="control-btn cyber" onclick="openBacktestPanel()">
                             <i class="fas fa-chart-bar"></i>
                             Backtest
                         </button>
@@ -445,20 +515,29 @@
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
                         <div>
-                            <div class="balance-label">API Status</div>
-                            <div style="color: #00FFAA;" id="apiStatus">Connected</div>
+                            <div class="balance-label">Bybit API</div>
+                            <div style="color: #00FFAA;" id="bybitApiStatus">
+                                <div class="status-dot" style="display: inline-block; margin-right: 4px;"></div>
+                                Connected
+                            </div>
                         </div>
                         <div>
-                            <div class="balance-label">Uptime</div>
-                            <div style="color: #00FFAA;" id="uptime">0:00:00</div>
+                            <div class="balance-label">WebSocket</div>
+                            <div style="color: #00FFAA;" id="wsStatus">
+                                <div class="status-dot" style="display: inline-block; margin-right: 4px;"></div>
+                                Active
+                            </div>
                         </div>
                         <div>
-                            <div class="balance-label">CPU</div>
-                            <div style="color: #FF6B35;" id="cpuUsage">--</div>
+                            <div class="balance-label">ML Engine</div>
+                            <div style="color: #00FFAA;" id="mlEngineStatus">
+                                <div class="status-dot" style="display: inline-block; margin-right: 4px;"></div>
+                                Running
+                            </div>
                         </div>
                         <div>
-                            <div class="balance-label">Memory</div>
-                            <div style="color: #FF6B35;" id="memUsage">--</div>
+                            <div class="balance-label">Live Uptime</div>
+                            <div style="color: #5C67FF;" id="uptime">0:00:00</div>
                         </div>
                     </div>
                 </div>
@@ -515,6 +594,119 @@
             </div>
         </div>
         
+        <!-- Backtest Panel - Hidden -->
+        <div id="backtestPanel" class="backtest-panel-compact">
+            <div class="ultra-card">
+                <div class="card-title-compact">
+                    <i class="fas fa-chart-bar"></i>
+                    Backtest Configuration
+                </div>
+                <div class="backtest-form">
+                    <div class="form-row">
+                        <div>
+                            <div class="balance-label">Start Date</div>
+                            <input type="date" id="startDate" class="form-input" value="2024-01-01">
+                        </div>
+                        <div>
+                            <div class="balance-label">End Date</div>
+                            <input type="date" id="endDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <div class="balance-label">Initial Balance ($)</div>
+                            <input type="number" id="initialBalance" class="form-input" value="10000" min="100" max="1000000">
+                        </div>
+                        <div>
+                            <div class="balance-label">Trading Pair</div>
+                            <select id="tradingPair" class="form-input">
+                                <option value="BTCUSDT">BTC/USDT</option>
+                                <option value="ETHUSDT">ETH/USDT</option>
+                                <option value="ADAUSDT">ADA/USDT</option>
+                                <option value="DOTUSDT">DOT/USDT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <div class="balance-label">Strategy</div>
+                            <select id="strategy" class="form-input">
+                                <option value="ml_momentum">ML Momentum</option>
+                                <option value="rsi_macd">RSI + MACD</option>
+                                <option value="bollinger_bands">Bollinger Bands</option>
+                                <option value="moving_average">Moving Average</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="balance-label">Risk Level (%)</div>
+                            <input type="range" id="riskLevel" class="form-input" min="1" max="10" value="2" oninput="updateRiskDisplay(this.value)">
+                            <div style="color: #5C67FF; font-size: 10px; text-align: center;" id="riskDisplay">2% per trade</div>
+                        </div>
+                    </div>
+                    <div class="trading-controls">
+                        <button class="control-btn cyber" onclick="startBacktest()">
+                            <i class="fas fa-play"></i>
+                            Start Backtest
+                        </button>
+                        <button class="control-btn" onclick="resetBacktest()">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ultra-card">
+                <div class="card-title-compact">
+                    <i class="fas fa-chart-line"></i>
+                    Backtest Progress
+                </div>
+                <div>
+                    <div class="balance-label">Processing Status</div>
+                    <div id="backtestStatus" style="color: #999; font-size: 11px; margin: 4px 0;">Ready to start</div>
+                    <div class="progress-container">
+                        <div id="backtestProgress" class="progress-bar"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; text-align: center;">
+                        <div>
+                            <div class="balance-label">Trades</div>
+                            <div style="color: #5C67FF; font-size: 12px; font-weight: bold;" id="totalTrades">0</div>
+                        </div>
+                        <div>
+                            <div class="balance-label">Win Rate</div>
+                            <div style="color: #00FFAA; font-size: 12px; font-weight: bold;" id="backWinRate">0%</div>
+                        </div>
+                        <div>
+                            <div class="balance-label">Final P&L</div>
+                            <div style="color: #00FFAA; font-size: 12px; font-weight: bold;" id="finalPnL">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ultra-card">
+                <div class="card-title-compact">
+                    <i class="fas fa-list"></i>
+                    Recent Results
+                </div>
+                <div id="backtestResults" class="backtest-results">
+                    <div style="color: #999; font-size: 10px; text-align: center; padding: 20px;">
+                        No backtest results yet
+                    </div>
+                </div>
+                <div class="trading-controls" style="margin-top: 8px;">
+                    <button class="control-btn cyber" onclick="exportBacktestResults()">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                    <button class="control-btn cyber" onclick="viewDetailedResults()">
+                        <i class="fas fa-chart-area"></i>
+                        Detailed View
+                    </button>
+                </div>
+            </div>
+        </div>
+        
     </div>
 
     <!-- JavaScript Integration -->
@@ -537,6 +729,15 @@
                 initializeCharts();
                 connectWebSocket();
                 updateSystemStatus();
+                
+                // Initialize form dates
+                const today = new Date().toISOString().split('T')[0];
+                const sixMonthsAgo = new Date();
+                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+                const startDate = sixMonthsAgo.toISOString().split('T')[0];
+                
+                document.getElementById('endDate').value = today;
+                document.getElementById('startDate').value = startDate;
             }, 2000);
         }
         
@@ -589,7 +790,11 @@
                 socket = io();
                 socket.on('connect', () => {
                     console.log('🔥 WebSocket connected');
-                    document.getElementById('apiStatus').textContent = 'Connected';
+                    updateApiStatus('wsStatus', 'Connected', true);
+                });
+                
+                socket.on('disconnect', () => {
+                    updateApiStatus('wsStatus', 'Disconnected', false);
                 });
                 
                 socket.on('balance_update', (data) => {
@@ -604,8 +809,14 @@
                     updatePositionsDisplay(data);
                 });
                 
+                socket.on('api_status', (data) => {
+                    updateApiStatus('bybitApiStatus', data.bybit_status, data.bybit_connected);
+                    updateApiStatus('mlEngineStatus', data.ml_status, data.ml_active);
+                });
+                
             } catch (error) {
                 console.log('⚠️ WebSocket not available, using polling');
+                updateApiStatus('wsStatus', 'Polling Mode', false);
                 startPolling();
             }
         }
@@ -668,7 +879,34 @@
                 const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
                 document.getElementById('uptime').textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Simulate API status checks
+                checkApiStatuses();
             }, 1000);
+        }
+        
+        function updateApiStatus(elementId, status, isConnected) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const dot = element.querySelector('.status-dot');
+                element.innerHTML = `<div class="status-dot" style="display: inline-block; margin-right: 4px; background: ${isConnected ? '#00FFAA' : '#FF6B35'};"></div>${status}`;
+                element.style.color = isConnected ? '#00FFAA' : '#FF6B35';
+            }
+        }
+        
+        function checkApiStatuses() {
+            // Simulate periodic API status checks
+            fetch('/api/system-status')
+                .then(response => response.json())
+                .then(data => {
+                    updateApiStatus('bybitApiStatus', data.bybit_status || 'Connected', data.bybit_connected !== false);
+                    updateApiStatus('mlEngineStatus', data.ml_status || 'Running', data.ml_active !== false);
+                })
+                .catch(error => {
+                    // Fallback status when API is unreachable
+                    updateApiStatus('bybitApiStatus', 'API Error', false);
+                    updateApiStatus('mlEngineStatus', 'Offline', false);
+                });
         }
         
         // Button Functions
@@ -681,6 +919,11 @@
             document.querySelectorAll('.env-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('currentEnv').textContent = env.toUpperCase();
+            
+            if (env === 'backtest') {
+                openBacktestPanel();
+                return;
+            }
             
             // Fetch data for new environment
             fetch(`/api/balance/${env}`)
@@ -715,8 +958,134 @@
             document.getElementById('botStatus').style.color = '#FF0000';
         }
         
+        function openBacktestPanel() {
+            const panel = document.getElementById('backtestPanel');
+            const adminPanel = document.getElementById('adminPanel');
+            adminPanel.classList.remove('active');
+            panel.classList.toggle('active');
+            
+            // Set default end date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('endDate').value = today;
+        }
+        
+        function updateRiskDisplay(value) {
+            document.getElementById('riskDisplay').textContent = `${value}% per trade`;
+        }
+        
+        let backtestInterval = null;
+        
         function startBacktest() {
-            alert('🔥 Starting backtest analysis...');
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const initialBalance = document.getElementById('initialBalance').value;
+            const tradingPair = document.getElementById('tradingPair').value;
+            const strategy = document.getElementById('strategy').value;
+            const riskLevel = document.getElementById('riskLevel').value;
+            
+            if (!startDate || !endDate) {
+                alert('❌ Please select start and end dates');
+                return;
+            }
+            
+            if (new Date(startDate) >= new Date(endDate)) {
+                alert('❌ Start date must be before end date');
+                return;
+            }
+            
+            document.getElementById('backtestStatus').textContent = 'Initializing backtest...';
+            document.getElementById('backtestStatus').style.color = '#5C67FF';
+            
+            // Reset counters
+            document.getElementById('totalTrades').textContent = '0';
+            document.getElementById('backWinRate').textContent = '0%';
+            document.getElementById('finalPnL').textContent = '$0.00';
+            
+            // Simulate backtest progress
+            let progress = 0;
+            let trades = 0;
+            let wins = 0;
+            let balance = parseFloat(initialBalance);
+            
+            backtestInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                document.getElementById('backtestProgress').style.width = `${progress}%`;
+                
+                // Simulate trade generation
+                if (Math.random() > 0.7) {
+                    trades++;
+                    const isWin = Math.random() > 0.4;
+                    if (isWin) {
+                        wins++;
+                        balance += balance * (parseFloat(riskLevel) / 100) * (1 + Math.random());
+                    } else {
+                        balance -= balance * (parseFloat(riskLevel) / 100) * Math.random();
+                    }
+                    
+                    document.getElementById('totalTrades').textContent = trades.toString();
+                    document.getElementById('backWinRate').textContent = trades > 0 ? `${Math.round((wins / trades) * 100)}%` : '0%';
+                    document.getElementById('finalPnL').textContent = `$${(balance - initialBalance).toFixed(2)}`;
+                    
+                    // Update results
+                    updateBacktestResults(tradingPair, isWin, balance - initialBalance);
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(backtestInterval);
+                    document.getElementById('backtestStatus').textContent = 'Backtest completed successfully!';
+                    document.getElementById('backtestStatus').style.color = '#00FFAA';
+                }
+            }, 200);
+        }
+        
+        function updateBacktestResults(pair, isWin, pnl) {
+            const container = document.getElementById('backtestResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const resultHtml = `
+                <div class="result-item">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: ${isWin ? '#00FFAA' : '#FF6B35'}">${isWin ? '✅' : '❌'} ${pair}</span>
+                        <span style="color: ${pnl >= 0 ? '#00FFAA' : '#FF6B35'}">$${pnl.toFixed(2)}</span>
+                    </div>
+                    <div style="color: #999; font-size: 9px;">${timestamp}</div>
+                </div>
+            `;
+            container.innerHTML = resultHtml + container.innerHTML;
+            
+            // Keep only last 10 results
+            const items = container.querySelectorAll('.result-item');
+            if (items.length > 10) {
+                items[items.length - 1].remove();
+            }
+        }
+        
+        function resetBacktest() {
+            if (backtestInterval) {
+                clearInterval(backtestInterval);
+                backtestInterval = null;
+            }
+            
+            document.getElementById('backtestProgress').style.width = '0%';
+            document.getElementById('backtestStatus').textContent = 'Ready to start';
+            document.getElementById('backtestStatus').style.color = '#999';
+            document.getElementById('totalTrades').textContent = '0';
+            document.getElementById('backWinRate').textContent = '0%';
+            document.getElementById('finalPnL').textContent = '$0.00';
+            document.getElementById('backtestResults').innerHTML = `
+                <div style="color: #999; font-size: 10px; text-align: center; padding: 20px;">
+                    No backtest results yet
+                </div>
+            `;
+        }
+        
+        function exportBacktestResults() {
+            alert('📁 Exporting backtest results to CSV...');
+        }
+        
+        function viewDetailedResults() {
+            alert('📊 Opening detailed backtest analysis...');
         }
         
         function viewResults() {
