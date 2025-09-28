@@ -153,8 +153,8 @@
                     <button class="cyber-btn environment-btn" data-env="mainnet" onclick="switchEnvironment('mainnet')">
                         ⚡ MAINNET
                     </button>
-                    <button class="cyber-btn environment-btn" data-env="paper" onclick="switchEnvironment('paper')">
-                        📊 PAPER
+                    <button class="cyber-btn environment-btn" data-env="historical" onclick="switchToHistoricalBacktesting()">
+                        📊 HISTORICAL BACKTEST
                     </button>
                 </div>
 
@@ -198,8 +198,8 @@
                         <span class="fire-text">Mainnet: $<span id="mainnetBalance">0</span></span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="status-fire stopped" id="paperStatus"></div>
-                        <span class="fire-text">Paper: $<span id="paperBalance">0</span></span>
+                        <div class="status-fire stopped" id="historicalStatus"></div>
+                        <span class="fire-text">Historical: <span id="historicalProgress">Ready</span></span>
                     </div>
                 </div>
             </div>
@@ -230,6 +230,62 @@
                         <span class="cyber-text">Profit Factor:</span>
                         <span class="fire-text" id="profitFactor">--</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Historical Backtesting & Strategy Graduation -->
+            <div class="fire-card">
+                <h2 class="fire-text"><i class="fas fa-chart-line"></i> STRATEGY GRADUATION</h2>
+                
+                <!-- Backtesting Status -->
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="cyber-text">Historical Backtesting:</span>
+                        <span class="fire-text" id="backtestStatus">READY</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="cyber-text">Active Strategies:</span>
+                        <span class="fire-text" id="activeStrategies">0</span>
+                    </div>
+                </div>
+
+                <!-- Strategy Pipeline -->
+                <div style="margin: 16px 0;">
+                    <div class="strategy-pipeline">
+                        <div class="pipeline-stage">
+                            <div class="stage-icon">📊</div>
+                            <span class="stage-text">Historical</span>
+                            <span class="stage-count" id="historicalCount">0</span>
+                        </div>
+                        <div class="pipeline-arrow">→</div>
+                        <div class="pipeline-stage">
+                            <div class="stage-icon">📝</div>
+                            <span class="stage-text">Paper</span>
+                            <span class="stage-count" id="paperCount">0</span>
+                        </div>
+                        <div class="pipeline-arrow">→</div>
+                        <div class="pipeline-stage">
+                            <div class="stage-icon">🔥</div>
+                            <span class="stage-text">Testnet</span>
+                            <span class="stage-count" id="testnetStrategyCount">0</span>
+                        </div>
+                        <div class="pipeline-arrow">→</div>
+                        <div class="pipeline-stage">
+                            <div class="stage-icon">💰</div>
+                            <span class="stage-text">Live</span>
+                            <span class="stage-count" id="liveCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backtesting Controls -->
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
+                        <i class="fas fa-play"></i> START BACKTEST
+                    </button>
+                    <button class="fire-btn" onclick="viewBacktestResults()" style="flex: 1;">
+                        <i class="fas fa-chart-bar"></i> VIEW RESULTS
+                    </button>
                 </div>
             </div>
 

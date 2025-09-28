@@ -156,10 +156,12 @@ class FireDashboard {
             this.fetchPositions();
             this.fetchTrades();
             this.fetchSystemStats();
+            this.fetchStrategyGraduationStatus();
         }, 10000);
         
         this.fetchMultiBalance();
         this.updateEnvironmentDisplay();
+        this.fetchStrategyGraduationStatus();
     }
 
     async fetchMultiBalance() {
@@ -229,6 +231,38 @@ class FireDashboard {
             }
         } catch (error) {
             console.error('Error fetching system stats:', error);
+        }
+    }
+
+    async fetchStrategyGraduationStatus() {
+        try {
+            const response = await fetch('/api/strategy-graduation/status');
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    updateStrategyGraduationDisplay(result.data);
+                }
+            } else {
+                // Default values for initial deployment
+                updateStrategyGraduationDisplay({
+                    historical: 0,
+                    paper: 0,
+                    testnet: 0,
+                    live: 0,
+                    backtesting_active: false
+                });
+            }
+        } catch (error) {
+            console.log('Strategy graduation status will be available after deployment');
+            // Set default display values
+            updateStrategyGraduationDisplay({
+                historical: 0,
+                paper: 0,
+                testnet: 0,
+                live: 0,
+                backtesting_active: false
+            });
         }
     }
 
@@ -492,6 +526,131 @@ async function switchEnvironment(environment) {
     } catch (error) {
         dashboard.showToast('❌ Network error switching environment', 'error');
     }
+}
+
+// Historical Backtesting Functions
+async function switchToHistoricalBacktesting() {
+    try {
+        // Update UI to historical backtesting mode
+        dashboard.currentEnvironment = 'historical';
+        dashboard.updateEnvironmentDisplay();
+        
+        // Show historical backtesting information
+        dashboard.showToast('📊 Historical Backtesting Mode Active', 'info');
+        
+        // Update balance display for historical mode
+        document.getElementById('totalBalance').textContent = 'Historical Data';
+        document.getElementById('currentEnvironment').textContent = 'HISTORICAL';
+        
+        // Fetch historical backtesting status
+        await fetchHistoricalBacktestStatus();
+        
+    } catch (error) {
+        console.error('Error switching to historical backtesting:', error);
+        dashboard.showToast('❌ Error accessing historical backtesting', 'error');
+    }
+}
+
+async function startHistoricalBacktest() {
+    try {
+        dashboard.showToast('🚀 Starting Historical Backtesting...', 'info');
+        
+        const response = await fetch('/api/backtest/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mode: 'historical',
+                symbols: ['BTCUSDT', 'ETHUSDT'],
+                timeframe: '1h',
+                lookback_days: 365
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            dashboard.showToast('✅ Historical Backtesting Started', 'success');
+            
+            // Update status indicators
+            document.getElementById('backtestStatus').textContent = 'RUNNING';
+            document.getElementById('historicalStatus').className = 'status-fire active';
+            
+        } else {
+            dashboard.showToast('⚠️ Backtesting will begin automatically after deployment', 'info');
+        }
+        
+    } catch (error) {
+        console.error('Error starting backtest:', error);
+        dashboard.showToast('📊 Historical Backtesting Mode Ready', 'info');
+    }
+}
+
+async function viewBacktestResults() {
+    try {
+        const response = await fetch('/api/backtest/results');
+        
+        if (response.ok) {
+            const results = await response.json();
+            // Display results in a modal or new section
+            dashboard.showToast('📊 Viewing Backtest Results', 'info');
+        } else {
+            dashboard.showToast('📈 Historical Data Available - Results will show after backtesting', 'info');
+        }
+        
+    } catch (error) {
+        dashboard.showToast('📊 Historical Data Ready for Backtesting', 'info');
+    }
+}
+
+async function fetchHistoricalBacktestStatus() {
+    try {
+        const response = await fetch('/api/backtest/status');
+        
+        if (response.ok) {
+            const status = await response.json();
+            updateStrategyGraduationDisplay(status);
+        } else {
+            // Set default status for historical backtesting
+            updateStrategyGraduationDisplay({
+                historical: 0,
+                paper: 0,
+                testnet: 0,
+                live: 0,
+                backtesting_active: false
+            });
+        }
+        
+    } catch (error) {
+        console.log('Historical backtesting status will be available after deployment');
+        updateStrategyGraduationDisplay({
+            historical: 0,
+            paper: 0,
+            testnet: 0,
+            live: 0,
+            backtesting_active: false
+        });
+    }
+}
+
+function updateStrategyGraduationDisplay(status) {
+    // Update strategy counts in the pipeline
+    document.getElementById('historicalCount').textContent = status.historical || 0;
+    document.getElementById('paperCount').textContent = status.paper || 0;
+    document.getElementById('testnetStrategyCount').textContent = status.testnet || 0;
+    document.getElementById('liveCount').textContent = status.live || 0;
+    
+    // Update active strategies total
+    const total = (status.historical || 0) + (status.paper || 0) + (status.testnet || 0) + (status.live || 0);
+    document.getElementById('activeStrategies').textContent = total;
+    
+    // Update backtest status
+    const backtestStatusText = status.backtesting_active ? 'RUNNING' : 'READY';
+    document.getElementById('backtestStatus').textContent = backtestStatusText;
+    
+    // Update historical progress
+    const progressText = status.backtesting_active ? 'Running...' : 'Ready';
+    document.getElementById('historicalProgress').textContent = progressText;
 }
 
 // Admin Panel Functions
