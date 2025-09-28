@@ -20,6 +20,7 @@ import sys
 import logging
 import json
 import yaml
+import math  # Added for dynamic risk scaling calculations
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any
@@ -300,6 +301,47 @@ class PrivateUseSafetyChecker:
         self.logger.info("✅ Resource limits check passed")
         return True
 
+
+def calculate_dynamic_risk_ratio(balance: float, config: Dict[str, Any]) -> float:
+    """
+    Calculate dynamic risk ratio based on balance using exponential decay.
+    
+    For small accounts (<$10k): Higher risk tolerance (2%) to grow faster
+    For large accounts (>$100k): Conservative risk (0.5%) to preserve wealth
+    Between $10k-$100k: Exponential decay from 2% down to 0.5%
+    
+    Args:
+        balance: Current account balance in USD
+        config: Trading configuration containing dynamic_risk_scaling settings
+        
+    Returns:
+        Risk ratio (e.g., 0.02 for 2%)
+    """
+    private_mode = config.get('trading', {}).get('private_mode', {})
+    scaling_config = private_mode.get('dynamic_risk_scaling', {})
+    
+    if not scaling_config.get('enabled', False):
+        # Fallback to static max_risk_ratio if dynamic scaling disabled
+        return private_mode.get('max_risk_ratio', 0.005)
+    
+    small_account_risk = scaling_config.get('base_risk_small_accounts', 0.02)  # 2%
+    large_account_risk = scaling_config.get('base_risk_large_accounts', 0.005) # 0.5%
+    transition_start = scaling_config.get('transition_start', 10000)  # $10k
+    transition_end = scaling_config.get('transition_end', 100000)     # $100k
+    decay_factor = scaling_config.get('decay_factor', 2.0)
+    
+    if balance <= transition_start:
+        return small_account_risk  # 2% for small accounts
+    elif balance >= transition_end:
+        return large_account_risk  # 0.5% for large accounts
+    else:
+        # Exponential decay between thresholds
+        ratio = (balance - transition_start) / (transition_end - transition_start)
+        decay_multiplier = math.exp(-decay_factor * ratio)
+        risk_range = small_account_risk - large_account_risk
+        return large_account_risk + (risk_range * decay_multiplier)
+
+
 class PrivateUseModeLauncher:
     """Main launcher for private use mode"""
     
@@ -365,18 +407,40 @@ Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         self.logger.info("Private Use Mode Banner Displayed")
         
     def _display_config_summary(self, config: Dict[str, Any]):
-        """Display configuration summary"""
+        """Display configuration summary with dynamic risk scaling"""
         trading_config = config.get('trading', {})
+        private_mode = trading_config.get('private_mode', {})
         risk_config = config.get('risk', {})
         
-        summary = f"""
-📋 CONFIGURATION SUMMARY:
-------------------------
+        # Check if dynamic risk scaling is enabled
+        scaling_config = private_mode.get('dynamic_risk_scaling', {})
+        is_dynamic = scaling_config.get('enabled', False)
+        
+        if is_dynamic:
+            # Show dynamic risk scaling examples
+            base_balance = trading_config.get('base_balance', 10000)
+            risk_examples = []
+            for balance in [5000, 10000, 25000, 50000, 100000, 200000]:
+                risk_ratio = calculate_dynamic_risk_ratio(balance, config)
+                risk_examples.append(f"${balance:,}: {risk_ratio * 100:.2f}%")
+            
+            summary = f"""
+📋 CONFIGURATION SUMMARY - DYNAMIC RISK SCALING ACTIVE:
+-------------------------------------------------------
 Trading Mode: {trading_config.get('mode', 'unknown')}
-Max Risk Per Trade: {trading_config.get('private_mode', {}).get('max_risk_ratio', 0) * 100:.2f}%
-Max Daily Loss: {trading_config.get('private_mode', {}).get('daily_loss_limit', 0) * 100:.2f}%
-Max Drawdown: {trading_config.get('private_mode', {}).get('portfolio_drawdown_limit', 0) * 100:.2f}%
-Max Positions: {trading_config.get('private_mode', {}).get('max_positions', 0)}
+
+🎯 DYNAMIC RISK SCALING (High Risk/Low Balance → Conservative Growth):
+- Small Accounts (≤$10k): {scaling_config.get('base_risk_small_accounts', 0.02) * 100:.1f}% risk per trade
+- Large Accounts (≥$100k): {scaling_config.get('base_risk_large_accounts', 0.005) * 100:.1f}% risk per trade
+- Transition: ${scaling_config.get('transition_start', 10000):,} → ${scaling_config.get('transition_end', 100000):,} (exponential decay)
+
+Risk Examples by Balance:
+{chr(10).join(f'  • {example}' for example in risk_examples)}
+
+Static Safety Limits:
+- Max Daily Loss: {private_mode.get('daily_loss_limit', 0) * 100:.1f}%
+- Max Drawdown: {private_mode.get('portfolio_drawdown_limit', 0) * 100:.1f}%
+- Max Positions: {private_mode.get('max_positions', 0)}
 
 Risk Management:
 - Portfolio Heat: {risk_config.get('portfolio', {}).get('max_correlation', 0) * 100:.0f}% max correlation
@@ -386,8 +450,28 @@ Risk Management:
 Exchange: Bybit ({os.getenv('TRADING_ENVIRONMENT', 'testnet').upper()})
 Symbols: {', '.join(config.get('exchange', {}).get('symbols', []))}
 """
+        else:
+            # Show static risk configuration
+            summary = f"""
+📋 CONFIGURATION SUMMARY - STATIC RISK MODE:
+--------------------------------------------
+Trading Mode: {trading_config.get('mode', 'unknown')}
+Max Risk Per Trade: {private_mode.get('max_risk_ratio', 0) * 100:.2f}% (STATIC)
+Max Daily Loss: {private_mode.get('daily_loss_limit', 0) * 100:.2f}%
+Max Drawdown: {private_mode.get('portfolio_drawdown_limit', 0) * 100:.2f}%
+Max Positions: {private_mode.get('max_positions', 0)}
+
+Risk Management:
+- Portfolio Heat: {risk_config.get('portfolio', {}).get('max_correlation', 0) * 100:.0f}% max correlation
+- Stop Loss: {risk_config.get('strategy', {}).get('stop_loss', 0) * 100:.1f}%
+- Take Profit: {risk_config.get('strategy', {}).get('take_profit', 0) * 100:.1f}%
+
+Exchange: Bybit ({os.getenv('TRADING_ENVIRONMENT', 'testnet').upper()})
+Symbols: {', '.join(config.get('exchange', {}).get('symbols', []))}
+"""
+        
         print(summary)
-        self.logger.info("Configuration summary displayed")
+        self.logger.info(f"Configuration summary displayed ({'Dynamic' if is_dynamic else 'Static'} risk scaling)")
         
     def _start_main_application(self):
         """Start the main trading application"""
