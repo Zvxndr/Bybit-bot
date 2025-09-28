@@ -652,16 +652,22 @@ class FrontendHandler(BaseHTTPRequestHandler):
             logger.warning(f"❌ Static file not found: {full_path}")
     
     def get_dashboard_html(self):
-        """Load the Fire Cybersigilism dashboard template"""
+        """Load the Fire Cybersigilism dashboard template - REDESIGNED VERSION"""
         try:
-            # Fixed path - look in src/templates directory
-            template_path = Path("src/templates/fire_dashboard.html")
+            # Updated path - use redesigned dashboard
+            template_path = Path("src/templates/fire_dashboard_redesign.html")
             if template_path.exists():
                 with open(template_path, 'r', encoding='utf-8') as f:
-                    logger.info("✅ Fire dashboard template loaded successfully")
+                    logger.info("✅ Fire dashboard REDESIGN template loaded successfully")
                     return f.read()
             else:
-                logger.warning(f"Template not found at: {template_path}")
+                logger.warning(f"Redesign template not found at: {template_path}")
+                # Fallback to original
+                template_path = Path("src/templates/fire_dashboard.html")
+                if template_path.exists():
+                    with open(template_path, 'r', encoding='utf-8') as f:
+                        logger.info("✅ Fire dashboard original template loaded as fallback")
+                        return f.read()
         except Exception as e:
             logger.warning(f"Could not load Fire dashboard template: {e}")
         
