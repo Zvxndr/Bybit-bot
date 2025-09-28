@@ -62,20 +62,20 @@ body::after {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255, 0, 0, 0.4) 0%, transparent 70%);
+    radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 0, 0, 0.2) 0%, transparent 70%);
   animation: fire-wave 4s ease-in-out infinite;
   pointer-events: none;
   z-index: -1;
 }
 
 @keyframes fire-wave {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
 }
 
-/* Glass morphism overlay */
+/* Enhanced glass morphism overlay for better text readability */
 body::before {
   content: '';
   position: fixed;
@@ -83,8 +83,8 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--bg-primary);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
   z-index: -2;
 }
 
@@ -99,18 +99,35 @@ body::before {
   -webkit-text-fill-color: transparent;
   text-shadow: var(--glow-fire);
   animation: fire-glow 2s ease-in-out infinite alternate;
+  padding: 8px 16px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  margin-bottom: 8px;
+  display: inline-block;
 }
 
 .fire-text {
   color: var(--fire-primary);
   text-shadow: var(--glow-fire);
   font-family: var(--font-primary);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
 }
 
 .cyber-text {
   color: var(--cyber-cyan);
   text-shadow: var(--glow-cyber);
   font-family: var(--font-primary);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
 }
 
 /* Fire Glow Animation */
@@ -670,6 +687,13 @@ body::before {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Card Content */
