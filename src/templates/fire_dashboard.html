@@ -297,19 +297,19 @@
                     </div>
 
                     <!-- Detailed Backtesting Progress -->
-                    <div class="backtest-details" id="backtestDetails" style="display: block;">
+                    <div class="backtest-details" id="backtestDetails" style="display: block; margin-top: 16px; opacity: 1;">
                         <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 15%;"></div>
+                                <div class="progress-fill" id="progressFill" style="width: 15%; background: linear-gradient(90deg, #FF6B35, #FF0000);"></div>
                             </div>
                             <div class="progress-text" id="progressText">Ready to start backtesting...</div>
                         </div>
                         
                         <div class="backtest-phases">
-                            <div class="phase-item" id="phaseDataLoad">
+                            <div class="phase-item active" id="phaseDataLoad" style="border-color: #FF6B35;">
                                 <span class="phase-icon">📊</span>
                                 <span class="phase-name">Data Loading</span>
-                                <span class="phase-status" id="phaseDataLoadStatus">Ready</span>
+                                <span class="phase-status active" id="phaseDataLoadStatus" style="color: #FF6B35;">Ready</span>
                             </div>
                             <div class="phase-item" id="phaseStrategyInit">
                                 <span class="phase-icon">🧠</span>
