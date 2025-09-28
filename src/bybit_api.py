@@ -87,53 +87,39 @@ class BybitAPIClient:
         logger.debug("🔧 BybitAPIClient initialization complete")
         
     async def get_session(self):
-        """Get or create aiohttp session with proper management"""
+        """Get or create aiohttp session with proper management - using fresh sessions to avoid event loop issues"""
         logger.debug("🔧 Getting API session")
         try:
-            # Check if current loop is running and valid
-            current_loop = None
-            try:
-                current_loop = asyncio.get_running_loop()
-            except RuntimeError:
-                # No running loop, create a new session when one starts
-                logger.debug("🔧 No running event loop detected")
-                pass
+            # Always create a fresh session for maximum reliability
+            # This eliminates "Event loop is closed" errors completely
+            logger.debug("🔧 Creating fresh session for maximum reliability")
             
-            # Check if we need a new session
-            if (self.session is None or 
-                self.session.closed or 
-                (current_loop and current_loop.is_closed())):
-                
-                async with self._session_lock:
-                    # Double-check after acquiring lock
-                    if (self.session is None or 
-                        self.session.closed or
-                        (current_loop and current_loop.is_closed())):
-                        
-                        # Close old session if it exists
-                        if self.session and not self.session.closed:
-                            await self.session.close()
-                            logger.debug("🔧 Closed old session")
-                        
-                        logger.debug("🔧 Creating new aiohttp session")
-                        self.session = aiohttp.ClientSession(
-                            timeout=aiohttp.ClientTimeout(total=30)
-                        )
-                        logger.debug("🔧 New session created successfully")
+            # Close any existing session first
+            if self.session and not self.session.closed:
+                try:
+                    await self.session.close()
+                    logger.debug("🔧 Closed previous session")
+                except Exception as close_error:
+                    logger.debug(f"🔧 Error closing previous session (ignoring): {close_error}")
             
+            # Create brand new session
+            self.session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            )
+            logger.debug("🔧 Fresh session created successfully")
             return self.session
             
         except Exception as e:
-            logger.error(f"❌ Error managing session: {e}")
-            # Fallback: create a fresh session
+            logger.error(f"❌ Error creating fresh session: {e}")
+            # Last resort fallback
             try:
                 self.session = aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=30)
+                    timeout=aiohttp.ClientTimeout(total=10)  # Shorter timeout for fallback
                 )
-                logger.debug("🔧 Created fallback session")
+                logger.debug("🔧 Created emergency fallback session")
                 return self.session
             except Exception as fallback_error:
-                logger.error(f"❌ Fallback session creation failed: {fallback_error}")
+                logger.error(f"❌ Emergency fallback session creation failed: {fallback_error}")
                 raise fallback_error
         
     async def __aenter__(self):
@@ -255,23 +241,24 @@ class BybitAPIClient:
             session = await self.get_session()
             logger.debug("🔧 Making HTTP GET request to Bybit API")
             
-            async with session.get(url, headers=headers) as response:
-                logger.debug(f"🔧 Response status: {response.status}")
-                
-                # Enhanced error handling for None responses in balance method
-                try:
-                    data = await response.json()
-                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
-                except Exception as json_error:
-                    logger.error(f"❌ Failed to parse JSON response in get_account_balance: {json_error}")
-                    log_exception(json_error, "JSON parsing in get_account_balance")
-                    data = None
-                
-                if data is None:
-                    logger.error(f"❌ Bybit API returned None response in balance check. Status: {response.status}")
-                    return {
-                        "success": False,
-                        "message": f"API returned empty response (Status: {response.status})",
+            try:
+                async with session.get(url, headers=headers) as response:
+                    logger.debug(f"🔧 Response status: {response.status}")
+                    
+                    # Enhanced error handling for None responses in balance method
+                    try:
+                        data = await response.json()
+                        logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
+                    except Exception as json_error:
+                        logger.error(f"❌ Failed to parse JSON response in get_account_balance: {json_error}")
+                        log_exception(json_error, "JSON parsing in get_account_balance")
+                        data = None
+                    
+                    if data is None:
+                        logger.error(f"❌ Bybit API returned None response in balance check. Status: {response.status}")
+                        return {
+                            "success": False,
+                            "message": f"API returned empty response (Status: {response.status})",
                         "data": {
                             "total_wallet_balance": "API Error",
                             "total_available_balance": "API Error",
@@ -336,6 +323,14 @@ class BybitAPIClient:
                             "coins": []
                         }
                     }
+            finally:
+                # Always cleanup session after request to prevent event loop issues
+                if session and not session.closed:
+                    try:
+                        await session.close()
+                        logger.debug("🔧 Session cleaned up after balance request")
+                    except Exception as cleanup_error:
+                        logger.debug(f"🔧 Session cleanup error (ignoring): {cleanup_error}")
                     
         except Exception as e:
             logger.error(f"❌ Error fetching balance: {str(e)}")
@@ -387,68 +382,78 @@ class BybitAPIClient:
             
             session = await self.get_session()
             logger.debug("🔧 Making HTTP GET request for positions")
-            async with session.get(url, headers=headers) as response:
-                logger.debug(f"🔧 Response status: {response.status}")
-                
-                try:
-                    data = await response.json()
-                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
-                except Exception as json_error:
-                    logger.error(f"❌ Failed to parse JSON response in get_positions: {json_error}")
-                    log_exception(json_error, "JSON parsing in get_positions")
-                    return {
-                        "success": False,
-                        "message": f"Failed to parse response: {json_error}",
-                        "data": {"positions": []}
-                    }
-                
-                if response.status == 200 and data.get("retCode") == 0:
-                    logger.info("✅ Successfully received positions data from Bybit")
+            
+            try:
+                async with session.get(url, headers=headers) as response:
+                    logger.debug(f"🔧 Response status: {response.status}")
                     
-                    # Safe float conversion helper
-                    def safe_float(value, default=0.0):
-                        try:
-                            return float(value) if value and str(value).strip() else default
-                        except (ValueError, TypeError):
-                            return default
+                    try:
+                        data = await response.json()
+                        logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
+                    except Exception as json_error:
+                        logger.error(f"❌ Failed to parse JSON response in get_positions: {json_error}")
+                        log_exception(json_error, "JSON parsing in get_positions")
+                        return {
+                            "success": False,
+                            "message": f"Failed to parse response: {json_error}",
+                            "data": {"positions": []}
+                        }
                     
-                    positions = []
-                    total_positions = len(data["result"]["list"])
-                    logger.debug(f"🔧 Processing {total_positions} total positions from API")
-                    
-                    for pos in data["result"]["list"]:
-                        size = safe_float(pos.get("size"))
-                        if size > 0:  # Only active positions
-                            unrealised_pnl = safe_float(pos.get("unrealisedPnl"))
-                            position_value = safe_float(pos.get("positionValue"), 1.0)
-                            pnl_percentage = (unrealised_pnl / position_value * 100) if position_value > 0 else 0
-                            
-                            positions.append({
-                                "symbol": pos.get("symbol"),
-                                "side": pos.get("side", "").lower(),
-                                "size": str(size),
-                                "entry_price": pos.get("avgPrice"),
-                                "mark_price": pos.get("markPrice"),
-                                "pnl": str(unrealised_pnl),
-                                "pnl_percentage": f"{pnl_percentage:.2f}%"
-                            })
-                    
-                    logger.info(f"✅ Found {len(positions)} active positions out of {total_positions} total")
-                    log_performance("get_positions", start_time, 
-                                  active_positions=len(positions), 
-                                  total_positions=total_positions)
-                    
-                    return {
-                        "success": True,
-                        "data": {"positions": positions}
-                    }
-                else:
-                    logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
-                    return {
-                        "success": False,
+                    if response.status == 200 and data.get("retCode") == 0:
+                        logger.info("✅ Successfully received positions data from Bybit")
+                        
+                        # Safe float conversion helper
+                        def safe_float(value, default=0.0):
+                            try:
+                                return float(value) if value and str(value).strip() else default
+                            except (ValueError, TypeError):
+                                return default
+                        
+                        positions = []
+                        total_positions = len(data["result"]["list"])
+                        logger.debug(f"🔧 Processing {total_positions} total positions from API")
+                        
+                        for pos in data["result"]["list"]:
+                            size = safe_float(pos.get("size"))
+                            if size > 0:  # Only active positions
+                                unrealised_pnl = safe_float(pos.get("unrealisedPnl"))
+                                position_value = safe_float(pos.get("positionValue"), 1.0)
+                                pnl_percentage = (unrealised_pnl / position_value * 100) if position_value > 0 else 0
+                                
+                                positions.append({
+                                    "symbol": pos.get("symbol"),
+                                    "side": pos.get("side", "").lower(),
+                                    "size": str(size),
+                                    "entry_price": pos.get("avgPrice"),
+                                    "mark_price": pos.get("markPrice"),
+                                    "pnl": str(unrealised_pnl),
+                                    "pnl_percentage": f"{pnl_percentage:.2f}%"
+                                })
+                        
+                        logger.info(f"✅ Found {len(positions)} active positions out of {total_positions} total")
+                        log_performance("get_positions", start_time, 
+                                      active_positions=len(positions), 
+                                      total_positions=total_positions)
+                        
+                        return {
+                            "success": True,
+                            "data": {"positions": positions}
+                        }
+                    else:
+                        logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
+                        return {
+                            "success": False,
                         "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
                         "data": {"positions": []}
                     }
+            finally:
+                # Always cleanup session after request to prevent event loop issues
+                if session and not session.closed:
+                    try:
+                        await session.close()
+                        logger.debug("🔧 Session cleaned up after positions request")
+                    except Exception as cleanup_error:
+                        logger.debug(f"🔧 Session cleanup error (ignoring): {cleanup_error}")
                     
         except Exception as e:
             logger.error(f"❌ Error fetching positions: {str(e)}")
@@ -704,61 +709,70 @@ class BybitAPIClient:
             session = await self.get_session()
             logger.debug("🔧 Making HTTP GET request for trade history")
             
-            async with session.get(url, headers=headers) as response:
-                logger.debug(f"🔧 Response status: {response.status}")
-                
-                try:
-                    data = await response.json()
-                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
-                except Exception as json_error:
-                    logger.error(f"❌ Failed to parse JSON response in get_trade_history: {json_error}")
-                    log_exception(json_error, "JSON parsing in get_trade_history")
-                    return {
-                        "success": False,
-                        "message": f"Failed to parse response: {json_error}",
-                        "data": {"trades": []}
-                    }
-                
-                if response.status == 200 and data.get("retCode") == 0:
-                    logger.info("✅ Successfully received trade history from Bybit")
+            try:
+                async with session.get(url, headers=headers) as response:
+                    logger.debug(f"🔧 Response status: {response.status}")
                     
-                    trades = []
-                    executions = data.get("result", {}).get("list", [])
-                    logger.debug(f"🔧 Processing {len(executions)} trade executions")
+                    try:
+                        data = await response.json()
+                        logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
+                    except Exception as json_error:
+                        logger.error(f"❌ Failed to parse JSON response in get_trade_history: {json_error}")
+                        log_exception(json_error, "JSON parsing in get_trade_history")
+                        return {
+                            "success": False,
+                            "message": f"Failed to parse response: {json_error}",
+                            "data": {"trades": []}
+                        }
                     
-                    for execution in executions:
-                        try:
-                            # Parse execution data
-                            trade = {
-                                "symbol": execution.get("symbol"),
-                                "side": execution.get("side", "").lower(),
-                                "size": execution.get("execQty"),
-                                "price": execution.get("execPrice"),
-                                "value": execution.get("execValue"),
-                                "fee": execution.get("execFee"),
-                                "timestamp": execution.get("execTime"),
-                                "order_id": execution.get("orderId"),
-                                "exec_id": execution.get("execId")
-                            }
-                            trades.append(trade)
-                        except Exception as e:
-                            logger.warning(f"⚠️ Error parsing trade execution: {e}")
-                            continue
-                    
-                    logger.info(f"✅ Processed {len(trades)} trade executions")
-                    log_performance("get_trade_history", start_time, trades_found=len(trades))
-                    
-                    return {
-                        "success": True,
-                        "data": {"trades": trades}
-                    }
-                else:
-                    logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
-                    return {
-                        "success": False,
-                        "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
-                        "data": {"trades": []}
-                    }
+                    if response.status == 200 and data.get("retCode") == 0:
+                        logger.info("✅ Successfully received trade history from Bybit")
+                        
+                        trades = []
+                        executions = data.get("result", {}).get("list", [])
+                        logger.debug(f"🔧 Processing {len(executions)} trade executions")
+                        
+                        for execution in executions:
+                            try:
+                                # Parse execution data
+                                trade = {
+                                    "symbol": execution.get("symbol"),
+                                    "side": execution.get("side", "").lower(),
+                                    "size": execution.get("execQty"),
+                                    "price": execution.get("execPrice"),
+                                    "value": execution.get("execValue"),
+                                    "fee": execution.get("execFee"),
+                                    "timestamp": execution.get("execTime"),
+                                    "order_id": execution.get("orderId"),
+                                    "exec_id": execution.get("execId")
+                                }
+                                trades.append(trade)
+                            except Exception as e:
+                                logger.warning(f"⚠️ Error parsing trade execution: {e}")
+                                continue
+                        
+                        logger.info(f"✅ Processed {len(trades)} trade executions")
+                        log_performance("get_trade_history", start_time, trades_found=len(trades))
+                        
+                        return {
+                            "success": True,
+                            "data": {"trades": trades}
+                        }
+                    else:
+                        logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
+                        return {
+                            "success": False,
+                            "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
+                            "data": {"trades": []}
+                        }
+            finally:
+                # Always cleanup session after request to prevent event loop issues
+                if session and not session.closed:
+                    try:
+                        await session.close()
+                        logger.debug("🔧 Session cleaned up after request")
+                    except Exception as cleanup_error:
+                        logger.debug(f"🔧 Session cleanup error (ignoring): {cleanup_error}")
                     
         except Exception as e:
             logger.error(f"❌ Error fetching trade history: {str(e)}")
