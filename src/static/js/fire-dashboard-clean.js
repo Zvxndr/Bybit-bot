@@ -686,7 +686,7 @@ async function clearAllData() {
                 
                 // Step 3: Wipe all data
                 const response = await fetch('/api/admin/wipe-data', {
-                    method: 'DELETE',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${getAuthToken()}`
