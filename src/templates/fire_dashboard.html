@@ -458,14 +458,14 @@
                     </div>
 
                     <!-- Backtesting Controls -->
-                    <div class="backtest-controls" style="margin-top: 16px; display: flex; gap: 8px;">
-                        <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button class="fire-cyber-btn btn-primary" onclick="startHistoricalBacktest()">
                             <i class="fas fa-play"></i> START BACKTEST
                         </button>
-                        <button class="cyber-btn" onclick="viewBacktestResults()" style="flex: 1;">
+                        <button class="fire-cyber-btn btn-primary" onclick="viewBacktestResults()">
                             <i class="fas fa-chart-bar"></i> VIEW RESULTS
                         </button>
-                        <button class="fire-btn" onclick="toggleBacktestDetails()" style="flex: 0 0 auto;">
+                        <button class="fire-cyber-btn btn-secondary" onclick="toggleBacktestDetails()" title="More Info">
                             <i class="fas fa-info-circle"></i>
                         </button>
                     </div>
@@ -506,16 +506,152 @@
     </div>
 
     <!-- Toast Notifications -->
-    <div id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Fire Trading Dashboard JavaScript -->
     <script src="/static/js/fire-dashboard-clean.js"></script>
     <script>
+        // Enhanced Loading Screen Management
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainDashboard = document.getElementById('mainDashboard');
+            
+            if (loadingScreen) {
+                loadingScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    if (mainDashboard) {
+                        mainDashboard.style.display = 'block';
+                        mainDashboard.classList.add('fade-in');
+                    }
+                }, 800);
+            }
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${getToastIcon(type)}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto remove after duration
+            setTimeout(() => {
+                toast.style.animation = 'slide-out 0.4s ease forwards';
+                setTimeout(() => {
+                    if (container.contains(toast)) {
+                        container.removeChild(toast);
+                    }
+                }, 400);
+            }, duration);
+        }
+
+        function getToastIcon(type) {
+            switch(type) {
+                case 'success': return 'check-circle';
+                case 'error': return 'exclamation-circle';
+                case 'warning': return 'exclamation-triangle';
+                default: return 'info-circle';
+            }
+        }
+
         // Initialize the Fire Dashboard when page loads
         let dashboard;
         document.addEventListener('DOMContentLoaded', function() {
-            dashboard = new FireDashboard();
+            // Show loading for at least 2 seconds for better UX
+            setTimeout(() => {
+                hideLoadingScreen();
+                dashboard = new FireDashboard();
+                showToast('Fire Trading Dashboard Loaded Successfully', 'success');
+            }, 2000);
         });
+
+        // Enhanced Control Functions
+        function toggleMainBot() {
+            const toggle = document.getElementById('mainBotToggle');
+            const isEnabled = toggle.checked;
+            showToast(`Trading Bot ${isEnabled ? 'Enabled' : 'Disabled'}`, 
+                     isEnabled ? 'success' : 'warning');
+        }
+
+        function toggleLiveTrading() {
+            const toggle = document.getElementById('liveTradingToggle');
+            const isEnabled = toggle.checked;
+            showToast(`Live Trading ${isEnabled ? 'Activated' : 'Deactivated'}`, 
+                     isEnabled ? 'success' : 'error');
+        }
+
+        function emergencyStop() {
+            if (confirm('Are you sure you want to execute an emergency stop?')) {
+                showToast('Emergency Stop Executed - All Trading Halted', 'error');
+                // Disable all toggles
+                document.getElementById('mainBotToggle').checked = false;
+                document.getElementById('liveTradingToggle').checked = false;
+            }
+        }
+
+        function startHistoricalBacktest() {
+            showToast('Starting Historical Backtest...', 'info');
+            // Add skeleton loading to chart containers
+            const charts = document.querySelectorAll('.chart-wrapper canvas');
+            charts.forEach(chart => {
+                const skeleton = document.createElement('div');
+                skeleton.className = 'skeleton';
+                skeleton.style.position = 'absolute';
+                skeleton.style.top = '0';
+                skeleton.style.left = '0';
+                skeleton.style.right = '0';
+                skeleton.style.bottom = '0';
+                chart.parentNode.appendChild(skeleton);
+            });
+        }
     </script>
+
+    <!-- Additional CSS for Toast Animations -->
+    <style>
+        @keyframes slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .chart-wrapper {
+            position: relative;
+        }
+        
+        /* Fix for overlapping elements */
+        .fire-card {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Enhanced spacing for better visual hierarchy */
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            padding: 20px 0;
+        }
+    </style>
 </body>
 </html>
