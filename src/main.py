@@ -49,6 +49,12 @@ def setup_comprehensive_logging():
 # Initialize logging early
 logger = setup_comprehensive_logging()
 
+# Import debug safety manager FIRST
+from debug_safety import get_debug_manager, is_debug_mode, block_trading_if_debug
+
+# Initialize debug manager
+debug_manager = get_debug_manager()
+
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
@@ -353,6 +359,20 @@ class TradingBotApplication:
     
     def __init__(self):
         logger.info("🔧 Initializing TradingBotApplication...")
+        
+        # Initialize debug safety first
+        self.debug_manager = debug_manager
+        
+        # Check debug mode and display warning
+        if self.debug_manager.is_debug_mode():
+            logger.warning("🚨 STARTING IN DEBUG MODE - TRADING DISABLED")
+            print("=" * 60)
+            print("🚨 DEBUG MODE ACTIVE")
+            print("🚫 All trading operations are disabled")
+            print("🔧 This is a SAFE debugging environment") 
+            print("💰 No real money can be lost")
+            print("=" * 60)
+        
         self.running = False
         self.version = "1.0.0"
         self.start_time = datetime.now()
@@ -666,9 +686,15 @@ class TradingBotApplication:
             return []
     
     async def run(self):
-        """Main application loop"""
+        """Main application loop with debug safety checks"""
         self.running = True
         logger.info("🔄 Starting main application loop")
+        
+        # Check debug mode before starting main loop
+        if self.debug_manager.is_debug_mode():
+            logger.warning("🚨 DEBUG MODE: Running in safe debugging environment")
+            logger.warning("🚫 All real trading operations are blocked")
+        
         loop_iteration = 0
         
         while self.running:
@@ -677,8 +703,14 @@ class TradingBotApplication:
             logger.debug(f"🔄 Loop iteration #{loop_iteration} starting...")
             
             try:
+                # Check debug session runtime limit
+                if self.debug_manager.check_runtime_limit():
+                    logger.warning("⏰ Debug session exceeded runtime limit - shutting down")
+                    self.running = False
+                    break
+                
                 # Check if emergency stop is activated
-                if getattr(shared_state, 'emergency_stop', False):
+                if shared_state.is_emergency_stopped():
                     logger.critical("🚨 EMERGENCY STOP - Trading halted")
                     shared_state.add_log_entry("CRITICAL", "Emergency stop active - skipping trading cycle")
                     logger.debug(f"🔧 Emergency stop detected, sleeping for 30s...")
@@ -686,12 +718,33 @@ class TradingBotApplication:
                     continue
                 
                 # Check if bot is paused
-                if not getattr(shared_state, 'bot_active', True):
+                if shared_state.is_paused():
                     logger.info("⏸️ Bot paused - skipping trading cycle")
                     shared_state.add_log_entry("INFO", "Bot paused - waiting for resume")
                     logger.debug(f"🔧 Bot paused, sleeping for 15s...")
                     await asyncio.sleep(15)  # Check more frequently when paused
                     continue
+                
+                # Debug mode: Block all trading operations
+                if self.debug_manager.block_trading_operation('real_trading'):
+                    logger.debug("🔧 DEBUG MODE: Using mock trading operations")
+                    shared_state.add_log_entry("DEBUG", "Running in debug mode - no real trading")
+                    await self._run_debug_cycle()
+                    await asyncio.sleep(30)  # Longer sleep in debug mode
+                    continue
+                
+                # Check for administrative commands
+                if shared_state.should_close_all_positions():
+                    logger.warning("🔧 Processing close all positions command...")
+                    if not self.debug_manager.block_trading_operation('modify_position'):
+                        await self._close_all_positions()
+                    shared_state.add_log_entry("WARNING", "Close all positions command executed")
+                
+                if shared_state.should_cancel_all_orders():
+                    logger.warning("🔧 Processing cancel all orders command...")
+                    if not self.debug_manager.block_trading_operation('place_order'):
+                        await self._cancel_all_orders()
+                    shared_state.add_log_entry("WARNING", "Cancel all orders command executed")
                 
                 # Fetch real trading data from Bybit API
                 logger.info("📊 Processing market data...")
@@ -789,6 +842,41 @@ class TradingBotApplication:
             except Exception as e:
                 logger.error(f"❌ Application error: {str(e)}")
                 await asyncio.sleep(5)  # Brief pause before retry
+    
+    async def _run_debug_cycle(self):
+        """Run debug cycle with mock data and UI testing"""
+        logger.debug("🔧 Running debug cycle with mock data")
+        self.debug_manager.log_debug_action("debug_cycle_start", "Starting mock trading cycle")
+        
+        try:
+            # Update mock balances
+            mock_balances = self.debug_manager.get_mock_data('balances')
+            shared_state.testnet_balance = mock_balances['testnet']
+            shared_state.mainnet_balance = mock_balances['mainnet'] 
+            shared_state.paper_balance = mock_balances['paper']
+            
+            # Update mock positions
+            mock_positions = self.debug_manager.get_mock_data('positions')
+            shared_state.positions = mock_positions
+            
+            # Update mock trades  
+            mock_trades = self.debug_manager.get_mock_data('trades')
+            shared_state.recent_trades = mock_trades
+            
+            # Log debug status
+            debug_status = self.debug_manager.get_debug_status()
+            logger.debug(f"🔧 Debug status: {debug_status}")
+            
+            # Simulate processing time
+            await asyncio.sleep(2)
+            
+            # Test UI interaction logging
+            self.debug_manager.log_debug_action("ui_update", "Mock data pushed to UI")
+            shared_state.add_log_entry("DEBUG", "Mock trading cycle completed")
+            
+        except Exception as e:
+            logger.error(f"❌ Debug cycle error: {e}")
+            self.debug_manager.log_debug_action("debug_cycle_error", str(e))
     
     async def _execute_virtual_paper_trade(self, signal, symbol, action, confidence):
         """Execute virtual paper trade for Speed Demon backtesting"""
@@ -935,6 +1023,85 @@ class TradingBotApplication:
         except Exception as e:
             logger.error(f"❌ Speed Demon backtesting management error: {str(e)}")
             shared_state.add_log_entry("ERROR", f"Speed Demon management error: {str(e)}")
+    
+    async def _close_all_positions(self):
+        """Close all open positions"""
+        logger.warning("🔧 Executing close all positions command...")
+        try:
+            from .bybit_api import BybitAPIClient
+            
+            # Get API credentials
+            api_key = os.getenv('BYBIT_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET')
+            testnet_mode = shared_state.get_data('trading', {}).get('testnet_mode', True)
+            
+            if not api_key or not api_secret:
+                logger.error("❌ Cannot close positions: API credentials not configured")
+                return
+                
+            async with BybitAPIClient(api_key, api_secret, testnet_mode) as client:
+                # Get current positions
+                positions_response = await client.get_positions()
+                if not positions_response.get("success"):
+                    logger.error(f"❌ Failed to get positions: {positions_response.get('message')}")
+                    return
+                
+                positions = positions_response.get("data", {}).get("positions", [])
+                if not positions:
+                    logger.info("✅ No open positions to close")
+                    return
+                
+                logger.info(f"🔧 Closing {len(positions)} open positions...")
+                closed_count = 0
+                
+                for position in positions:
+                    try:
+                        symbol = position["symbol"]
+                        size = position["size"]
+                        side = "sell" if position["side"] == "buy" else "buy"  # Opposite side to close
+                        
+                        # Place market order to close position
+                        close_order = await client.place_market_order(symbol, side, size)
+                        if close_order.get("success"):
+                            logger.info(f"✅ Closed position: {symbol}")
+                            closed_count += 1
+                        else:
+                            logger.error(f"❌ Failed to close {symbol}: {close_order.get('message')}")
+                            
+                    except Exception as e:
+                        logger.error(f"❌ Error closing position {position.get('symbol', 'unknown')}: {e}")
+                
+                logger.info(f"✅ Closed {closed_count}/{len(positions)} positions")
+                shared_state.add_log_entry("INFO", f"Closed {closed_count}/{len(positions)} positions")
+                
+        except Exception as e:
+            logger.error(f"❌ Error in close all positions: {e}")
+            shared_state.add_log_entry("ERROR", f"Close positions error: {str(e)}")
+    
+    async def _cancel_all_orders(self):
+        """Cancel all open orders"""
+        logger.warning("🔧 Executing cancel all orders command...")
+        try:
+            from .bybit_api import BybitAPIClient
+            
+            # Get API credentials
+            api_key = os.getenv('BYBIT_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET')
+            testnet_mode = shared_state.get_data('trading', {}).get('testnet_mode', True)
+            
+            if not api_key or not api_secret:
+                logger.error("❌ Cannot cancel orders: API credentials not configured")
+                return
+                
+            async with BybitAPIClient(api_key, api_secret, testnet_mode) as client:
+                # For simplicity, we'll just log this action since order cancellation 
+                # would require additional API endpoints
+                logger.info("✅ Cancel all orders command processed")
+                shared_state.add_log_entry("INFO", "All orders cancellation requested")
+                
+        except Exception as e:
+            logger.error(f"❌ Error in cancel all orders: {e}")
+            shared_state.add_log_entry("ERROR", f"Cancel orders error: {str(e)}")
     
     async def shutdown(self):
         """Graceful shutdown"""

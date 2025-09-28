@@ -16,14 +16,24 @@ from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
 from debug_logger import log_exception, log_performance
+from debug_safety import get_debug_manager
 
 logger = logging.getLogger(__name__)
 
 class BybitAPIClient:
-    """Async Bybit API client for real-time data fetching"""
+    """Async Bybit API client for real-time data fetching with debug safety"""
     
     def __init__(self, api_key: str = None, api_secret: str = None, testnet: bool = True):
         logger.info(f"🔧 Initializing BybitAPIClient (testnet={testnet})")
+        
+        # Initialize debug manager
+        self.debug_manager = get_debug_manager()
+        
+        # Force testnet in debug mode
+        if self.debug_manager.should_use_testnet():
+            testnet = True
+            logger.warning("🚨 DEBUG MODE: Forced testnet usage")
+        
         self.api_key = api_key
         self.api_secret = api_secret
         self.testnet = testnet
@@ -258,7 +268,7 @@ class BybitAPIClient:
                 }
             
             endpoint = "/v5/position/list"
-            params = "category=linear"
+            params = "category=linear&settleCoin=USDT"
             url = f"{self.base_url}{endpoint}?{params}"
             logger.debug(f"🔧 Request URL: {url}")
             
@@ -445,8 +455,24 @@ class BybitAPIClient:
             }
     
     async def place_order(self, symbol: str, side: str, order_type: str, qty: str, price: str = None) -> Dict[str, Any]:
-        """Place a trading order on Bybit"""
+        """Place a trading order on Bybit with debug safety"""
         try:
+            # Check debug mode first - block all orders
+            if self.debug_manager.block_trading_operation('place_order'):
+                logger.warning(f"🚫 DEBUG MODE: Blocked order placement - {symbol} {side} {qty}")
+                return {
+                    "success": True,  # Return success for UI testing
+                    "message": "DEBUG MODE: Order blocked for safety",
+                    "data": {
+                        "order_id": f"DEBUG_{int(time.time())}",
+                        "symbol": symbol,
+                        "side": side,
+                        "qty": qty,
+                        "order_type": order_type,
+                        "status": "debug_blocked"
+                    }
+                }
+            
             if not self.api_key or not self.api_secret:
                 return {
                     "success": False,
@@ -504,6 +530,97 @@ class BybitAPIClient:
                 "success": False,
                 "message": f"Connection error: {str(e)}",
                 "data": {}
+            }
+
+    async def get_trade_history(self, limit: int = 20) -> Dict[str, Any]:
+        """Get recent trade history"""
+        start_time = time.time()
+        logger.info("🔧 Starting get_trade_history request")
+        
+        try:
+            if not self.api_key:
+                logger.warning("⚠️ API credentials not configured for trade history request")
+                return {
+                    "success": False,
+                    "message": "API credentials not configured",
+                    "data": {"trades": []}
+                }
+            
+            endpoint = "/v5/execution/list"
+            params = f"category=linear&limit={limit}"
+            url = f"{self.base_url}{endpoint}?{params}"
+            logger.debug(f"🔧 Request URL: {url}")
+            
+            headers = self._get_headers(params)
+            logger.debug("🔧 Headers prepared for trade history request")
+            
+            session = await self.get_session()
+            logger.debug("🔧 Making HTTP GET request for trade history")
+            
+            async with session.get(url, headers=headers) as response:
+                logger.debug(f"🔧 Response status: {response.status}")
+                
+                try:
+                    data = await response.json()
+                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
+                except Exception as json_error:
+                    logger.error(f"❌ Failed to parse JSON response in get_trade_history: {json_error}")
+                    log_exception(json_error, "JSON parsing in get_trade_history")
+                    return {
+                        "success": False,
+                        "message": f"Failed to parse response: {json_error}",
+                        "data": {"trades": []}
+                    }
+                
+                if response.status == 200 and data.get("retCode") == 0:
+                    logger.info("✅ Successfully received trade history from Bybit")
+                    
+                    trades = []
+                    executions = data.get("result", {}).get("list", [])
+                    logger.debug(f"🔧 Processing {len(executions)} trade executions")
+                    
+                    for execution in executions:
+                        try:
+                            # Parse execution data
+                            trade = {
+                                "symbol": execution.get("symbol"),
+                                "side": execution.get("side", "").lower(),
+                                "size": execution.get("execQty"),
+                                "price": execution.get("execPrice"),
+                                "value": execution.get("execValue"),
+                                "fee": execution.get("execFee"),
+                                "timestamp": execution.get("execTime"),
+                                "order_id": execution.get("orderId"),
+                                "exec_id": execution.get("execId")
+                            }
+                            trades.append(trade)
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error parsing trade execution: {e}")
+                            continue
+                    
+                    logger.info(f"✅ Processed {len(trades)} trade executions")
+                    log_performance("get_trade_history", start_time, trades_found=len(trades))
+                    
+                    return {
+                        "success": True,
+                        "data": {"trades": trades}
+                    }
+                else:
+                    logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
+                    return {
+                        "success": False,
+                        "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
+                        "data": {"trades": []}
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ Error fetching trade history: {str(e)}")
+            log_exception(e, "get_trade_history")
+            log_performance("get_trade_history", start_time, error=str(e))
+            return {
+                "success": False,
+                "message": f"Connection error: {str(e)}",
+                "data": {"trades": []}
             }
 
 def load_api_credentials() -> tuple[Optional[str], Optional[str]]:

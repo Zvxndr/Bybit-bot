@@ -9,6 +9,7 @@ This creates a seamless single-server solution.
 import os
 import json
 import logging
+import asyncio
 from datetime import datetime as dt
 from shared_state import shared_state
 from pathlib import Path
@@ -16,16 +17,18 @@ from http.server import BaseHTTPRequestHandler
 import mimetypes
 import traceback
 import time
+from debug_safety import get_debug_manager
 
 # Setup enhanced logging for frontend server
 logger = logging.getLogger(__name__)
 logger.info("🔧 Frontend server module loaded")
 
 class FrontendHandler(BaseHTTPRequestHandler):
-    """Handle frontend requests through Python backend"""
+    """Handle frontend requests through Python backend with debug safety"""
     
     def __init__(self, *args, **kwargs):
         logger.debug("🔧 Initializing FrontendHandler")
+        self.debug_manager = get_debug_manager()
         self.frontend_path = Path("src/dashboard/frontend")
         logger.debug(f"🔧 Frontend path: {self.frontend_path}")
         super().__init__(*args, **kwargs)
@@ -107,30 +110,65 @@ class FrontendHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length) if content_length > 0 else b''
         
+        logger.debug(f"🔧 POST data received: {len(post_data)} bytes")
+        
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
-        # Handle different POST endpoints
+        # Handle different POST endpoints with actual functionality
         if self.path == '/api/bot/pause':
+            logger.info("🔧 Bot pause requested via API")
+            shared_state.set_bot_control('is_paused', True)
+            shared_state.set_bot_control('last_action', 'pause')
             response = {"success": True, "message": "Bot paused successfully"}
+            
         elif self.path == '/api/bot/resume':
+            logger.info("🔧 Bot resume requested via API")
+            shared_state.set_bot_control('is_paused', False)
+            shared_state.set_bot_control('last_action', 'resume')
             response = {"success": True, "message": "Bot resumed successfully"}
+            
         elif self.path == '/api/bot/emergency-stop':
-            response = {"success": True, "message": "Emergency stop activated"}
+            logger.warning("🚨 Emergency stop requested via API")
+            shared_state.set_bot_control('emergency_stop', True)
+            shared_state.set_bot_control('is_paused', True)
+            shared_state.set_bot_control('last_action', 'emergency_stop')
+            response = {"success": True, "message": "Emergency stop activated - all trading halted"}
+            
         elif self.path == '/api/environment/switch':
-            response = {"success": True, "message": "Environment switched successfully"}
+            logger.info("🔧 Environment switch requested via API")
+            # Toggle between testnet and mainnet
+            current_testnet = shared_state.get_data('trading', {}).get('testnet_mode', True)
+            new_testnet = not current_testnet
+            shared_state.set_data('trading', 'testnet_mode', new_testnet)
+            env_name = "Testnet" if new_testnet else "Mainnet" 
+            response = {"success": True, "message": f"Switched to {env_name} environment"}
+            
         elif self.path == '/api/admin/close-all-positions':
-            response = {"success": True, "message": "All positions closed", "closedCount": 0}
+            logger.warning("🔧 Close all positions requested via API")
+            shared_state.set_bot_control('close_all_positions', True)
+            shared_state.set_bot_control('last_action', 'close_all_positions')
+            response = {"success": True, "message": "Close all positions command issued", "status": "processing"}
+            
         elif self.path == '/api/admin/cancel-all-orders':
-            response = {"success": True, "message": "All orders canceled", "canceledCount": 0}
+            logger.warning("🔧 Cancel all orders requested via API")
+            shared_state.set_bot_control('cancel_all_orders', True)
+            shared_state.set_bot_control('last_action', 'cancel_all_orders')
+            response = {"success": True, "message": "Cancel all orders command issued", "status": "processing"}
+            
         elif self.path == '/api/admin/wipe-data':
+            logger.warning("🔧 Data wipe requested via API")
             shared_state.clear_all_data()
+            shared_state.set_bot_control('last_action', 'wipe_data')
             response = {"success": True, "message": "All data wiped successfully"}
+            
         else:
-            response = {"success": False, "error": "POST endpoint not implemented"}
+            logger.warning(f"⚠️ Unknown POST endpoint: {self.path}")
+            response = {"success": False, "error": f"POST endpoint not implemented: {self.path}"}
         
+        logger.debug(f"🔧 POST response: {response}")
         self.wfile.write(json.dumps(response).encode())
     
     def handle_health_check(self):
@@ -269,19 +307,75 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(response).encode())
             
         elif self.path.startswith('/api/trades/'):
+            logger.info("📊 Handling trade history API request")
             # Handle trade requests for specific environments
             environment = self.path.split('/')[-1]
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
             
-            response = {
-                "success": True,
-                "data": [],
-                "environment": environment
-            }
-            self.wfile.write(json.dumps(response).encode())
+            try:
+                from .bybit_api import get_bybit_client
+                from .debug_logger import log_exception
+                
+                # Parse limit from query params if present
+                limit = 20  # default
+                if '?' in self.path:
+                    query = self.path.split('?')[1]
+                    params = dict(param.split('=') for param in query.split('&') if '=' in param)
+                    limit = int(params.get('limit', 20))
+                
+                logger.debug(f"🔧 Requesting {limit} trades from Bybit API for {environment}")
+                
+                # Run async code synchronously
+                async def get_trades():
+                    client = await get_bybit_client()
+                    return await client.get_trade_history(limit)
+                
+                result = asyncio.run(get_trades())
+                logger.debug(f"🔧 Trade history API response: {result.get('success')}")
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                if result['success']:
+                    logger.info(f"✅ Successfully fetched {len(result['data']['trades'])} trades")
+                    response = {
+                        "success": True,
+                        "data": result['data']['trades'],
+                        "environment": environment
+                    }
+                else:
+                    logger.warning(f"⚠️ Failed to fetch trade history: {result.get('message')}")
+                    response = {
+                        "success": False,
+                        "data": [],
+                        "environment": environment,
+                        "message": result.get('message', 'Failed to fetch trade history')
+                    }
+                
+                self.wfile.write(json.dumps(response).encode())
+                
+            except Exception as e:
+                logger.error(f"❌ Error in trade history API: {e}")
+                
+                try:
+                    from .debug_logger import log_exception
+                    log_exception(e, "trade_history_api")
+                except ImportError:
+                    pass  # Fallback if debug_logger not available
+                
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                response = {
+                    "success": False,
+                    "data": [],
+                    "environment": environment,
+                    "error": str(e)
+                }
+                self.wfile.write(json.dumps(response).encode())
             
         elif self.path == '/api/system-stats':
             self.send_response(200)
@@ -289,13 +383,21 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
+            # Get debug status
+            debug_status = self.debug_manager.get_debug_status()
+            
             response = {
                 "success": True,
                 "data": {
                     "cpu_usage": "15.2%",
-                    "memory_usage": "48.7%",
+                    "memory_usage": "48.7%", 
                     "disk_usage": "23.1%",
-                    "network_status": "connected"
+                    "network_status": "connected",
+                    "debug_mode": debug_status.get('debug_mode', False),
+                    "debug_phase": debug_status.get('phase', 'UNKNOWN'),
+                    "trading_allowed": debug_status.get('trading_allowed', False),
+                    "runtime_minutes": int(debug_status.get('runtime_seconds', 0) / 60),
+                    "time_remaining_minutes": int(debug_status.get('time_remaining', 0) / 60) if debug_status.get('time_remaining', 0) > 0 else 0
                 }
             }
             self.wfile.write(json.dumps(response).encode())

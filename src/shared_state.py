@@ -191,6 +191,47 @@ class SharedState:
                     "unrealized": 0.00
                 }
             }
+    
+    def set_bot_control(self, control_key: str, value: Any):
+        """Set bot control flags for UI communication"""
+        logger.debug(f"🔧 Setting bot control: {control_key} = {value}")
+        with self._lock:
+            # Update the attribute directly for backward compatibility
+            setattr(self, control_key, value)
+            
+            # Also store in state for consistency
+            if "bot_control" not in self._state:
+                self._state["bot_control"] = {}
+            self._state["bot_control"][control_key] = value
+            self._state["last_update"] = datetime.now().isoformat()
+    
+    def get_bot_control(self, control_key: str, default=None):
+        """Get bot control flag value"""
+        return getattr(self, control_key, default)
+    
+    def is_emergency_stopped(self) -> bool:
+        """Check if emergency stop is active"""
+        return getattr(self, 'emergency_stop', False)
+    
+    def is_paused(self) -> bool:
+        """Check if bot is paused"""
+        return getattr(self, 'is_paused', False)
+    
+    def should_close_all_positions(self) -> bool:
+        """Check and reset close all positions flag"""
+        with self._lock:
+            if getattr(self, 'close_all_positions', False):
+                self.close_all_positions = False  # Reset flag after check
+                return True
+            return False
+    
+    def should_cancel_all_orders(self) -> bool:
+        """Check and reset cancel all orders flag"""
+        with self._lock:
+            if getattr(self, 'cancel_all_orders', False):
+                self.cancel_all_orders = False  # Reset flag after check
+                return True
+            return False
 
 # Global shared state instance
 shared_state = SharedState()
