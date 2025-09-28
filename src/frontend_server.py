@@ -139,20 +139,20 @@ class FrontendHandler(BaseHTTPRequestHandler):
         # Handle different POST endpoints with actual functionality
         if self.path == '/api/bot/pause':
             logger.info("🔧 Bot pause requested via API")
-            shared_state.set_bot_control('is_paused', True)
+            shared_state.set_bot_control('paused', True)
             shared_state.set_bot_control('last_action', 'pause')
             response = {"success": True, "message": "Bot paused successfully"}
             
         elif self.path == '/api/bot/resume':
             logger.info("🔧 Bot resume requested via API")
-            shared_state.set_bot_control('is_paused', False)
+            shared_state.set_bot_control('paused', False)
             shared_state.set_bot_control('last_action', 'resume')
             response = {"success": True, "message": "Bot resumed successfully"}
             
         elif self.path == '/api/bot/emergency-stop':
             logger.warning("🚨 Emergency stop requested via API")
             shared_state.set_bot_control('emergency_stop', True)
-            shared_state.set_bot_control('is_paused', True)
+            shared_state.set_bot_control('paused', True)
             shared_state.set_bot_control('last_action', 'emergency_stop')
             response = {"success": True, "message": "Emergency stop activated - all trading halted"}
             
@@ -331,8 +331,33 @@ class FrontendHandler(BaseHTTPRequestHandler):
             environment = self.path.split('/')[-1]
             
             try:
-                from .bybit_api import get_bybit_client
-                from .debug_logger import log_exception
+                # Multi-strategy import for bybit_api
+                try:
+                    from .bybit_api import get_bybit_client
+                except (ImportError, ValueError):
+                    try:
+                        from bybit_api import get_bybit_client
+                    except ImportError:
+                        try:
+                            from src.bybit_api import get_bybit_client
+                        except ImportError:
+                            # Create fallback function
+                            async def get_bybit_client():
+                                return None
+                
+                # Multi-strategy import for debug_logger
+                try:
+                    from .debug_logger import log_exception
+                except (ImportError, ValueError):
+                    try:
+                        from debug_logger import log_exception
+                    except ImportError:
+                        try:
+                            from src.debug_logger import log_exception
+                        except ImportError:
+                            # Create fallback function
+                            def log_exception(e, context):
+                                logger.error(f"Exception in {context}: {e}")
                 
                 # Parse limit from query params if present
                 limit = 20  # default
@@ -377,11 +402,8 @@ class FrontendHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 logger.error(f"❌ Error in trade history API: {e}")
                 
-                try:
-                    from .debug_logger import log_exception
-                    log_exception(e, "trade_history_api")
-                except ImportError:
-                    pass  # Fallback if debug_logger not available
+                # Use the log_exception function we imported above
+                log_exception(e, "trade_history_api")
                 
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')

@@ -133,6 +133,10 @@ class SharedState:
     
     def clear_all_data(self):
         """Clear all trading data and reset to defaults"""
+        import os
+        import shutil
+        from pathlib import Path
+        
         with self._lock:
             # Reset to initial state
             self._start_time = time.time()
@@ -164,8 +168,36 @@ class SharedState:
                 "last_update": datetime.now().isoformat()
             }
             
+            # Clear historical data files
+            try:
+                data_dirs = [
+                    "src/data/speed_demon_cache",
+                    "data",
+                    "logs"
+                ]
+                
+                for data_dir in data_dirs:
+                    if os.path.exists(data_dir):
+                        if os.path.isdir(data_dir):
+                            shutil.rmtree(data_dir)
+                            logger.info(f"🗑️ Cleared directory: {data_dir}")
+                        else:
+                            os.remove(data_dir)
+                            logger.info(f"🗑️ Cleared file: {data_dir}")
+                
+                # Clear any .db files in the workspace
+                for db_file in Path(".").glob("**/*.db"):
+                    try:
+                        db_file.unlink()
+                        logger.info(f"🗑️ Cleared database: {db_file}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Could not clear {db_file}: {e}")
+                        
+            except Exception as e:
+                logger.error(f"❌ Error during data wipe: {e}")
+        
         # Log the reset
-        self.add_log_entry("INFO", "🔥 All trading data cleared - System reset to defaults")
+        self.add_log_entry("INFO", "🔥 All trading data and historical files cleared - System reset to defaults")
     
     def get_multi_environment_balance(self) -> Dict[str, Any]:
         """Get balance data for all environments (testnet, mainnet, paper)"""
@@ -215,7 +247,7 @@ class SharedState:
     
     def is_paused(self) -> bool:
         """Check if bot is paused"""
-        return getattr(self, 'is_paused', False)
+        return getattr(self, 'paused', False)  # Changed from 'is_paused' to 'paused'
     
     def should_close_all_positions(self) -> bool:
         """Check and reset close all positions flag"""
