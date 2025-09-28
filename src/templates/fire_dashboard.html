@@ -16,7 +16,8 @@
                         <button class="fire-btn" onclick="toggleBacktestDetails()" style="flex: 0 0 auto;">
                             <i class="fas fa-info-circle"></i>
                         </button>
-                    </div>et">
+                    </div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
@@ -374,10 +375,10 @@
                     </div>
 
                     <!-- Detailed Backtesting Progress -->
-                    <div class="backtest-details" id="backtestDetails" style="display: block; margin-top: 16px; opacity: 1;">
+                    <div class="backtest-details" id="backtestDetails" style="display: none; margin-top: 16px; opacity: 0;">
                         <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 15%; background: linear-gradient(90deg, #FF6B35, #FF0000);"></div>
+                                <div class="progress-fill" id="progressFill" style="width: 0%; background: linear-gradient(90deg, #FF6B35, #FF0000);"></div>
                             </div>
                             <div class="progress-text" id="progressText">Ready to start backtesting...</div>
                         </div>
@@ -567,11 +568,44 @@
         // Initialize the Fire Dashboard when page loads
         let dashboard;
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing dashboard...');
+            
+            // Force show loading screen initially
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainDashboard = document.getElementById('mainDashboard');
+            
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+                loadingScreen.style.opacity = '1';
+            }
+            if (mainDashboard) {
+                mainDashboard.style.display = 'none';
+            }
+            
             // Show loading for at least 2 seconds for better UX
             setTimeout(() => {
+                console.log('Hiding loading screen...');
                 hideLoadingScreen();
-                dashboard = new FireDashboard();
-                showToast('Fire Trading Dashboard Loaded Successfully', 'success');
+                
+                // Initialize dashboard after a small delay
+                setTimeout(() => {
+                    try {
+                        if (typeof FireDashboard !== 'undefined') {
+                            dashboard = new FireDashboard();
+                            console.log('FireDashboard initialized');
+                        } else {
+                            console.log('FireDashboard class not found, dashboard running in basic mode');
+                        }
+                        
+                        // Initialize placeholder charts
+                        initializePlaceholderCharts();
+                        
+                        showToast('Fire Trading Dashboard Loaded Successfully', 'success');
+                    } catch (error) {
+                        console.error('Dashboard initialization error:', error);
+                        showToast('Dashboard loaded with basic functionality', 'warning');
+                    }
+                }, 100);
             }, 2000);
         });
 
@@ -602,17 +636,156 @@
         function startHistoricalBacktest() {
             showToast('Starting Historical Backtest...', 'info');
             // Add skeleton loading to chart containers
-            const charts = document.querySelectorAll('.chart-wrapper canvas');
+            const charts = document.querySelectorAll('.chart-container canvas');
             charts.forEach(chart => {
+                const container = chart.parentNode;
                 const skeleton = document.createElement('div');
                 skeleton.className = 'skeleton';
                 skeleton.style.position = 'absolute';
-                skeleton.style.top = '0';
-                skeleton.style.left = '0';
-                skeleton.style.right = '0';
-                skeleton.style.bottom = '0';
-                chart.parentNode.appendChild(skeleton);
+                skeleton.style.top = '20px';
+                skeleton.style.left = '20px';
+                skeleton.style.right = '20px';
+                skeleton.style.bottom = '20px';
+                skeleton.style.zIndex = '10';
+                
+                // Make container relative if not already
+                if (getComputedStyle(container).position === 'static') {
+                    container.style.position = 'relative';
+                }
+                
+                container.appendChild(skeleton);
+                
+                // Remove skeleton after 3 seconds
+                setTimeout(() => {
+                    if (container.contains(skeleton)) {
+                        container.removeChild(skeleton);
+                    }
+                }, 3000);
             });
+            
+            // Show backtest details
+            const details = document.getElementById('backtestDetails');
+            if (details) {
+                details.style.display = 'block';
+                setTimeout(() => {
+                    details.style.opacity = '1';
+                }, 10);
+            }
+        }
+
+        function toggleBacktestDetails() {
+            const details = document.getElementById('backtestDetails');
+            if (details) {
+                const isVisible = details.style.display !== 'none';
+                if (isVisible) {
+                    // Hide with animation
+                    details.style.opacity = '0';
+                    setTimeout(() => {
+                        details.style.display = 'none';
+                    }, 300);
+                    showToast('Backtest Details Hidden', 'info');
+                } else {
+                    // Show with animation
+                    details.style.display = 'block';
+                    setTimeout(() => {
+                        details.style.opacity = '1';
+                    }, 10);
+                    showToast('Showing Backtest Details', 'info');
+                }
+            }
+        }
+
+        function viewBacktestResults() {
+            showToast('Loading Backtest Results...', 'info');
+            // Could redirect to results page or show modal
+        }
+
+        // Initialize basic charts with placeholder data
+        function initializePlaceholderCharts() {
+            try {
+                // Balance Chart
+                const balanceCtx = document.getElementById('balanceChart')?.getContext('2d');
+                if (balanceCtx) {
+                    new Chart(balanceCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                            datasets: [{
+                                label: 'Balance',
+                                data: [1000, 1050, 980, 1100, 1080, 1150],
+                                borderColor: '#FF6B35',
+                                backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                                borderWidth: 2,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    labels: { color: '#ffffff' }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: '#ffffff' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                },
+                                y: {
+                                    ticks: { color: '#ffffff' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Performance Chart
+                const performanceCtx = document.getElementById('performanceChart')?.getContext('2d');
+                if (performanceCtx) {
+                    new Chart(performanceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                            datasets: [{
+                                label: 'Performance %',
+                                data: [5.2, -2.1, 8.7, 3.4],
+                                backgroundColor: function(context) {
+                                    const value = context.parsed.y;
+                                    return value >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)';
+                                },
+                                borderColor: function(context) {
+                                    const value = context.parsed.y;
+                                    return value >= 0 ? '#10b981' : '#ef4444';
+                                },
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    labels: { color: '#ffffff' }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: '#ffffff' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                },
+                                y: {
+                                    ticks: { color: '#ffffff' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Chart initialization error:', error);
+            }
         }
     </script>
 
@@ -644,6 +817,7 @@
             padding: 20px;
             max-width: 1400px;
             margin: 0 auto;
+            min-height: 100vh;
         }
         
         .admin-grid {
@@ -651,6 +825,67 @@
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 24px;
             padding: 20px 0;
+        }
+        
+        /* Ensure charts have proper dimensions */
+        .chart-container {
+            min-height: 250px;
+            position: relative;
+        }
+        
+        .chart-container canvas {
+            width: 100% !important;
+            height: 200px !important;
+        }
+        
+        /* Fix button spacing */
+        .btn-group {
+            margin-top: 20px;
+        }
+        
+        /* Ensure backtest details are properly positioned */
+        .backtest-details {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        /* Fix overlapping issues */
+        .fire-card {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 20px;
+        }
+        
+        /* Loading screen improvements */
+        .fire-loading {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 10000 !important;
+            background: linear-gradient(135deg, #000000 0%, #1a0a00 50%, #000000 100%) !important;
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            
+            .admin-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
         }
     </style>
 </body>
