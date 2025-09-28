@@ -209,16 +209,51 @@ class FireDashboard {
     }
 
     async fetchTrades() {
+        const tbody = document.getElementById('tradesTableBody');
+        
+        // Show loading state
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="cyber-text" style="padding: 20px; text-align: center;">
+                    <div class="loading-spinner" style="margin-right: 10px;"></div>
+                    Loading trade history...
+                </td>
+            </tr>
+        `;
+        
         try {
             const response = await fetch(`/api/trades/${this.currentEnvironment}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const result = await response.json();
             
-            if (result.success) {
+            if (result.success && result.data) {
                 this.updateTrades(result.data);
+            } else {
+                this.showTradeError(`API returned: ${result.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error fetching trades:', error);
+            this.showTradeError(error.message);
         }
+    }
+    
+    showTradeError(message) {
+        const tbody = document.getElementById('tradesTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="fire-text" style="padding: 20px; text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                    <br><small style="opacity: 0.7; margin-top: 8px; display: block;">
+                        This is normal in demo mode without API credentials
+                    </small>
+                </td>
+            </tr>
+        `;
     }
 
     async fetchSystemStats() {
