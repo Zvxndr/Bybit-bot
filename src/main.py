@@ -568,16 +568,32 @@ class TradingBotApplication:
     async def _run_debug_scripts_if_enabled(self):
         """Run debug test scripts if in debug mode during deployment"""
         try:
-            # Check if we're in debug mode
+            # Check if we're in debug mode - enhanced detection
+            is_debug = False
+            
+            # Method 1: Environment variables
+            if os.getenv('DEBUG_MODE', '').lower() == 'true':
+                is_debug = True
+                logger.debug("🔧 Debug mode detected via DEBUG_MODE environment variable")
+            
+            # Method 2: Debug manager check
             if debug_manager and hasattr(debug_manager, 'is_debug_mode'):
-                is_debug = debug_manager.is_debug_mode()
-            else:
-                # Fallback check - look for debug indicators
-                is_debug = (
-                    os.getenv('DEBUG_MODE', '').lower() == 'true' or
-                    os.getenv('ENVIRONMENT', '').lower() in ['debug', 'development'] or
-                    Path('.debug').exists()
-                )
+                if debug_manager.is_debug_mode():
+                    is_debug = True
+                    logger.debug("🔧 Debug mode detected via debug_manager")
+            
+            # Method 3: .debug file in root directory
+            debug_file_paths = [
+                Path('.debug'),  # Current directory
+                Path(__file__).parent.parent / '.debug',  # Root directory
+                Path('/app/.debug')  # DigitalOcean container path
+            ]
+            
+            for debug_file in debug_file_paths:
+                if debug_file.exists():
+                    is_debug = True
+                    logger.debug(f"🔧 Debug mode detected via debug file: {debug_file}")
+                    break
             
             if is_debug:
                 logger.info("🔧 Debug mode detected - running automated debug scripts")
@@ -603,12 +619,27 @@ class TradingBotApplication:
             import subprocess
             import sys
             
-            # Determine the root directory (parent of src)
-            root_dir = Path(__file__).parent.parent
-            test_script = root_dir / 'test_button_functions.py'
+            # Determine possible locations for the test script
+            possible_locations = [
+                Path(__file__).parent.parent / 'test_button_functions.py',  # Root directory
+                Path('/app/test_button_functions.py'),  # DigitalOcean container path
+                Path('test_button_functions.py'),  # Current directory
+            ]
             
-            if not test_script.exists():
-                logger.warning(f"⚠️ Test script not found at {test_script}")
+            test_script = None
+            for location in possible_locations:
+                if location.exists():
+                    test_script = location
+                    logger.debug(f"🔧 Found test script at: {test_script}")
+                    break
+            
+            if not test_script:
+                logger.warning(f"⚠️ Test script not found in any of these locations:")
+                for location in possible_locations:
+                    logger.warning(f"   - {location}")
+                
+                # Create a simple inline test instead
+                await self._run_inline_button_tests()
                 return
             
             # Run the test script as a subprocess to avoid blocking
@@ -616,7 +647,7 @@ class TradingBotApplication:
                 sys.executable, str(test_script),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(root_dir)  # Set working directory to root
+                cwd=str(test_script.parent)  # Set working directory
             )
             
             stdout, stderr = await result.communicate()
@@ -637,6 +668,58 @@ class TradingBotApplication:
                     
         except Exception as e:
             logger.warning(f"⚠️ Could not run button function tests: {e}")
+            # Fallback to inline tests
+            await self._run_inline_button_tests()
+    
+    async def _run_inline_button_tests(self):
+        """Run inline button tests when external script is not available"""
+        try:
+            logger.info("🧪 Running inline button function tests...")
+            
+            import aiohttp
+            
+            # Test endpoints
+            test_endpoints = [
+                ("Health Check", "GET", "http://localhost:8080/health"),
+                ("System Stats", "GET", "http://localhost:8080/api/system-stats"),
+                ("Positions", "GET", "http://localhost:8080/api/positions"),
+                ("Multi Balance", "GET", "http://localhost:8080/api/multi-balance"),
+                ("Bot Start", "POST", "http://localhost:8080/api/bot/start"),
+                ("Bot Pause", "POST", "http://localhost:8080/api/bot/pause"),
+                ("Emergency Stop", "POST", "http://localhost:8080/api/bot/emergency-stop"),
+                ("Data Wipe", "POST", "http://localhost:8080/api/admin/wipe-data"),
+            ]
+            
+            results = []
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                for name, method, url in test_endpoints:
+                    try:
+                        if method == "GET":
+                            async with session.get(url) as response:
+                                status = response.status
+                                success = 200 <= status < 300
+                        else:  # POST
+                            async with session.post(url) as response:
+                                status = response.status
+                                success = 200 <= status < 300
+                        
+                        results.append((name, "✅ PASS" if success else f"❌ FAIL ({status})", status))
+                        logger.info(f"🧪 {name}: {'✅ PASS' if success else f'❌ FAIL ({status})'}")
+                        
+                    except Exception as e:
+                        results.append((name, f"❌ ERROR: {e}", "N/A"))
+                        logger.warning(f"🧪 {name}: ❌ ERROR: {e}")
+            
+            # Summary
+            passed = sum(1 for _, result, _ in results if result.startswith("✅"))
+            total = len(results)
+            
+            logger.info(f"🧪 Inline Button Tests Summary: {passed}/{total} passed")
+            shared_state.add_log_entry("INFO", f"Inline button tests: {passed}/{total} passed")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Inline button tests failed: {e}")
     
     async def _run_data_wipe_debug(self):
         """Run the data wipe debug script during debug deployment"""
@@ -647,12 +730,27 @@ class TradingBotApplication:
             import subprocess
             import sys
             
-            # Determine the root directory (parent of src)
-            root_dir = Path(__file__).parent.parent
-            debug_script = root_dir / 'debug_data_wipe.py'
+            # Determine possible locations for the debug script
+            possible_locations = [
+                Path(__file__).parent.parent / 'debug_data_wipe.py',  # Root directory
+                Path('/app/debug_data_wipe.py'),  # DigitalOcean container path
+                Path('debug_data_wipe.py'),  # Current directory
+            ]
             
-            if not debug_script.exists():
-                logger.warning(f"⚠️ Debug script not found at {debug_script}")
+            debug_script = None
+            for location in possible_locations:
+                if location.exists():
+                    debug_script = location
+                    logger.debug(f"🔧 Found debug script at: {debug_script}")
+                    break
+            
+            if not debug_script:
+                logger.warning(f"⚠️ Debug script not found in any of these locations:")
+                for location in possible_locations:
+                    logger.warning(f"   - {location}")
+                
+                # Run inline data wipe test instead
+                await self._run_inline_data_wipe_test()
                 return
             
             # Run the debug script as a subprocess
@@ -660,7 +758,7 @@ class TradingBotApplication:
                 sys.executable, str(debug_script),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(root_dir)  # Set working directory to root
+                cwd=str(debug_script.parent)  # Set working directory
             )
             
             stdout, stderr = await result.communicate()
@@ -681,6 +779,48 @@ class TradingBotApplication:
                     
         except Exception as e:
             logger.warning(f"⚠️ Could not run data wipe debug: {e}")
+            # Fallback to inline test
+            await self._run_inline_data_wipe_test()
+    
+    async def _run_inline_data_wipe_test(self):
+        """Run inline data wipe test when external script is not available"""
+        try:
+            logger.info("🔥 Running inline data wipe test...")
+            
+            # Test direct data wipe function
+            logger.info("🔧 Testing direct data wipe function...")
+            initial_data = shared_state.get_all_data()
+            logger.info(f"📊 Initial state has {len(initial_data)} top-level keys")
+            
+            # Test the wipe function
+            shared_state.clear_all_data()
+            logger.info("✅ clear_all_data() completed without errors")
+            
+            # Check the state was reset
+            final_data = shared_state.get_all_data()
+            logger.info(f"📊 Final state has {len(final_data)} top-level keys")
+            
+            # Test API endpoint
+            logger.info("🌐 Testing data wipe API endpoint...")
+            import aiohttp
+            
+            try:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                    async with session.post("http://localhost:8080/api/admin/wipe-data") as response:
+                        status = response.status
+                        if 200 <= status < 300:
+                            logger.info("✅ Data wipe API endpoint responded successfully")
+                        else:
+                            logger.warning(f"⚠️ Data wipe API returned status {status}")
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Data wipe API test failed: {e}")
+            
+            logger.info("✅ Inline data wipe test completed")
+            shared_state.add_log_entry("SUCCESS", "Inline data wipe test completed")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Inline data wipe test failed: {e}")
         
     def start_health_server(self):
         """Start HTTP server with frontend and API support"""
@@ -1315,19 +1455,26 @@ async def main():
     """Main entry point"""
     logger.info("🚀 Starting Open Alpha Application")
     
-    # Check for debug mode early
+    # Check for debug mode early - enhanced detection
     debug_indicators = [
         os.getenv('DEBUG_MODE', '').lower() == 'true',
         os.getenv('ENVIRONMENT', '').lower() in ['debug', 'development'],
         Path('.debug').exists(),
-        '--debug' in sys.argv
+        Path(__file__).parent.parent / '.debug' ,  # Check root .debug file
+        '--debug' in sys.argv,
+        # Check if debug_safety detected debug mode
+        debug_manager and hasattr(debug_manager, 'is_debug_mode') and debug_manager.is_debug_mode()
     ]
     
-    if any(debug_indicators):
+    is_debug = any(debug_indicators)
+    
+    if is_debug:
         logger.info("🔧 DEBUG MODE ACTIVATED - Test scripts will run automatically")
         os.environ['DEBUG_MODE'] = 'true'  # Ensure it's set for child processes
+        print("🔧 DEBUG MODE ACTIVATED - Test scripts will run automatically")
     else:
         logger.info("✅ Production mode activated")
+        print("✅ Production mode activated")
     
     try:
         # Set up signal handlers
