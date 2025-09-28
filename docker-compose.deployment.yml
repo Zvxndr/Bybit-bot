@@ -1,0 +1,53 @@
+# 🔥 Open Alpha - DigitalOcean Docker Compose
+version: '3.8'
+
+services:
+  openalpha-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.deployment
+    container_name: openalpha-wealth-system
+    ports:
+      - "5050:5050"
+    environment:
+      - DEPLOYMENT_ENV=digitalocean
+      - DEBUG_MODE=true
+      - DATA_DOWNLOAD_ON_START=true
+      - PORT=5050
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/src/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "/app/health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.openalpha.rule=Host(`your-domain.com`)"
+      - "traefik.http.services.openalpha.loadbalancer.server.port=5050"
+
+  # Optional: Reverse proxy for production
+  traefik:
+    image: traefik:v2.10
+    container_name: openalpha-proxy
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    profiles:
+      - production
+
+networks:
+  default:
+    name: openalpha-network

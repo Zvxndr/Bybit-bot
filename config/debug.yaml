@@ -1,66 +1,60 @@
-# DEBUG MODE CONFIGURATION
-# =========================
-# This file controls debugging behavior during development phase
-# Set debug_mode: true to prevent ALL real trading operations
-
-debug_mode: true  # CRITICAL: Prevents all real trading when true
-
-# Debug Settings
+debug_mode: true
 debug_settings:
-  # Trading Controls
-  disable_real_trading: true      # Prevent actual trades
-  disable_api_orders: true        # Block order placement API calls
-  disable_position_changes: true  # Prevent position modifications
-  
-  # API Safety
-  force_testnet: true            # Force testnet even if mainnet configured
-  mock_api_responses: true       # Use mock data instead of real API calls
-  api_call_logging: true         # Log all API calls for debugging
-  
-  # UI Controls
-  show_debug_warnings: true      # Display debug mode warnings in UI
-  enable_debug_panel: true       # Show debug information panel
-  log_ui_interactions: true     # Log all button clicks and UI actions
-  
-  # Data Management  
-  use_mock_balances: true        # Use fake balance data
-  preserve_real_data: true       # Don't modify real account data
-  
-  # Safety Timeouts
-  max_debug_runtime: 3600        # Max runtime in debug mode (1 hour)
-  auto_shutdown_on_error: true   # Shutdown on critical errors
-
-# Logging Configuration
+  disable_real_trading: true
+  disable_api_orders: true
+  disable_position_changes: true
+  force_testnet: true
+  mock_api_responses: true
+  api_call_logging: true
+  use_historical_data: true
+  historical_data_source: src/data/speed_demon_cache/market_data.db
+  fallback_to_mock: true
+  show_debug_warnings: true
+  enable_debug_panel: true
+  log_ui_interactions: true
+  use_mock_balances: false
+  preserve_real_data: true
+  max_debug_runtime: 3600
+  auto_shutdown_on_error: true
+phase:
+  current: HISTORICAL_DATA_DEBUGGING
+  trading_allowed: false
+  data_source: historical
+  description: Using real historical market data for realistic debugging
 logging:
   level: DEBUG
   console_output: true
   file_output: true
-  debug_log_file: "logs/debug_session.log"
-  
-# Mock Data for Testing
+  debug_log_file: logs/debug_session.log
+historical_data:
+  enabled: true
+  database_path: src/data/speed_demon_cache/market_data.db
+  preferred_symbols:
+  - BTCUSDT
+  - ETHUSDT
+  - SOLUSDT
+  max_records_per_query: 100
+  balance_calculation_method: dynamic
+  position_simulation: true
+  trade_history_limit: 50
+  database_populated: true
+  data_quality_score: 0.98386
+  last_updated: '2025-09-28T13:24:27.178266'
+  deployment_ready: true
 mock_data:
-  testnet_balance: 10000.00
-  mainnet_balance: 0.00
-  paper_balance: 100000.00
-  
+  testnet_balance: 10000.0
+  mainnet_balance: 0.0
+  paper_balance: 100000.0
   mock_positions:
-    - symbol: "BTCUSDT"
-      side: "long"
-      size: "0.001"
-      entry_price: "67500.00"
-      pnl: "+15.50"
-      
+  - symbol: BTCUSDT
+    side: long
+    size: '0.001'
+    entry_price: '67500.00'
+    pnl: '+15.50'
   mock_trades:
-    - symbol: "BTCUSDT"
-      side: "buy"
-      size: "0.001"
-      price: "67500.00"
-      timestamp: "2024-01-20 14:30:00"
-      pnl: "+15.50"
-
-# Debug Phase Indicators
-phase:
-  current: "PRIVATE_USE_DEBUGGING"
-  status: "DEVELOPMENT"
-  trading_allowed: false
-  live_deployment: false
+  - symbol: BTCUSDT
+    side: buy
+    size: '0.001'
+    price: '67500.00'
+    timestamp: '2024-01-20 14:30:00'
+    pnl: '+15.50'

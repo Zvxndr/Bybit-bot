@@ -17,7 +17,26 @@ from http.server import BaseHTTPRequestHandler
 import mimetypes
 import traceback
 import time
-from debug_safety import get_debug_manager
+
+# Import debug safety with fallback
+try:
+    from .debug_safety import get_debug_manager
+except ImportError:
+    try:
+        from debug_safety import get_debug_manager
+    except ImportError:
+        # Fallback debug manager
+        class FallbackDebugManager:
+            def get_debug_status(self):
+                return {
+                    'debug_mode': True,
+                    'phase': 'DEPLOYMENT_FALLBACK',
+                    'trading_allowed': False,
+                    'runtime_seconds': 0,
+                    'max_runtime_seconds': 3600,
+                    'time_remaining': 3600
+                }
+        def get_debug_manager(): return FallbackDebugManager()
 
 # Setup enhanced logging for frontend server
 logger = logging.getLogger(__name__)

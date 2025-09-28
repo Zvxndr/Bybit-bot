@@ -60,5 +60,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Expose port
 EXPOSE 8080
 
-# Speed Demon startup script - downloads data then starts main application
-CMD ["sh", "-c", "python scripts/speed_demon_deploy.py --years 2 --testnet && python -m src.main"]
+# Speed Demon startup script - downloads data then starts main application  
+CMD ["sh", "-c", "python scripts/speed_demon_deploy.py --years 2 --testnet && cd /app && python -m src.main"]

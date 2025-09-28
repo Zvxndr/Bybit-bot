@@ -12,50 +12,49 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 
-# Import historical data provider for realistic debugging data
-try:
-    from .historical_data_provider import get_historical_data_provider
-    historical_data_available = True
-except ImportError:
-    historical_data_available = False
-    logging.warning("Historical data provider not available, falling back to simple mock data")
-
-# Handle yaml import with fallback
 try:
     import yaml
 except ImportError:
-    # Create a minimal yaml substitute for deployment
+    print("Warning: PyYAML not installed. Using basic configuration.")
+    # Create a minimal yaml substitute
     class SimpleYAML:
         @staticmethod
         def safe_load(content):
-            """Basic configuration parser for debug config"""
-            if hasattr(content, 'read'):
-                content = content.read()
+            # Basic YAML parsing for debug config
+            if isinstance(content, str):
+                lines = content.split('\n')
+            else:
+                lines = content.read().split('\n')
             
-            # Return safe debug defaults if parsing fails
-            return {
-                'debug_mode': True,
-                'debug_settings': {
-                    'disable_real_trading': True,
-                    'disable_api_orders': True,
-                    'force_testnet': True,
-                    'mock_api_responses': True,
-                    'max_debug_runtime': 3600
-                },
-                'phase': {
-                    'current': 'DEPLOYMENT_DEBUG',
-                    'trading_allowed': False
-                },
-                'mock_data': {
-                    'testnet_balance': 10000.00,
-                    'mainnet_balance': 0.00,
-                    'paper_balance': 100000.00
+            config = {}
+            for line in lines:
+                if ':' in line and not line.strip().startswith('#'):
+                    key, value = line.split(':', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # Convert basic types
+                    if value.lower() == 'true':
+                        config[key] = True
+                    elif value.lower() == 'false':
+                        config[key] = False
+                    elif value.isdigit():
+                        config[key] = int(value)
+                    else:
+                        config[key] = value.strip('"\'')
+            
+            # Provide safe defaults if parsing fails
+            if not config:
+                return {
+                    'debug_mode': True,
+                    'debug_settings': {'disable_real_trading': True},
+                    'phase': {'trading_allowed': False}
                 }
-            }
+            return config
         
         @staticmethod
         def dump(data, f, **kwargs):
-            # Simple config output
+            # Simple YAML output
             for key, value in data.items():
                 f.write(f"{key}: {value}\n")
     
@@ -160,29 +159,7 @@ class DebugSafetyManager:
         return False
     
     def get_mock_data(self, data_type: str) -> Any:
-        """Get realistic data for testing using historical data when available"""
-        
-        # Try to use historical data first
-        if historical_data_available:
-            try:
-                provider = get_historical_data_provider()
-                
-                if data_type == 'balances':
-                    return provider.get_realistic_balances()
-                
-                elif data_type == 'positions':
-                    return provider.get_historical_positions()
-                
-                elif data_type == 'trades':
-                    return provider.get_historical_trades()
-                
-                elif data_type == 'market_data':
-                    return provider.get_market_data_sample()
-                    
-            except Exception as e:
-                logger.warning(f"🔄 Historical data unavailable ({e}), using fallback mock data")
-        
-        # Fallback to configuration-based mock data
+        """Get mock data for testing"""
         mock_data = self.config.get('mock_data', {})
         
         if data_type == 'balances':

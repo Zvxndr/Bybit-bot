@@ -16,6 +16,7 @@ from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
 
+# Import debug logger with fallback
 try:
     from .debug_logger import log_exception, log_performance
 except ImportError:
@@ -24,15 +25,31 @@ except ImportError:
     except ImportError:
         # Fallback functions if debug_logger is not available
         def log_exception(exc, context=""):
-            logger.error(f"Exception in {context}: {exc}")
+            import logging
+            logging.getLogger(__name__).error(f"Exception in {context}: {exc}")
         def log_performance(operation, start_time, **kwargs):
+            import logging
             duration = time.time() - start_time
-            logger.debug(f"Performance {operation}: {duration:.2f}s {kwargs}")
+            logging.getLogger(__name__).debug(f"Performance {operation}: {duration:.2f}s {kwargs}")
 
+# Import debug safety with fallback
 try:
     from .debug_safety import get_debug_manager
 except ImportError:
-    from debug_safety import get_debug_manager
+    try:
+        from debug_safety import get_debug_manager
+    except ImportError:
+        # Fallback debug manager for deployment safety
+        class FallbackDebugManager:
+            def is_debug_mode(self): return True
+            def block_trading_operation(self, op): return True
+            def should_use_testnet(self): return True
+            def should_mock_api_calls(self): return True
+            def log_debug_action(self, action, details=""): 
+                import logging
+                logging.getLogger(__name__).debug(f"🔧 {action}: {details}")
+        
+        def get_debug_manager(): return FallbackDebugManager()
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +163,35 @@ class BybitAPIClient:
         """Get account balance for all coins"""
         start_time = time.time()
         logger.info("🔧 Starting get_account_balance request")
+        
+        # Check if debug mode is active and return historical data
+        if self.debug_manager.is_debug_mode():
+            logger.info("🔧 Debug mode active - using historical balance data")
+            mock_balances = self.debug_manager.get_mock_data('balances')
+            if mock_balances:
+                logger.info("✅ Using historical balance data for debugging")
+                return {
+                    "success": True,
+                    "data": {
+                        "total_wallet_balance": f"{mock_balances.get('total_usd', 15000.00):.2f}",
+                        "total_available_balance": f"{mock_balances.get('USDT', 10000.00):.2f}",
+                        "total_used_margin": "0.00",
+                        "coins": [
+                            {
+                                "coin": "USDT",
+                                "wallet_balance": mock_balances.get('USDT', 10000.00),
+                                "available_balance": mock_balances.get('USDT', 10000.00),
+                                "used_margin": 0.00
+                            },
+                            {
+                                "coin": "BTC",
+                                "wallet_balance": mock_balances.get('BTC', 0.15),
+                                "available_balance": mock_balances.get('BTC', 0.15),
+                                "used_margin": 0.00
+                            }
+                        ]
+                    }
+                }
         
         try:
             if not self.api_key:
@@ -273,6 +319,17 @@ class BybitAPIClient:
         """Get all active positions"""
         start_time = time.time()
         logger.info("🔧 Starting get_positions request")
+        
+        # Check if debug mode is active and return historical data
+        if self.debug_manager.is_debug_mode():
+            logger.info("🔧 Debug mode active - using historical position data")
+            mock_positions = self.debug_manager.get_mock_data('positions')
+            if mock_positions:
+                logger.info(f"✅ Using {len(mock_positions)} historical positions for debugging")
+                return {
+                    "success": True,
+                    "data": {"positions": mock_positions}
+                }
         
         try:
             if not self.api_key:
@@ -552,6 +609,19 @@ class BybitAPIClient:
         """Get recent trade history"""
         start_time = time.time()
         logger.info("🔧 Starting get_trade_history request")
+        
+        # Check if debug mode is active and return historical data
+        if self.debug_manager.is_debug_mode():
+            logger.info("🔧 Debug mode active - using historical trade data")
+            mock_trades = self.debug_manager.get_mock_data('trades')
+            if mock_trades:
+                # Limit to the requested number of trades
+                limited_trades = mock_trades[:limit] if len(mock_trades) > limit else mock_trades
+                logger.info(f"✅ Using {len(limited_trades)} historical trades for debugging")
+                return {
+                    "success": True,
+                    "data": {"trades": limited_trades}
+                }
         
         try:
             if not self.api_key:

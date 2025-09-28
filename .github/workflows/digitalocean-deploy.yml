@@ -1,0 +1,190 @@
+name: 🔥 Open Alpha - DigitalOcean Deployment
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and test the application
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🔥 Checkout Open Alpha
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_deployment.txt
+    
+    - name: 🔍 Validate System Architecture
+      run: |
+        echo "🔍 Validating SAR compliance..."
+        python -c "
+        import os
+        from pathlib import Path
+        
+        # Check required components
+        required = [
+            'src/debug_safety.py',
+            'src/historical_data_provider.py', 
+            'src/dashboard/',
+            'src/bybit_api.py',
+            'config/'
+        ]
+        
+        missing = []
+        for component in required:
+            if not Path(component).exists():
+                missing.append(component)
+        
+        if missing:
+            print(f'❌ Missing components: {missing}')
+            exit(1)
+        else:
+            print('✅ All SAR components present')
+        "
+    
+    - name: 🛡️ Safety System Test
+      run: |
+        echo "🛡️ Testing debug safety system..."
+        python -c "
+        import sys
+        sys.path.append('src')
+        try:
+            from debug_safety import DebugSafetyManager
+            safety = DebugSafetyManager()
+            print('✅ Debug safety system operational')
+        except Exception as e:
+            print(f'❌ Safety system error: {e}')
+            exit(1)
+        "
+    
+    - name: 🏗️ Build Docker Image
+      run: |
+        docker build -f Dockerfile.deployment -t openalpha:test .
+    
+    - name: 🧪 Test Container
+      run: |
+        # Start container in background
+        docker run -d --name openalpha-test -p 5051:5050 \
+          -e DEBUG_MODE=true \
+          -e DATA_DOWNLOAD_ON_START=false \
+          openalpha:test
+        
+        # Wait for startup
+        sleep 30
+        
+        # Test health endpoint
+        if curl -f http://localhost:5051/ --max-time 10; then
+          echo "✅ Container test passed"
+        else
+          echo "❌ Container test failed"
+          docker logs openalpha-test
+          exit 1
+        fi
+        
+        # Cleanup
+        docker stop openalpha-test
+        docker rm openalpha-test
+
+  # Deploy to DigitalOcean
+  deploy-digitalocean:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 🔥 Checkout for Deployment
+      uses: actions/checkout@v4
+    
+    - name: 🐋 Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🏗️ Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.deployment
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+    
+    - name: 🌊 Deploy to DigitalOcean
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    
+    - name: 🚀 Update DigitalOcean App
+      run: |
+        # Create app specification
+        cat > app-spec.yaml << EOF
+        name: openalpha-wealth-system
+        services:
+        - name: web
+          image:
+            registry_type: GHCR
+            repository: ${{ env.IMAGE_NAME }}
+            tag: latest
+          instance_count: 1
+          instance_size_slug: basic-xxs
+          http_port: 5050
+          environment_slug: node-js
+          env:
+          - key: DEBUG_MODE
+            value: "true"
+          - key: DEPLOYMENT_ENV
+            value: "digitalocean"
+          - key: DATA_DOWNLOAD_ON_START
+            value: "true"
+          health_check:
+            http_path: /
+            initial_delay_seconds: 60
+            period_seconds: 30
+            timeout_seconds: 10
+            success_threshold: 1
+            failure_threshold: 3
+        EOF
+        
+        # Deploy to DigitalOcean App Platform
+        doctl apps create --spec app-spec.yaml || doctl apps update ${{ secrets.DIGITALOCEAN_APP_ID }} --spec app-spec.yaml
+    
+    - name: 📊 Deployment Summary
+      run: |
+        echo "🔥 Open Alpha Deployment Complete!"
+        echo "🚀 Status: Deployed to DigitalOcean App Platform"
+        echo "🌐 Environment: Production with debug safety active"
+        echo "🛡️ Safety: All trading operations blocked"
+        echo "📊 Data: Historical data auto-download enabled"
+        echo "🔥 Dashboard: Fire cybersigilism UI active"
+        echo ""
+        echo "📋 Next Steps:"
+        echo "1. Monitor deployment logs"
+        echo "2. Verify health checks pass"
+        echo "3. Test fire dashboard functionality"
+        echo "4. Validate historical data integration"
+        echo "5. Begin Phase 2: ML Integration planning"
