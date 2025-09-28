@@ -13,14 +13,23 @@ import time
 from pathlib import Path
 
 # Setup deployment logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - DEPLOYMENT - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/app/logs/deployment.log')
-    ]
-)
+def setup_logging():
+    """Setup logging with environment-specific paths"""
+    handlers = [logging.StreamHandler(sys.stdout)]
+    
+    # Add file handler if in deployment environment
+    log_dir = Path('/app/logs') if os.path.exists('/app') else Path('logs')
+    if log_dir.parent.exists():
+        log_dir.mkdir(exist_ok=True)
+        handlers.append(logging.FileHandler(log_dir / 'deployment.log'))
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - DEPLOYMENT - %(levelname)s - %(message)s',
+        handlers=handlers
+    )
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 class DigitalOceanDeployment:

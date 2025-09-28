@@ -49,8 +49,31 @@ def setup_comprehensive_logging():
 # Initialize logging early
 logger = setup_comprehensive_logging()
 
-# Import debug safety manager FIRST
-from debug_safety import get_debug_manager, is_debug_mode, block_trading_if_debug
+# Import debug safety manager FIRST - try multiple import strategies
+debug_manager = None
+try:
+    # Strategy 1: Relative import
+    from .debug_safety import get_debug_manager, is_debug_mode, block_trading_if_debug
+    logger.debug("✅ Debug safety imported via relative import")
+except ImportError:
+    try:
+        # Strategy 2: Direct import
+        from debug_safety import get_debug_manager, is_debug_mode, block_trading_if_debug
+        logger.debug("✅ Debug safety imported via direct import")
+    except ImportError:
+        try:
+            # Strategy 3: Absolute import for deployment
+            from src.debug_safety import get_debug_manager, is_debug_mode, block_trading_if_debug
+            logger.debug("✅ Debug safety imported via absolute import")
+        except ImportError as e:
+            logger.error(f"❌ Failed to import debug_safety: {e}")
+            # Create minimal fallback functions
+            def get_debug_manager():
+                return None
+            def is_debug_mode():
+                return True  # Safer to assume debug mode if unsure
+            def block_trading_if_debug():
+                return True
 
 # Initialize debug manager
 debug_manager = get_debug_manager()
