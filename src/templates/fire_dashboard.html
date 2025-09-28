@@ -812,9 +812,9 @@
             z-index: 1;
         }
         
-        /* Enhanced spacing for better visual hierarchy - Compact */
+        /* Ultra-Compact Layout - Minimal Spacing */
         .dashboard-container {
-            padding: 16px;
+            padding: 8px !important;
             max-width: 1600px;
             margin: 0 auto;
             min-height: 100vh;
@@ -823,48 +823,70 @@
         .admin-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 16px;
-            padding: 16px 0;
+            gap: 8px !important;
+            padding: 8px 0 !important;
+            margin-bottom: 8px !important;
         }
         
-        /* Chart containers - Better proportions */
+        /* Chart containers - Compact proportions */
         .chart-container {
-            height: 280px !important;
-            min-height: 280px !important;
+            height: 200px !important;
+            min-height: 200px !important;
             position: relative;
-            margin: 8px 0 !important;
+            margin: 4px 0 !important;
+            padding: 8px !important;
         }
         
         .chart-container canvas {
             width: 100% !important;
             height: 100% !important;
-            max-height: 248px !important; /* container height - padding */
+            max-height: 184px !important; /* container height - padding */
         }
         
-        /* Fix button spacing - Compact */
-        .btn-group {
-            margin-top: 12px;
-        }
-        
-        /* Tighter card spacing */
+        /* Minimal card spacing */
         .fire-card {
-            margin-bottom: 12px !important;
-            padding: 16px !important;
+            margin-bottom: 6px !important;
+            padding: 10px !important;
         }
         
-        /* Section spacing */
+        /* Section spacing - Ultra tight */
         section {
-            margin-bottom: 12px !important;
+            margin-bottom: 6px !important;
         }
         
-        /* Balance grid improvements */
+        /* Balance grid - Very compact */
         .balance-grid {
-            gap: 10px !important;
-            margin-top: 10px !important;
+            gap: 6px !important;
+            margin-top: 6px !important;
         }
         
         .balance-card {
-            padding: 10px !important;
+            padding: 8px !important;
+        }
+        
+        /* Card headers - Minimal */
+        .card-header {
+            margin-bottom: 6px !important;
+            padding-bottom: 4px !important;
+        }
+        
+        /* Button groups - Tight */
+        .btn-group {
+            margin-top: 6px !important;
+        }
+        
+        /* Environment status - Compact */
+        .environment-status {
+            margin-top: 6px !important;
+            gap: 8px !important;
+        }
+        
+        /* Trading section - Compact grid */
+        .trading-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 8px !important;
+            margin-bottom: 6px !important;
         }
         
         /* Ensure backtest details are properly positioned */
@@ -891,21 +913,21 @@
             background: linear-gradient(135deg, #000000 0%, #1a0a00 50%, #000000 100%) !important;
         }
         
-        /* Responsive improvements - Mobile friendly */
+        /* Responsive improvements - Ultra compact mobile */
         @media (max-width: 768px) {
             .dashboard-container {
-                padding: 12px;
+                padding: 6px !important;
             }
             
             .admin-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
-                padding: 12px 0;
+                gap: 6px !important;
+                padding: 6px 0 !important;
             }
             
             .btn-group {
                 flex-direction: column;
-                gap: 8px;
+                gap: 4px;
             }
             
             .btn-primary, .btn-secondary {
@@ -913,22 +935,28 @@
             }
             
             .chart-container {
-                height: 220px !important;
-                min-height: 220px !important;
+                height: 160px !important;
+                min-height: 160px !important;
+                padding: 6px !important;
             }
             
             .chart-container canvas {
-                max-height: 188px !important;
+                max-height: 148px !important;
             }
             
             .balance-grid {
                 grid-template-columns: 1fr 1fr !important;
-                gap: 8px !important;
+                gap: 4px !important;
             }
             
             .trading-section {
                 grid-template-columns: 1fr !important;
-                gap: 12px;
+                gap: 6px;
+            }
+            
+            .fire-card {
+                padding: 6px !important;
+                margin-bottom: 4px !important;
             }
         }
         
@@ -938,12 +966,16 @@
             }
             
             .chart-container {
-                height: 200px !important;
-                min-height: 200px !important;
+                height: 140px !important;
+                min-height: 140px !important;
             }
             
             .fire-card {
-                padding: 12px !important;
+                padding: 4px !important;
+            }
+            
+            .balance-card {
+                padding: 4px !important;
             }
         }
     </style>
