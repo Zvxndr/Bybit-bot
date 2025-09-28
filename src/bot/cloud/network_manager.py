@@ -339,7 +339,7 @@ class NetworkManager:
                         'ResourceType': 'vpc',
                         'Tags': [
                             {'Key': 'Name', 'Value': vpc_name},
-                            **[{'Key': k, 'Value': v} for k, v in tags.items()]
+                            *[{'Key': k, 'Value': v} for k, v in tags.items()]
                         ]
                     }
                 ]
