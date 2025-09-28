@@ -559,15 +559,36 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
+            # Check if Speed Demon backtesting is active
+            speed_demon_status = getattr(shared_state, 'speed_demon_status', {})
+            is_backtesting_active = speed_demon_status.get('status') == 'backtesting_active'
+            
             backtest_status = {
                 "success": True,
                 "data": {
-                    "status": "ready",
+                    "status": "backtesting_active" if is_backtesting_active else "ready",
                     "historical_data_ready": True,
                     "database_connected": True,
                     "last_backtest": None,
-                    "available_symbols": ["BTCUSDT", "ETHUSDT"],
-                    "data_range": "2+ years available"
+                    "current_phase": "initialization" if not is_backtesting_active else "execution",
+                    "progress_percentage": 0,
+                    "processing_details": {
+                        "data_loading": "pending",
+                        "strategy_initialization": "pending", 
+                        "execution": "pending",
+                        "analysis": "pending",
+                        "graduation": "pending"
+                    },
+                    "performance_metrics": {
+                        "strategies_tested": 0,
+                        "trades_executed": 0,
+                        "data_points_processed": 0,
+                        "processing_time": "00:00:00",
+                        "symbols_analyzed": ["BTCUSDT", "ETHUSDT", "ADAUSDT", "DOTUSDT"]
+                    },
+                    "available_symbols": ["BTCUSDT", "ETHUSDT", "ADAUSDT", "DOTUSDT"],
+                    "data_range": "2+ years available",
+                    "backtesting_engine": "Speed Demon ML Enhanced" if is_backtesting_active else "Professional Backtesting Engine"
                 }
             }
             self.wfile.write(json.dumps(backtest_status).encode())

@@ -1121,3 +1121,134 @@ body::before {
         min-width: auto;
     }
 }
+
+/* Backtesting Progress Styles */
+.backtest-details {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.progress-container {
+    margin-bottom: 16px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--fire-orange), var(--fire-red));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: var(--fire-orange);
+    font-weight: bold;
+}
+
+.backtest-phases {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.phase-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.phase-item.active {
+    border-color: var(--fire-orange);
+    background: rgba(255, 107, 53, 0.1);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+}
+
+.phase-item.completed {
+    border-color: var(--cyber-green);
+    background: rgba(0, 255, 0, 0.1);
+}
+
+.phase-icon {
+    font-size: 1.2em;
+    margin-right: 12px;
+    min-width: 24px;
+}
+
+.phase-name {
+    flex: 1;
+    color: var(--cyber-cyan);
+    font-weight: 500;
+}
+
+.phase-status {
+    color: var(--fire-orange);
+    font-size: 0.9em;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: right;
+}
+
+.phase-status.active {
+    color: var(--fire-red);
+    animation: pulse-fire 1.5s infinite;
+}
+
+.phase-status.completed {
+    color: var(--cyber-green);
+}
+
+@keyframes pulse-fire {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.backtest-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.9em;
+}
+
+/* Responsive design for backtesting details */
+@media (max-width: 768px) {
+    .backtest-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .phase-item {
+        font-size: 0.9em;
+    }
+    
+    .phase-name {
+        font-size: 0.85em;
+    }
+}
