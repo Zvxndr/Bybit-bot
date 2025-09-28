@@ -97,6 +97,513 @@ body::before {
   margin: 4px 0;
 }
 
+/* 🔥 FIRE UI COMPONENTS - LOADER, CARDS, TOGGLES, BUTTONS 🔥 */
+
+/* === FIRE LOADER ANIMATION === */
+@keyframes scaleUpDown {
+  0%, 100% {
+    transform: scaleY(1) scaleX(1);
+  }
+  50%, 90% {
+    transform: scaleY(1.1);
+  }
+  75% {
+    transform: scaleY(0.95);
+  }
+  80% {
+    transform: scaleX(0.95);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: skewX(0) scale(1);
+  }
+  50% {
+    transform: skewX(5deg) scale(0.9);
+  }
+}
+
+@keyframes particleUp {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    top: -100%;
+    transform: scale(0.5);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    background-color: var(--fire-primary);
+  }
+  50% {
+    background-color: var(--fire-secondary);
+  }
+}
+
+.fire {
+  position: absolute;
+  top: calc(50% - 50px);
+  left: calc(50% - 50px);
+  width: 100px;
+  height: 100px;
+  background-color: transparent;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fire-center {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  animation: scaleUpDown 3s ease-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.fire-center .main-fire {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(farthest-corner at 10px 0, var(--fire-dark) 0%, var(--fire-primary) 95%);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 0 40% 60% 40%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+}
+
+.fire-center .particle-fire {
+  position: absolute;
+  top: 60%;
+  left: 45%;
+  width: 10px;
+  height: 10px;
+  background-color: var(--fire-primary);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+  animation: particleUp 2s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.fire-right {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  animation: shake 2s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.fire-right .main-fire {
+  position: absolute;
+  top: 15%;
+  right: -25%;
+  width: 80%;
+  height: 80%;
+  background-color: var(--fire-primary);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 0 40% 60% 40%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+}
+
+.fire-right .particle-fire {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  background-color: var(--fire-primary);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+  animation: particleUp 2s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.fire-left {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  animation: shake 3s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.fire-left .main-fire {
+  position: absolute;
+  top: 15%;
+  left: -20%;
+  width: 80%;
+  height: 80%;
+  background-color: var(--fire-primary);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 0 40% 60% 40%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+}
+
+.fire-left .particle-fire {
+  position: absolute;
+  top: 10%;
+  left: 20%;
+  width: 10%;
+  height: 10%;
+  background-color: var(--fire-primary);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 10px var(--fire-accent));
+  animation: particleUp 3s infinite ease-out 0;
+  animation-fill-mode: both;
+}
+
+.fire-bottom .main-fire {
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  width: 75%;
+  height: 75%;
+  background-color: var(--fire-secondary);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 0 40% 100% 40%;
+  filter: blur(10px);
+  animation: glow 2s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+/* === FIRE CYBER CARD/PANEL === */
+.fire-panel-container {
+  position: relative;
+  width: 280px;
+  height: 320px;
+  transition: 200ms;
+  margin: 16px;
+}
+
+.fire-panel-container:active {
+  width: 270px;
+  height: 310px;
+}
+
+.fire-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  transition: 700ms;
+  background: linear-gradient(45deg, 
+    rgba(20, 20, 20, 0.9), 
+    rgba(40, 20, 20, 0.9));
+  border: 2px solid var(--fire-primary);
+  overflow: hidden;
+  box-shadow:
+    0 0 30px rgba(255, 107, 53, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.fire-panel-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+}
+
+.fire-panel-prompt {
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  transition: 300ms ease-in-out;
+  position: absolute;
+  text-align: center;
+  color: var(--fire-ember);
+  text-shadow: 0 0 10px var(--fire-primary);
+}
+
+.fire-panel-title {
+  opacity: 0;
+  transition: 300ms ease-in-out;
+  position: absolute;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-align: center;
+  width: 100%;
+  padding-top: 20px;
+  background: linear-gradient(45deg, var(--fire-primary), var(--fire-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.5));
+  font-family: var(--font-primary);
+}
+
+.fire-panel-subtitle {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 2px;
+  transform: translateY(30px);
+  color: var(--cyber-cyan);
+  font-family: var(--font-secondary);
+}
+
+.fire-panel-highlight {
+  color: var(--fire-accent);
+  margin-left: 5px;
+  background: linear-gradient(90deg, var(--fire-primary), var(--fire-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Hover Effects for Fire Panel */
+.fire-panel-tracker:hover ~ .fire-panel .fire-panel-title {
+  opacity: 1;
+  transform: translateY(-10px);
+}
+
+.fire-panel-tracker:hover ~ .fire-panel .fire-panel-prompt {
+  opacity: 0;
+}
+
+.fire-panel-tracker:hover ~ .fire-panel {
+  transition: 300ms;
+  filter: brightness(1.2);
+  box-shadow: 0 0 40px var(--fire-primary);
+}
+
+.fire-panel-tracker {
+  position: absolute;
+  z-index: 200;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* === FIRE TOGGLE SWITCH === */
+.fire-switch {
+  width: 100px;
+  height: 45px;
+}
+
+.fire-switch input {
+  display: none;
+}
+
+.fire-slider {
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(8, 8, 8);
+  transition: all 0.4s cubic-bezier(0.99, 0.1, 0.1, 0.99);
+  border-radius: 8px;
+  box-shadow:
+    inset 0px 0px 1px 0px rgba(0, 0, 0, 1),
+    inset 90px 0px 50px -50px rgba(183, 28, 28, 0.6);
+  border: 2px solid var(--fire-dark);
+}
+
+.fire-slider-btn {
+  position: absolute;
+  content: "";
+  aspect-ratio: 6/4;
+  border-radius: 6px;
+  left: 2px;
+  top: 2px;
+  bottom: 2px;
+  right: auto;
+  background: linear-gradient(to bottom, #333333, #242323);
+  border: 1px solid #2b2b2b;
+  background-color: #333333;
+  box-shadow:
+    0px 10px 5px 1px rgba(0, 0, 0, 0.15),
+    inset 10px 0px 10px -5px rgba(183, 28, 28, 0.2);
+  transition: all 0.4s cubic-bezier(0.99, 0.1, 0.1, 0.99);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.fire-texture {
+  width: 2px;
+  height: 70%;
+  background-color: #202020ea;
+  box-shadow:
+    -0.7px -1.5px 1px 0px rgba(192, 192, 192, 0.3),
+    0px 2px 3px rgb(0, 0, 0, 0.3);
+  transition: 0.25s;
+}
+
+.fire-light {
+  width: 4px;
+  height: 4px;
+  border: 1px solid #222121;
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.99, 0.1, 0.1, 0.99);
+  background-color: var(--fire-accent);
+  box-shadow: 0px 0px 10px 1px var(--fire-primary);
+}
+
+.fire-switch input:checked + .fire-slider {
+  box-shadow:
+    inset 0px 0px 1px 0px rgba(0, 0, 0, 1),
+    inset -85px 0px 50px -50px rgba(0, 255, 65, 0.4);
+}
+
+.fire-switch input:checked + .fire-slider .fire-slider-btn {
+  transform: translateX(66%);
+  box-shadow:
+    0px 10px 5px 1px rgba(0, 0, 0, 0.15),
+    inset -10px 0px 10px -5px rgba(0, 255, 65, 0.2);
+}
+
+.fire-switch input:checked + .fire-slider .fire-slider-btn .fire-light {
+  background-color: var(--cyber-green);
+  box-shadow: 0px 0px 10px 0px var(--cyber-green);
+}
+
+/* === FIRE CHECKBOX === */
+.fire-checkbox-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.fire-checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.fire-checkmark {
+  position: relative;
+  box-shadow: var(--fire-primary) 0px 0px 0px 2px;
+  background-color: rgba(20, 20, 20, 0.7);
+  height: 20px;
+  width: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  margin-top: -1px;
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  transform-origin: 0px 10px;
+  border-radius: 6px;
+  margin: -1px 10px 0px 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+.fire-checkbox-container input:checked ~ .fire-checkmark {
+  box-shadow: var(--fire-primary) 0px 0px 0px 2px;
+  background-color: rgba(255, 107, 53, 0.3);
+  border: 1px solid var(--fire-accent);
+}
+
+.fire-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.fire-checkbox-container input:checked ~ .fire-checkmark:after {
+  display: block;
+}
+
+.fire-checkbox-container .fire-checkmark:after {
+  left: 0.45em;
+  top: 0.25em;
+  width: 0.25em;
+  height: 0.5em;
+  border: solid var(--text-primary);
+  border-width: 0 0.15em 0.15em 0;
+  transform: rotate(45deg);
+  transition: all 500ms ease-in-out;
+}
+
+/* === FIRE CYBER BUTTON === */
+.fire-cyber-btn {
+  --glow-color: var(--fire-primary);
+  --glow-spread-color: rgba(255, 107, 53, 0.6);
+  --enhanced-glow-color: var(--fire-ember);
+  --btn-color: rgba(183, 28, 28, 0.8);
+  border: .25em solid var(--glow-color);
+  padding: 1em 2em;
+  color: var(--glow-color);
+  font-size: 14px;
+  font-weight: bold;
+  background-color: var(--btn-color);
+  border-radius: 1em;
+  outline: none;
+  box-shadow: 0 0 1em .25em var(--glow-color),
+         0 0 4em 1em var(--glow-spread-color),
+         inset 0 0 .75em .25em var(--glow-color);
+  text-shadow: 0 0 .5em var(--glow-color);
+  position: relative;
+  transition: all 0.3s;
+  cursor: pointer;
+  font-family: var(--font-primary);
+  letter-spacing: 1px;
+}
+
+.fire-cyber-btn::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--glow-spread-color);
+  filter: blur(2em);
+  opacity: .7;
+  transform: perspective(1.5em) rotateX(35deg) scale(1, .6);
+}
+
+.fire-cyber-btn:hover {
+  color: var(--btn-color);
+  background-color: var(--glow-color);
+  box-shadow: 0 0 1em .25em var(--glow-color),
+         0 0 4em 2em var(--glow-spread-color),
+         inset 0 0 .75em .25em var(--glow-color);
+  transform: translateY(-2px);
+}
+
+.fire-cyber-btn:active {
+  box-shadow: 0 0 0.6em .25em var(--glow-color),
+         0 0 2.5em 2em var(--glow-spread-color),
+         inset 0 0 .5em .25em var(--glow-color);
+  transform: translateY(1px);
+}
+
+/* Cyber variant button */
+.cyber-fire-btn {
+  --glow-color: var(--cyber-cyan);
+  --glow-spread-color: rgba(0, 255, 255, 0.6);
+  --enhanced-glow-color: var(--cyber-blue);
+  --btn-color: rgba(0, 102, 255, 0.2);
+}
+
 /* Fire Cyber Typography */
 .cyber-title {
   font-family: var(--font-primary);

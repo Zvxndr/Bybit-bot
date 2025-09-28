@@ -1321,7 +1321,160 @@ const additionalStyles = `
     .status-running { color: #00FF00; }
     .status-paused { color: #FFA500; }
     .status-emergency_stopped { color: #FF0000; }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
 `;
+
+// 🔥 NEW UI CONTROLS FUNCTIONS
+
+function toggleMainBot() {
+    const toggle = document.getElementById('mainBotToggle');
+    const isEnabled = toggle.checked;
+    
+    console.log('🔥 Main bot toggle:', isEnabled ? 'ON' : 'OFF');
+    
+    // Visual feedback
+    showToast(
+        isEnabled ? '🔥 Trading Bot Activated' : '⏸️ Trading Bot Disabled', 
+        isEnabled ? 'success' : 'warning'
+    );
+    
+    // Update dependent controls
+    updateDependentControls(isEnabled);
+    
+    // API call to backend (placeholder)
+    fetch('/api/bot/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: isEnabled })
+    }).catch(console.error);
+}
+
+function toggleLiveTrading() {
+    const toggle = document.getElementById('liveTradingToggle');
+    const mainBotToggle = document.getElementById('mainBotToggle');
+    
+    if (!mainBotToggle.checked) {
+        toggle.checked = false;
+        showToast('⚠️ Enable main bot first', 'error');
+        return;
+    }
+    
+    const isEnabled = toggle.checked;
+    console.log('⚡ Live trading toggle:', isEnabled ? 'ON' : 'OFF');
+    
+    showToast(
+        isEnabled ? '⚡ Live Trading Enabled' : '📊 Paper Trading Mode', 
+        isEnabled ? 'success' : 'info'
+    );
+}
+
+function toggleStopLoss() {
+    const checkbox = document.getElementById('stopLossEnabled');
+    const isEnabled = checkbox.checked;
+    
+    console.log('🛡️ Stop loss:', isEnabled ? 'ENABLED' : 'DISABLED');
+    showToast(
+        isEnabled ? '🛡️ Stop Loss Protection Enabled' : '⚠️ Stop Loss Disabled',
+        isEnabled ? 'success' : 'warning'
+    );
+}
+
+function toggleAutoScaling() {
+    const checkbox = document.getElementById('autoScalingEnabled');
+    const isEnabled = checkbox.checked;
+    
+    console.log('📈 Auto scaling:', isEnabled ? 'ENABLED' : 'DISABLED');
+    showToast(
+        isEnabled ? '📈 Auto Position Scaling Enabled' : '📊 Fixed Position Size',
+        'info'
+    );
+}
+
+function toggleRiskManagement() {
+    const checkbox = document.getElementById('riskManagementEnabled');
+    const isEnabled = checkbox.checked;
+    
+    console.log('⚖️ Risk management:', isEnabled ? 'ENABLED' : 'DISABLED');
+    showToast(
+        isEnabled ? '⚖️ Risk Management Active' : '⚠️ Risk Management Disabled',
+        isEnabled ? 'success' : 'warning'
+    );
+}
+
+function updateDependentControls(mainBotEnabled) {
+    const liveTradingToggle = document.getElementById('liveTradingToggle');
+    const checkboxes = [
+        'stopLossEnabled', 
+        'autoScalingEnabled', 
+        'riskManagementEnabled'
+    ];
+    
+    if (!mainBotEnabled) {
+        liveTradingToggle.checked = false;
+        checkboxes.forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) checkbox.disabled = true;
+        });
+    } else {
+        checkboxes.forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) checkbox.disabled = false;
+        });
+    }
+}
+
+// Enhanced toast notification system
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const colors = {
+        success: 'linear-gradient(45deg, #00ff41, #00aa2b)',
+        error: 'linear-gradient(45deg, #ff0000, #aa0000)',
+        warning: 'linear-gradient(45deg, #ff6b35, #cc4400)',
+        info: 'linear-gradient(45deg, #00ffff, #0099cc)'
+    };
+    
+    toast.innerHTML = `
+        <div style="
+            background: ${colors[type]};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+            position: relative;
+            z-index: 9999;
+        ">
+            ${message}
+        </div>
+    `;
+    
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 // Inject additional styles
 const styleSheet = document.createElement('style');

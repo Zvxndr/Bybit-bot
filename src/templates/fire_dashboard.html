@@ -23,8 +23,24 @@
 <body>
     <!-- Fire Loading Screen -->
     <div id="loadingScreen" class="fire-loading">
-        <div class="fire-spinner"></div>
-        <h2 class="cyber-title" style="margin-top: 20px;">INITIALIZING FIRE PROTOCOLS</h2>
+        <div class="fire">
+            <div class="fire-center">
+                <div class="main-fire"></div>
+                <div class="particle-fire"></div>
+            </div>
+            <div class="fire-right">
+                <div class="main-fire"></div>
+                <div class="particle-fire"></div>
+            </div>
+            <div class="fire-left">
+                <div class="main-fire"></div>
+                <div class="particle-fire"></div>
+            </div>
+            <div class="fire-bottom">
+                <div class="main-fire"></div>
+            </div>
+        </div>
+        <h2 class="cyber-title" style="margin-top: 120px;">INITIALIZING FIRE PROTOCOLS</h2>
         <p class="fire-text">Loading trading systems...</p>
     </div>
 
@@ -77,13 +93,74 @@
                     <h3 class="card-title"><i class="fas fa-robot"></i> BOT CONTROL</h3>
                 </div>
                 <div class="card-content">
-                    <button class="fire-btn" onclick="pauseBot()" style="width: 100%; margin: 4px 0;">
-                        <i class="fas fa-pause"></i> PAUSE TRADING
-                    </button>
-                    <button class="cyber-btn" onclick="resumeBot()" style="width: 100%; margin: 4px 0;">
-                        <i class="fas fa-play"></i> RESUME TRADING
-                    </button>
-                    <button class="fire-btn" onclick="emergencyStop()" style="width: 100%; margin: 4px 0; background: linear-gradient(45deg, #ff0000, #8b0000);">
+                    <!-- Main Bot Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="fire-text">Trading Bot:</span>
+                        <label class="fire-switch">
+                            <input type="checkbox" id="mainBotToggle" onchange="toggleMainBot()">
+                            <span class="fire-slider">
+                                <span class="fire-slider-btn">
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-light"></span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Live Trading Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="fire-text">Live Trading:</span>
+                        <label class="fire-switch">
+                            <input type="checkbox" id="liveTradingToggle" onchange="toggleLiveTrading()">
+                            <span class="fire-slider">
+                                <span class="fire-slider-btn">
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-texture"></span>
+                                    <span class="fire-light"></span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Bot Options -->
+                    <div style="margin-bottom: 16px;">
+                        <label class="fire-checkbox-container">
+                            <input type="checkbox" id="stopLossEnabled" checked onchange="toggleStopLoss()">
+                            <span class="fire-checkmark"></span>
+                            <span class="fire-text">Enable Stop Loss</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label class="fire-checkbox-container">
+                            <input type="checkbox" id="autoScalingEnabled" onchange="toggleAutoScaling()">
+                            <span class="fire-checkmark"></span>
+                            <span class="fire-text">Auto Position Scaling</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label class="fire-checkbox-container">
+                            <input type="checkbox" id="riskManagementEnabled" checked onchange="toggleRiskManagement()">
+                            <span class="fire-checkmark"></span>
+                            <span class="fire-text">Risk Management</span>
+                        </label>
+                    </div>
+
+                    <!-- Emergency Actions -->
+                    <div style="display: flex; gap: 8px; margin-top: 16px;">
+                        <button class="fire-cyber-btn" onclick="pauseBot()" style="flex: 1;">
+                            <i class="fas fa-pause"></i> PAUSE
+                        </button>
+                        <button class="fire-cyber-btn cyber-fire-btn" onclick="resumeBot()" style="flex: 1;">
+                            <i class="fas fa-play"></i> RESUME
+                        </button>
+                    </div>
+                    
+                    <button class="fire-cyber-btn" onclick="emergencyStop()" style="width: 100%; margin-top: 8px; --glow-color: #ff0000; --glow-spread-color: rgba(255, 0, 0, 0.6);">
                         <i class="fas fa-stop"></i> EMERGENCY STOP
                     </button>
                 </div>

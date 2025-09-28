@@ -62,6 +62,11 @@ def fire_dashboard():
     """Serve the fire cybersigilism dashboard"""
     return render_template('fire_dashboard.html')
 
+@app.route('/ui-showcase')
+def ui_showcase():
+    """Serve the UI components showcase page"""
+    return render_template('ui_showcase.html')
+
 @app.route('/api/multi-balance')
 def get_multi_balance():
     """API endpoint to get all environment balances"""

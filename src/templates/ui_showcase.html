@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Fire UI Components Showcase</title>
+    <link rel="stylesheet" href="/static/css/fire-cybersigilism.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .showcase-section {
+            margin: 40px 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid var(--fire-primary);
+        }
+        
+        .showcase-title {
+            font-family: var(--font-primary);
+            color: var(--fire-primary);
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px var(--fire-primary);
+        }
+        
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            align-items: center;
+            justify-items: center;
+        }
+        
+        .demo-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+        
+        .demo-label {
+            color: var(--text-secondary);
+            font-family: var(--font-secondary);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="showcase-section">
+        <h1 class="cyber-title" style="text-align: center; margin-bottom: 10px;">
+            🔥 FIRE UI COMPONENTS SHOWCASE
+        </h1>
+        <p class="fire-text" style="text-align: center;">
+            Advanced UI Elements for Fire Cybersigilism Theme
+        </p>
+    </div>
+
+    <!-- Fire Loader Section -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">🔥 FIRE LOADER ANIMATION</h2>
+        <div class="showcase-grid">
+            <div class="demo-item">
+                <div class="demo-label">Fire Loader (Animated)</div>
+                <div class="fire">
+                    <div class="fire-center">
+                        <div class="main-fire"></div>
+                        <div class="particle-fire"></div>
+                    </div>
+                    <div class="fire-right">
+                        <div class="main-fire"></div>
+                        <div class="particle-fire"></div>
+                    </div>
+                    <div class="fire-left">
+                        <div class="main-fire"></div>
+                        <div class="particle-fire"></div>
+                    </div>
+                    <div class="fire-bottom">
+                        <div class="main-fire"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fire Cards Section -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">🎴 FIRE CYBER CARDS</h2>
+        <div class="showcase-grid">
+            <div class="fire-panel-container">
+                <div class="fire-panel-tracker"></div>
+                <div class="fire-panel" id="card">
+                    <div class="fire-panel-content">
+                        <div class="fire-panel-prompt" id="prompt">HOVER TO REVEAL</div>
+                        <div class="fire-panel-title">TRADING</div>
+                        <div class="fire-panel-subtitle">
+                            Status<span class="fire-panel-highlight">ACTIVE</span>
+                        </div>
+                        
+                        <!-- Glowing elements -->
+                        <div class="glowing-elements">
+                            <div class="glow-1"></div>
+                            <div class="glow-2"></div>
+                            <div class="glow-3"></div>
+                        </div>
+                        
+                        <!-- Card particles -->
+                        <div class="card-particles">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        
+                        <!-- Cyber lines -->
+                        <div class="cyber-lines">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        
+                        <!-- Corner elements -->
+                        <div class="corner-elements">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        
+                        <!-- Scan line -->
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fire-panel-container">
+                <div class="fire-panel-tracker"></div>
+                <div class="fire-panel">
+                    <div class="fire-panel-content">
+                        <div class="fire-panel-prompt">HOVER TO REVEAL</div>
+                        <div class="fire-panel-title">ANALYTICS</div>
+                        <div class="fire-panel-subtitle">
+                            Data<span class="fire-panel-highlight">LIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fire-panel-container">
+                <div class="fire-panel-tracker"></div>
+                <div class="fire-panel">
+                    <div class="fire-panel-content">
+                        <div class="fire-panel-prompt">HOVER TO REVEAL</div>
+                        <div class="fire-panel-title">SECURITY</div>
+                        <div class="fire-panel-subtitle">
+                            Level<span class="fire-panel-highlight">MAX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle Switches Section -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">🎚️ FIRE TOGGLE SWITCHES</h2>
+        <div class="showcase-grid">
+            <div class="demo-item">
+                <div class="demo-label">Trading Bot Control</div>
+                <label class="fire-switch">
+                    <input type="checkbox" checked>
+                    <span class="fire-slider">
+                        <span class="fire-slider-btn">
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-light"></span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="demo-item">
+                <div class="demo-label">Live Trading</div>
+                <label class="fire-switch">
+                    <input type="checkbox">
+                    <span class="fire-slider">
+                        <span class="fire-slider-btn">
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-light"></span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="demo-item">
+                <div class="demo-label">Risk Management</div>
+                <label class="fire-switch">
+                    <input type="checkbox" checked>
+                    <span class="fire-slider">
+                        <span class="fire-slider-btn">
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-texture"></span>
+                            <span class="fire-light"></span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkboxes Section -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">☑️ FIRE CHECKBOXES</h2>
+        <div class="showcase-grid">
+            <div class="demo-item">
+                <label class="fire-checkbox-container">
+                    <input type="checkbox" checked>
+                    <span class="fire-checkmark"></span>
+                    <span class="fire-text">Enable Notifications</span>
+                </label>
+            </div>
+
+            <div class="demo-item">
+                <label class="fire-checkbox-container">
+                    <input type="checkbox">
+                    <span class="fire-checkmark"></span>
+                    <span class="fire-text">Auto-Reinvest</span>
+                </label>
+            </div>
+
+            <div class="demo-item">
+                <label class="fire-checkbox-container">
+                    <input type="checkbox" checked>
+                    <span class="fire-checkmark"></span>
+                    <span class="fire-text">Emergency Stop</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buttons Section -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">🔥 FIRE CYBER BUTTONS</h2>
+        <div class="showcase-grid">
+            <div class="demo-item">
+                <div class="demo-label">Fire Theme Button</div>
+                <button class="fire-cyber-btn">
+                    <i class="fas fa-fire"></i> START TRADING
+                </button>
+            </div>
+
+            <div class="demo-item">
+                <div class="demo-label">Cyber Theme Button</div>
+                <button class="fire-cyber-btn cyber-fire-btn">
+                    <i class="fas fa-robot"></i> ACTIVATE BOT
+                </button>
+            </div>
+
+            <div class="demo-item">
+                <div class="demo-label">Action Button</div>
+                <button class="fire-cyber-btn">
+                    <i class="fas fa-chart-line"></i> VIEW ANALYTICS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Example -->
+    <div class="showcase-section">
+        <h2 class="showcase-title">🎯 INTEGRATED EXAMPLE</h2>
+        <div class="fire-card" style="max-width: 500px; margin: 0 auto;">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-cog"></i> SYSTEM CONTROL PANEL</h3>
+            </div>
+            <div class="card-content" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Trading Controls -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="fire-text">Trading Bot:</span>
+                    <label class="fire-switch">
+                        <input type="checkbox" id="tradingToggle">
+                        <span class="fire-slider">
+                            <span class="fire-slider-btn">
+                                <span class="fire-texture"></span>
+                                <span class="fire-texture"></span>
+                                <span class="fire-texture"></span>
+                                <span class="fire-light"></span>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Options -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label class="fire-checkbox-container">
+                        <input type="checkbox" checked>
+                        <span class="fire-checkmark"></span>
+                        <span class="fire-text">Enable Stop Loss</span>
+                    </label>
+                    <label class="fire-checkbox-container">
+                        <input type="checkbox">
+                        <span class="fire-checkmark"></span>
+                        <span class="fire-text">Auto Scaling</span>
+                    </label>
+                    <label class="fire-checkbox-container">
+                        <input type="checkbox" checked>
+                        <span class="fire-checkmark"></span>
+                        <span class="fire-text">Risk Management</span>
+                    </label>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="fire-cyber-btn" style="flex: 1;">
+                        <i class="fas fa-play"></i> START
+                    </button>
+                    <button class="fire-cyber-btn cyber-fire-btn" style="flex: 1;">
+                        <i class="fas fa-stop"></i> STOP
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle switch interaction
+            const tradingToggle = document.getElementById('tradingToggle');
+            if (tradingToggle) {
+                tradingToggle.addEventListener('change', function() {
+                    console.log('Trading bot:', this.checked ? 'ON' : 'OFF');
+                });
+            }
+
+            // Button click handlers
+            document.querySelectorAll('.fire-cyber-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log('Button clicked:', this.textContent.trim());
+                });
+            });
+        });
+    </script>
+</body>
+</html>
