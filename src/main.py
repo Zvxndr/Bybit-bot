@@ -31,7 +31,7 @@ def setup_comprehensive_logging():
         level=logging.DEBUG,  # Set to DEBUG for comprehensive logging
         format=log_format,
         handlers=[
-            logging.FileHandler(f'logs/open_alpha_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+            logging.FileHandler(f'logs/open_alpha_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log', encoding='utf-8'),
             logging.StreamHandler(sys.stdout)
         ]
     )
@@ -43,7 +43,7 @@ def setup_comprehensive_logging():
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
     
     logger = logging.getLogger(__name__)
-    logger.info("🔧 Comprehensive logging system initialized")
+    logger.info("Application logging system initialized")
     return logger
 
 # Initialize logging early
@@ -419,8 +419,8 @@ class TradingBotApplication:
             
             # Initialize bot control flags
             logger.debug("🔧 Initializing bot control flags...")
+            shared_state.reset_bot_control_flags()  # Use reset function to clear any stuck states
             shared_state.bot_active = True
-            shared_state.emergency_stop = False
             logger.info("✅ Bot control flags initialized")
             
             # Create necessary directories
@@ -596,12 +596,32 @@ class TradingBotApplication:
                     break
             
             if is_debug:
-                logger.info("🔧 Debug mode detected - running automated debug scripts")
-                shared_state.add_log_entry("INFO", "Running debug scripts during deployment")
+                # Check debug config to prevent automatic data wiping
+                try:
+                    config = self.config_manager.get_debug_config()
+                    auto_run_tests = config.get('auto_run_debug_tests', False)
+                    run_data_wipe = config.get('run_data_wipe_tests', False)
+                except:
+                    # Safe defaults if config fails
+                    auto_run_tests = False
+                    run_data_wipe = False
                 
-                # Import and run the debug scripts
-                await self._run_button_function_tests()
-                await self._run_data_wipe_debug()
+                if auto_run_tests:
+                    logger.info("🔧 Debug mode detected - running automated debug scripts")
+                    shared_state.add_log_entry("INFO", "Running debug scripts during deployment")
+                    
+                    # Import and run safe debug scripts only
+                    await self._run_button_function_tests()
+                    
+                    # Only run data wipe tests if explicitly enabled
+                    if run_data_wipe:
+                        logger.warning("🔥 Data wipe tests enabled - this will clear data!")
+                        await self._run_data_wipe_debug()
+                    else:
+                        logger.info("✅ Data wipe tests disabled in debug config")
+                else:
+                    logger.info("✅ Debug automatic test execution disabled in config")
+                    shared_state.add_log_entry("INFO", "Debug tests disabled - safe startup")
                 
             else:
                 logger.info("✅ Production mode - skipping debug scripts")

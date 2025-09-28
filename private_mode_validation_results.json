@@ -1,0 +1,82 @@
+{
+  "timestamp": "2025-09-28T18:52:46.380177",
+  "tests": {
+    "file_exists_private_mode_launcher.py": {
+      "description": "Private Mode Launcher",
+      "passed": true,
+      "filepath": "private_mode_launcher.py"
+    },
+    "file_exists_private_use.yaml": {
+      "description": "Private Use Configuration",
+      "passed": true,
+      "filepath": "config/private_use.yaml"
+    },
+    "file_exists_start_private_mode.bat": {
+      "description": "Windows Batch Launcher",
+      "passed": true,
+      "filepath": "start_private_mode.bat"
+    },
+    "file_exists_start_private_mode.ps1": {
+      "description": "PowerShell Launcher",
+      "passed": true,
+      "filepath": "start_private_mode.ps1"
+    },
+    "file_exists_.env": {
+      "description": "Environment Variables File",
+      "passed": true,
+      "filepath": ".env"
+    },
+    "file_exists_PRIVATE_MODE_SUCCESS.md": {
+      "description": "Success Documentation",
+      "passed": true,
+      "filepath": "PRIVATE_MODE_SUCCESS.md"
+    },
+    "config_content_private_use.yaml": {
+      "description": "Private Use YAML Configuration",
+      "passed": true,
+      "passed_checks": [
+        "trading.mode",
+        "trading.private_mode.max_risk_ratio",
+        "trading.private_mode.daily_loss_limit",
+        "trading.private_mode.max_positions",
+        "logging.enabled"
+      ],
+      "failed_checks": []
+    },
+    "config_content_.env": {
+      "description": "Environment Variables",
+      "passed": false,
+      "passed_checks": [
+        "PRIVATE_USE_MODE",
+        "TRADING_ENVIRONMENT",
+        "COMPREHENSIVE_DEBUGGING"
+      ],
+      "failed_checks": [
+        "DEBUG_MODE not found in content"
+      ]
+    },
+    "config_content_start_private_mode.bat": {
+      "description": "Batch File Content",
+      "passed": true,
+      "passed_checks": [
+        "BYBIT TRADING BOT",
+        "Private Use Mode"
+      ],
+      "failed_checks": []
+    },
+    "config_content_start_private_mode.ps1": {
+      "description": "PowerShell Script Content",
+      "passed": true,
+      "passed_checks": [
+        "BYBIT TRADING BOT",
+        "Private Use Mode"
+      ],
+      "failed_checks": []
+    }
+  },
+  "summary": {
+    "passed": 10,
+    "failed": 1,
+    "total": 11
+  }
+}

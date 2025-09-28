@@ -107,85 +107,111 @@ class Phase1Integration:
         except Exception as e:
             self.error_count += 1
             logger.error(f"❌ Failed to get Phase 1 real-time data: {e}")
-            return self._get_mock_data()
+            return self._get_error_data()
     
     async def _get_execution_metrics(self) -> Dict[str, Any]:
-        """Get execution optimization metrics"""
+        """Get real execution optimization metrics"""
         if self.execution_optimizer:
             try:
-                # Get metrics from execution optimizer
+                # Get real metrics from execution optimizer
+                metrics = await self.execution_optimizer.get_performance_metrics()
                 return {
                     "optimization_active": True,
-                    "latency_reduction": 45.2,  # %
-                    "throughput_improvement": 38.7,  # %
-                    "error_rate": 0.003,  # %
-                    "orders_processed": 1247,
-                    "avg_execution_time": 0.023  # seconds
+                    "latency_reduction": metrics.get('latency_reduction_pct', 0),
+                    "throughput_improvement": metrics.get('throughput_improvement_pct', 0),
+                    "error_rate": metrics.get('error_rate', 0),
+                    "orders_processed": metrics.get('total_orders', 0),
+                    "avg_execution_time": metrics.get('avg_execution_time_ms', 0) / 1000
                 }
             except Exception as e:
                 logger.error(f"❌ Execution metrics error: {e}")
         
-        # Mock data for development
+        # Return empty metrics when not available (no mock data)
         return {
-            "optimization_active": True,
-            "latency_reduction": 45.2,
-            "throughput_improvement": 38.7,
-            "error_rate": 0.003,
-            "orders_processed": 1247,
-            "avg_execution_time": 0.023
+            "optimization_active": False,
+            "latency_reduction": 0,
+            "throughput_improvement": 0,
+            "error_rate": 0,
+            "orders_processed": 0,
+            "avg_execution_time": 0
         }
     
     async def _get_compression_stats(self) -> Dict[str, Any]:
         """Get ML compression statistics"""
         if self.compression_manager:
             try:
-                # Get stats from compression manager
+                # Get real stats from compression manager
+                stats = await self.compression_manager.get_compression_stats()
                 return {
                     "compression_active": True,
-                    "model_size_reduction": 73.4,  # %
-                    "inference_speedup": 4.8,  # x faster
-                    "memory_savings": 68.9,  # %
-                    "accuracy_retention": 99.1  # %
+                    "model_size_reduction": stats.get('size_reduction_pct', 0),
+                    "inference_speedup": stats.get('inference_speedup', 0),
+                    "memory_savings": stats.get('memory_savings_pct', 0),
+                    "accuracy_retention": stats.get('accuracy_retention_pct', 0)
                 }
             except Exception as e:
                 logger.error(f"❌ Compression stats error: {e}")
         
-        # Mock data for development
+        # Return inactive state when not available
         return {
-            "compression_active": True,
-            "model_size_reduction": 73.4,
-            "inference_speedup": 4.8,
-            "memory_savings": 68.9,
-            "accuracy_retention": 99.1
+            "compression_active": False,
+            "model_size_reduction": 0,
+            "inference_speedup": 0,
+            "memory_savings": 0,
+            "accuracy_retention": 0
         }
     
     async def _get_monitoring_data(self) -> Dict[str, Any]:
-        """Get enhanced monitoring data"""
-        if self.monitoring_system:
-            try:
-                # Get monitoring data
-                return {
-                    "monitoring_active": True,
-                    "system_health": "excellent",
-                    "cpu_usage": 23.4,  # %
-                    "memory_usage": 45.7,  # %
-                    "network_latency": 12.3,  # ms
-                    "disk_usage": 34.2,  # %
-                    "alerts_active": 0
-                }
-            except Exception as e:
-                logger.error(f"❌ Monitoring data error: {e}")
-        
-        # Mock data for development
-        return {
-            "monitoring_active": True,
-            "system_health": "excellent",
-            "cpu_usage": 23.4,
-            "memory_usage": 45.7,
-            "network_latency": 12.3,
-            "disk_usage": 34.2,
-            "alerts_active": 0
-        }
+        """Get real system monitoring data"""
+        try:
+            import psutil
+            
+            # Get real system metrics
+            cpu_usage = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            memory_usage = memory.percent
+            disk_usage = psutil.disk_usage('/').percent if hasattr(psutil.disk_usage('/'), 'percent') else 0
+            
+            # Network latency would require actual network calls
+            network_latency = 0  # Placeholder for real network latency measurement
+            
+            if self.monitoring_system:
+                try:
+                    monitoring_data = await self.monitoring_system.get_health_metrics()
+                    return {
+                        "monitoring_active": True,
+                        "system_health": monitoring_data.get('status', 'unknown'),
+                        "cpu_usage": cpu_usage,
+                        "memory_usage": memory_usage,
+                        "network_latency": monitoring_data.get('network_latency', network_latency),
+                        "disk_usage": disk_usage,
+                        "alerts_active": monitoring_data.get('active_alerts', 0)
+                    }
+                except Exception as e:
+                    logger.error(f"❌ Monitoring data error: {e}")
+            
+            # Return basic system metrics when monitoring system not available
+            return {
+                "monitoring_active": False,
+                "system_health": "unknown",
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
+                "network_latency": network_latency,
+                "disk_usage": disk_usage,
+                "alerts_active": 0
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ System monitoring error: {e}")
+            return {
+                "monitoring_active": False,
+                "system_health": "error",
+                "cpu_usage": 0,
+                "memory_usage": 0,
+                "network_latency": 0,
+                "disk_usage": 0,
+                "alerts_active": 0
+            }
     
     def _get_mock_data(self) -> Dict[str, Any]:
         """Get mock data for development/error scenarios"""

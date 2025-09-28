@@ -1,41 +1,47 @@
-debug_mode: true
+debug_mode: false  # PRODUCTION MODE - Live trading enabled
+# Production configuration - Live trading with comprehensive logging
+auto_run_debug_tests: false  # DISABLED - Production mode
+run_data_wipe_tests: false   # DISABLED - Protect live data
+run_button_tests: false      # DISABLED - Production mode
+emergency_stop_on_startup: false  # DISABLED - Production startup
+
 debug_settings:
-  disable_real_trading: true
-  disable_api_orders: true
-  disable_position_changes: true
-  force_testnet: true
-  mock_api_responses: true
-  api_call_logging: true
-  use_historical_data: true
+  disable_real_trading: false      # ENABLED - Live trading allowed
+  disable_api_orders: false        # ENABLED - API orders allowed
+  disable_position_changes: false  # ENABLED - Position changes allowed
+  force_testnet: false             # DISABLED - Allow live trading
+  mock_api_responses: false        # DISABLED - Use real API responses
+  api_call_logging: true           # ENABLED - Keep comprehensive API logging
+  use_historical_data: false       # DISABLED - Use live data
   historical_data_source: src/data/speed_demon_cache/market_data.db
-  fallback_to_mock: true
-  show_debug_warnings: true
-  enable_debug_panel: true
-  log_ui_interactions: true
-  use_mock_balances: false
-  preserve_real_data: true
-  max_debug_runtime: 3600
-  auto_shutdown_on_error: true
+  fallback_to_mock: false          # DISABLED - No mock fallback in production
+  show_debug_warnings: false       # DISABLED - Production mode
+  enable_debug_panel: false        # DISABLED - Production mode
+  log_ui_interactions: true        # ENABLED - Keep UI logging for monitoring
+  use_mock_balances: false         # DISABLED - Use real balances
+  preserve_real_data: true         # ENABLED - Protect live data
+  max_debug_runtime: 86400         # 24 hours - Extended for production
+  auto_shutdown_on_error: true     # ENABLED - Safety measure
 phase:
-  current: HISTORICAL_DATA_DEBUGGING
-  trading_allowed: false
-  data_source: historical
-  description: Using real historical market data for realistic debugging
+  current: PRODUCTION_LIVE_TRADING
+  trading_allowed: true
+  data_source: live
+  description: Production mode with live trading and comprehensive logging
 logging:
-  level: DEBUG
-  console_output: true
-  file_output: true
-  debug_log_file: logs/debug_session.log
+  level: INFO                      # Production logging level (comprehensive but not debug)
+  console_output: true             # ENABLED - Keep console output
+  file_output: true               # ENABLED - Keep comprehensive file logging
+  debug_log_file: logs/production_session.log  # Production log file
 historical_data:
-  enabled: true
+  enabled: false                   # DISABLED - Use live data in production
   database_path: src/data/speed_demon_cache/market_data.db
   preferred_symbols:
   - BTCUSDT
   - ETHUSDT
   - SOLUSDT
   max_records_per_query: 100
-  balance_calculation_method: dynamic
-  position_simulation: true
+  balance_calculation_method: live  # Use live balance calculation
+  position_simulation: false       # DISABLED - Use real positions
   trade_history_limit: 50
   database_populated: true
   data_quality_score: 0.98386

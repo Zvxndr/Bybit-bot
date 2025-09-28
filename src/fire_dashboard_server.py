@@ -111,25 +111,51 @@ def switch_environment():
 def get_positions(environment='testnet'):
     """Get positions for specific environment"""
     try:
-        # Mock position data for now
         positions = []
         
-        if environment == 'testnet' and balance_manager.balance_data['testnet']['status'] == 'active':
-            positions = [
-                {
-                    'symbol': 'BTCUSDT',
-                    'side': 'buy',
-                    'size': '0.1',
-                    'entryPrice': '65000',
-                    'unrealizedPnl': 125.50,
-                    'environment': environment
-                }
-            ]
+        # Attempt to get real positions from API
+        try:
+            from src.bot.exchange.bybit_client import BybitClient
+            
+            # Initialize client based on environment
+            api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
+            
+            if api_key and api_secret:
+                is_testnet = environment == 'testnet' or os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
+                
+                # Use pybit directly for real positions
+                from pybit.unified_trading import HTTP
+                client = HTTP(api_key=api_key, api_secret=api_secret, testnet=is_testnet)
+                
+                # Get real positions
+                response = client.get_positions(category="linear")
+                if response.get('retCode') == 0:
+                    raw_positions = response.get('result', {}).get('list', [])
+                    
+                    # Transform to our format
+                    for pos in raw_positions:
+                        if float(pos.get('size', '0')) > 0:  # Only active positions
+                            positions.append({
+                                'symbol': pos.get('symbol'),
+                                'side': pos.get('side', '').lower(),
+                                'size': pos.get('size'),
+                                'entryPrice': pos.get('avgPrice'),
+                                'unrealizedPnl': float(pos.get('unrealisedPnl', '0')),
+                                'environment': environment,
+                                'leverage': pos.get('leverage'),
+                                'markPrice': pos.get('markPrice')
+                            })
+                
+        except Exception as api_error:
+            logger.warning(f"Could not fetch real positions from API: {api_error}")
+            # Continue with empty positions array - no fallback mock data
         
         return jsonify({
             'success': True,
             'data': positions,
-            'environment': environment
+            'environment': environment,
+            'count': len(positions)
         })
         
     except Exception as e:
@@ -143,21 +169,55 @@ def get_positions(environment='testnet'):
 def get_trades(environment='testnet'):
     """Get trades for specific environment"""
     try:
-        # Mock trade data for now
         trades = []
         
-        if environment in ['testnet', 'paper']:
-            trades = [
-                {
-                    'timestamp': datetime.now().isoformat(),
-                    'symbol': 'BTCUSDT',
-                    'side': 'buy',
-                    'size': '0.05',
-                    'price': '64500',
-                    'pnl': 25.00,
-                    'environment': environment
-                }
-            ]
+        # Attempt to get real trade history from API
+        try:
+            api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
+            
+            if api_key and api_secret:
+                is_testnet = environment == 'testnet' or os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
+                
+                from pybit.unified_trading import HTTP
+                client = HTTP(api_key=api_key, api_secret=api_secret, testnet=is_testnet)
+                
+                # Get recent trades (last 50)
+                response = client.get_executions(category="linear", limit=50)
+                if response.get('retCode') == 0:
+                    raw_trades = response.get('result', {}).get('list', [])
+                    
+                    # Transform to our format
+                    for trade in raw_trades:
+                        trades.append({
+                            'timestamp': trade.get('execTime'),
+                            'symbol': trade.get('symbol'),
+                            'side': trade.get('side', '').lower(),
+                            'size': trade.get('execQty'),
+                            'price': trade.get('execPrice'),
+                            'fee': float(trade.get('execFee', '0')),
+                            'orderId': trade.get('orderId'),
+                            'environment': environment,
+                            'execType': trade.get('execType')
+                        })
+                
+        except Exception as api_error:
+            logger.warning(f"Could not fetch real trades from API: {api_error}")
+            # Continue with empty trades array - no fallback mock data
+        
+        return jsonify({
+            'success': True,
+            'data': trades,
+            'environment': environment,
+            'count': len(trades)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting trades for {environment}: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
         
         return jsonify({
             'success': True,
@@ -174,16 +234,61 @@ def get_trades(environment='testnet'):
 
 @app.route('/api/system-stats')
 def get_system_stats():
-    """Get system statistics"""
+    """Get real system statistics"""
     try:
+        import psutil
+        import time
+        from datetime import datetime
+        
+        # Real system metrics
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        
+        # Check API connectivity
+        api_status = 'Disconnected'
+        try:
+            api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+            if api_key:
+                from pybit.unified_trading import HTTP
+                is_testnet = os.getenv('BYBIT_TESTNET', 'true').lower() == 'true'
+                client = HTTP(api_key=api_key, api_secret=os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET'), testnet=is_testnet)
+                
+                # Quick ping test
+                response = client.get_server_time()
+                if response.get('retCode') == 0:
+                    api_status = 'Connected'
+        except:
+            pass
+        
+        # Calculate trading performance from logs if available
+        win_rate = 0.0
+        profit_factor = 0.0
+        try:
+            # Try to read recent trading performance from logs or database
+            from pathlib import Path
+            log_dir = Path("logs")
+            if log_dir.exists():
+                # This would be replaced with actual performance calculation
+                # For now, show real system metrics only
+                pass
+        except:
+            pass
+        
         stats = {
-            'cpu': 15.2,  # Mock data for personal use
-            'memory': 45.8,
-            'apiStatus': 'Connected' if os.getenv('BYBIT_TESTNET_API_KEY') else 'Disconnected',
-            'winRate': 75.5,
-            'profitFactor': 1.8,
-            'activeEnvironment': 'testnet',
-            'timestamp': datetime.now().isoformat()
+            'cpu': round(cpu_percent, 1),
+            'memory': round(memory_percent, 1),
+            'apiStatus': api_status,
+            'winRate': win_rate,  # Would be calculated from real trade data
+            'profitFactor': profit_factor,  # Would be calculated from real trade data
+            'activeEnvironment': 'testnet' if os.getenv('BYBIT_TESTNET', 'true').lower() == 'true' else 'live',
+            'timestamp': datetime.now().isoformat(),
+            'uptime': time.time(),  # System start time would be tracked
+            'memoryUsage': {
+                'total': memory.total,
+                'available': memory.available,
+                'used': memory.used
+            }
         }
         
         return jsonify({

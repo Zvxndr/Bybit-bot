@@ -55,6 +55,14 @@ class SharedState:
             "logs": [],
             "last_update": datetime.now().isoformat()
         }
+        
+        # Initialize bot control flags to safe defaults
+        self.emergency_stop = False  # NOT in emergency stop by default
+        self.paused = False          # NOT paused by default  
+        self.close_all_positions = False
+        self.cancel_all_orders = False
+        self.last_action = "initialize"
+        logger.debug("🔧 Bot control flags initialized to safe defaults")
     
     def update_system_status(self, status: str):
         """Update system status"""
@@ -242,28 +250,93 @@ class SharedState:
     def get_multi_environment_balance(self) -> Dict[str, Any]:
         """Get balance data for all environments (testnet, mainnet, paper)"""
         with self._lock:
-            # For now, return mock data - this would be populated by real API calls
-            return {
-                "testnet": {
-                    "total": 55116.84,
-                    "available": 55116.84,
-                    "used": 0.00,
-                    "unrealized": 0.00
-                },
-                "mainnet": {
-                    "total": 0.00,
-                    "available": 0.00,
-                    "used": 0.00,
-                    "unrealized": 0.00
-                },
-                "paper": {
-                    "total": 100000.00,
-                    "available": 100000.00,
-                    "used": 0.00,
-                    "unrealized": 0.00
-                }
+            balance_data = {
+                "testnet": {"total": 0.0, "available": 0.0, "used": 0.0, "unrealized": 0.0},
+                "mainnet": {"total": 0.0, "available": 0.0, "used": 0.0, "unrealized": 0.0},
+                "paper": {"total": 100000.0, "available": 100000.0, "used": 0.0, "unrealized": 0.0}
             }
+            
+            # Attempt to get real balance data from API
+            try:
+                import os
+                api_key = os.getenv('BYBIT_API_KEY') or os.getenv('BYBIT_TESTNET_API_KEY')
+                api_secret = os.getenv('BYBIT_API_SECRET') or os.getenv('BYBIT_TESTNET_API_SECRET')
+                
+                if api_key and api_secret:
+                    from pybit.unified_trading import HTTP
+                    
+                    # Get testnet balance
+                    try:
+                        testnet_client = HTTP(api_key=api_key, api_secret=api_secret, testnet=True)
+                        response = testnet_client.get_wallet_balance(accountType="UNIFIED")
+                        
+                        if response.get('retCode') == 0:
+                            wallet_list = response.get('result', {}).get('list', [])
+                            if wallet_list:
+                                wallet = wallet_list[0]  # First wallet
+                                coins = wallet.get('coin', [])
+                                for coin in coins:
+                                    if coin.get('coin') == 'USDT':
+                                        balance_data["testnet"] = {
+                                            "total": float(coin.get('walletBalance', '0')),
+                                            "available": float(coin.get('availableToWithdraw', '0')),
+                                            "used": float(coin.get('locked', '0')),
+                                            "unrealized": float(coin.get('unrealisedPnl', '0'))
+                                        }
+                                        break
+                    except Exception as e:
+                        logger.debug(f"Could not fetch testnet balance: {e}")
+                    
+                    # Get mainnet balance if not in testnet mode
+                    if os.getenv('BYBIT_TESTNET', 'true').lower() != 'true':
+                        try:
+                            mainnet_client = HTTP(api_key=api_key, api_secret=api_secret, testnet=False)
+                            response = mainnet_client.get_wallet_balance(accountType="UNIFIED")
+                            
+                            if response.get('retCode') == 0:
+                                wallet_list = response.get('result', {}).get('list', [])
+                                if wallet_list:
+                                    wallet = wallet_list[0]
+                                    coins = wallet.get('coin', [])
+                                    for coin in coins:
+                                        if coin.get('coin') == 'USDT':
+                                            balance_data["mainnet"] = {
+                                                "total": float(coin.get('walletBalance', '0')),
+                                                "available": float(coin.get('availableToWithdraw', '0')),
+                                                "used": float(coin.get('locked', '0')),
+                                                "unrealized": float(coin.get('unrealisedPnl', '0'))
+                                            }
+                                            break
+                        except Exception as e:
+                            logger.debug(f"Could not fetch mainnet balance: {e}")
+                            
+            except Exception as e:
+                logger.debug(f"Balance API integration not available: {e}")
+            
+            return balance_data
     
+    def reset_bot_control_flags(self):
+        """Reset all bot control flags to safe defaults"""
+        logger.debug("🔧 Resetting bot control flags to safe defaults")
+        with self._lock:
+            self.emergency_stop = False
+            self.paused = False
+            self.close_all_positions = False 
+            self.cancel_all_orders = False
+            self.last_action = "reset"
+            
+            # Also clear from state dict
+            if "bot_control" in self._state:
+                self._state["bot_control"] = {
+                    "emergency_stop": False,
+                    "paused": False,
+                    "close_all_positions": False,
+                    "cancel_all_orders": False,
+                    "last_action": "reset"
+                }
+            self._state["last_update"] = datetime.now().isoformat()
+        logger.info("✅ Bot control flags reset to safe defaults")
+
     def set_bot_control(self, control_key: str, value: Any):
         """Set bot control flags for UI communication"""
         logger.debug(f"🔧 Setting bot control: {control_key} = {value}")

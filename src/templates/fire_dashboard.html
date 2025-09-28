@@ -146,15 +146,15 @@
                 <h2 class="fire-text"><i class="fas fa-wallet"></i> ACCOUNT BALANCES</h2>
                 
                 <!-- Environment Selector -->
-                <div style="margin-bottom: 16px; display: flex; gap: 8px;">
-                    <button class="cyber-btn environment-btn active" data-env="testnet" onclick="switchEnvironment('testnet')">
+                <div style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="cyber-btn environment-btn active" data-env="testnet" onclick="switchEnvironment('testnet')" style="flex: 1; min-width: 80px;">
                         🔥 TESTNET
                     </button>
-                    <button class="cyber-btn environment-btn" data-env="mainnet" onclick="switchEnvironment('mainnet')">
+                    <button class="cyber-btn environment-btn" data-env="mainnet" onclick="switchEnvironment('mainnet')" style="flex: 1; min-width: 80px;">
                         ⚡ MAINNET
                     </button>
-                    <button class="cyber-btn environment-btn" data-env="historical" onclick="switchToHistoricalBacktesting()">
-                        📊 HISTORICAL BACKTEST
+                    <button class="cyber-btn environment-btn" data-env="historical" onclick="switchToHistoricalBacktesting()" style="flex: 1; min-width: 80px;">
+                        📊 HISTORY
                     </button>
                 </div>
 

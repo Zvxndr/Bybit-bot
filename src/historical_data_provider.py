@@ -42,7 +42,7 @@ class HistoricalDataProvider:
                 self._inspect_database_schema()
             else:
                 logger.warning(f"[WARNING] Historical data not found: {self.db_path}")
-                logger.info("[INFO] Falling back to mock data generation")
+                logger.info("[INFO] Historical data provider will return empty results when database unavailable")
         except Exception as e:
             logger.error(f"[ERROR] Failed to connect to historical database: {e}")
     

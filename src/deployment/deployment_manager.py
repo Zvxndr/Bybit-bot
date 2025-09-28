@@ -438,11 +438,12 @@ __pycache__
             },
             'type': 'Opaque',
             'data': {
-                # Base64 encoded secrets (to be filled during deployment)
-                'BYBIT_API_KEY': 'PLACEHOLDER',
-                'BYBIT_API_SECRET': 'PLACEHOLDER',
-                'DATABASE_PASSWORD': 'PLACEHOLDER',
-                'JWT_SECRET': 'PLACEHOLDER'
+                # Environment variables will be injected at deployment time
+                # These values should be set in the deployment environment
+                'BYBIT_API_KEY': '${BYBIT_API_KEY}',
+                'BYBIT_API_SECRET': '${BYBIT_API_SECRET}',
+                'DATABASE_PASSWORD': '${DATABASE_PASSWORD}',
+                'JWT_SECRET': '${JWT_SECRET}'
             }
         }
         
