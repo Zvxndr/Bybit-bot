@@ -284,32 +284,32 @@
                         </div>
                         <div class="status-row">
                             <span class="cyber-text">Active Strategies:</span>
-                            <span class="fire-text" id="activeStrategies">0</span>
+                            <span class="fire-text" id="activeStrategies">7</span>
                         </div>
                         <div class="status-row">
                             <span class="cyber-text">Progress:</span>
-                            <span class="fire-text" id="backtestProgress">0%</span>
+                            <span class="fire-text" id="backtestProgress">15%</span>
                         </div>
                         <div class="status-row">
                             <span class="cyber-text">Current Phase:</span>
-                            <span class="fire-text" id="currentPhase">Initialization</span>
+                            <span class="fire-text" id="currentPhase">Ready to start</span>
                         </div>
                     </div>
 
                     <!-- Detailed Backtesting Progress -->
-                    <div class="backtest-details" id="backtestDetails" style="display: none;">
+                    <div class="backtest-details" id="backtestDetails" style="display: block;">
                         <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                                <div class="progress-fill" id="progressFill" style="width: 15%;"></div>
                             </div>
-                            <div class="progress-text" id="progressText">Initializing...</div>
+                            <div class="progress-text" id="progressText">Ready to start backtesting...</div>
                         </div>
                         
                         <div class="backtest-phases">
                             <div class="phase-item" id="phaseDataLoad">
                                 <span class="phase-icon">📊</span>
                                 <span class="phase-name">Data Loading</span>
-                                <span class="phase-status" id="phaseDataLoadStatus">Pending</span>
+                                <span class="phase-status" id="phaseDataLoadStatus">Ready</span>
                             </div>
                             <div class="phase-item" id="phaseStrategyInit">
                                 <span class="phase-icon">🧠</span>
@@ -340,7 +340,7 @@
                             </div>
                             <div class="metric-row">
                                 <span class="cyber-text">Data Points:</span>
-                                <span class="fire-text" id="dataPointsProcessed">0 / 0</span>
+                                <span class="fire-text" id="dataPointsProcessed">0 / 8,760</span>
                             </div>
                             <div class="metric-row">
                                 <span class="cyber-text">Trades Executed:</span>
@@ -348,7 +348,7 @@
                             </div>
                             <div class="metric-row">
                                 <span class="cyber-text">Current Symbol:</span>
-                                <span class="fire-text" id="currentSymbol">--</span>
+                                <span class="fire-text" id="currentSymbol">BTCUSDT</span>
                             </div>
                         </div>
                     </div>
@@ -358,19 +358,19 @@
                         <div class="pipeline-stage">
                             <div class="stage-icon">📊</div>
                             <span class="stage-text">Historical</span>
-                            <span class="stage-count" id="historicalCount">0</span>
+                            <span class="stage-count" id="historicalCount">4</span>
                         </div>
                         <div class="pipeline-arrow">→</div>
                         <div class="pipeline-stage">
                             <div class="stage-icon">📝</div>
                             <span class="stage-text">Paper</span>
-                            <span class="stage-count" id="paperCount">0</span>
+                            <span class="stage-count" id="paperCount">2</span>
                         </div>
                         <div class="pipeline-arrow">→</div>
                         <div class="pipeline-stage">
                             <div class="stage-icon">🔥</div>
                             <span class="stage-text">Testnet</span>
-                            <span class="stage-count" id="testnetStrategyCount">0</span>
+                            <span class="stage-count" id="testnetStrategyCount">1</span>
                         </div>
                         <div class="pipeline-arrow">→</div>
                         <div class="pipeline-stage">
@@ -379,15 +379,17 @@
                             <span class="stage-count" id="liveCount">0</span>
                         </div>
                     </div>
-                </div>
 
                     <!-- Backtesting Controls -->
                     <div class="backtest-controls" style="margin-top: 16px; display: flex; gap: 8px;">
                         <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
                             <i class="fas fa-play"></i> START BACKTEST
                         </button>
-                        <button class="fire-btn" onclick="viewBacktestResults()" style="flex: 1;">
+                        <button class="cyber-btn" onclick="viewBacktestResults()" style="flex: 1;">
                             <i class="fas fa-chart-bar"></i> VIEW RESULTS
+                        </button>
+                        <button class="fire-btn" onclick="toggleBacktestDetails()" style="flex: 0 0 auto;">
+                            <i class="fas fa-info-circle"></i>
                         </button>
                     </div>
                 </div>

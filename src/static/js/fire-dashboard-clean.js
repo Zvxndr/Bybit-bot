@@ -758,6 +758,58 @@ function toggleBacktestDetails() {
     }
 }
 
+// Initialize backtesting UI on page load
+function initializeBacktestingUI() {
+    console.log('🔥 Initializing backtesting UI...');
+    
+    // Set some default demo values
+    document.getElementById('backtestProgress').textContent = '15%';
+    document.getElementById('currentPhase').textContent = 'Ready to start';
+    document.getElementById('dataPointsProcessed').textContent = '0 / 8,760';
+    document.getElementById('currentSymbol').textContent = 'BTCUSDT';
+    
+    // Show some sample strategy counts
+    document.getElementById('historicalCount').textContent = '4';
+    document.getElementById('paperCount').textContent = '2';
+    document.getElementById('testnetStrategyCount').textContent = '1';
+    document.getElementById('liveCount').textContent = '0';
+    document.getElementById('activeStrategies').textContent = '7';
+    
+    // Set initial progress
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) {
+        progressFill.style.width = '15%';
+    }
+    
+    // Make sure the details section is visible
+    const detailsDiv = document.getElementById('backtestDetails');
+    if (detailsDiv) {
+        detailsDiv.style.display = 'block';
+    }
+    
+    // Show initialization toast
+    if (typeof dashboard !== 'undefined' && dashboard.showToast) {
+        dashboard.showToast('🔥 Backtesting UI initialized successfully', 'success');
+    } else {
+        console.log('🔥 Backtesting UI initialized successfully');
+    }
+}
+
+// Call initialization when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔥 DOM Content Loaded - initializing backtesting UI in 1 second...');
+    setTimeout(initializeBacktestingUI, 1000); // Wait 1 second for other elements to load
+});
+
+// Also call it immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    // Loading hasn't finished yet
+    document.addEventListener('DOMContentLoaded', initializeBacktestingUI);
+} else {
+    // `DOMContentLoaded` has already fired
+    setTimeout(initializeBacktestingUI, 500);
+}
+
 async function viewBacktestResults() {
     try {
         const response = await fetch('/api/backtest/results');
