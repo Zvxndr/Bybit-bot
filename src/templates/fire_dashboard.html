@@ -5,7 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔥 Open Alpha - Fire Trading Dashboard</title>
     <link rel="stylesheet" href="/static/css/fire-cybersigilism.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnj                    </div>
+
+                    <!-- Backtesting Controls -->
+                    <div class="backtest-controls" style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
+                            <i class="fas fa-play"></i> START BACKTEST
+                        </button>
+                        <button class="fire-btn" onclick="viewBacktestResults()" style="flex: 1;">
+                            <i class="fas fa-chart-bar"></i> VIEW RESULTS
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="fire-card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> RECENT TRADES</h3>
+                </div>
+                <div class="card-content">ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
@@ -18,37 +37,39 @@
     </div>
 
     <!-- Main Dashboard Container -->
-    <div id="mainDashboard" style="display: none;">
+    <div id="mainDashboard" class="dashboard-container" style="display: none;">
         <!-- Header -->
-        <header class="glass-panel" style="margin: 0; border-radius: 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1 class="cyber-title">🔥 OPEN ALPHA</h1>
-                    <p class="cyber-text">Enterprise Trading Dashboard</p>
-                </div>
-                <div style="display: flex; gap: 16px; align-items: center;">
-                    <div class="status-fire active"></div>
-                    <span class="fire-text">SYSTEM ACTIVE</span>
-                    <button class="cyber-btn" onclick="toggleAdminPanel()">
-                        <i class="fas fa-cog"></i> ADMIN
-                    </button>
-                </div>
+        <header class="dashboard-header">
+            <div>
+                <h1 class="cyber-title">🔥 OPEN ALPHA</h1>
+                <p class="cyber-text">Enterprise Trading Dashboard</p>
+            </div>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="status-fire active"></div>
+                <span class="fire-text">SYSTEM ACTIVE</span>
+                <button class="cyber-btn" onclick="toggleAdminPanel()">
+                    <i class="fas fa-cog"></i> ADMIN
+                </button>
             </div>
         </header>
 
         <!-- Admin Panel (Hidden by default) -->
-        <div id="adminPanel" class="glass-panel" style="display: none;">
-            <h2 class="fire-text"><i class="fas fa-shield-alt"></i> ENTERPRISE ADMIN CONTROL</h2>
-            <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                
-                <!-- API Key Management -->
-                <div class="fire-card">
-                    <h3 class="cyber-text"><i class="fas fa-key"></i> API CREDENTIALS</h3>
-                    <div style="margin: 16px 0;">
+        <div id="adminPanel" class="admin-grid" style="display: none;">
+            <div class="card-header" style="grid-column: 1 / -1; border: none; margin-bottom: 8px;">
+                <h2 class="card-title"><i class="fas fa-shield-alt"></i> ENTERPRISE ADMIN CONTROL</h2>
+            </div>
+            
+            <!-- API Key Management -->
+            <div class="fire-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-key"></i> API CREDENTIALS</h3>
+                </div>
+                <div class="card-content">
+                    <div>
                         <label class="fire-text">Bybit API Key:</label>
                         <input type="password" class="cyber-input" id="apiKey" placeholder="Enter API Key">
                     </div>
-                    <div style="margin: 16px 0;">
+                    <div>
                         <label class="fire-text">API Secret:</label>
                         <input type="password" class="cyber-input" id="apiSecret" placeholder="Enter API Secret">
                     </div>
@@ -56,41 +77,49 @@
                         <i class="fas fa-save"></i> SECURE UPDATE
                     </button>
                 </div>
+            </div>
 
-                <!-- Bot Control -->
-                <div class="fire-card">
-                    <h3 class="cyber-text"><i class="fas fa-robot"></i> BOT CONTROL</h3>
-                    <div style="margin: 16px 0;">
-                        <button class="fire-btn" onclick="pauseBot()" style="width: 100%; margin: 8px 0;">
-                            <i class="fas fa-pause"></i> PAUSE TRADING
-                        </button>
-                        <button class="cyber-btn" onclick="resumeBot()" style="width: 100%; margin: 8px 0;">
-                            <i class="fas fa-play"></i> RESUME TRADING
-                        </button>
-                        <button class="fire-btn" onclick="emergencyStop()" style="width: 100%; margin: 8px 0; background: linear-gradient(45deg, #ff0000, #8b0000);">
-                            <i class="fas fa-stop"></i> EMERGENCY STOP
-                        </button>
-                    </div>
+            <!-- Bot Control -->
+            <div class="fire-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-robot"></i> BOT CONTROL</h3>
                 </div>
-
-                <!-- Data Management -->
-                <div class="fire-card">
-                    <h3 class="cyber-text"><i class="fas fa-database"></i> DATA MANAGEMENT</h3>
-                    <div style="margin: 16px 0;">
-                        <p class="fire-text">Clear all trading data and reset system:</p>
-                        <button class="fire-btn" onclick="clearAllData()" style="width: 100%; margin: 8px 0; background: linear-gradient(45deg, #ff6600, #cc3300);">
-                            <i class="fas fa-trash-alt"></i> CLEAR ALL DATA
-                        </button>
-                        <button class="cyber-btn" onclick="exportData()" style="width: 100%; margin: 8px 0;">
-                            <i class="fas fa-download"></i> EXPORT BACKUP
-                        </button>
-                    </div>
+                <div class="card-content">
+                    <button class="fire-btn" onclick="pauseBot()" style="width: 100%; margin: 4px 0;">
+                        <i class="fas fa-pause"></i> PAUSE TRADING
+                    </button>
+                    <button class="cyber-btn" onclick="resumeBot()" style="width: 100%; margin: 4px 0;">
+                        <i class="fas fa-play"></i> RESUME TRADING
+                    </button>
+                    <button class="fire-btn" onclick="emergencyStop()" style="width: 100%; margin: 4px 0; background: linear-gradient(45deg, #ff0000, #8b0000);">
+                        <i class="fas fa-stop"></i> EMERGENCY STOP
+                    </button>
                 </div>
+            </div>
 
-                <!-- Multi-Factor Authentication -->
-                <div class="fire-card">
-                    <h3 class="cyber-text"><i class="fas fa-shield-halved"></i> MFA SECURITY</h3>
-                    <div style="margin: 16px 0;">
+            <!-- Data Management -->
+            <div class="fire-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-database"></i> DATA MANAGEMENT</h3>
+                </div>
+                <div class="card-content">
+                    <p class="fire-text" style="margin-bottom: 12px;">Clear all trading data and reset system:</p>
+                    <button class="fire-btn" onclick="clearAllData()" style="width: 100%; margin: 4px 0; background: linear-gradient(45deg, #ff6600, #cc3300);">
+                        <i class="fas fa-trash-alt"></i> CLEAR ALL DATA
+                    </button>
+                    <button class="cyber-btn" onclick="exportData()" style="width: 100%; margin: 4px 0;">
+                        <i class="fas fa-download"></i> EXPORT BACKUP
+                    </button>
+                </div>
+            </div>
+
+            <!-- Multi-Factor Authentication -->
+            <div class="fire-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-shield-halved"></i> MFA SECURITY</h3>
+                </div>
+                <div class="card-content">
+                    <div>
                         <label class="fire-text">2FA Code:</label>
                         <input type="text" class="cyber-input" id="mfaCode" placeholder="Enter 6-digit code" maxlength="6">
                     </div>
@@ -98,6 +127,7 @@
                         <i class="fas fa-lock"></i> VERIFY ACCESS
                     </button>
                 </div>
+            </div>
 
                 <!-- System Monitoring -->
                 <div class="fire-card">
@@ -139,118 +169,134 @@
             </div>
         </div>
 
-        <!-- Trading Dashboard -->
-        <div class="dashboard-grid">
+        <!-- Balance Section -->
+        <section class="balance-section">
             <!-- Multi-Environment Account Balance -->
             <div class="fire-card">
-                <h2 class="fire-text"><i class="fas fa-wallet"></i> ACCOUNT BALANCES</h2>
-                
-                <!-- Environment Selector -->
-                <div style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="cyber-btn environment-btn active" data-env="testnet" onclick="switchEnvironment('testnet')" style="flex: 1; min-width: 80px;">
-                        🔥 TESTNET
-                    </button>
-                    <button class="cyber-btn environment-btn" data-env="mainnet" onclick="switchEnvironment('mainnet')" style="flex: 1; min-width: 80px;">
-                        ⚡ MAINNET
-                    </button>
-                    <button class="cyber-btn environment-btn" data-env="historical" onclick="switchToHistoricalBacktesting()" style="flex: 1; min-width: 80px;">
-                        📊 HISTORY
-                    </button>
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-wallet"></i> ACCOUNT BALANCES</h3>
                 </div>
+                <div class="card-content">
+                    <!-- Environment Selector -->
+                    <div class="environment-selector">
+                        <button class="cyber-btn environment-btn active" data-env="testnet" onclick="switchEnvironment('testnet')">
+                            🔥 TESTNET
+                        </button>
+                        <button class="cyber-btn environment-btn" data-env="mainnet" onclick="switchEnvironment('mainnet')">
+                            ⚡ MAINNET
+                        </button>
+                        <button class="cyber-btn environment-btn" data-env="historical" onclick="switchToHistoricalBacktesting()">
+                            📊 HISTORY
+                        </button>
+                    </div>
 
-                <!-- Balance Chart -->
-                <div class="chart-container">
-                    <canvas id="balanceChart" width="400" height="200"></canvas>
-                </div>
-                
-                <!-- Balance Details -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-top: 16px;">
-                    <div class="balance-card">
-                        <p class="cyber-text">Total Balance</p>
-                        <h3 class="fire-text" id="totalBalance">$0.00</h3>
-                        <small class="fire-text" id="currentEnvironment">TESTNET</small>
+                    <!-- Balance Chart -->
+                    <div class="chart-container">
+                        <canvas id="balanceChart" width="400" height="200"></canvas>
                     </div>
-                    <div class="balance-card">
-                        <p class="cyber-text">Available</p>
-                        <h3 class="fire-text" id="availableBalance">$0.00</h3>
-                        <small class="cyber-text" id="availablePercent">0%</small>
+                    
+                    <!-- Balance Details -->
+                    <div class="balance-grid">
+                        <div class="balance-card">
+                            <p class="balance-label">Total Balance</p>
+                            <h3 class="balance-value fire-text" id="totalBalance">$0.00</h3>
+                            <small class="fire-text" id="currentEnvironment">TESTNET</small>
+                        </div>
+                        <div class="balance-card">
+                            <p class="balance-label">Available</p>
+                            <h3 class="balance-value fire-text" id="availableBalance">$0.00</h3>
+                            <small class="cyber-text" id="availablePercent">0%</small>
+                        </div>
+                        <div class="balance-card">
+                            <p class="balance-label">In Positions</p>
+                            <h3 class="balance-value fire-text" id="usedBalance">$0.00</h3>
+                            <small class="cyber-text" id="usedPercent">0%</small>
+                        </div>
+                        <div class="balance-card">
+                            <p class="balance-label">Unrealized PnL</p>
+                            <h3 class="balance-value fire-text" id="unrealizedPnl">$0.00</h3>
+                            <small class="cyber-text" id="pnlPercent">0%</small>
+                        </div>
                     </div>
-                    <div class="balance-card">
-                        <p class="cyber-text">In Positions</p>
-                        <h3 class="fire-text" id="usedBalance">$0.00</h3>
-                        <small class="cyber-text" id="usedPercent">0%</small>
-                    </div>
-                    <div class="balance-card">
-                        <p class="cyber-text">Unrealized PnL</p>
-                        <h3 class="fire-text" id="unrealizedPnl">$0.00</h3>
-                        <small class="cyber-text" id="pnlPercent">0%</small>
-                    </div>
-                </div>
 
-                <!-- Environment Status Indicators -->
-                <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="status-fire active" id="testnetStatus"></div>
-                        <span class="fire-text">Testnet: $<span id="testnetBalance">0</span></span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="status-fire paused" id="mainnetStatus"></div>
-                        <span class="fire-text">Mainnet: $<span id="mainnetBalance">0</span></span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="status-fire stopped" id="historicalStatus"></div>
-                        <span class="fire-text">Historical: <span id="historicalProgress">Ready</span></span>
+                    <!-- Environment Status Indicators -->
+                    <div class="environment-status">
+                        <div class="status-item">
+                            <div class="status-fire active" id="testnetStatus"></div>
+                            <span class="fire-text">Testnet: $<span id="testnetBalance">0</span></span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-fire paused" id="mainnetStatus"></div>
+                            <span class="fire-text">Mainnet: $<span id="mainnetBalance">0</span></span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-fire stopped" id="historicalStatus"></div>
+                            <span class="fire-text">Historical: <span id="historicalProgress">Ready</span></span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Trading Section -->
+        <section class="trading-section">
 
             <!-- Live Positions -->
             <div class="fire-card">
-                <h2 class="fire-text"><i class="fas fa-chart-area"></i> ACTIVE POSITIONS</h2>
-                <div id="positionsContainer">
-                    <div class="loading-positions">
-                        <div class="fire-spinner" style="width: 30px; height: 30px;"></div>
-                        <p class="cyber-text">Loading positions...</p>
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-area"></i> ACTIVE POSITIONS</h3>
+                </div>
+                <div class="card-content">
+                    <div id="positionsContainer">
+                        <div class="loading-positions">
+                            <div class="fire-spinner" style="width: 30px; height: 30px;"></div>
+                            <p class="cyber-text">Loading positions...</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- ML Strategy Performance -->
             <div class="fire-card">
-                <h2 class="fire-text"><i class="fas fa-brain"></i> AI STRATEGY</h2>
-                <div class="chart-container">
-                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-brain"></i> AI STRATEGY</h3>
                 </div>
-                <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span class="cyber-text">Win Rate:</span>
-                        <span class="fire-text" id="winRate">--</span>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <canvas id="performanceChart" width="400" height="200"></canvas>
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span class="cyber-text">Profit Factor:</span>
-                        <span class="fire-text" id="profitFactor">--</span>
+                    <div class="strategy-metrics">
+                        <div class="metric-item">
+                            <span class="cyber-text">Win Rate:</span>
+                            <span class="fire-text" id="winRate">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="cyber-text">Profit Factor:</span>
+                            <span class="fire-text" id="profitFactor">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Historical Backtesting & Strategy Graduation -->
             <div class="fire-card">
-                <h2 class="fire-text"><i class="fas fa-chart-line"></i> STRATEGY GRADUATION</h2>
-                
-                <!-- Backtesting Status -->
-                <div style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span class="cyber-text">Historical Backtesting:</span>
-                        <span class="fire-text" id="backtestStatus">READY</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span class="cyber-text">Active Strategies:</span>
-                        <span class="fire-text" id="activeStrategies">0</span>
-                    </div>
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-line"></i> STRATEGY GRADUATION</h3>
                 </div>
+                <div class="card-content">
+                    <!-- Backtesting Status -->
+                    <div class="backtest-status">
+                        <div class="status-row">
+                            <span class="cyber-text">Historical Backtesting:</span>
+                            <span class="fire-text" id="backtestStatus">READY</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="cyber-text">Active Strategies:</span>
+                            <span class="fire-text" id="activeStrategies">0</span>
+                        </div>
+                    </div>
 
-                <!-- Strategy Pipeline -->
-                <div style="margin: 16px 0;">
+                    <!-- Strategy Pipeline -->
                     <div class="strategy-pipeline">
                         <div class="pipeline-stage">
                             <div class="stage-icon">📊</div>
@@ -278,44 +324,49 @@
                     </div>
                 </div>
 
-                <!-- Backtesting Controls -->
-                <div style="margin-top: 16px; display: flex; gap: 8px;">
-                    <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
-                        <i class="fas fa-play"></i> START BACKTEST
-                    </button>
-                    <button class="fire-btn" onclick="viewBacktestResults()" style="flex: 1;">
-                        <i class="fas fa-chart-bar"></i> VIEW RESULTS
-                    </button>
+                    <!-- Backtesting Controls -->
+                    <div class="backtest-controls" style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
+                            <i class="fas fa-play"></i> START BACKTEST
+                        </button>
+                        <button class="fire-btn" onclick="viewBacktestResults()" style="flex: 1;">
+                            <i class="fas fa-chart-bar"></i> VIEW RESULTS
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Recent Trades -->
-            <div class="fire-card" style="grid-column: span 2;">
-                <h2 class="fire-text"><i class="fas fa-history"></i> RECENT TRADES</h2>
-                <div class="table-container" style="overflow-x: auto; margin-top: 16px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--fire-primary);">
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">Time</th>
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">Symbol</th>
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">Side</th>
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">Size</th>
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">Price</th>
-                                <th class="cyber-text" style="padding: 12px; text-align: left;">PnL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tradesTableBody">
-                            <tr>
-                                <td colspan="6" class="fire-text" style="padding: 20px; text-align: center;">
-                                    <div class="fire-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
-                                    Loading trade history...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="fire-card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> RECENT TRADES</h3>
+                </div>
+                <div class="card-content">
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--fire-primary);">
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">Time</th>
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">Symbol</th>
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">Side</th>
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">Size</th>
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">Price</th>
+                                    <th class="cyber-text" style="padding: 12px; text-align: left;">PnL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesTableBody">
+                                <tr>
+                                    <td colspan="6" class="fire-text" style="padding: 20px; text-align: center;">
+                                        <div class="fire-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                                        Loading trade history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- Toast Notifications -->
