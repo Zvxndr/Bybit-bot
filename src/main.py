@@ -16,16 +16,53 @@ from pathlib import Path
 from threading import Thread
 import time
 from typing import List, Dict, Any
+import traceback
+
+# Enhanced logging configuration
+def setup_comprehensive_logging():
+    """Setup comprehensive logging with multiple levels and detailed formatting"""
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
+    
+    # Create logs directory if it doesn't exist
+    Path("logs").mkdir(exist_ok=True)
+    
+    # Setup root logger
+    logging.basicConfig(
+        level=logging.DEBUG,  # Set to DEBUG for comprehensive logging
+        format=log_format,
+        handlers=[
+            logging.FileHandler(f'logs/open_alpha_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    
+    # Set specific loggers to appropriate levels
+    logging.getLogger('asyncio').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('requests').setLevel(logging.WARNING)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    
+    logger = logging.getLogger(__name__)
+    logger.info("🔧 Comprehensive logging system initialized")
+    return logger
+
+# Initialize logging early
+logger = setup_comprehensive_logging()
 
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
     load_dotenv()
+    logger.info("✅ Environment variables loaded from .env file")
     print("✅ Environment variables loaded from .env file")
 except ImportError:
+    logger.warning("⚠️ python-dotenv not installed - install with: pip install python-dotenv")
     print("⚠️ python-dotenv not installed - install with: pip install python-dotenv")
 except Exception as e:
+    logger.error(f"⚠️ Could not load .env file: {e}")
     print(f"⚠️ Could not load .env file: {e}")
+
+logger.debug("🔧 Starting main module import sequence...")
 
 # Add HTTP server imports
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -42,25 +79,34 @@ try:
     import sys
     from pathlib import Path
     
+    logger.debug("🔧 Attempting Strategy 1: Relative imports from current directory")
+    
     # Add current src directory to path
     current_dir = Path(__file__).parent
+    logger.debug(f"🔧 Current directory: {current_dir}")
     if str(current_dir) not in sys.path:
         sys.path.insert(0, str(current_dir))
+        logger.debug(f"🔧 Added to sys.path: {current_dir}")
     
     from frontend_server import FrontendHandler
     from shared_state import shared_state
     from bybit_api import get_bybit_client
+    logger.info("✅ Strategy 1 SUCCESS: Full frontend components loaded successfully")
     print("✅ Full frontend components loaded successfully")
     
 except ImportError as e1:
+    logger.warning(f"⚠️ Strategy 1 FAILED: Relative imports failed - {e1}")
     # Strategy 2: Try absolute imports for deployment environment  
     try:
+        logger.debug("🔧 Attempting Strategy 2: Absolute imports for deployment")
         from src.frontend_server import FrontendHandler
         from src.shared_state import shared_state
         from src.bybit_api import get_bybit_client
+        logger.info("✅ Strategy 2 SUCCESS: Full frontend components loaded via absolute imports")
         print("✅ Full frontend components loaded via absolute imports")
         
     except ImportError as e2:
+        logger.error(f"❌ Strategy 2 FAILED: Absolute imports failed - {e2}")
         # Strategy 3: Try importing just the essential components
         try:
             import importlib.util
@@ -239,10 +285,17 @@ except ImportError as e1:
                     print("💡 Check your API keys and network connection")
                     return None
 
-# Speed Demon integration
+# Speed Demon integration with enhanced logging
+logger.debug("🔧 Attempting to import Speed Demon integration...")
 try:
     from bot.speed_demon_integration import speed_demon_integration
-except ImportError:
+    logger.info("✅ Speed Demon integration loaded successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Speed Demon integration not available - {e}")
+    speed_demon_integration = None
+except Exception as e:
+    logger.error(f"❌ Speed Demon integration failed - {e}")
+    logger.debug(f"🔧 Speed Demon error traceback: {traceback.format_exc()}")
     speed_demon_integration = None
 
 # Add src to Python path
@@ -299,69 +352,99 @@ class TradingBotApplication:
     """Main trading bot application"""
     
     def __init__(self):
+        logger.info("🔧 Initializing TradingBotApplication...")
         self.running = False
         self.version = "1.0.0"
         self.start_time = datetime.now()
         self.http_server = None
+        logger.debug(f"🔧 Application version: {self.version}")
+        logger.debug(f"🔧 Start time: {self.start_time}")
+        logger.info("✅ TradingBotApplication constructor completed")
         
     async def initialize(self):
         """Initialize application components"""
-        logger.info(f"🚀 Initializing Open Alpha v{self.version}")
+        logger.info(f"🚀 Starting initialization process for Open Alpha v{self.version}")
+        initialization_start = time.time()
         
-        # Update shared state
-        shared_state.update_system_status("initializing")
-        shared_state.add_log_entry("INFO", f"Initializing Open Alpha v{self.version}")
-        
-        # Create necessary directories
-        Path("logs").mkdir(exist_ok=True)
-        Path("data").mkdir(exist_ok=True)
-        Path("data/models").mkdir(exist_ok=True)
-        Path("data/strategies").mkdir(exist_ok=True)
-        
-        # Initialize email integration
-        await self._initialize_email_system()
-        
-        # Initialize Speed Demon integration (14-day deployment)
-        await self._initialize_speed_demon()
-        
-        # Start HTTP health server
-        self.start_health_server()
-        
-        # Initialize components (production-ready systems)
-        logger.info("✅ Security systems initialized")
-        shared_state.add_log_entry("INFO", "Security systems initialized")
-        
-        logger.info("✅ Performance monitoring active") 
-        shared_state.add_log_entry("INFO", "Performance monitoring active")
-        
-        logger.info("✅ ML pipeline ready")
-        shared_state.add_log_entry("INFO", "ML pipeline ready")
-        
-        logger.info("✅ Analytics platform online")
-        shared_state.add_log_entry("INFO", "Analytics platform online")
-        
-        logger.info("✅ Testing framework loaded")
-        shared_state.add_log_entry("INFO", "Testing framework loaded")
-        
-        logger.info("✅ Documentation system ready")
-        shared_state.add_log_entry("INFO", "Documentation system ready")
-        
-        logger.info("✅ Email integration system ready")
-        shared_state.add_log_entry("INFO", "Email integration system ready")
-        
-        # Send startup notification
-        await self._send_startup_notification()
-        
-        logger.info("🎯 Application initialization completed successfully")
-        shared_state.update_system_status("active")
-        shared_state.add_log_entry("INFO", "Application initialization completed successfully")
+        try:
+            logger.info(f"🚀 Initializing Open Alpha v{self.version}")
+            
+            # Update shared state
+            logger.debug("🔧 Updating shared state...")
+            shared_state.update_system_status("initializing")
+            shared_state.add_log_entry("INFO", f"Initializing Open Alpha v{self.version}")
+            
+            # Initialize bot control flags
+            logger.debug("🔧 Initializing bot control flags...")
+            shared_state.bot_active = True
+            shared_state.emergency_stop = False
+            logger.info("✅ Bot control flags initialized")
+            
+            # Create necessary directories
+            logger.debug("🔧 Creating necessary directories...")
+            directories = ["logs", "data", "data/models", "data/strategies"]
+            for directory in directories:
+                Path(directory).mkdir(exist_ok=True)
+                logger.debug(f"🔧 Directory created/verified: {directory}")
+            logger.info("✅ Directory structure created")
+            
+            # Initialize email integration
+            logger.debug("🔧 Initializing email system...")
+            await self._initialize_email_system()
+            
+            # Initialize Speed Demon integration (14-day deployment)
+            logger.debug("🔧 Initializing Speed Demon integration...")
+            await self._initialize_speed_demon()
+            
+            # Start HTTP health server
+            logger.debug("🔧 Starting HTTP health server...")
+            self.start_health_server()
+            
+            # Initialize components (production-ready systems)
+            logger.info("✅ Security systems initialized")
+            shared_state.add_log_entry("INFO", "Security systems initialized")
+            
+            logger.info("✅ Performance monitoring active") 
+            shared_state.add_log_entry("INFO", "Performance monitoring active")
+            
+            logger.info("✅ ML pipeline ready")
+            shared_state.add_log_entry("INFO", "ML pipeline ready")
+            
+            logger.info("✅ Analytics platform online")
+            shared_state.add_log_entry("INFO", "Analytics platform online")
+            
+            logger.info("✅ Testing framework loaded")
+            shared_state.add_log_entry("INFO", "Testing framework loaded")
+            
+            logger.info("✅ Documentation system ready")
+            shared_state.add_log_entry("INFO", "Documentation system ready")
+            
+            logger.info("✅ Email integration system ready")
+            shared_state.add_log_entry("INFO", "Email integration system ready")
+            
+            # Send startup notification
+            logger.debug("🔧 Sending startup notification...")
+            await self._send_startup_notification()
+            
+            initialization_time = time.time() - initialization_start
+            logger.info(f"🎯 Application initialization completed successfully in {initialization_time:.2f}s")
+            shared_state.update_system_status("active")
+            shared_state.add_log_entry("INFO", "Application initialization completed successfully")
+            
+        except Exception as e:
+            logger.error(f"❌ Initialization failed: {e}")
+            logger.error(f"🔧 Initialization error traceback: {traceback.format_exc()}")
+            raise
         
     async def _initialize_email_system(self):
         """Initialize email notification system"""
+        logger.debug("🔧 Starting email system initialization...")
         try:
             # Import and initialize email integration
+            logger.debug("🔧 Importing EmailIntegrationManager...")
             from email_integration import EmailIntegrationManager
             self.email_manager = EmailIntegrationManager()
+            logger.debug("🔧 EmailIntegrationManager created successfully")
             
             if self.email_manager.enabled:
                 logger.info("✅ Email system initialized and ready")
@@ -370,6 +453,7 @@ class TradingBotApplication:
                 
         except Exception as e:
             logger.warning(f"📧 Email system initialization failed: {e}")
+            logger.debug(f"🔧 Email init error traceback: {traceback.format_exc()}")
             self.email_manager = None
     
     async def _initialize_speed_demon(self):
@@ -585,19 +669,45 @@ class TradingBotApplication:
         """Main application loop"""
         self.running = True
         logger.info("🔄 Starting main application loop")
+        loop_iteration = 0
         
         while self.running:
+            loop_iteration += 1
+            loop_start_time = time.time()
+            logger.debug(f"🔄 Loop iteration #{loop_iteration} starting...")
+            
             try:
+                # Check if emergency stop is activated
+                if getattr(shared_state, 'emergency_stop', False):
+                    logger.critical("🚨 EMERGENCY STOP - Trading halted")
+                    shared_state.add_log_entry("CRITICAL", "Emergency stop active - skipping trading cycle")
+                    logger.debug(f"🔧 Emergency stop detected, sleeping for 30s...")
+                    await asyncio.sleep(30)  # Wait longer during emergency stop
+                    continue
+                
+                # Check if bot is paused
+                if not getattr(shared_state, 'bot_active', True):
+                    logger.info("⏸️ Bot paused - skipping trading cycle")
+                    shared_state.add_log_entry("INFO", "Bot paused - waiting for resume")
+                    logger.debug(f"🔧 Bot paused, sleeping for 15s...")
+                    await asyncio.sleep(15)  # Check more frequently when paused
+                    continue
+                
                 # Fetch real trading data from Bybit API
                 logger.info("📊 Processing market data...")
+                logger.debug(f"🔧 Starting market data processing at {datetime.now().isoformat()}")
                 shared_state.add_log_entry("INFO", "Processing market data...")
                 
                 # Fetch real balance and positions from Bybit
+                data_fetch_start = time.time()
                 await self.fetch_real_trading_data()
+                data_fetch_time = time.time() - data_fetch_start
+                logger.debug(f"🔧 Market data fetch completed in {data_fetch_time:.2f}s")
                 
                 await asyncio.sleep(10)
                 
                 logger.info("🤖 Executing trading strategies...")
+                logger.debug(f"🔧 Starting trading strategy execution...")
                 shared_state.add_log_entry("INFO", "Executing trading strategies...")
                 
                 # Execute actual ML-based trading strategies
@@ -608,21 +718,33 @@ class TradingBotApplication:
                     trading_signals = await self.execute_ml_strategies()
                     if trading_signals:
                         logger.info(f"💡 ML Signals generated: {len(trading_signals)} opportunities")
+                        signals_summary = [f"{s.get('action', 'hold')} {s.get('symbol', 'N/A')} (conf: {s.get('confidence', 0.0):.2f})" for s in trading_signals]
+                        logger.debug(f"🔧 Generated signals: {signals_summary}")
                         shared_state.add_log_entry("INFO", f"ML generated {len(trading_signals)} trading signals")
                         
                         # Process trading signals - Check mode before execution
-                        for signal in trading_signals:
+                        for i, signal in enumerate(trading_signals, 1):
                             action = signal.get('action', 'hold')
                             symbol = signal.get('symbol', 'BTCUSDT')
                             confidence = signal.get('confidence', 0.0)
-                            logger.info(f"📊 ML Signal: {action.upper()} {symbol} (confidence: {confidence:.2f})")
+                            logger.info(f"📊 ML Signal [{i}/{len(trading_signals)}]: {action.upper()} {symbol} (confidence: {confidence:.2f})")
+                            logger.debug(f"🔧 Signal details: {signal}")
                             
                             # Place orders based on current mode and confidence
                             if confidence >= 0.75 and action in ['buy', 'sell']:
-                                # Check Speed Demon status and execution phase
-                                speed_demon_status = getattr(shared_state, 'speed_demon_status', {})
+                                logger.debug(f"🔧 Signal meets criteria (conf >= 0.75, action in [buy,sell])")
+                                # Check Speed Demon status and execution phase with safe handling
+                                speed_demon_status = getattr(shared_state, 'speed_demon_status', None)
+                                logger.debug(f"🔧 Current speed_demon_status: {speed_demon_status}")
+                                
+                                if not speed_demon_status or not isinstance(speed_demon_status, dict):
+                                    logger.debug("🔧 Initializing default speed_demon_status")
+                                    speed_demon_status = {'mode': 'standard', 'status': 'inactive'}
+                                    shared_state.speed_demon_status = speed_demon_status
+                                
                                 is_speed_demon_mode = speed_demon_status.get('mode') == 'speed_demon'
                                 speed_demon_phase = speed_demon_status.get('status', 'unknown')
+                                logger.debug(f"🔧 Mode: {speed_demon_status.get('mode')}, Phase: {speed_demon_phase}, Is Speed Demon: {is_speed_demon_mode}")
                                 
                                 if is_speed_demon_mode:
                                     if speed_demon_phase in ['ready', 'backtesting_active']:
@@ -758,7 +880,12 @@ class TradingBotApplication:
     async def _manage_speed_demon_backtesting(self):
         """Manage Speed Demon backtesting lifecycle and phase transitions"""
         try:
-            speed_demon_status = getattr(shared_state, 'speed_demon_status', {})
+            # Safely get Speed Demon status with proper null checking
+            speed_demon_status = getattr(shared_state, 'speed_demon_status', None)
+            if not speed_demon_status or not isinstance(speed_demon_status, dict):
+                # Initialize default status if none exists
+                speed_demon_status = {'mode': 'standard', 'status': 'inactive'}
+                shared_state.speed_demon_status = speed_demon_status
             
             if speed_demon_status.get('mode') != 'speed_demon':
                 return  # Not in Speed Demon mode

@@ -15,6 +15,7 @@ import json
 from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
+from debug_logger import log_exception, log_performance
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class BybitAPIClient:
     """Async Bybit API client for real-time data fetching"""
     
     def __init__(self, api_key: str = None, api_secret: str = None, testnet: bool = True):
+        logger.info(f"🔧 Initializing BybitAPIClient (testnet={testnet})")
         self.api_key = api_key
         self.api_secret = api_secret
         self.testnet = testnet
@@ -32,18 +34,26 @@ class BybitAPIClient:
         else:
             self.base_url = "https://api.bybit.com"
             
+        logger.info(f"🔧 Using API base URL: {self.base_url}")
+        logger.debug(f"🔧 API key provided: {'✅' if api_key else '❌'}")
+        logger.debug(f"🔧 API secret provided: {'✅' if api_secret else '❌'}")
+            
         # Session management - create once, reuse
         self.session = None
         self._session_lock = asyncio.Lock()
+        logger.debug("🔧 BybitAPIClient initialization complete")
         
     async def get_session(self):
         """Get or create aiohttp session with proper management"""
+        logger.debug("🔧 Getting API session")
         if self.session is None or self.session.closed:
             async with self._session_lock:
                 if self.session is None or self.session.closed:
+                    logger.debug("🔧 Creating new aiohttp session")
                     self.session = aiohttp.ClientSession(
                         timeout=aiohttp.ClientTimeout(total=30)
                     )
+                    logger.debug("🔧 New session created successfully")
         return self.session
         
     async def __aenter__(self):
@@ -58,7 +68,9 @@ class BybitAPIClient:
     
     def _generate_signature(self, timestamp: str, recv_window: str, params: str, method: str = "GET") -> str:
         """Generate API signature for authenticated requests"""
+        logger.debug(f"🔧 Generating signature for {method} request")
         if not self.api_secret:
+            logger.warning("⚠️ No API secret provided - signature will be empty")
             return ""
         
         # Bybit signature format varies by method:
@@ -70,15 +82,20 @@ class BybitAPIClient:
         else:
             # For GET requests, params is the query string
             param_str = f"{timestamp}{self.api_key}{recv_window}{params}"
-            
-        return hmac.new(
+        
+        logger.debug(f"🔧 Param string length: {len(param_str)}")
+        signature = hmac.new(
             self.api_secret.encode('utf-8'),
             param_str.encode('utf-8'),
             hashlib.sha256
         ).hexdigest()
+        logger.debug(f"🔧 Signature generated: {signature[:16]}...")
+        
+        return signature
     
     def _get_headers(self, params: str = "", method: str = "GET") -> Dict[str, str]:
         """Get headers for API requests"""
+        logger.debug(f"🔧 Preparing headers for {method} request")
         timestamp = str(int(time.time() * 1000))
         recv_window = "5000"
         
@@ -90,15 +107,23 @@ class BybitAPIClient:
         }
         
         if self.api_key and self.api_secret:
+            logger.debug("🔧 Adding signature to headers")
             signature = self._generate_signature(timestamp, recv_window, params, method)
             headers["X-BAPI-SIGN"] = signature
-            
+        else:
+            logger.warning("⚠️ No API credentials - using unsigned request")
+        
+        logger.debug(f"🔧 Headers prepared with timestamp: {timestamp}")
         return headers
     
     async def get_account_balance(self) -> Dict[str, Any]:
         """Get account balance for all coins"""
+        start_time = time.time()
+        logger.info("🔧 Starting get_account_balance request")
+        
         try:
             if not self.api_key:
+                logger.warning("⚠️ API credentials not configured for balance request")
                 return {
                     "success": False,
                     "message": "API credentials not configured",
@@ -113,20 +138,28 @@ class BybitAPIClient:
             endpoint = "/v5/account/wallet-balance"
             params = "accountType=UNIFIED"
             url = f"{self.base_url}{endpoint}?{params}"
+            logger.debug(f"🔧 Request URL: {url}")
             
             headers = self._get_headers(params)
+            logger.debug("🔧 Headers prepared for balance request")
             
             session = await self.get_session()
+            logger.debug("🔧 Making HTTP GET request to Bybit API")
+            
             async with session.get(url, headers=headers) as response:
+                logger.debug(f"🔧 Response status: {response.status}")
+                
                 # Enhanced error handling for None responses in balance method
                 try:
                     data = await response.json()
+                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
                 except Exception as json_error:
-                    logger.error(f"Failed to parse JSON response in get_account_balance: {json_error}")
+                    logger.error(f"❌ Failed to parse JSON response in get_account_balance: {json_error}")
+                    log_exception(json_error, "JSON parsing in get_account_balance")
                     data = None
                 
                 if data is None:
-                    logger.error(f"Bybit API returned None response in balance check. Status: {response.status}")
+                    logger.error(f"❌ Bybit API returned None response in balance check. Status: {response.status}")
                     return {
                         "success": False,
                         "message": f"API returned empty response (Status: {response.status})",
@@ -139,7 +172,9 @@ class BybitAPIClient:
                     }
                 
                 if response.status == 200 and data.get("retCode") == 0:
+                    logger.info("✅ Successfully received balance data from Bybit")
                     wallet_data = data["result"]["list"][0] if data["result"]["list"] else {}
+                    logger.debug(f"🔧 Wallet data keys: {list(wallet_data.keys())}")
                     
                     # Safe float conversion helper
                     def safe_float(value, default=0.0):
@@ -154,6 +189,8 @@ class BybitAPIClient:
                     total_margin = safe_float(wallet_data.get("totalMarginBalance"))
                     total_used = max(0, total_margin - total_available)
                     
+                    logger.debug(f"🔧 Balance summary: Wallet={total_wallet:.2f}, Available={total_available:.2f}, Used={total_used:.2f}")
+                    
                     # Get individual coin balances
                     coins = []
                     for coin_data in wallet_data.get("coin", []):
@@ -166,6 +203,9 @@ class BybitAPIClient:
                                 "used_margin": safe_float(coin_data.get("totalOrderIM"))
                             })
                     
+                    logger.info(f"✅ Processed {len(coins)} coins with balance > 0")
+                    log_performance("get_account_balance", start_time, coins_found=len(coins))
+                    
                     return {
                         "success": True,
                         "data": {
@@ -176,10 +216,10 @@ class BybitAPIClient:
                         }
                     }
                 else:
-                    logger.error(f"Bybit API error: {data}")
+                    logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
                     return {
                         "success": False,
-                        "message": f"API Error: {data.get('retMsg', 'Unknown error')}",
+                        "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
                         "data": {
                             "total_wallet_balance": "Error",
                             "total_available_balance": "Error",
@@ -189,7 +229,9 @@ class BybitAPIClient:
                     }
                     
         except Exception as e:
-            logger.error(f"Error fetching balance: {str(e)}")
+            logger.error(f"❌ Error fetching balance: {str(e)}")
+            log_exception(e, "get_account_balance")
+            log_performance("get_account_balance", start_time, error=str(e))
             return {
                 "success": False,
                 "message": f"Connection error: {str(e)}",
@@ -203,8 +245,12 @@ class BybitAPIClient:
     
     async def get_positions(self) -> Dict[str, Any]:
         """Get all active positions"""
+        start_time = time.time()
+        logger.info("🔧 Starting get_positions request")
+        
         try:
             if not self.api_key:
+                logger.warning("⚠️ API credentials not configured for positions request")
                 return {
                     "success": False,
                     "message": "API credentials not configured",
@@ -214,14 +260,31 @@ class BybitAPIClient:
             endpoint = "/v5/position/list"
             params = "category=linear"
             url = f"{self.base_url}{endpoint}?{params}"
+            logger.debug(f"🔧 Request URL: {url}")
             
             headers = self._get_headers(params)
+            logger.debug("🔧 Headers prepared for positions request")
             
             session = await self.get_session()
+            logger.debug("🔧 Making HTTP GET request for positions")
             async with session.get(url, headers=headers) as response:
-                data = await response.json()
+                logger.debug(f"🔧 Response status: {response.status}")
+                
+                try:
+                    data = await response.json()
+                    logger.debug(f"🔧 Response data size: {len(str(data)) if data else 0} chars")
+                except Exception as json_error:
+                    logger.error(f"❌ Failed to parse JSON response in get_positions: {json_error}")
+                    log_exception(json_error, "JSON parsing in get_positions")
+                    return {
+                        "success": False,
+                        "message": f"Failed to parse response: {json_error}",
+                        "data": {"positions": []}
+                    }
                 
                 if response.status == 200 and data.get("retCode") == 0:
+                    logger.info("✅ Successfully received positions data from Bybit")
+                    
                     # Safe float conversion helper
                     def safe_float(value, default=0.0):
                         try:
@@ -230,6 +293,9 @@ class BybitAPIClient:
                             return default
                     
                     positions = []
+                    total_positions = len(data["result"]["list"])
+                    logger.debug(f"🔧 Processing {total_positions} total positions from API")
+                    
                     for pos in data["result"]["list"]:
                         size = safe_float(pos.get("size"))
                         if size > 0:  # Only active positions
@@ -247,19 +313,27 @@ class BybitAPIClient:
                                 "pnl_percentage": f"{pnl_percentage:.2f}%"
                             })
                     
+                    logger.info(f"✅ Found {len(positions)} active positions out of {total_positions} total")
+                    log_performance("get_positions", start_time, 
+                                  active_positions=len(positions), 
+                                  total_positions=total_positions)
+                    
                     return {
                         "success": True,
                         "data": {"positions": positions}
                     }
                 else:
+                    logger.error(f"❌ Bybit API error: Status={response.status}, Data={data}")
                     return {
                         "success": False,
-                        "message": f"API Error: {data.get('retMsg', 'Unknown error')}",
+                        "message": f"API Error: {data.get('retMsg', 'Unknown error') if data else 'No response data'}",
                         "data": {"positions": []}
                     }
                     
         except Exception as e:
-            logger.error(f"Error fetching positions: {str(e)}")
+            logger.error(f"❌ Error fetching positions: {str(e)}")
+            log_exception(e, "get_positions")
+            log_performance("get_positions", start_time, error=str(e))
             return {
                 "success": False,
                 "message": f"Connection error: {str(e)}",

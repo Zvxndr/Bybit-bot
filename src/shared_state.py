@@ -10,18 +10,25 @@ import threading
 from datetime import datetime
 from typing import Dict, Any, Optional
 import time
+import logging
+
+# Setup logging for shared state
+logger = logging.getLogger(__name__)
 
 class SharedState:
     """Thread-safe shared state for trading bot data"""
     
     def __init__(self):
+        logger.debug("🔧 Initializing SharedState...")
         self._lock = threading.RLock()
         self._start_time = time.time()
         
         # Speed Demon deployment status
         self.speed_demon_status = None
+        logger.debug("🔧 Speed Demon status initialized to None")
         
         # Initialize default state
+        logger.debug("🔧 Setting up default state...")
         self._state = {
             "system": {
                 "status": "initializing",

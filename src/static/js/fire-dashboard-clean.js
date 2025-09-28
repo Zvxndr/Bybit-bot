@@ -1,4 +1,4 @@
-// 🔥 Fire Cybersigilism Dashboard JavaScript
+// 🔥 Fire Trading Dashboard JavaScript
 // Multi-Environment Trading Bot Control System for Personal Use
 
 class FireDashboard {
@@ -191,14 +191,18 @@ class FireDashboard {
 
     async fetchPositions() {
         try {
-            const response = await fetch(`/api/positions/${this.currentEnvironment}`);
+            const response = await fetch('/api/positions');
             const result = await response.json();
             
-            if (result.success) {
-                this.updatePositions(result.data);
+            if (result.positions) {
+                this.updatePositions(result.positions);
+            } else {
+                console.log('No positions data received:', result);
+                this.updatePositions([]);
             }
         } catch (error) {
             console.error('Error fetching positions:', error);
+            this.updatePositions([]);
         }
     }
 

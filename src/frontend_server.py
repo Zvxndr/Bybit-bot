@@ -14,51 +14,93 @@ from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 import mimetypes
+import traceback
+import time
 
+# Setup enhanced logging for frontend server
 logger = logging.getLogger(__name__)
+logger.info("🔧 Frontend server module loaded")
 
 class FrontendHandler(BaseHTTPRequestHandler):
     """Handle frontend requests through Python backend"""
     
     def __init__(self, *args, **kwargs):
+        logger.debug("🔧 Initializing FrontendHandler")
         self.frontend_path = Path("src/dashboard/frontend")
+        logger.debug(f"🔧 Frontend path: {self.frontend_path}")
         super().__init__(*args, **kwargs)
     
     def do_GET(self):
         """Handle GET requests for frontend assets and API"""
+        request_start = time.time()
+        logger.debug(f"🌐 GET {self.path} from {self.client_address[0]}")
         
-        # Handle API routes
-        if self.path.startswith('/api/'):
-            self.handle_api_request()
-            return
-        
-        # Handle health check
-        if self.path == '/health':
-            self.handle_health_check()
-            return
+        try:
+            # Handle API routes
+            if self.path.startswith('/api/'):
+                logger.debug(f"🔧 Handling API request: {self.path}")
+                self.handle_api_request()
+                return
             
-        # Handle frontend routes
-        if self.path == '/' or self.path == '/dashboard':
+            # Handle health check
+            if self.path == '/health':
+                logger.debug(f"🔧 Handling health check")
+                self.handle_health_check()
+                return
+                
+            # Handle frontend routes
+            if self.path == '/' or self.path == '/dashboard':
+                logger.debug(f"🔧 Serving dashboard")
+                self.serve_dashboard()
+                return
+                
+            # Handle static assets
+            if self.path.startswith('/static/') or self.path.startswith('/assets/'):
+                logger.debug(f"🔧 Serving static file: {self.path}")
+                self.serve_static_file()
+                return
+                
+            # Default to dashboard for SPA routing
+            logger.debug(f"🔧 Default routing to dashboard for: {self.path}")
             self.serve_dashboard()
-            return
             
-        # Handle static assets
-        if self.path.startswith('/static/') or self.path.startswith('/assets/'):
-            self.serve_static_file()
-            return
+        except Exception as e:
+            logger.error(f"❌ GET request error for {self.path}: {e}")
+            logger.debug(f"🔧 GET error traceback: {traceback.format_exc()}")
+            self.send_response(500)
+            self.end_headers()
             
-        # Default to dashboard for SPA routing
-        self.serve_dashboard()
+        finally:
+            request_time = time.time() - request_start
+            logger.debug(f"🔧 GET {self.path} completed in {request_time:.3f}s")
     
     def do_POST(self):
         """Handle POST requests for API endpoints"""
-        if self.path.startswith('/api/'):
-            self.handle_api_post_request()
-        else:
-            self.send_response(404)
+        request_start = time.time()
+        logger.debug(f"🌐 POST {self.path} from {self.client_address[0]}")
+        
+        try:
+            if self.path.startswith('/api/'):
+                logger.debug(f"🔧 Handling POST API request: {self.path}")
+                self.handle_api_post_request()
+            else:
+                logger.warning(f"⚠️ POST to non-API endpoint: {self.path}")
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "POST endpoint not found"}).encode())
+                
+        except Exception as e:
+            logger.error(f"❌ POST request error for {self.path}: {e}")
+            logger.debug(f"🔧 POST error traceback: {traceback.format_exc()}")
+            self.send_response(500)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "POST endpoint not found"}).encode())
+            self.wfile.write(json.dumps({"error": "Internal server error"}).encode())
+            
+        finally:
+            request_time = time.time() - request_start
+            logger.debug(f"🔧 POST {self.path} completed in {request_time:.3f}s")
     
     def handle_api_post_request(self):
         """Handle POST API requests"""
@@ -264,7 +306,16 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            response = {"success": True, "message": "Bot paused successfully"}
+            # Actually implement pause functionality
+            try:
+                shared_state.bot_active = False
+                shared_state.add_log_entry("INFO", "🔀 Bot paused by user")
+                logger.info("🔀 Bot paused via API")
+                response = {"success": True, "message": "Bot paused successfully"}
+            except Exception as e:
+                logger.error(f"Bot pause error: {e}")
+                response = {"success": False, "error": f"Pause failed: {str(e)}"}
+            
             self.wfile.write(json.dumps(response).encode())
             
         elif self.path == '/api/bot/resume':
@@ -273,7 +324,17 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            response = {"success": True, "message": "Bot resumed successfully"}
+            # Actually implement resume functionality
+            try:
+                shared_state.bot_active = True
+                shared_state.emergency_stop = False  # Clear emergency stop if set
+                shared_state.add_log_entry("INFO", "▶️ Bot resumed by user")
+                logger.info("▶️ Bot resumed via API")
+                response = {"success": True, "message": "Bot resumed successfully"}
+            except Exception as e:
+                logger.error(f"Bot resume error: {e}")
+                response = {"success": False, "error": f"Resume failed: {str(e)}"}
+            
             self.wfile.write(json.dumps(response).encode())
             
         elif self.path == '/api/bot/emergency-stop':
@@ -282,7 +343,19 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            response = {"success": True, "message": "Emergency stop activated"}
+            # Actually implement emergency stop functionality
+            try:
+                # Set emergency stop flag in shared state
+                shared_state.emergency_stop = True
+                shared_state.bot_active = False
+                shared_state.add_log_entry("CRITICAL", "🚨 EMERGENCY STOP ACTIVATED by user")
+                logger.critical("🚨 EMERGENCY STOP ACTIVATED via API")
+                
+                response = {"success": True, "message": "Emergency stop activated - all trading halted"}
+            except Exception as e:
+                logger.error(f"Emergency stop error: {e}")
+                response = {"success": False, "error": f"Emergency stop failed: {str(e)}"}
+            
             self.wfile.write(json.dumps(response).encode())
             
         elif self.path == '/api/environment/switch':
