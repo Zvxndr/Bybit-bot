@@ -67,12 +67,27 @@ class DebugSafetyManager:
     """Manages debug mode and prevents real trading during development"""
     
     def __init__(self, config_path: Optional[str] = None):
-        self.config_path = config_path or "config/debug.yaml"
+        # Check for production mode via environment variables
+        self.is_production_env = os.getenv('PRODUCTION_MODE', '').lower() == 'true'
+        self.deployment_env = os.getenv('DEPLOYMENT_ENV', 'development')
+        
+        # Determine config file based on environment
+        if self.is_production_env:
+            self.config_path = config_path or "config/production.yaml"
+        else:
+            self.config_path = config_path or "config/debug.yaml"
+            
         self.config = self._load_debug_config()
         self.debug_mode = self.config.get('debug_mode', True)
         self.start_time = datetime.now()
         
-        # Initialize debug session
+        # Log the mode we're operating in
+        mode = "PRODUCTION" if not self.debug_mode else "DEBUG"
+        logger.info(f"🔧 Safety Manager initialized in {mode} mode")
+        logger.info(f"🔧 Environment: {self.deployment_env}")
+        logger.info(f"🔧 Config file: {self.config_path}")
+        
+        # Initialize session
         self._initialize_debug_session()
         
     def _load_debug_config(self) -> Dict[str, Any]:
@@ -109,16 +124,25 @@ class DebugSafetyManager:
         }
     
     def _initialize_debug_session(self):
-        """Initialize debug session with safety checks"""
+        """Initialize session with appropriate safety checks"""
         if self.debug_mode:
             logger.warning("🚨 DEBUG MODE ACTIVE - Trading execution disabled")
             logger.info("🔧 Debug Safety Manager initialized")
             logger.info(f"📅 Debug session started at: {self.start_time}")
             
-            # Check max runtime
+            # Check max runtime for debug mode
             max_runtime = self.config.get('debug_settings', {}).get('max_debug_runtime', 3600)
             end_time = self.start_time + timedelta(seconds=max_runtime)
             logger.info(f"⏰ Debug session will auto-shutdown at: {end_time}")
+        else:
+            logger.info("🚀 PRODUCTION MODE ACTIVE - Live trading enabled")
+            logger.info("🔧 Production Safety Manager initialized") 
+            logger.info(f"📅 Production session started at: {self.start_time}")
+            
+            # Log production safety settings
+            safety_settings = self.config.get('safety_systems', {})
+            logger.info(f"🛡️ Emergency stop: {safety_settings.get('emergency_stop_enabled', True)}")
+            logger.info(f"🛡️ Position monitoring: {safety_settings.get('position_monitoring', True)}")
     
     def is_debug_mode(self) -> bool:
         """Check if debug mode is active"""
@@ -128,10 +152,11 @@ class DebugSafetyManager:
         """Check if trading operations are allowed"""
         if self.debug_mode:
             return False
-        return self.config.get('phase', {}).get('trading_allowed', False)
+        # In production mode, check if live trading is enabled
+        return self.config.get('production_settings', {}).get('enable_live_trading', False)
     
     def should_use_testnet(self) -> bool:
-        """Force testnet usage in debug mode"""
+        """Determine if testnet should be used"""
         if self.debug_mode:
             return True
         return self.config.get('debug_settings', {}).get('force_testnet', False)

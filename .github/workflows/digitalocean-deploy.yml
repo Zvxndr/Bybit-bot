@@ -84,7 +84,8 @@ jobs:
       run: |
         # Start container in background
         docker run -d --name openalpha-test -p 5051:5050 \
-          -e DEBUG_MODE=true \
+          -e PRODUCTION_MODE=true \
+          -e DEBUG_MODE=false \
           -e DATA_DOWNLOAD_ON_START=false \
           openalpha:test
         
@@ -155,8 +156,10 @@ jobs:
           http_port: 5050
           environment_slug: node-js
           env:
-          - key: DEBUG_MODE
+          - key: PRODUCTION_MODE
             value: "true"
+          - key: DEBUG_MODE
+            value: "false"
           - key: DEPLOYMENT_ENV
             value: "digitalocean"
           - key: DATA_DOWNLOAD_ON_START
@@ -175,16 +178,18 @@ jobs:
     
     - name: 📊 Deployment Summary
       run: |
-        echo "🔥 Open Alpha Deployment Complete!"
+        echo "🔥 Production Deployment Complete!"
         echo "🚀 Status: Deployed to DigitalOcean App Platform"
-        echo "🌐 Environment: Production with debug safety active"
-        echo "🛡️ Safety: All trading operations blocked"
+        echo "🌐 Environment: LIVE TRADING ENABLED"
+        echo "� Trading: All trading operations ACTIVE"
         echo "📊 Data: Historical data auto-download enabled"
         echo "🔥 Dashboard: Fire cybersigilism UI active"
+        echo "🛡️ Logging: Full debug logging preserved"
         echo ""
         echo "📋 Next Steps:"
         echo "1. Monitor deployment logs"
         echo "2. Verify health checks pass"
+        echo "3. Confirm live trading operations"
         echo "3. Test fire dashboard functionality"
         echo "4. Validate historical data integration"
         echo "5. Begin Phase 2: ML Integration planning"
