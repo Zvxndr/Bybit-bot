@@ -5,18 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔥 Open Alpha - Fire Trading Dashboard</title>
     <link rel="stylesheet" href="/static/css/fire-cybersigilism.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel=                    <!-- Backtesting Controls -->
-                    <div class="backtest-controls" style="margin-top: 16px; display: flex; gap: 8px;">
-                        <button class="cyber-btn" onclick="startHistoricalBacktest()" style="flex: 1;">
-                            <i class="fas fa-play"></i> START BACKTEST
-                        </button>
-                        <button class="cyber-btn" onclick="viewBacktestResults()" style="flex: 1;">
-                            <i class="fas fa-chart-bar"></i> VIEW RESULTS
-                        </button>
-                        <button class="fire-btn" onclick="toggleBacktestDetails()" style="flex: 0 0 auto;">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -48,7 +37,7 @@
     <!-- Main Dashboard Container -->
     <div id="mainDashboard" class="dashboard-container" style="display: none;">
         <!-- Header -->
-        <header class="dashboard-header">
+        <header class="dashboard-header" style="margin-bottom: 0px !important;">
             <div>
                 <h1 class="cyber-title">🔥 OPEN ALPHA</h1>
                 <p class="cyber-text">Enterprise Trading Dashboard</p>
@@ -63,7 +52,7 @@
         </header>
 
         <!-- Admin Panel (Hidden by default) -->
-        <div id="adminPanel" class="admin-grid" style="display: none;">
+        <div id="adminPanel" class="admin-grid" style="display: none; margin: 0px !important;">
             <div class="card-header" style="grid-column: 1 / -1; border: none; margin-bottom: 8px;">
                 <h2 class="card-title"><i class="fas fa-shield-alt"></i> ENTERPRISE ADMIN CONTROL</h2>
             </div>
@@ -240,9 +229,9 @@
         </div>
 
         <!-- Balance Section -->
-        <section class="balance-section">
+        <section class="balance-section" style="margin-top: -4px !important; gap: 4px !important;">
             <!-- Multi-Environment Account Balance -->
-            <div class="fire-card">
+            <div class="fire-card" style="margin-top: 0px !important;">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-wallet"></i> ACCOUNT BALANCES</h3>
                 </div>
