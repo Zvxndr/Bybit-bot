@@ -469,6 +469,10 @@ class TradingBotApplication:
             logger.debug("🔧 Sending startup notification...")
             await self._send_startup_notification()
             
+            # Run debug scripts if in debug mode
+            logger.debug("🔧 Checking if debug scripts should be run...")
+            await self._run_debug_scripts_if_enabled()
+            
             initialization_time = time.time() - initialization_start
             logger.info(f"🎯 Application initialization completed successfully in {initialization_time:.2f}s")
             shared_state.update_system_status("active")
@@ -560,6 +564,123 @@ class TradingBotApplication:
                 logger.info("📧 Startup notification sent")
             except Exception as e:
                 logger.warning(f"📧 Failed to send startup notification: {e}")
+        
+    async def _run_debug_scripts_if_enabled(self):
+        """Run debug test scripts if in debug mode during deployment"""
+        try:
+            # Check if we're in debug mode
+            if debug_manager and hasattr(debug_manager, 'is_debug_mode'):
+                is_debug = debug_manager.is_debug_mode()
+            else:
+                # Fallback check - look for debug indicators
+                is_debug = (
+                    os.getenv('DEBUG_MODE', '').lower() == 'true' or
+                    os.getenv('ENVIRONMENT', '').lower() in ['debug', 'development'] or
+                    Path('.debug').exists()
+                )
+            
+            if is_debug:
+                logger.info("🔧 Debug mode detected - running automated debug scripts")
+                shared_state.add_log_entry("INFO", "Running debug scripts during deployment")
+                
+                # Import and run the debug scripts
+                await self._run_button_function_tests()
+                await self._run_data_wipe_debug()
+                
+            else:
+                logger.info("✅ Production mode - skipping debug scripts")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Debug script execution failed: {e}")
+            # Don't fail initialization if debug scripts fail
+    
+    async def _run_button_function_tests(self):
+        """Run the button function tests during debug deployment"""
+        try:
+            logger.info("🧪 Running button function tests...")
+            
+            # Import and run the test script
+            import subprocess
+            import sys
+            
+            # Determine the root directory (parent of src)
+            root_dir = Path(__file__).parent.parent
+            test_script = root_dir / 'test_button_functions.py'
+            
+            if not test_script.exists():
+                logger.warning(f"⚠️ Test script not found at {test_script}")
+                return
+            
+            # Run the test script as a subprocess to avoid blocking
+            result = await asyncio.create_subprocess_exec(
+                sys.executable, str(test_script),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(root_dir)  # Set working directory to root
+            )
+            
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                logger.info("✅ Button function tests completed successfully")
+                shared_state.add_log_entry("SUCCESS", "Button function tests passed")
+                
+                # Log the results
+                if stdout:
+                    test_output = stdout.decode()
+                    logger.info(f"🧪 Test Results:\n{test_output}")
+            else:
+                logger.warning(f"⚠️ Button function tests failed with exit code {result.returncode}")
+                if stderr:
+                    error_output = stderr.decode()
+                    logger.warning(f"🧪 Test Errors:\n{error_output}")
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Could not run button function tests: {e}")
+    
+    async def _run_data_wipe_debug(self):
+        """Run the data wipe debug script during debug deployment"""
+        try:
+            logger.info("🔥 Running data wipe debug tests...")
+            
+            # Import and run the debug script
+            import subprocess
+            import sys
+            
+            # Determine the root directory (parent of src)
+            root_dir = Path(__file__).parent.parent
+            debug_script = root_dir / 'debug_data_wipe.py'
+            
+            if not debug_script.exists():
+                logger.warning(f"⚠️ Debug script not found at {debug_script}")
+                return
+            
+            # Run the debug script as a subprocess
+            result = await asyncio.create_subprocess_exec(
+                sys.executable, str(debug_script),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(root_dir)  # Set working directory to root
+            )
+            
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                logger.info("✅ Data wipe debug tests completed successfully")
+                shared_state.add_log_entry("SUCCESS", "Data wipe debug tests passed")
+                
+                # Log the results
+                if stdout:
+                    debug_output = stdout.decode()
+                    logger.info(f"🔥 Debug Results:\n{debug_output}")
+            else:
+                logger.warning(f"⚠️ Data wipe debug tests failed with exit code {result.returncode}")
+                if stderr:
+                    error_output = stderr.decode()
+                    logger.warning(f"🔥 Debug Errors:\n{error_output}")
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Could not run data wipe debug: {e}")
         
     def start_health_server(self):
         """Start HTTP server with frontend and API support"""
@@ -1193,6 +1314,20 @@ def signal_handler(signum, frame):
 async def main():
     """Main entry point"""
     logger.info("🚀 Starting Open Alpha Application")
+    
+    # Check for debug mode early
+    debug_indicators = [
+        os.getenv('DEBUG_MODE', '').lower() == 'true',
+        os.getenv('ENVIRONMENT', '').lower() in ['debug', 'development'],
+        Path('.debug').exists(),
+        '--debug' in sys.argv
+    ]
+    
+    if any(debug_indicators):
+        logger.info("🔧 DEBUG MODE ACTIVATED - Test scripts will run automatically")
+        os.environ['DEBUG_MODE'] = 'true'  # Ensure it's set for child processes
+    else:
+        logger.info("✅ Production mode activated")
     
     try:
         # Set up signal handlers

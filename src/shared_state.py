@@ -137,6 +137,8 @@ class SharedState:
         import shutil
         from pathlib import Path
         
+        logger.warning("🔥 Starting comprehensive data wipe...")
+        
         with self._lock:
             # Reset to initial state
             self._start_time = time.time()
@@ -168,36 +170,74 @@ class SharedState:
                 "last_update": datetime.now().isoformat()
             }
             
-            # Clear historical data files
+            # Clear historical data files and directories
             try:
-                data_dirs = [
+                data_paths = [
+                    # Cache directories  
                     "src/data/speed_demon_cache",
+                    "src/data/historical_cache",
+                    "data/historical",
+                    "data/cache",
+                    "data/models",
+                    "data/strategies",
+                    # General data and logs
                     "data",
-                    "logs"
+                    "logs",
+                    "cache",
+                    # Any .db files
+                    "*.db"
                 ]
                 
-                for data_dir in data_dirs:
-                    if os.path.exists(data_dir):
-                        if os.path.isdir(data_dir):
-                            shutil.rmtree(data_dir)
-                            logger.info(f"🗑️ Cleared directory: {data_dir}")
-                        else:
-                            os.remove(data_dir)
-                            logger.info(f"🗑️ Cleared file: {data_dir}")
+                files_cleared = 0
+                dirs_cleared = 0
                 
-                # Clear any .db files in the workspace
-                for db_file in Path(".").glob("**/*.db"):
+                for pattern in data_paths:
+                    if "*" in pattern:
+                        # Handle glob patterns
+                        for path in Path(".").glob(pattern):
+                            try:
+                                if path.is_file():
+                                    path.unlink()
+                                    files_cleared += 1
+                                    logger.info(f"🗑️ Cleared file: {path}")
+                                elif path.is_dir():
+                                    shutil.rmtree(path)
+                                    dirs_cleared += 1
+                                    logger.info(f"🗑️ Cleared directory: {path}")
+                            except Exception as e:
+                                logger.warning(f"⚠️ Could not clear {path}: {e}")
+                    else:
+                        # Handle direct paths
+                        if os.path.exists(pattern):
+                            try:
+                                if os.path.isdir(pattern):
+                                    shutil.rmtree(pattern)
+                                    dirs_cleared += 1
+                                    logger.info(f"🗑️ Cleared directory: {pattern}")
+                                else:
+                                    os.remove(pattern)
+                                    files_cleared += 1
+                                    logger.info(f"🗑️ Cleared file: {pattern}")
+                            except Exception as e:
+                                logger.warning(f"⚠️ Could not clear {pattern}: {e}")
+                
+                # Also clear any remaining database files in subdirectories
+                for db_file in Path(".").rglob("*.db"):
                     try:
                         db_file.unlink()
+                        files_cleared += 1
                         logger.info(f"🗑️ Cleared database: {db_file}")
                     except Exception as e:
-                        logger.warning(f"⚠️ Could not clear {db_file}: {e}")
+                        logger.warning(f"⚠️ Could not clear database {db_file}: {e}")
+                
+                logger.warning(f"🔥 Data wipe completed: {files_cleared} files, {dirs_cleared} directories cleared")
                         
             except Exception as e:
                 logger.error(f"❌ Error during data wipe: {e}")
         
         # Log the reset
-        self.add_log_entry("INFO", "🔥 All trading data and historical files cleared - System reset to defaults")
+        self.add_log_entry("WARNING", f"🔥 SYSTEM RESET - All trading data and historical files cleared - {files_cleared} files, {dirs_cleared} directories removed")
+        logger.warning("🔥 Data wipe operation completed successfully")
     
     def get_multi_environment_balance(self) -> Dict[str, Any]:
         """Get balance data for all environments (testnet, mainnet, paper)"""

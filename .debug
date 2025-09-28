@@ -1,0 +1,6 @@
+# Debug Mode Flag
+# This file exists to trigger debug mode during deployment
+# Remove this file to disable debug mode
+DEBUG_MODE=true
+ENVIRONMENT=debug
+AUTO_RUN_TESTS=true

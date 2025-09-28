@@ -89,15 +89,52 @@ class BybitAPIClient:
     async def get_session(self):
         """Get or create aiohttp session with proper management"""
         logger.debug("🔧 Getting API session")
-        if self.session is None or self.session.closed:
-            async with self._session_lock:
-                if self.session is None or self.session.closed:
-                    logger.debug("🔧 Creating new aiohttp session")
-                    self.session = aiohttp.ClientSession(
-                        timeout=aiohttp.ClientTimeout(total=30)
-                    )
-                    logger.debug("🔧 New session created successfully")
-        return self.session
+        try:
+            # Check if current loop is running and valid
+            current_loop = None
+            try:
+                current_loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # No running loop, create a new session when one starts
+                logger.debug("🔧 No running event loop detected")
+                pass
+            
+            # Check if we need a new session
+            if (self.session is None or 
+                self.session.closed or 
+                (current_loop and current_loop.is_closed())):
+                
+                async with self._session_lock:
+                    # Double-check after acquiring lock
+                    if (self.session is None or 
+                        self.session.closed or
+                        (current_loop and current_loop.is_closed())):
+                        
+                        # Close old session if it exists
+                        if self.session and not self.session.closed:
+                            await self.session.close()
+                            logger.debug("🔧 Closed old session")
+                        
+                        logger.debug("🔧 Creating new aiohttp session")
+                        self.session = aiohttp.ClientSession(
+                            timeout=aiohttp.ClientTimeout(total=30)
+                        )
+                        logger.debug("🔧 New session created successfully")
+            
+            return self.session
+            
+        except Exception as e:
+            logger.error(f"❌ Error managing session: {e}")
+            # Fallback: create a fresh session
+            try:
+                self.session = aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=30)
+                )
+                logger.debug("🔧 Created fallback session")
+                return self.session
+            except Exception as fallback_error:
+                logger.error(f"❌ Fallback session creation failed: {fallback_error}")
+                raise fallback_error
         
     async def __aenter__(self):
         """Async context manager entry"""
@@ -639,6 +676,30 @@ class BybitAPIClient:
             
             headers = self._get_headers(params)
             logger.debug("🔧 Headers prepared for trade history request")
+            
+            # Check if event loop is available and not closed
+            try:
+                current_loop = asyncio.get_running_loop()
+                if current_loop.is_closed():
+                    raise RuntimeError("Event loop is closed")
+            except RuntimeError as loop_error:
+                logger.warning(f"⚠️ Event loop issue: {loop_error}")
+                # Return mock data if in debug mode
+                if self.debug_manager.is_debug_mode():
+                    mock_trades = self.debug_manager.get_mock_data('trades')
+                    if mock_trades:
+                        limited_trades = mock_trades[:limit] if len(mock_trades) > limit else mock_trades
+                        logger.info(f"✅ Using {len(limited_trades)} mock trades due to loop issue")
+                        return {
+                            "success": True,
+                            "data": {"trades": limited_trades}
+                        }
+                # Return error for non-debug mode
+                return {
+                    "success": False,
+                    "message": f"Event loop error: {loop_error}",
+                    "data": {"trades": []}
+                }
             
             session = await self.get_session()
             logger.debug("🔧 Making HTTP GET request for trade history")
