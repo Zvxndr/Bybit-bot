@@ -6,12 +6,59 @@ Comprehensive debugging system to prevent trading execution during development.
 This ensures no real money is at risk during the debugging phase.
 """
 
-import yaml
 import logging
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+
+try:
+    import yaml
+except ImportError:
+    print("Warning: PyYAML not installed. Using basic configuration.")
+    # Create a minimal yaml substitute
+    class SimpleYAML:
+        @staticmethod
+        def safe_load(content):
+            # Basic YAML parsing for debug config
+            if isinstance(content, str):
+                lines = content.split('\n')
+            else:
+                lines = content.read().split('\n')
+            
+            config = {}
+            for line in lines:
+                if ':' in line and not line.strip().startswith('#'):
+                    key, value = line.split(':', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # Convert basic types
+                    if value.lower() == 'true':
+                        config[key] = True
+                    elif value.lower() == 'false':
+                        config[key] = False
+                    elif value.isdigit():
+                        config[key] = int(value)
+                    else:
+                        config[key] = value.strip('"\'')
+            
+            # Provide safe defaults if parsing fails
+            if not config:
+                return {
+                    'debug_mode': True,
+                    'debug_settings': {'disable_real_trading': True},
+                    'phase': {'trading_allowed': False}
+                }
+            return config
+        
+        @staticmethod
+        def dump(data, f, **kwargs):
+            # Simple YAML output
+            for key, value in data.items():
+                f.write(f"{key}: {value}\n")
+    
+    yaml = SimpleYAML()
 
 logger = logging.getLogger(__name__)
 

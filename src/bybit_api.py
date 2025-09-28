@@ -15,8 +15,24 @@ import json
 from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
-from debug_logger import log_exception, log_performance
-from debug_safety import get_debug_manager
+
+try:
+    from .debug_logger import log_exception, log_performance
+except ImportError:
+    try:
+        from debug_logger import log_exception, log_performance
+    except ImportError:
+        # Fallback functions if debug_logger is not available
+        def log_exception(exc, context=""):
+            logger.error(f"Exception in {context}: {exc}")
+        def log_performance(operation, start_time, **kwargs):
+            duration = time.time() - start_time
+            logger.debug(f"Performance {operation}: {duration:.2f}s {kwargs}")
+
+try:
+    from .debug_safety import get_debug_manager
+except ImportError:
+    from debug_safety import get_debug_manager
 
 logger = logging.getLogger(__name__)
 
