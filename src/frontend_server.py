@@ -502,9 +502,8 @@ class FrontendHandler(BaseHTTPRequestHandler):
             debug_status = self.debug_manager.get_debug_status()
             shared_data = shared_state.get_all_data()
             
-            # Get bot control data
-            bot_control = shared_state.get_bot_control_data()
-            debug_mode = bot_control.get('debug_mode', debug_status.get('debug_mode', True))
+            # Get debug mode from available sources
+            debug_mode = debug_status.get('debug_mode', True)
             
             response = {
                 "success": True,
@@ -714,27 +713,32 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def get_dashboard_html(self):
         """Load the Professional Glass Box dashboard template"""
         try:
-            # Use the new professional dashboard following Glass Box design philosophy
-            template_path = Path("professional_dashboard.html")
-            if template_path.exists():
-                with open(template_path, 'r', encoding='utf-8') as f:
-                    logger.info("✅ Professional Glass Box dashboard template loaded successfully")
-                    return f.read()
-            else:
-                logger.warning(f"Professional template not found at: {template_path}")
-                # Fallback to fire dashboard if professional not found
-                template_path = Path("src/templates/fire_dashboard_redesign.html")
+            # Check multiple possible locations for the professional dashboard
+            possible_paths = [
+                Path("professional_dashboard.html"),  # Root directory
+                Path("src/templates/professional_dashboard.html"),  # Templates folder
+            ]
+            
+            for template_path in possible_paths:
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info("✅ Fire dashboard REDESIGN template loaded as fallback")
+                        logger.info(f"✅ Professional Glass Box dashboard template loaded from: {template_path}")
                         return f.read()
-                else:
-                    # Final fallback to original fire dashboard
-                    template_path = Path("src/templates/fire_dashboard.html")
-                    if template_path.exists():
-                        with open(template_path, 'r', encoding='utf-8') as f:
-                            logger.info("✅ Fire dashboard original template loaded as final fallback")
-                            return f.read()
+            
+            # If professional template not found, fallback to fire dashboard
+            logger.warning("Professional template not found in any expected location")
+            template_path = Path("src/templates/fire_dashboard_redesign.html")
+            if template_path.exists():
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    logger.info("✅ Fire dashboard REDESIGN template loaded as fallback")
+                    return f.read()
+            else:
+                # Final fallback to original fire dashboard
+                template_path = Path("src/templates/fire_dashboard.html")
+                if template_path.exists():
+                    with open(template_path, 'r', encoding='utf-8') as f:
+                        logger.info("✅ Fire dashboard original template loaded as final fallback")
+                        return f.read()
         except Exception as e:
             logger.warning(f"Could not load Professional dashboard template: {e}")
         
