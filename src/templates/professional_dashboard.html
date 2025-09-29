@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading System - Professional Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <style>
+        /* Professional Glass Box Design System */
+        :root {
+            /* Dark Theme Color Palette */
+            --primary-dark: #0A0A0B;
+            --secondary-dark: #1A1A1B;
+            --tertiary-dark: #2A2A2B;
+            --card-bg: #1E1E1F;
+            --border-color: #333334;
+            
+            /* Status Colors */
+            --status-live: #00D084;
+            --status-paper: #FFB020;
+            --status-loss: #FF4757;
+            --status-info: #3742FA;
+            --status-disabled: #666667;
+            
+            /* Typography */
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+        }
+        
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--primary-dark);
+            color: #FFFFFF;
+            font-family: var(--font-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        /* Glass Box Layout System */
+        .dashboard-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* System Status Banner */
+        .system-status-banner {
+            background: linear-gradient(90deg, var(--status-paper) 0%, #FF8C00 100%);
+            color: var(--primary-dark);
+            padding: var(--spacing-md);
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(255, 176, 32, 0.3);
+        }
+        
+        .system-status-banner.debug-mode {
+            background: linear-gradient(90deg, var(--status-paper) 0%, #FF4757 50%, var(--status-paper) 100%);
+            animation: pulse-warning 2s infinite;
+        }
+        
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* Main Layout Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            flex: 1;
+        }
+        
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-lg);
+            height: fit-content;
+            position: sticky;
+            top: calc(60px + var(--spacing-md));
+        }
+        
+        .nav-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--status-info);
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            color: #CCCCCD;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background: var(--tertiary-dark);
+            color: #FFFFFF;
+        }
+        
+        .nav-link.active {
+            background: var(--status-info);
+            color: #FFFFFF;
+        }
+        
+        .nav-link i {
+            width: 16px;
+            text-align: center;
+        }
+        
+        /* Content Area */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        
+        /* Modular Card System */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            transition: border-color 0.2s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--status-info);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+        
+        .kpi-label {
+            font-size: 12px;
+            color: #999999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .kpi-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .kpi-positive {
+            color: var(--status-live);
+        }
+        
+        .kpi-negative {
+            color: var(--status-loss);
+        }
+        
+        .kpi-neutral {
+            color: var(--status-paper);
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            background: var(--secondary-dark);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+        }
+        
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-lg);
+        }
+        
+        /* Status Indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: var(--spacing-sm);
+        }
+        
+        .status-live { background: var(--status-live); }
+        .status-paper { background: var(--status-paper); }
+        .status-loss { background: var(--status-loss); }
+        .status-info { background: var(--status-info); }
+        .status-disabled { background: var(--status-disabled); }
+        
+        /* Action Buttons */
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .btn-primary {
+            background: var(--status-info);
+            color: #FFFFFF;
+        }
+        
+        .btn-primary:hover {
+            background: #2C35E6;
+        }
+        
+        .btn-success {
+            background: var(--status-live);
+            color: #FFFFFF;
+        }
+        
+        .btn-success:hover {
+            background: #00B870;
+        }
+        
+        .btn-warning {
+            background: var(--status-paper);
+            color: var(--primary-dark);
+        }
+        
+        .btn-warning:hover {
+            background: #E69D00;
+        }
+        
+        .btn-danger {
+            background: var(--status-loss);
+            color: #FFFFFF;
+        }
+        
+        .btn-danger:hover {
+            background: #E63946;
+        }
+        
+        .btn:disabled {
+            background: var(--status-disabled);
+            color: #999999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        /* Alert Feed */
+        .alert-feed {
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--secondary-dark);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+        }
+        
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-time {
+            color: #666667;
+            font-family: var(--font-mono);
+            white-space: nowrap;
+        }
+        
+        .alert-message {
+            flex: 1;
+        }
+        
+        /* System Health Grid */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .health-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md);
+            background: var(--secondary-dark);
+            border-radius: 6px;
+        }
+        
+        .health-label {
+            font-size: 13px;
+            color: #CCCCCD;
+        }
+        
+        .health-value {
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-sidebar {
+                position: static;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-grid {
+                padding: var(--spacing-sm);
+                gap: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- System Status Banner -->
+    <div class="system-status-banner debug-mode" id="systemBanner">
+        <i class="fas fa-exclamation-triangle"></i>
+        🛑 DEBUG MODE - ALL LIVE TRADING DISABLED - SYSTEM IN DEVELOPMENT
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container">
+        <div class="main-grid">
+            
+            <!-- Navigation Sidebar -->
+            <aside class="nav-sidebar">
+                <div class="nav-brand">
+                    <i class="fas fa-robot"></i>
+                    AI Trading System
+                </div>
+                
+                <nav>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="#overview" class="nav-link active" data-screen="overview">
+                                <i class="fas fa-tachometer-alt"></i>
+                                System Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#strategy-lab" class="nav-link" data-screen="strategy-lab">
+                                <i class="fas fa-flask"></i>
+                                AI Strategy Lab
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#strategy-manager" class="nav-link" data-screen="strategy-manager">
+                                <i class="fas fa-chess"></i>
+                                Strategy Manager
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#risk-matrix" class="nav-link" data-screen="risk-matrix">
+                                <i class="fas fa-shield-alt"></i>
+                                Risk & Exposure
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#settings" class="nav-link" data-screen="settings">
+                                <i class="fas fa-cog"></i>
+                                Global Settings
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                
+                <!-- Screen 1: System Overview Dashboard -->
+                <div id="overview-screen" class="screen active">
+                    
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Total AUM</div>
+                            <div class="kpi-value" id="totalAUM">$0.00</div>
+                            <div class="kpi-change kpi-neutral" id="aumChange">+0.00%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Today's P&L</div>
+                            <div class="kpi-value" id="todayPnL">$0.00</div>
+                            <div class="kpi-change kpi-neutral" id="pnlChange">+0.00%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Active Strategies</div>
+                            <div class="kpi-value" id="activeStrategies">0</div>
+                            <div class="kpi-change">
+                                <span class="status-dot status-paper"></span>
+                                Paper Mode
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">System Health</div>
+                            <div class="kpi-value" id="systemHealth">
+                                <span class="status-dot status-live"></span>
+                                Healthy
+                            </div>
+                            <div class="kpi-change" id="apiLatency">API: 0ms</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Performance & Allocation -->
+                    <div class="two-column">
+                        <!-- Performance Chart -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    Portfolio Performance
+                                </h2>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary" onclick="changeTimeframe('1D')">1D</button>
+                                    <button class="btn btn-primary" onclick="changeTimeframe('1W')">1W</button>
+                                    <button class="btn btn-primary" onclick="changeTimeframe('1M')">1M</button>
+                                    <button class="btn btn-primary" onclick="changeTimeframe('3M')">3M</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Allocation & Alerts -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="fas fa-pie-chart"></i>
+                                    Strategy Allocation
+                                </h2>
+                            </div>
+                            <div class="chart-container" style="height: 200px;">
+                                <canvas id="allocationChart"></canvas>
+                            </div>
+                            
+                            <!-- Real-time Alert Feed -->
+                            <div style="margin-top: var(--spacing-lg);">
+                                <h3 class="card-title" style="margin-bottom: var(--spacing-md);">
+                                    <i class="fas fa-bell"></i>
+                                    System Alerts
+                                </h3>
+                                <div class="alert-feed" id="alertFeed">
+                                    <div class="alert-item">
+                                        <span class="alert-time">09:30:15</span>
+                                        <span class="status-dot status-info"></span>
+                                        <div class="alert-message">System initialized in DEBUG mode</div>
+                                    </div>
+                                    <div class="alert-item">
+                                        <span class="alert-time">09:30:16</span>
+                                        <span class="status-dot status-live"></span>
+                                        <div class="alert-message">Historical data backtesting engine ready</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Health Matrix -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-server"></i>
+                                Infrastructure Status
+                            </h2>
+                        </div>
+                        <div class="health-grid">
+                            <div class="health-item">
+                                <span class="health-label">Bybit API</span>
+                                <span class="health-value">
+                                    <span class="status-dot status-paper"></span>
+                                    Testnet
+                                </span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Data Feed</span>
+                                <span class="health-value">
+                                    <span class="status-dot status-live"></span>
+                                    Live
+                                </span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">ML Engine</span>
+                                <span class="health-value">
+                                    <span class="status-dot status-live"></span>
+                                    Active
+                                </span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Database</span>
+                                <span class="health-value">
+                                    <span class="status-dot status-live"></span>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Uptime</span>
+                                <span class="health-value" id="systemUptime">0:00:00</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Memory Usage</span>
+                                <span class="health-value" id="memoryUsage">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 2: AI Strategy Lab (Hidden by default) -->
+                <div id="strategy-lab-screen" class="screen" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-flask"></i>
+                                AI Strategy Discovery & Backtesting Lab
+                            </h2>
+                        </div>
+                        <p style="color: #CCCCCD; text-align: center; padding: 40px;">
+                            <i class="fas fa-hammer" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                            Strategy Lab Interface Under Construction<br>
+                            <small>Phase 1: Focus on System Foundation & Debugging</small>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Screen 3: Strategy Manager (Hidden by default) -->
+                <div id="strategy-manager-screen" class="screen" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chess"></i>
+                                Strategy Graduation System
+                            </h2>
+                        </div>
+                        <p style="color: #CCCCCD; text-align: center; padding: 40px;">
+                            <i class="fas fa-hammer" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                            Strategy Manager Interface Under Construction<br>
+                            <small>Phase 2: Paper Trading & Strategy Graduation</small>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Screen 4: Risk & Exposure Matrix (Hidden by default) -->
+                <div id="risk-matrix-screen" class="screen" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Risk & Exposure Matrix
+                            </h2>
+                        </div>
+                        <p style="color: #CCCCCD; text-align: center; padding: 40px;">
+                            <i class="fas fa-hammer" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                            Risk Management Interface Under Construction<br>
+                            <small>Phase 3: Live Deployment & Risk Management</small>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Screen 5: Global Settings (Hidden by default) -->
+                <div id="settings-screen" class="screen" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-cog"></i>
+                                Global Settings & Infrastructure
+                            </h2>
+                        </div>
+                        <p style="color: #CCCCCD; text-align: center; padding: 40px;">
+                            <i class="fas fa-hammer" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                            Settings Interface Under Construction<br>
+                            <small>Phase 4: Scale & Business Features</small>
+                        </p>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript Implementation -->
+    <script>
+        // Professional Dashboard Controller
+        class ProfessionalDashboard {
+            constructor() {
+                this.socket = null;
+                this.charts = {};
+                this.currentScreen = 'overview';
+                this.startTime = Date.now();
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('🔥 Professional AI Trading Dashboard Initializing...');
+                this.initializeNavigation();
+                this.initializeCharts();
+                this.connectWebSocket();
+                this.startSystemUpdates();
+                this.loadInitialData();
+            }
+            
+            initializeNavigation() {
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const screen = e.target.closest('.nav-link').dataset.screen;
+                        this.switchScreen(screen);
+                    });
+                });
+            }
+            
+            switchScreen(screenName) {
+                // Hide all screens
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.style.display = 'none';
+                });
+                
+                // Show selected screen
+                document.getElementById(`${screenName}-screen`).style.display = 'block';
+                
+                // Update navigation
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+                
+                this.currentScreen = screenName;
+                console.log(`Switched to ${screenName} screen`);
+            }
+            
+            initializeCharts() {
+                // Performance Chart
+                const perfCtx = document.getElementById('performanceChart');
+                if (perfCtx) {
+                    this.charts.performance = new Chart(perfCtx, {
+                        type: 'line',
+                        data: {
+                            labels: this.generateTimeLabels('1D'),
+                            datasets: [{
+                                label: 'Portfolio Value',
+                                data: this.generateMockPerformanceData(),
+                                borderColor: '#3742FA',
+                                backgroundColor: 'rgba(55, 66, 250, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        color: '#333334'
+                                    },
+                                    ticks: {
+                                        color: '#CCCCCD'
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        color: '#333334'
+                                    },
+                                    ticks: {
+                                        color: '#CCCCCD',
+                                        callback: function(value) {
+                                            return '$' + value.toFixed(0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Allocation Chart
+                const allocCtx = document.getElementById('allocationChart');
+                if (allocCtx) {
+                    this.charts.allocation = new Chart(allocCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Paper Trading', 'Testnet', 'Live', 'Cash'],
+                            datasets: [{
+                                data: [60, 20, 0, 20],
+                                backgroundColor: [
+                                    '#FFB020',
+                                    '#3742FA',
+                                    '#00D084',
+                                    '#666667'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#CCCCCD',
+                                        usePointStyle: true,
+                                        padding: 20
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            generateTimeLabels(timeframe) {
+                const labels = [];
+                const now = new Date();
+                
+                if (timeframe === '1D') {
+                    for (let i = 23; i >= 0; i--) {
+                        const time = new Date(now - i * 60 * 60 * 1000);
+                        labels.push(time.getHours().toString().padStart(2, '0') + ':00');
+                    }
+                }
+                
+                return labels;
+            }
+            
+            generateMockPerformanceData() {
+                const data = [];
+                let value = 10000;
+                
+                for (let i = 0; i < 24; i++) {
+                    value += (Math.random() - 0.48) * 100;
+                    data.push(Math.max(value, 9000));
+                }
+                
+                return data;
+            }
+            
+            connectWebSocket() {
+                try {
+                    this.socket = io();
+                    this.socket.on('connect', () => {
+                        console.log('🔗 WebSocket connected');
+                        this.addAlert('WebSocket connection established', 'info');
+                    });
+                    
+                    this.socket.on('disconnect', () => {
+                        this.addAlert('WebSocket connection lost', 'warning');
+                    });
+                    
+                    this.socket.on('system_update', (data) => {
+                        this.updateSystemData(data);
+                    });
+                    
+                } catch (error) {
+                    console.log('⚠️ WebSocket not available, using polling mode');
+                    this.startPolling();
+                }
+            }
+            
+            startPolling() {
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('/api/system-status');
+                        const data = await response.json();
+                        this.updateSystemData(data);
+                    } catch (error) {
+                        console.log('Polling error:', error);
+                    }
+                }, 5000);
+            }
+            
+            startSystemUpdates() {
+                setInterval(() => {
+                    this.updateUptime();
+                    this.updateMemoryUsage();
+                }, 1000);
+            }
+            
+            updateUptime() {
+                const uptime = Date.now() - this.startTime;
+                const hours = Math.floor(uptime / (1000 * 60 * 60));
+                const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
+                
+                document.getElementById('systemUptime').textContent = 
+                    `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateMemoryUsage() {
+                // Simulate memory usage
+                const usage = Math.floor(Math.random() * 20) + 30; // 30-50%
+                document.getElementById('memoryUsage').textContent = `${usage}%`;
+            }
+            
+            updateSystemData(data) {
+                // Update KPIs
+                if (data.balance !== undefined) {
+                    document.getElementById('totalAUM').textContent = `$${data.balance.toFixed(2)}`;
+                }
+                
+                if (data.pnl !== undefined) {
+                    const pnlElement = document.getElementById('todayPnL');
+                    pnlElement.textContent = `$${data.pnl.toFixed(2)}`;
+                    pnlElement.className = data.pnl >= 0 ? 'kpi-value kpi-positive' : 'kpi-value kpi-negative';
+                }
+                
+                if (data.api_latency !== undefined) {
+                    document.getElementById('apiLatency').textContent = `API: ${data.api_latency}ms`;
+                }
+            }
+            
+            addAlert(message, type = 'info') {
+                const alertFeed = document.getElementById('alertFeed');
+                const time = new Date().toLocaleTimeString();
+                const statusClass = `status-${type}`;
+                
+                const alertHTML = `
+                    <div class="alert-item">
+                        <span class="alert-time">${time}</span>
+                        <span class="status-dot ${statusClass}"></span>
+                        <div class="alert-message">${message}</div>
+                    </div>
+                `;
+                
+                alertFeed.insertAdjacentHTML('afterbegin', alertHTML);
+                
+                // Keep only last 10 alerts
+                const alerts = alertFeed.querySelectorAll('.alert-item');
+                if (alerts.length > 10) {
+                    alerts[alerts.length - 1].remove();
+                }
+            }
+            
+            loadInitialData() {
+                // Simulate initial data loading
+                setTimeout(() => {
+                    this.addAlert('System initialized in DEBUG mode', 'warning');
+                    this.addAlert('Historical data backtesting engine ready', 'live');
+                    this.addAlert('ML strategy discovery pipeline active', 'info');
+                }, 1000);
+                
+                // Update initial KPIs
+                this.updateSystemData({
+                    balance: 10000,
+                    pnl: 125.50,
+                    api_latency: 45
+                });
+            }
+        }
+        
+        // Global Functions
+        window.changeTimeframe = function(timeframe) {
+            console.log(`Changing timeframe to ${timeframe}`);
+            // Implementation for timeframe changes
+        };
+        
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            window.dashboard = new ProfessionalDashboard();
+        });
+    </script>
+</body>
+</html>

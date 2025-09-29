@@ -11,6 +11,9 @@ import json
 import logging
 import asyncio
 from datetime import datetime as dt
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from shared_state import shared_state
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
@@ -183,6 +186,30 @@ class FrontendHandler(BaseHTTPRequestHandler):
             shared_state.set_bot_control('last_action', 'wipe_data')
             response = {"success": True, "message": "All data wiped successfully"}
             
+        elif self.path == '/api/admin/enable-debug':
+            logger.warning("🔧 Debug mode enable requested via API")
+            try:
+                # Enable debug mode by updating shared state
+                shared_state.set_bot_control('debug_mode', True)
+                shared_state.set_bot_control('last_action', 'enable_debug')
+                shared_state.add_log_entry("WARNING", "Debug mode enabled via API - All trading disabled")
+                response = {"success": True, "message": "Debug mode enabled - All live trading disabled"}
+            except Exception as e:
+                logger.error(f"Failed to enable debug mode: {e}")
+                response = {"success": False, "message": f"Failed to enable debug mode: {str(e)}"}
+                
+        elif self.path == '/api/admin/disable-debug':
+            logger.critical("🔧 Debug mode disable requested via API")
+            try:
+                # Disable debug mode by updating shared state
+                shared_state.set_bot_control('debug_mode', False)
+                shared_state.set_bot_control('last_action', 'disable_debug')
+                shared_state.add_log_entry("CRITICAL", "Debug mode disabled via API - LIVE TRADING ENABLED")
+                response = {"success": True, "message": "Debug mode disabled - LIVE TRADING ENABLED"}
+            except Exception as e:
+                logger.error(f"Failed to disable debug mode: {e}")
+                response = {"success": False, "message": f"Failed to disable debug mode: {str(e)}"}
+        
         elif self.path == '/api/backtest/start':
             logger.info("🚀 Historical backtesting start requested via API")
             try:
@@ -464,6 +491,39 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 }
             }
             self.wfile.write(json.dumps(response).encode())
+
+        elif self.path == '/api/system-status':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # Get comprehensive system status for professional dashboard
+            debug_status = self.debug_manager.get_debug_status()
+            shared_data = shared_state.get_all_data()
+            
+            # Get bot control data
+            bot_control = shared_state.get_bot_control_data()
+            debug_mode = bot_control.get('debug_mode', debug_status.get('debug_mode', True))
+            
+            response = {
+                "success": True,
+                "data": {
+                    "debug_mode": debug_mode,
+                    "trading_mode": "Paper Trading" if debug_mode else "Live Trading",
+                    "balance": shared_data["trading"]["balance"] if not debug_mode else 10000.00,
+                    "todayPnl": shared_data["trading"]["daily_pnl"],
+                    "activeStrategies": shared_data["trading"]["strategies_active"],
+                    "health": shared_data["system"]["status"],
+                    "uptime": shared_data["system"].get("uptime_seconds", 0),
+                    "activeOrders": shared_data["trading"]["positions_count"],
+                    "lastSignal": "No recent signals",
+                    "lastSignalTime": dt.now().isoformat(),
+                    "apiStatus": "connected" if not debug_mode else "testnet"
+                },
+                "timestamp": dt.now().isoformat()
+            }
+            self.wfile.write(json.dumps(response).encode())
             
         elif self.path == '/api/bot/pause':
             self.send_response(200)
@@ -616,7 +676,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "API endpoint not found"}).encode())
     
     def serve_dashboard(self):
-        """Serve the main dashboard HTML"""
+        """Serve the Professional Glass Box dashboard HTML with debug safety"""
         self.send_response(200)
         self.send_header('Content-Type', 'text/html')
         self.send_header('Cache-Control', 'no-cache')
@@ -652,24 +712,31 @@ class FrontendHandler(BaseHTTPRequestHandler):
             logger.warning(f"❌ Static file not found: {full_path}")
     
     def get_dashboard_html(self):
-        """Load the Fire Cybersigilism dashboard template - REDESIGNED VERSION"""
+        """Load the Professional Glass Box dashboard template"""
         try:
-            # Updated path - use redesigned dashboard
-            template_path = Path("src/templates/fire_dashboard_redesign.html")
+            # Use the new professional dashboard following Glass Box design philosophy
+            template_path = Path("professional_dashboard.html")
             if template_path.exists():
                 with open(template_path, 'r', encoding='utf-8') as f:
-                    logger.info("✅ Fire dashboard REDESIGN template loaded successfully")
+                    logger.info("✅ Professional Glass Box dashboard template loaded successfully")
                     return f.read()
             else:
-                logger.warning(f"Redesign template not found at: {template_path}")
-                # Fallback to original
-                template_path = Path("src/templates/fire_dashboard.html")
+                logger.warning(f"Professional template not found at: {template_path}")
+                # Fallback to fire dashboard if professional not found
+                template_path = Path("src/templates/fire_dashboard_redesign.html")
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info("✅ Fire dashboard original template loaded as fallback")
+                        logger.info("✅ Fire dashboard REDESIGN template loaded as fallback")
                         return f.read()
+                else:
+                    # Final fallback to original fire dashboard
+                    template_path = Path("src/templates/fire_dashboard.html")
+                    if template_path.exists():
+                        with open(template_path, 'r', encoding='utf-8') as f:
+                            logger.info("✅ Fire dashboard original template loaded as final fallback")
+                            return f.read()
         except Exception as e:
-            logger.warning(f"Could not load Fire dashboard template: {e}")
+            logger.warning(f"Could not load Professional dashboard template: {e}")
         
         # Fallback to minimal dashboard if template fails
         return """<!DOCTYPE html>
@@ -1618,3 +1685,38 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         """Suppress default request logging"""
         pass
+
+
+if __name__ == "__main__":
+    from http.server import HTTPServer
+    import logging
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    logger = logging.getLogger(__name__)
+    
+    # Server configuration
+    host = "127.0.0.1"
+    port = 8080
+    
+    try:
+        # Start server
+        server = HTTPServer((host, port), FrontendHandler)
+        logger.info(f"🚀 Professional Dashboard Server starting on http://{host}:{port}")
+        logger.info("📊 Glass Box Design System Active - 'Clarity in Complexity'")
+        logger.info("🔧 Debug Mode Toggle: Available in Global Settings")
+        logger.info("🛡️ Safety Systems: Integrated with Debug Safety Manager")
+        
+        server.serve_forever()
+        
+    except KeyboardInterrupt:
+        logger.info("🛑 Server shutdown requested")
+        server.server_close()
+        logger.info("✅ Server stopped gracefully")
+    except Exception as e:
+        logger.error(f"❌ Server error: {e}")
+        raise
