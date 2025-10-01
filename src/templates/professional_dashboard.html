@@ -203,20 +203,33 @@
         }
     }
 
-    /* ULTIMATE FIT LAYOUT - Force Single Column with proper spacing */
+    /* ULTIMATE FIT LAYOUT - Force Single Column with clear separation */
     .main-container {
         display: flex !important;
         flex-direction: column !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
-        gap: 0 !important;
+        gap: 1rem !important;
+        padding: 0 !important;
+    }
+
+    /* Add visual separator after navigation */
+    .top-nav-bar::after {
+        content: "" !important;
+        position: absolute !important;
+        bottom: -1rem !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 1rem !important;
+        background: transparent !important;
+        pointer-events: none !important;
     }
     
     .sidebar {
         display: none !important;
     }
 
-    /* Top Navigation Bar - Enhanced with proper spacing */
+    /* Top Navigation Bar - Fixed spacing */
     .top-nav-bar {
         display: flex !important;
         background: var(--card-bg) !important;
@@ -231,8 +244,9 @@
         align-items: center !important;
         justify-content: flex-start !important;
         position: relative !important;
-        z-index: 10 !important;
-        margin-bottom: 0 !important;
+        z-index: 100 !important;
+        margin-bottom: 1rem !important;
+        min-height: 80px !important;
     }
 
     .nav-button {
@@ -269,7 +283,7 @@
         transform: translateY(-1px) !important;
     }
 
-    /* Compact Grid System - Fixed overlap */
+    /* Compact Grid System - More space for nav */
     .dashboard-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
@@ -277,42 +291,45 @@
         padding: 1rem !important;
         overflow-y: auto !important;
         flex: 1 !important;
-        max-height: calc(100vh - 200px) !important;
-        margin-top: 0 !important;
+        max-height: calc(100vh - 250px) !important;
+        margin-top: 1rem !important;
     }
 
-    /* Strategy Pipeline - Fixed overlap */
+    /* Strategy Pipeline - More space for larger nav */
     .strategy-pipeline-layout {
         display: flex !important;
         flex-direction: column !important;
         gap: 0.5rem !important;
         height: auto !important;
-        max-height: calc(100vh - 200px) !important;
+        max-height: calc(100vh - 250px) !important;
         overflow-y: auto !important;
         flex: 1 !important;
         padding: 1rem !important;
-        margin-top: 0 !important;
+        margin-top: 1rem !important;
     }
 
-    /* Content screens - prevent overlap */
+    /* Content screens - clear separation from nav */
     .content-screen {
         flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-
-    /* System Overview specific fixes */
-    #system-overview {
+        margin-top: 2rem !important;
         padding-top: 1rem !important;
+        border-top: 1px solid rgba(75, 85, 99, 0.2) !important;
     }
 
-    /* Content header - reduce spacing */
+    /* System Overview - extra space */
+    #system-overview {
+        padding-top: 2rem !important;
+        margin-top: 1rem !important;
+    }
+
+    /* Content header - clear separation */
     .content-header {
-        margin-bottom: 0.5rem !important;
-        padding: 0 1rem !important;
+        margin-bottom: 1rem !important;
+        padding: 0 1rem 1rem 1rem !important;
         flex-shrink: 0 !important;
+        border-bottom: 1px solid rgba(75, 85, 99, 0.1) !important;
     }
 
     .pipeline-panel {
@@ -560,15 +577,16 @@
             font-size: var(--font-size-xs);
         }
 
-        /* Main Content Area - No overlap */
+        /* Main Content Area - Clear separation from nav */
         .main-content {
-            padding: 0 !important;
+            padding: 1rem 0 0 0 !important;
             height: 100% !important;
             overflow-y: auto !important;
             display: flex !important;
             flex-direction: column !important;
             flex: 1 !important;
-            margin-top: 0 !important;
+            margin-top: 1rem !important;
+            position: relative !important;
         }
 
         /* Header - Compact */
