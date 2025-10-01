@@ -203,19 +203,20 @@
         }
     }
 
-    /* ULTIMATE FIT LAYOUT - Force Single Column */
+    /* ULTIMATE FIT LAYOUT - Force Single Column with proper spacing */
     .main-container {
         display: flex !important;
         flex-direction: column !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
+        gap: 0 !important;
     }
     
     .sidebar {
         display: none !important;
     }
 
-    /* Top Navigation Bar - Enhanced */
+    /* Top Navigation Bar - Enhanced with proper spacing */
     .top-nav-bar {
         display: flex !important;
         background: var(--card-bg) !important;
@@ -224,11 +225,14 @@
         gap: 0.75rem !important;
         flex-shrink: 0 !important;
         overflow-x: auto !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         backdrop-filter: blur(20px) !important;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
         align-items: center !important;
         justify-content: flex-start !important;
+        position: relative !important;
+        z-index: 10 !important;
+        margin-bottom: 0 !important;
     }
 
     .nav-button {
@@ -265,7 +269,7 @@
         transform: translateY(-1px) !important;
     }
 
-    /* Compact Grid System - Adjusted for larger nav */
+    /* Compact Grid System - Fixed overlap */
     .dashboard-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
@@ -273,19 +277,42 @@
         padding: 1rem !important;
         overflow-y: auto !important;
         flex: 1 !important;
-        max-height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 200px) !important;
+        margin-top: 0 !important;
     }
 
-    /* Strategy Pipeline - Stack Vertically (adjusted for larger nav) */
+    /* Strategy Pipeline - Fixed overlap */
     .strategy-pipeline-layout {
         display: flex !important;
         flex-direction: column !important;
         gap: 0.5rem !important;
         height: auto !important;
-        max-height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 200px) !important;
         overflow-y: auto !important;
         flex: 1 !important;
         padding: 1rem !important;
+        margin-top: 0 !important;
+    }
+
+    /* Content screens - prevent overlap */
+    .content-screen {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    /* System Overview specific fixes */
+    #system-overview {
+        padding-top: 1rem !important;
+    }
+
+    /* Content header - reduce spacing */
+    .content-header {
+        margin-bottom: 0.5rem !important;
+        padding: 0 1rem !important;
+        flex-shrink: 0 !important;
     }
 
     .pipeline-panel {
@@ -533,13 +560,15 @@
             font-size: var(--font-size-xs);
         }
 
-        /* Main Content Area - Viewport Optimized */
+        /* Main Content Area - No overlap */
         .main-content {
-            padding: 1rem;
-            height: 100%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            padding: 0 !important;
+            height: 100% !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            margin-top: 0 !important;
         }
 
         /* Header - Compact */
