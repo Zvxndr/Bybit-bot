@@ -28,6 +28,12 @@ from database import DatabaseManager
 from integration import Phase1Integration, Phase2Integration
 from monitoring import PerformanceMonitor
 
+# Import dashboard analytics API
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from api.dashboard_analytics_api import create_dashboard_analytics_api
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -191,6 +197,9 @@ app.include_router(trading_router.router, prefix="/api/trading", tags=["Trading"
 app.include_router(analytics_router.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(health_router.router, prefix="/api/health", tags=["Health"])
 app.include_router(ml_router.router, prefix="/api/ml", tags=["Machine Learning"])
+
+# Initialize dashboard analytics API
+dashboard_analytics = create_dashboard_analytics_api(app)
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
