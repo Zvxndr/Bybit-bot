@@ -203,33 +203,25 @@
         }
     }
 
-    /* ULTIMATE FIT LAYOUT - Force Single Column with clear separation */
+    /* ULTIMATE FIT LAYOUT - Account for fixed navigation */
     .main-container {
         display: flex !important;
         flex-direction: column !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
-        gap: 1rem !important;
+        gap: 0 !important;
         padding: 0 !important;
+        margin-top: 128px !important;
+        height: calc(100vh - 128px) !important;
     }
 
-    /* Add visual separator after navigation */
-    .top-nav-bar::after {
-        content: "" !important;
-        position: absolute !important;
-        bottom: -1rem !important;
-        left: 0 !important;
-        right: 0 !important;
-        height: 1rem !important;
-        background: transparent !important;
-        pointer-events: none !important;
-    }
+
     
     .sidebar {
         display: none !important;
     }
 
-    /* Top Navigation Bar - Fixed spacing */
+    /* Top Navigation Bar - Absolute positioning to prevent overlap */
     .top-nav-bar {
         display: flex !important;
         background: var(--card-bg) !important;
@@ -243,10 +235,12 @@
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        position: relative !important;
-        z-index: 100 !important;
-        margin-bottom: 1rem !important;
-        min-height: 80px !important;
+        position: fixed !important;
+        top: 48px !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1000 !important;
+        height: 80px !important;
     }
 
     .nav-button {
@@ -283,16 +277,16 @@
         transform: translateY(-1px) !important;
     }
 
-    /* Compact Grid System - More space for nav */
+    /* Compact Grid System - Fixed nav adjustment */
     .dashboard-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
         gap: 0.5rem !important;
-        padding: 1rem !important;
+        padding: 0 !important;
         overflow-y: auto !important;
         flex: 1 !important;
-        max-height: calc(100vh - 250px) !important;
-        margin-top: 1rem !important;
+        max-height: 100% !important;
+        margin-top: 0 !important;
     }
 
     /* Strategy Pipeline - More space for larger nav */
@@ -308,28 +302,28 @@
         margin-top: 1rem !important;
     }
 
-    /* Content screens - clear separation from nav */
+    /* Content screens - work with fixed nav */
     .content-screen {
         flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        margin-top: 2rem !important;
-        padding-top: 1rem !important;
-        border-top: 1px solid rgba(75, 85, 99, 0.2) !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        height: 100% !important;
     }
 
-    /* System Overview - extra space */
+    /* System Overview - no extra margins needed */
     #system-overview {
-        padding-top: 2rem !important;
-        margin-top: 1rem !important;
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+        height: 100% !important;
     }
 
-    /* Content header - clear separation */
+    /* Content header - compact */
     .content-header {
         margin-bottom: 1rem !important;
-        padding: 0 1rem 1rem 1rem !important;
+        padding: 0 !important;
         flex-shrink: 0 !important;
-        border-bottom: 1px solid rgba(75, 85, 99, 0.1) !important;
     }
 
     .pipeline-panel {
@@ -577,15 +571,15 @@
             font-size: var(--font-size-xs);
         }
 
-        /* Main Content Area - Clear separation from nav */
+        /* Main Content Area - No overlap with fixed nav */
         .main-content {
-            padding: 1rem 0 0 0 !important;
+            padding: 1rem !important;
             height: 100% !important;
             overflow-y: auto !important;
             display: flex !important;
             flex-direction: column !important;
             flex: 1 !important;
-            margin-top: 1rem !important;
+            margin-top: 0 !important;
             position: relative !important;
         }
 
