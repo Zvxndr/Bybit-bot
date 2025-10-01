@@ -713,10 +713,9 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def get_dashboard_html(self):
         """Load the Professional Glass Box dashboard template"""
         try:
-            # Check multiple possible locations for the professional dashboard
+            # Check templates directory for the professional dashboard
             possible_paths = [
-                Path("professional_dashboard.html"),  # Root directory
-                Path("src/templates/professional_dashboard.html"),  # Templates folder
+                Path("src/templates/professional_dashboard.html"),  # Templates folder (CORRECT LOCATION)
             ]
             
             for template_path in possible_paths:
