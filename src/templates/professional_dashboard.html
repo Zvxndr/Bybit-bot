@@ -287,16 +287,31 @@
         font-size: 18px !important;
     }
 
+    /* NUCLEAR OPTION - Force connected buttons with extreme specificity */
+    .top-nav-bar .nav-button:first-child,
+    .top-nav-bar .nav-button:last-child,
+    .top-nav-bar .nav-button {
+        border-radius: 0 !important;
+        margin: 0 !important;
+        border-left-width: 1px !important;
+        border-right-width: 1px !important;
+    }
+
     .nav-button:first-child {
         border-radius: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
     }
 
     .nav-button:last-child {
         border-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
     }
 
     .nav-button:not(:first-child) {
         border-left: none !important;
+        margin-left: 0 !important;
     }
 
     .nav-button:hover {
