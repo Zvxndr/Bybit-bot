@@ -47,18 +47,14 @@
         bottom: 0 !important;
         width: 100vw !important;
         height: calc(100vh - 28px) !important;
-        grid-template-columns: 160px 1fr !important;
+        display: flex !important;
+        flex-direction: column !important;
         overflow: hidden !important;
         margin: 0 !important;
         padding: 0 !important;
     }
 
-    .sidebar {
-        width: 160px !important;
-        padding: 0.5rem 0 !important;
-        overflow-y: auto !important;
-        border-right: 1px solid var(--border-color) !important;
-    }
+    /* Sidebar removed - using top navigation only */
 
     .sidebar-brand {
         padding: 0.5rem !important;
@@ -3613,67 +3609,6 @@
                 <i class="fas fa-sliders-h"></i> Settings
             </button>
         </div>
-
-        <!-- Sidebar Navigation (Hidden in compact mode) -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <h1>TradingBot Pro</h1>
-                <p>Glass Box Trading System</p>
-            </div>
-            
-            <nav>
-                <ul class="nav-menu">
-                    <li class="nav-item">
-                        <a href="#system-overview" class="nav-link active" data-screen="system-overview">
-                            <i class="fas fa-tachometer-alt"></i>
-                            System Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#strategy-lab" class="nav-link" data-screen="strategy-lab">
-                            <i class="fas fa-flask"></i>
-                            AI Strategy Lab
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#strategy-manager" class="nav-link" data-screen="strategy-manager">
-                            <i class="fas fa-cogs"></i>
-                            Strategy Manager
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#live-trading" class="nav-link" data-screen="live-trading">
-                            <i class="fas fa-rocket"></i>
-                            Live Trading
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#risk-management" class="nav-link" data-screen="risk-management">
-                            <i class="fas fa-shield-alt"></i>
-                            Risk Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#risk-exposure" class="nav-link" data-screen="risk-exposure">
-                            <i class="fas fa-chart-pie"></i>
-                            Risk & Exposure
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#global-settings" class="nav-link" data-screen="global-settings">
-                            <i class="fas fa-sliders-h"></i>
-                            Global Settings
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#testing-framework" class="nav-link" data-screen="testing-framework">
-                            <i class="fas fa-flask"></i>
-                            Testing Framework
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
 
         <!-- Main Content Area -->
         <main class="main-content">
