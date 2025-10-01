@@ -1,12 +1,11 @@
-# Minimal requirements for dashboard deployment# 🔥 Open Alpha - DigitalOcean Deployment Requirements
+# Minimal requirements for dashboard deployment
+# Optimized for cloud deployment with essential dependencies only
 
-fastapi>=0.104.0# Optimized for cloud deployment with all necessary dependencies
-
+# Core Web Framework
+fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-
-jinja2>=3.1.0# Core Web Framework
-
-python-multipart>=0.0.6fastapi>=0.100.0
+jinja2>=3.1.0
+python-multipart>=0.0.6
 
 aiofiles>=23.2.0uvicorn>=0.23.0
 
