@@ -1,6 +1,7 @@
 """
 Simple Dashboard Server
 Serves only the professional dashboard without trading processes
+Production-ready version for DigitalOcean deployment
 """
 
 import http.server
@@ -11,12 +12,21 @@ from pathlib import Path
 
 class DashboardHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
+        # Health check endpoint for DigitalOcean
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(b'{"status": "healthy", "service": "bybit-dashboard"}')
+            return
+            
         if self.path == '/' or self.path == '/dashboard':
             # Serve the professional dashboard
             dashboard_path = Path(__file__).parent / 'src' / 'templates' / 'professional_dashboard.html'
             if dashboard_path.exists():
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
                 self.end_headers()
                 with open(dashboard_path, 'r', encoding='utf-8') as f:
                     self.wfile.write(f.read().encode('utf-8'))
@@ -27,7 +37,8 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
 def main():
-    PORT = 8080
+    # Use environment PORT or default to 8080
+    PORT = int(os.environ.get('PORT', 8080))
     
     # Change to project directory
     project_dir = Path(__file__).parent
@@ -35,9 +46,11 @@ def main():
     
     Handler = DashboardHandler
     
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print(f"🌐 Dashboard Server running at http://localhost:{PORT}")
-        print(f"📱 Professional Dashboard: http://localhost:{PORT}/dashboard")
+    # Bind to 0.0.0.0 for DigitalOcean
+    with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
+        print(f"🌐 Dashboard Server running at http://0.0.0.0:{PORT}")
+        print(f"📱 Professional Dashboard: http://0.0.0.0:{PORT}/dashboard")
+        print(f"💚 Health Check: http://0.0.0.0:{PORT}/health")
         print(f"🔧 Static Mode - No background trading processes")
         print("Press Ctrl+C to stop")
         
