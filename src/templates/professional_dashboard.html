@@ -91,10 +91,14 @@
 
     .main-content {
         padding: 0.5rem !important;
-        height: 100% !important;
+        height: calc(100% - 170px) !important;
         overflow-y: auto !important;
         display: flex !important;
         flex-direction: column !important;
+        position: absolute !important;
+        top: 170px !important;
+        left: 0 !important;
+        right: 0 !important;
     }
 
     .content-header {
@@ -231,7 +235,7 @@
         left: -9999px !important;
     }
 
-    /* Top Navigation Bar - No wrap, single line */
+    /* Top Navigation Bar - Force position below banner */
     .top-nav-bar {
         display: flex !important;
         background: var(--card-bg) !important;
@@ -243,10 +247,12 @@
         flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        position: relative !important;
-        z-index: 10 !important;
-        margin-top: 20px !important;
-        margin-bottom: 2rem !important;
+        position: absolute !important;
+        top: 100px !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1 !important;
+        margin: 0 !important;
         min-height: 70px !important;
     }
 
