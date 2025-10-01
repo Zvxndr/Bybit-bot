@@ -202,6 +202,96 @@
             max-height: calc(100vh - 100px) !important;
         }
     }
+
+    /* ULTIMATE FIT LAYOUT - Force Single Column */
+    .main-container {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: none !important;
+        grid-template-areas: none !important;
+    }
+    
+    .sidebar {
+        display: none !important;
+    }
+
+    /* Top Navigation Bar */
+    .top-nav-bar {
+        display: flex !important;
+        background: var(--card-bg) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 0.5rem !important;
+        gap: 0.5rem !important;
+        flex-shrink: 0 !important;
+        overflow-x: auto !important;
+        flex-wrap: wrap !important;
+    }
+
+    .nav-button {
+        padding: 0.25rem 0.75rem !important;
+        font-size: 11px !important;
+        background: rgba(75, 85, 99, 0.2) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 6px !important;
+        color: var(--text-secondary) !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        white-space: nowrap !important;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+        background: var(--status-info) !important;
+        color: white !important;
+        border-color: var(--status-info) !important;
+    }
+
+    /* Compact Grid System */
+    .dashboard-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+        max-height: calc(100vh - 150px) !important;
+    }
+
+    /* Strategy Pipeline - Stack Vertically */
+    .strategy-pipeline-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        height: auto !important;
+        max-height: calc(100vh - 150px) !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+
+    .pipeline-panel {
+        height: auto !important;
+        min-height: 200px !important;
+        max-height: 300px !important;
+    }
+
+    /* Compact everything */
+    .glass-card {
+        min-height: 120px !important;
+        padding: 0.75rem !important;
+    }
+
+    .metric-value {
+        font-size: 20px !important;
+        line-height: 1.2 !important;
+    }
+
+    .metric-label {
+        font-size: 11px !important;
+    }
+
+    .chart-container {
+        height: 180px !important;
+    }
     </style>
     
     <style>
@@ -3447,7 +3537,29 @@
     </div>
 
     <div class="main-container">
-        <!-- Sidebar Navigation -->
+        <!-- Compact Top Navigation -->
+        <div class="top-nav-bar">
+            <button class="nav-button active" data-screen="system-overview">
+                <i class="fas fa-tachometer-alt"></i> Overview
+            </button>
+            <button class="nav-button" data-screen="strategy-lab">
+                <i class="fas fa-flask"></i> AI Lab
+            </button>
+            <button class="nav-button" data-screen="strategy-manager">
+                <i class="fas fa-cogs"></i> Strategy
+            </button>
+            <button class="nav-button" data-screen="live-trading">
+                <i class="fas fa-rocket"></i> Trading
+            </button>
+            <button class="nav-button" data-screen="risk-management">
+                <i class="fas fa-shield-alt"></i> Risk
+            </button>
+            <button class="nav-button" data-screen="global-settings">
+                <i class="fas fa-sliders-h"></i> Settings
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation (Hidden in compact mode) -->
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <h1>TradingBot Pro</h1>
@@ -5112,16 +5224,21 @@ class StrategyTemplate:
 
             initializeNavigation() {
                 const navLinks = document.querySelectorAll('.nav-link');
+                const navButtons = document.querySelectorAll('.nav-button');
                 const contentScreens = document.querySelectorAll('.content-screen');
 
-                navLinks.forEach(link => {
-                    link.addEventListener('click', (e) => {
+                // Handle both sidebar links and compact nav buttons
+                const allNavElements = [...navLinks, ...navButtons];
+
+                allNavElements.forEach(element => {
+                    element.addEventListener('click', (e) => {
                         e.preventDefault();
-                        const targetScreen = link.getAttribute('data-screen');
+                        const targetScreen = element.getAttribute('data-screen');
                         
-                        // Update active navigation
+                        // Update active navigation for both types
                         navLinks.forEach(nl => nl.classList.remove('active'));
-                        link.classList.add('active');
+                        navButtons.forEach(nb => nb.classList.remove('active'));
+                        element.classList.add('active');
                         
                         // Show target screen
                         contentScreens.forEach(screen => {
