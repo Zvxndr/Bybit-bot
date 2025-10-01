@@ -3414,10 +3414,10 @@
             overflow: visible;
         }
 
-        /* Strategy Lab Auto-Discovery Indicator */
+        /* Strategy Lab Auto-Discovery Indicator - Moved down to avoid nav overlap */
         .strategy-discovery-status {
             position: absolute;
-            top: 1rem;
+            top: 120px;
             right: 1rem;
             padding: 0.5rem 1rem;
             background: var(--status-success);
@@ -3427,6 +3427,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            z-index: 5;
         }
 
         .strategy-discovery-status.active::before {
