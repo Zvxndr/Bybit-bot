@@ -45,6 +45,89 @@ class HistoricalDataProvider:
                 logger.info("[INFO] Historical data provider will return empty results when database unavailable")
         except Exception as e:
             logger.error(f"[ERROR] Failed to connect to historical database: {e}")
+
+    def _inspect_database_schema(self):
+        """Inspect database schema to understand available tables and columns"""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            
+            self.available_tables = [table[0] for table in tables]
+            logger.info(f"[INFO] Found database tables: {self.available_tables}")
+            
+            # Inspect data_cache table schema if it exists
+            if 'data_cache' in self.available_tables:
+                cursor.execute("PRAGMA table_info(data_cache)")
+                columns = cursor.fetchall()
+                self.data_cache_columns = [col[1] for col in columns]
+                logger.info(f"[INFO] data_cache columns: {self.data_cache_columns}")
+                
+        except Exception as e:
+            logger.error(f"[ERROR] Failed to inspect database schema: {e}")
+            self.available_tables = []
+            self.data_cache_columns = []
+
+    def _get_table_data(self, table_name: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get data from specified table"""
+        if not self.connection:
+            return []
+        
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(f"SELECT * FROM {table_name} LIMIT ?", (limit,))
+            rows = cursor.fetchall()
+            
+            # Get column names
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            columns = [col[1] for col in cursor.fetchall()]
+            
+            # Convert to list of dictionaries
+            data = []
+            for row in rows:
+                data.append(dict(zip(columns, row)))
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"[ERROR] Failed to get table data from {table_name}: {e}")
+            return []
+
+    def get_historical_data(self, symbol: str, timeframe: str, limit: int = 1000) -> List[Dict[str, Any]]:
+        """Get historical OHLC data for a specific symbol and timeframe"""
+        if not self.connection:
+            return []
+        
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''
+                SELECT timestamp, open_price, high_price, low_price, close_price, volume
+                FROM data_cache 
+                WHERE symbol = ? AND timeframe = ?
+                ORDER BY timestamp DESC 
+                LIMIT ?
+            ''', (symbol, timeframe, limit))
+            
+            rows = cursor.fetchall()
+            
+            # Convert to list of dictionaries
+            historical_data = []
+            for row in rows:
+                historical_data.append({
+                    'timestamp': row[0],
+                    'open': row[1],
+                    'high': row[2],
+                    'low': row[3],
+                    'close': row[4],
+                    'volume': row[5]
+                })
+            
+            logger.info(f"[SUCCESS] Retrieved {len(historical_data)} historical data points for {symbol} {timeframe}")
+            return historical_data
+            
+        except Exception as e:
+            logger.error(f"[ERROR] Failed to get historical data: {e}")
+            return []
     
     def get_realistic_balances(self, symbol: str = "BTCUSDT") -> Dict[str, float]:
         """Get realistic balance data based on historical trading patterns"""
