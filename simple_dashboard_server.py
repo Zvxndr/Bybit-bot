@@ -2,6 +2,7 @@
 Simple Dashboard Server
 Serves only the professional dashboard without trading processes
 Production-ready version for DigitalOcean deployment
+Updated: October 1, 2025
 """
 
 import http.server
