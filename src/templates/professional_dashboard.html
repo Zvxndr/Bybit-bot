@@ -5339,7 +5339,7 @@ class StrategyTemplate:
                         labels: this.generateTimeLabels(),
                         datasets: [{
                             label: 'Portfolio Value',
-                            data: [], // Will be populated with live data
+                            data: [1000, 1050, 1020, 1080, 1150, 1120, 1200, 1180, 1250, 1300, 1280, 1350], // Sample performance data
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 2,
@@ -5393,7 +5393,7 @@ class StrategyTemplate:
                     data: {
                         labels: ['BTC Strategy', 'ETH Strategy', 'Alt Strategy', 'Cash'],
                         datasets: [{
-                            data: [], // Will be populated with live data
+                            data: [40, 30, 20, 10], // Sample allocation: 40% BTC, 30% ETH, 20% Alt, 10% Cash
                             backgroundColor: [
                                 '#10b981',
                                 '#3b82f6', 
