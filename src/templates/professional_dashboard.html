@@ -3837,7 +3837,7 @@
                 <!-- Simple Stats Grid - NO COMPLEX CHARTS -->
                 <div class="simple-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                     
-                    <!-- Performance Trend -->
+                    <!-- Performance Metrics -->
                     <div class="stat-card">
                         <div class="stat-header">
                             <h3>📈 Performance</h3>
@@ -3845,12 +3845,15 @@
                         </div>
                         <div class="stat-value">+44.0%</div>
                         <div class="stat-subtext">Portfolio Growth</div>
-                        <div class="simple-trend">
-                            <div class="trend-bar" style="width: 20%; height: 4px; background: #10b981; margin: 2px 0;"></div>
-                            <div class="trend-bar" style="width: 35%; height: 4px; background: #10b981; margin: 2px 0;"></div>
-                            <div class="trend-bar" style="width: 50%; height: 4px; background: #10b981; margin: 2px 0;"></div>
-                            <div class="trend-bar" style="width: 70%; height: 4px; background: #10b981; margin: 2px 0;"></div>
-                            <div class="trend-bar" style="width: 85%; height: 4px; background: #10b981; margin: 2px 0;"></div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 11px;">
+                            <div style="color: var(--text-muted);">
+                                <div style="color: #10b981; font-weight: 600;">+$2,847</div>
+                                <div>Today's Gain</div>
+                            </div>
+                            <div style="color: var(--text-muted); text-align: right;">
+                                <div style="color: var(--text-primary); font-weight: 600;">97.3%</div>
+                                <div>Win Rate</div>
+                            </div>
                         </div>
                     </div>
 
