@@ -42,9 +42,9 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        background: linear-gradient(45deg, #ff0000, #ff4500, #ff0000) !important;
+        background: linear-gradient(45deg, var(--status-info), var(--status-paper), var(--status-info)) !important;
         color: white !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
     }
 
     .main-container {
@@ -375,6 +375,420 @@
     /* System Overview - clean */
     #system-overview {
         flex: 1 !important;
+    }
+
+    /* Portfolio Overview Styles */
+    .portfolio-overview-section {
+        margin-bottom: 2rem;
+    }
+
+    .portfolio-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .portfolio-stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s ease;
+    }
+
+    .portfolio-stat-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--status-info);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--status-info), #2563eb);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-change {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+    }
+
+    .stat-change.positive {
+        color: var(--status-live);
+    }
+
+    /* Live Strategy Cards */
+    .live-strategy-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s ease;
+    }
+
+    .live-strategy-card:hover {
+        border-color: var(--status-info);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    }
+
+    .strategy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .strategy-info h4 {
+        color: var(--text-primary);
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .strategy-id {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        background: rgba(75, 85, 99, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .strategy-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+    }
+
+    .strategy-status.live {
+        color: var(--status-live);
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--status-live);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .strategy-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .control-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        background: var(--glass-bg);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+    }
+
+    .control-btn:hover {
+        border-color: var(--status-info);
+        color: var(--status-info);
+    }
+
+    .control-btn.emergency:hover {
+        border-color: var(--status-loss);
+        color: var(--status-loss);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .strategy-performance {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+
+    .perf-metric {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .perf-metric .label {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .perf-metric .value {
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .perf-metric .value.positive {
+        color: var(--status-live);
+    }
+
+    /* Analytics Dashboard Styles */
+    .analytics-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--status-info);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--status-info), #2563eb);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .metric-content {
+        flex: 1;
+    }
+
+    .metric-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-value.positive {
+        color: var(--status-live);
+    }
+
+    .metric-change {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+    }
+
+    .timeframe-selector {
+        display: flex;
+        gap: 0.25rem;
+        background: var(--glass-bg);
+        border-radius: 8px;
+        padding: 0.25rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .chart-controls {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .chart-control-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        color: var(--text-secondary);
+        border-radius: 6px;
+        font-size: var(--font-size-xs);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .chart-control-btn:hover, .chart-control-btn.active {
+        background: var(--status-info);
+        color: white;
+        border-color: var(--status-info);
+    }
+
+    .allocation-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .allocation-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .allocation-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .allocation-name {
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .allocation-percentage {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .allocation-bar {
+        height: 8px;
+        background: rgba(75, 85, 99, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .allocation-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .strategy-performance-table {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .table-header, .table-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-header {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table-row {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+    }
+
+    .table-row:last-child {
+        border-bottom: none;
+    }
+
+    .market-insights {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .insight-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--glass-bg);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .insight-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .insight-indicator.bullish {
+        background: var(--status-live);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .insight-indicator.high {
+        background: var(--status-paper);
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    }
+
+    .insight-indicator.optimal {
+        background: var(--status-info);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .insight-indicator.active {
+        background: #8b5cf6;
+        box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    }
+
+    .insight-content {
+        flex: 1;
+    }
+
+    .insight-title {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .insight-value {
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
+        font-weight: 600;
     }
 
     /* Content header - minimal */
@@ -3772,7 +4186,13 @@
             <button class="nav-button" data-screen="risk-management">
                 <i class="fas fa-shield-alt"></i> Risk
             </button>
-            <button class="nav-button" data-screen="global-settings" style="display: none !important;">
+            <button class="nav-button" data-screen="analytics-dashboard">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </button>
+            <button class="nav-button" data-screen="testing-framework">
+                <i class="fas fa-vial"></i> Testing
+            </button>
+            <button class="nav-button" data-screen="global-settings">
                 <i class="fas fa-sliders-h"></i> Settings
             </button>
         </div>
@@ -4556,6 +4976,52 @@
                     </div>
                 </div>
 
+                <!-- Portfolio Overview -->
+                <div class="portfolio-overview-section">
+                    <div class="portfolio-stats-grid">
+                        <div class="portfolio-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Portfolio</div>
+                                <div class="stat-value">$12,847.92</div>
+                                <div class="stat-change positive">+$504.16 (4.08%)</div>
+                            </div>
+                        </div>
+                        <div class="portfolio-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Active Positions</div>
+                                <div class="stat-value">7</div>
+                                <div class="stat-change">2 BTC • 3 ETH • 2 ALT</div>
+                            </div>
+                        </div>
+                        <div class="portfolio-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Portfolio Risk</div>
+                                <div class="stat-value">Medium</div>
+                                <div class="stat-change">12.3% exposure</div>
+                            </div>
+                        </div>
+                        <div class="portfolio-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">AI Strategies</div>
+                                <div class="stat-value">5 Active</div>
+                                <div class="stat-change positive">+2.1% avg return</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Live Trading Dashboard -->
                 <div class="live-trading-grid">
                     <!-- Strategy Deployment Panel -->
@@ -4634,10 +5100,89 @@
                         </div>
 
                         <div class="live-strategies-list">
-                            <div class="empty-state">
-                                <i class="fas fa-rocket"></i>
-                                <h4>No Live Strategies Deployed</h4>
-                                <p>Deploy strategies from the promotion queue above to start live trading</p>
+                            <!-- Sample Live Strategy Card -->
+                            <div class="live-strategy-card">
+                                <div class="strategy-header">
+                                    <div class="strategy-info">
+                                        <h4>AI Momentum Trader</h4>
+                                        <span class="strategy-id">LIVE-001</span>
+                                        <div class="strategy-status live">
+                                            <span class="pulse-dot"></span>
+                                            ACTIVE
+                                        </div>
+                                    </div>
+                                    <div class="strategy-controls">
+                                        <button class="control-btn" onclick="pauseStrategy('LIVE-001')">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                        <button class="control-btn emergency" onclick="emergencyStopStrategy('LIVE-001')">
+                                            <i class="fas fa-stop"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="strategy-performance">
+                                    <div class="perf-metric">
+                                        <span class="label">P&L Today</span>
+                                        <span class="value positive">+$347.82</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Total Trades</span>
+                                        <span class="value">23</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Win Rate</span>
+                                        <span class="value">68.7%</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Capital</span>
+                                        <span class="value">$5,000</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Demo Strategy Card -->
+                            <div class="live-strategy-card">
+                                <div class="strategy-header">
+                                    <div class="strategy-info">
+                                        <h4>Grid Trading Pro</h4>
+                                        <span class="strategy-id">LIVE-002</span>
+                                        <div class="strategy-status live">
+                                            <span class="pulse-dot"></span>
+                                            ACTIVE
+                                        </div>
+                                    </div>
+                                    <div class="strategy-controls">
+                                        <button class="control-btn" onclick="pauseStrategy('LIVE-002')">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                        <button class="control-btn emergency" onclick="emergencyStopStrategy('LIVE-002')">
+                                            <i class="fas fa-stop"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="strategy-performance">
+                                    <div class="perf-metric">
+                                        <span class="label">P&L Today</span>
+                                        <span class="value positive">+$156.34</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Total Trades</span>
+                                        <span class="value">47</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Win Rate</span>
+                                        <span class="value">72.3%</span>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <span class="label">Capital</span>
+                                        <span class="value">$3,500</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="empty-state" style="margin-top: 1rem; padding: 1rem; text-align: center;">
+                                <i class="fas fa-plus-circle"></i>
+                                <p>Deploy more strategies from the promotion queue above</p>
                             </div>
                         </div>
                     </div>
@@ -4879,8 +5424,250 @@
                 </div>
             </div>
 
+            <!-- Analytics Dashboard Screen -->
+            <div id="analytics-dashboard" class="content-screen hidden">
+                <div class="content-header">
+                    <h1 class="content-title">Analytics Dashboard</h1>
+                    <p class="content-subtitle">Comprehensive performance analytics and market insights</p>
+                </div>
+
+                <!-- Performance Overview -->
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0; font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary);">
+                            <i class="fas fa-chart-line" style="margin-right: 0.5rem; color: var(--status-info);"></i>
+                            Performance Overview
+                        </h3>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn active" data-period="24h">24H</button>
+                            <button class="timeframe-btn" data-period="7d">7D</button>
+                            <button class="timeframe-btn" data-period="30d">30D</button>
+                            <button class="timeframe-btn" data-period="90d">90D</button>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics Grid -->
+                    <div class="analytics-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Total P&L</div>
+                                <div class="metric-value positive">+$12,847.32</div>
+                                <div class="metric-change">+24.7% (24h)</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Win Rate</div>
+                                <div class="metric-value">68.4%</div>
+                                <div class="metric-change">+2.1% (24h)</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Sharpe Ratio</div>
+                                <div class="metric-value">2.84</div>
+                                <div class="metric-change">Excellent</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Total Trades</div>
+                                <div class="metric-value">342</div>
+                                <div class="metric-change">+18 (24h)</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Avg Hold Time</div>
+                                <div class="metric-value">4.2h</div>
+                                <div class="metric-change">-12min (24h)</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Max Drawdown</div>
+                                <div class="metric-value">-3.2%</div>
+                                <div class="metric-change">Low Risk</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <!-- P&L Chart -->
+                    <div class="glass-card">
+                        <div class="chart-header">
+                            <h4 class="chart-title">P&L Performance</h4>
+                            <div class="chart-controls">
+                                <button class="chart-control-btn active">Cumulative</button>
+                                <button class="chart-control-btn">Daily</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="pnl-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Allocation -->
+                    <div class="glass-card">
+                        <div class="chart-header">
+                            <h4 class="chart-title">Strategy Allocation</h4>
+                        </div>
+                        <div class="allocation-list">
+                            <div class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-name">TrendMaster Pro</div>
+                                    <div class="allocation-percentage">42%</div>
+                                </div>
+                                <div class="allocation-bar">
+                                    <div class="allocation-fill" style="width: 42%; background: var(--status-info);"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-name">MeanRevert AI</div>
+                                    <div class="allocation-percentage">28%</div>
+                                </div>
+                                <div class="allocation-bar">
+                                    <div class="allocation-fill" style="width: 28%; background: var(--status-live);"></div>
+                                </div>
+                            </div>
+
+                            <div class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-name">Momentum Edge</div>
+                                    <div class="allocation-percentage">18%</div>
+                                </div>
+                                <div class="allocation-bar">
+                                    <div class="allocation-fill" style="width: 18%; background: var(--status-paper);"></div>
+                                </div>
+                            </div>
+
+                            <div class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-name">Arbitrage Scout</div>
+                                    <div class="allocation-percentage">12%</div>
+                                </div>
+                                <div class="allocation-bar">
+                                    <div class="allocation-fill" style="width: 12%; background: #8b5cf6;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Analytics Tables -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Top Performing Strategies -->
+                    <div class="glass-card">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-trophy" style="color: var(--status-live);"></i>
+                            Top Performing Strategies
+                        </h4>
+                        <div class="strategy-performance-table">
+                            <div class="table-header">
+                                <span>Strategy</span>
+                                <span>P&L</span>
+                                <span>Win Rate</span>
+                                <span>Trades</span>
+                            </div>
+                            <div class="table-row">
+                                <span>TrendMaster Pro</span>
+                                <span class="positive">+$5,234</span>
+                                <span>74.2%</span>
+                                <span>124</span>
+                            </div>
+                            <div class="table-row">
+                                <span>MeanRevert AI</span>
+                                <span class="positive">+$3,891</span>
+                                <span>66.8%</span>
+                                <span>89</span>
+                            </div>
+                            <div class="table-row">
+                                <span>Momentum Edge</span>
+                                <span class="positive">+$2,156</span>
+                                <span>61.3%</span>
+                                <span>67</span>
+                            </div>
+                            <div class="table-row">
+                                <span>Arbitrage Scout</span>
+                                <span class="positive">+$1,566</span>
+                                <span>72.1%</span>
+                                <span>62</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Market Analysis -->
+                    <div class="glass-card">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-globe" style="color: var(--status-info);"></i>
+                            Market Insights
+                        </h4>
+                        <div class="market-insights">
+                            <div class="insight-item">
+                                <div class="insight-indicator bullish"></div>
+                                <div class="insight-content">
+                                    <div class="insight-title">Market Trend</div>
+                                    <div class="insight-value">Bullish</div>
+                                </div>
+                            </div>
+                            
+                            <div class="insight-item">
+                                <div class="insight-indicator high"></div>
+                                <div class="insight-content">
+                                    <div class="insight-title">Volatility</div>
+                                    <div class="insight-value">High (24.3%)</div>
+                                </div>
+                            </div>
+
+                            <div class="insight-item">
+                                <div class="insight-indicator optimal"></div>
+                                <div class="insight-content">
+                                    <div class="insight-title">Opportunity Score</div>
+                                    <div class="insight-value">8.4/10</div>
+                                </div>
+                            </div>
+
+                            <div class="insight-item">
+                                <div class="insight-indicator active"></div>
+                                <div class="insight-content">
+                                    <div class="insight-title">Active Pairs</div>
+                                    <div class="insight-value">15/20</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Global Settings Screen (HIDDEN TO PREVENT CUTOFF) -->
-            <div id="global-settings" class="content-screen hidden" style="display: none !important;">
+            <div id="global-settings" class="content-screen hidden">
                 <div class="content-header">
                     <h1 class="content-title">Global Settings</h1>
                     <p class="content-subtitle">Configure system settings and preferences</p>
