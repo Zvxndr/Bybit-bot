@@ -3845,7 +3845,7 @@
                         </div>
                         <div class="stat-value">+44.0%</div>
                         <div class="stat-subtext">Portfolio Growth</div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 11px;">
+                        <div style="display: flex; justify-content: space-between; margin: 1rem 0 0.75rem 0; font-size: 11px;">
                             <div style="color: var(--text-muted);">
                                 <div style="color: #10b981; font-weight: 600;">+$2,847</div>
                                 <div>Today's Gain</div>
@@ -3853,6 +3853,31 @@
                             <div style="color: var(--text-muted); text-align: right;">
                                 <div style="color: var(--text-primary); font-weight: 600;">97.3%</div>
                                 <div>Win Rate</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 0.75rem;">
+                            <div style="color: var(--text-muted);">
+                                <div style="color: var(--text-primary); font-weight: 600;">$47,291</div>
+                                <div>Total Value</div>
+                            </div>
+                            <div style="color: var(--text-muted); text-align: right;">
+                                <div style="color: #3b82f6; font-weight: 600;">12</div>
+                                <div>Active Trades</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 0.75rem;">
+                            <div style="color: var(--text-muted);">
+                                <div style="color: #f59e0b; font-weight: 600;">0.34%</div>
+                                <div>Max Drawdown</div>
+                            </div>
+                            <div style="color: var(--text-muted); text-align: right;">
+                                <div style="color: var(--text-primary); font-weight: 600;">2.8</div>
+                                <div>Sharpe Ratio</div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.1); border-radius: 6px; padding: 0.5rem; margin-top: 0.5rem;">
+                            <div style="font-size: 10px; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
+                                <span>📊</span> Best Performer: BTC Strategy (+67.2%)
                             </div>
                         </div>
                     </div>
@@ -3863,34 +3888,42 @@
                             <h3>🎯 Strategy Mix</h3>
                             <span class="stat-period">Active</span>
                         </div>
-                        <div class="allocation-bars">
-                            <div class="alloc-item">
-                                <span class="alloc-label">🟢 BTC Strategy</span>
-                                <div class="alloc-bar">
-                                    <div style="width: 40%; background: #10b981; height: 8px; border-radius: 4px;"></div>
+                        <div class="allocation-bars" style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly;">
+                            <div class="alloc-item" style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 11px;">
+                                    <span style="color: var(--text-primary); font-weight: 500;">🟢 BTC Strategy</span>
+                                    <span style="color: var(--text-primary); font-weight: 600;">40%</span>
                                 </div>
-                                <span class="alloc-percent">40%</span>
+                                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 12px; overflow: hidden;">
+                                    <div style="width: 40%; background: #10b981; height: 100%; border-radius: 6px; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                            <div class="alloc-item" style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 11px;">
+                                    <span style="color: var(--text-primary); font-weight: 500;">🔵 ETH Strategy</span>
+                                    <span style="color: var(--text-primary); font-weight: 600;">30%</span>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 12px; overflow: hidden;">
+                                    <div style="width: 30%; background: #3b82f6; height: 100%; border-radius: 6px; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                            <div class="alloc-item" style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 11px;">
+                                    <span style="color: var(--text-primary); font-weight: 500;">🟠 Alt Strategy</span>
+                                    <span style="color: var(--text-primary); font-weight: 600;">20%</span>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 12px; overflow: hidden;">
+                                    <div style="width: 20%; background: #f59e0b; height: 100%; border-radius: 6px; transition: width 0.3s ease;"></div>
+                                </div>
                             </div>
                             <div class="alloc-item">
-                                <span class="alloc-label">🔵 ETH Strategy</span>
-                                <div class="alloc-bar">
-                                    <div style="width: 30%; background: #3b82f6; height: 8px; border-radius: 4px;"></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 11px;">
+                                    <span style="color: var(--text-primary); font-weight: 500;">⚪ Cash</span>
+                                    <span style="color: var(--text-primary); font-weight: 600;">10%</span>
                                 </div>
-                                <span class="alloc-percent">30%</span>
-                            </div>
-                            <div class="alloc-item">
-                                <span class="alloc-label">🟠 Alt Strategy</span>
-                                <div class="alloc-bar">
-                                    <div style="width: 20%; background: #f59e0b; height: 8px; border-radius: 4px;"></div>
+                                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 12px; overflow: hidden;">
+                                    <div style="width: 10%; background: #6b7280; height: 100%; border-radius: 6px; transition: width 0.3s ease;"></div>
                                 </div>
-                                <span class="alloc-percent">20%</span>
-                            </div>
-                            <div class="alloc-item">
-                                <span class="alloc-label">⚪ Cash</span>
-                                <div class="alloc-bar">
-                                    <div style="width: 10%; background: #6b7280; height: 8px; border-radius: 4px;"></div>
-                                </div>
-                                <span class="alloc-percent">10%</span>
                             </div>
                         </div>
                     </div>
