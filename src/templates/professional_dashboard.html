@@ -408,23 +408,24 @@
         height: 180px !important;
     }
 
-    /* NUCLEAR LAYOUT FIX V26.0 - FORCE EVERYTHING TO FIT */
+    /* BALANCED LAYOUT FIX V27.0 - PROPER PROPORTIONS */
     .charts-section {
-        height: 140px !important;
-        overflow: hidden !important;
+        height: 220px !important;
+        overflow: visible !important;
+        margin-bottom: 1rem !important;
     }
     
     .chart-container {
-        height: 140px !important;
-        min-height: 140px !important;
-        max-height: 140px !important;
-        padding: 0.5rem !important;
+        height: 220px !important;
+        min-height: 220px !important;
+        max-height: 220px !important;
+        padding: 1rem !important;
     }
     
     .main-content {
         height: calc(100vh - 165px) !important;
         overflow-y: auto !important;
-        padding-bottom: 2rem !important;
+        padding-bottom: 1rem !important;
     }
     </style>
     
@@ -3758,26 +3759,26 @@
                     </div>
                 </div>
 
-                <!-- Charts Section - FORCED COMPACT -->
-                <div class="charts-section" style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.5rem; margin-bottom: 1rem; height: 140px !important;">
-                    <div class="chart-container" style="height: 140px !important; padding: 0.5rem !important; overflow: hidden;">
-                        <div class="chart-header" style="margin-bottom: 0.25rem;">
-                            <h3 class="chart-title" style="font-size: 12px; margin: 0;">Performance Timeline</h3>
+                <!-- Charts Section - BALANCED SIZING -->
+                <div class="charts-section" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Performance Timeline</h3>
                             <div class="chart-timeframe">
-                                <button class="timeframe-btn active" data-timeframe="1H" style="font-size: 10px; padding: 0.2rem 0.4rem;">1H</button>
-                                <button class="timeframe-btn" data-timeframe="4H" style="font-size: 10px; padding: 0.2rem 0.4rem;">4H</button>
-                                <button class="timeframe-btn" data-timeframe="1D" style="font-size: 10px; padding: 0.2rem 0.4rem;">1D</button>
-                                <button class="timeframe-btn" data-timeframe="1W" style="font-size: 10px; padding: 0.2rem 0.4rem;">1W</button>
+                                <button class="timeframe-btn active" data-timeframe="1H">1H</button>
+                                <button class="timeframe-btn" data-timeframe="4H">4H</button>
+                                <button class="timeframe-btn" data-timeframe="1D">1D</button>
+                                <button class="timeframe-btn" data-timeframe="1W">1W</button>
                             </div>
                         </div>
-                        <canvas id="performance-chart" width="280" height="100" style="max-height: 100px !important;"></canvas>
+                        <canvas id="performance-chart" width="400" height="150"></canvas>
                     </div>
                     
-                    <div class="chart-container" style="height: 140px !important; padding: 0.5rem !important; overflow: hidden;">
-                        <div class="chart-header" style="margin-bottom: 0.25rem;">
-                            <h3 class="chart-title" style="font-size: 12px; margin: 0;">Strategy Allocation</h3>
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Strategy Allocation</h3>
                         </div>
-                        <canvas id="allocation-chart" width="120" height="120" style="max-height: 120px !important;"></canvas>
+                        <canvas id="allocation-chart" width="180" height="180"></canvas>
                     </div>
                 </div>
 
