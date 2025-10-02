@@ -52,9 +52,9 @@
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        bottom: 0 !important;
+        bottom: auto !important;
         width: 100vw !important;
-        height: 100vh !important;
+        height: calc(100vh - 20px) !important;
         display: block !important;
         flex-direction: column !important;
         overflow: hidden !important;
@@ -495,10 +495,11 @@
     }
     
     .main-content {
-        height: calc(100vh - 170px) !important;
+        height: calc(100vh - 165px) !important;
         overflow-y: auto !important;
-        padding-bottom: 1.5rem !important;
+        padding-bottom: 3rem !important;
         box-sizing: border-box !important;
+        max-height: calc(100vh - 165px) !important;
     }
     </style>
     
@@ -634,8 +635,8 @@
             50% { opacity: 0.9; }
         }
 
-        /* Main Layout - Absolute Positioned */
-        .main-container {
+        /* Main Layout - Absolute Positioned - DISABLED TO PREVENT CUTOFF */
+        .main-container-old {
             position: absolute;
             top: 48px;
             left: 0;
