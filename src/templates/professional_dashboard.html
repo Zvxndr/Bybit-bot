@@ -408,20 +408,21 @@
         height: 180px !important;
     }
 
-    /* RESPONSIVE CHART FIX V30.0 - PROPER CANVAS SIZING */
+    /* CONTAINED CHART FIX V31.0 - PREVENT BOTTOM OVERFLOW */
     .charts-section {
-        height: 200px !important;
-        overflow: visible !important;
+        height: 180px !important;
+        overflow: hidden !important;
         margin-bottom: 0.75rem !important;
     }
     
     .chart-container {
-        height: 200px !important;
-        min-height: 200px !important;
-        max-height: 200px !important;
+        height: 180px !important;
+        min-height: 180px !important;
+        max-height: 180px !important;
         padding: 0.75rem !important;
         display: flex !important;
         flex-direction: column !important;
+        overflow: hidden !important;
     }
 
     .chart-container canvas {
@@ -3778,7 +3779,7 @@
                                 <button class="timeframe-btn" data-timeframe="1W">1W</button>
                             </div>
                         </div>
-                        <div style="height: 140px;">
+                        <div style="height: 120px; overflow: hidden;">
                             <canvas id="performance-chart"></canvas>
                         </div>
                     </div>
@@ -3787,7 +3788,7 @@
                         <div class="chart-header">
                             <h3 class="chart-title">Strategy Allocation</h3>
                         </div>
-                        <div style="height: 140px;">
+                        <div style="height: 120px; overflow: hidden;">
                             <canvas id="allocation-chart"></canvas>
                         </div>
                     </div>
