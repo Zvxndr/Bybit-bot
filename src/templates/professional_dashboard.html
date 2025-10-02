@@ -408,9 +408,9 @@
         height: 180px !important;
     }
 
-    /* SIMPLE FOOLPROOF DESIGN V32.1 - FIXED BOTTOM CUTOFF */
+    /* SIMPLE FOOLPROOF DESIGN V32.4 - REMOVE EMPTY BOTTOM BOX */
     .simple-stats-grid {
-        margin-bottom: 2rem !important;
+        margin-bottom: 0 !important;
     }
     
     .stat-card {
@@ -497,9 +497,10 @@
     .main-content {
         height: calc(100vh - 165px) !important;
         overflow-y: auto !important;
-        padding-bottom: 3rem !important;
+        padding-bottom: 0 !important;
         box-sizing: border-box !important;
         max-height: calc(100vh - 165px) !important;
+        margin-bottom: 0 !important;
     }
     </style>
     
@@ -775,7 +776,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 0.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 0;
             padding: 0;
         }
 
