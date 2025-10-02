@@ -495,9 +495,9 @@
     }
     
     .main-content {
-        height: calc(100vh - 185px) !important;
+        height: calc(100vh - 170px) !important;
         overflow-y: auto !important;
-        padding-bottom: 2rem !important;
+        padding-bottom: 1.5rem !important;
         box-sizing: border-box !important;
     }
     </style>
@@ -3770,7 +3770,7 @@
             <button class="nav-button" data-screen="risk-management">
                 <i class="fas fa-shield-alt"></i> Risk
             </button>
-            <button class="nav-button" data-screen="global-settings">
+            <button class="nav-button" data-screen="global-settings" style="display: none !important;">
                 <i class="fas fa-sliders-h"></i> Settings
             </button>
         </div>
@@ -5044,8 +5044,8 @@ class StrategyTemplate:
                 </div>
             </div>
 
-            <!-- Global Settings Screen -->
-            <div id="global-settings" class="content-screen hidden">
+            <!-- Global Settings Screen (HIDDEN TO PREVENT CUTOFF) -->
+            <div id="global-settings" class="content-screen hidden" style="display: none !important;">
                 <div class="content-header">
                     <h1 class="content-title">Global Settings</h1>
                     <p class="content-subtitle">Configure system settings and preferences</p>
