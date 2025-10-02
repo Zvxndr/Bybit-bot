@@ -801,6 +801,137 @@
         font-weight: 600;
     }
 
+    /* Trade History Table Styles */
+    .trade-history-table {
+        display: flex;
+        flex-direction: column;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--glass-bg);
+    }
+
+    .trade-header, .trade-row {
+        display: grid;
+        grid-template-columns: 80px 100px 60px 80px 100px 80px 80px;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .trade-header {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(75, 85, 99, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .trade-row {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        transition: background-color 0.2s ease;
+    }
+
+    .trade-row:hover {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .trade-row:last-child {
+        border-bottom: none;
+    }
+
+    .trade-time {
+        font-family: 'Courier New', monospace;
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+    }
+
+    .trade-pair {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .trade-side {
+        font-weight: 600;
+        font-size: var(--font-size-xs);
+        text-transform: uppercase;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .trade-side.buy {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--status-live);
+    }
+
+    .trade-side.sell {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--status-loss);
+    }
+
+    .trade-size {
+        font-family: 'Courier New', monospace;
+        color: var(--text-secondary);
+    }
+
+    .trade-price {
+        font-family: 'Courier New', monospace;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .trade-pnl {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .trade-pnl.positive {
+        color: var(--status-live);
+    }
+
+    .trade-pnl.negative {
+        color: var(--status-loss);
+    }
+
+    .trade-status {
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .trade-status.filled {
+        color: var(--status-live);
+    }
+
+    .trade-status.pending {
+        color: var(--status-paper);
+    }
+
+    .trade-status.cancelled {
+        color: var(--text-muted);
+    }
+
+    .loading-spinner {
+        border: 2px solid var(--border-color);
+        border-top: 2px solid var(--status-info);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     /* Content header - minimal */
     .content-header {
         margin-bottom: 1rem !important;
@@ -4534,6 +4665,241 @@
                                     <div class="alert-time">System start</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trade History Section - As specified in SAR -->
+                <div class="glass-card" style="margin-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0; font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary);">
+                            <i class="fas fa-history" style="margin-right: 0.5rem; color: var(--status-info);"></i>
+                            Recent Trade History
+                        </h3>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span style="color: var(--text-muted); font-size: var(--font-size-sm);">Loading trades...</span>
+                            <div class="loading-spinner" style="width: 16px; height: 16px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="trade-history-table">
+                        <div class="trade-header">
+                            <span>Time</span>
+                            <span>Pair</span>
+                            <span>Side</span>
+                            <span>Size</span>
+                            <span>Price</span>
+                            <span>P&L</span>
+                            <span>Status</span>
+                        </div>
+                        
+                        <div id="trade-history-list">
+                            <!-- Trade entries will be dynamically loaded here -->
+                            <div class="trade-row">
+                                <span class="trade-time">14:32:18</span>
+                                <span class="trade-pair">BTCUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">0.025</span>
+                                <span class="trade-price">$67,842.30</span>
+                                <span class="trade-pnl positive">+$127.50</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                            
+                            <div class="trade-row">
+                                <span class="trade-time">14:28:45</span>
+                                <span class="trade-pair">ETHUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">1.50</span>
+                                <span class="trade-price">$2,487.92</span>
+                                <span class="trade-pnl positive">+$45.80</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                            
+                            <div class="trade-row">
+                                <span class="trade-time">14:25:12</span>
+                                <span class="trade-pair">SOLUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">25.00</span>
+                                <span class="trade-price">$138.67</span>
+                                <span class="trade-pnl positive">+$32.15</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                            
+                            <div class="trade-row">
+                                <span class="trade-time">14:21:33</span>
+                                <span class="trade-pair">ADAUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">850.00</span>
+                                <span class="trade-price">$0.3524</span>
+                                <span class="trade-pnl negative">-$8.45</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                            
+                            <div class="trade-row">
+                                <span class="trade-time">14:18:07</span>
+                                <span class="trade-pair">MATICUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">120.00</span>
+                                <span class="trade-price">$0.7842</span>
+                                <span class="trade-pnl positive">+$18.92</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                            
+                            <div class="trade-row">
+                                <span class="trade-time">14:15:28</span>
+                                <span class="trade-pair">AVAXUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">8.50</span>
+                                <span class="trade-price">$28.34</span>
+                                <span class="trade-pnl positive">+$22.67</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">14:12:15</span>
+                                <span class="trade-pair">DOTUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">42.00</span>
+                                <span class="trade-price">$4.892</span>
+                                <span class="trade-pnl positive">+$15.34</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">14:08:42</span>
+                                <span class="trade-pair">LINKUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">15.00</span>
+                                <span class="trade-price">$11.47</span>
+                                <span class="trade-pnl negative">-$5.23</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">14:05:19</span>
+                                <span class="trade-pair">UNIUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">28.00</span>
+                                <span class="trade-price">$7.234</span>
+                                <span class="trade-pnl positive">+$41.78</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">14:02:56</span>
+                                <span class="trade-pair">ATOMUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">35.00</span>
+                                <span class="trade-price">$6.189</span>
+                                <span class="trade-pnl positive">+$28.45</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:59:34</span>
+                                <span class="trade-pair">FTMUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">180.00</span>
+                                <span class="trade-price">$0.6721</span>
+                                <span class="trade-pnl positive">+$19.67</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:56:11</span>
+                                <span class="trade-pair">NEARUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">62.00</span>
+                                <span class="trade-price">$4.123</span>
+                                <span class="trade-pnl negative">-$12.89</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:52:48</span>
+                                <span class="trade-pair">ALGOUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">240.00</span>
+                                <span class="trade-price">$0.1892</span>
+                                <span class="trade-pnl positive">+$36.21</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:49:25</span>
+                                <span class="trade-pair">XLMUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">420.00</span>
+                                <span class="trade-price">$0.1076</span>
+                                <span class="trade-pnl positive">+$14.52</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:46:02</span>
+                                <span class="trade-pair">VETUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">1200.00</span>
+                                <span class="trade-price">$0.02847</span>
+                                <span class="trade-pnl positive">+$8.93</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:42:39</span>
+                                <span class="trade-pair">ZECUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">3.20</span>
+                                <span class="trade-price">$41.67</span>
+                                <span class="trade-pnl negative">-$3.78</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:39:16</span>
+                                <span class="trade-pair">COMPUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">2.80</span>
+                                <span class="trade-price">$56.23</span>
+                                <span class="trade-pnl positive">+$23.45</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:35:53</span>
+                                <span class="trade-pair">SUSHIUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">89.00</span>
+                                <span class="trade-price">$1.247</span>
+                                <span class="trade-pnl positive">+$11.84</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:32:30</span>
+                                <span class="trade-pair">YFIUSDT</span>
+                                <span class="trade-side buy">BUY</span>
+                                <span class="trade-size">0.15</span>
+                                <span class="trade-price">$6,789.42</span>
+                                <span class="trade-pnl positive">+$67.32</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+
+                            <div class="trade-row">
+                                <span class="trade-time">13:29:07</span>
+                                <span class="trade-pair">CRVUSDT</span>
+                                <span class="trade-side sell">SELL</span>
+                                <span class="trade-size">150.00</span>
+                                <span class="trade-price">$0.4821</span>
+                                <span class="trade-pnl negative">-$6.47</span>
+                                <span class="trade-status filled">FILLED</span>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                            <span style="color: var(--text-muted); font-size: var(--font-size-sm);">
+                                Showing last 20 trades • <span style="color: var(--status-live);">18 profitable</span> • <span style="color: var(--status-loss);">2 losses</span>
+                            </span>
                         </div>
                     </div>
                 </div>
