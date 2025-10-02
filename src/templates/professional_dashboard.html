@@ -1743,7 +1743,18 @@
         .bg-danger { background-color: var(--status-loss); }
         .bg-info { background-color: var(--status-info); }
 
-        .hidden { display: none !important; }
+        .content-screen {
+            display: none;
+        }
+        
+        .content-screen.active {
+            display: flex !important;
+            flex-direction: column;
+        }
+        
+        .hidden { 
+            display: none;
+        }
         .visible { display: block !important; }
 
         /* Toggle Switch Styles */
@@ -4528,7 +4539,7 @@
             </div>
 
             <!-- AI Strategy Lab Screen -->
-            <div id="strategy-lab" class="content-screen hidden">
+            <div id="strategy-lab" class="content-screen">
                 <div class="strategy-discovery-status active" style="position: absolute; top: 1rem; right: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.5rem 1rem; border-radius: 20px; font-size: 12px; font-weight: 600;">
                     <i class="fas fa-brain"></i>
                     ML Auto-Discovery Active
@@ -4637,7 +4648,7 @@
             </div>
 
             <!-- Strategy Manager Screen -->
-            <div id="strategy-manager" class="content-screen hidden">
+            <div id="strategy-manager" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">Strategy Manager</h1>
                     <p class="content-subtitle">Strategy Graduation System - Paper → Testnet → Live</p>
@@ -4955,7 +4966,7 @@
             <!-- === PHASE 3: LIVE TRADING & RISK MANAGEMENT === -->
             
             <!-- Live Trading Screen -->
-            <div id="live-trading" class="content-screen hidden">
+            <div id="live-trading" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">
                         <i class="fas fa-rocket" style="color: var(--accent-primary); margin-right: 0.5rem;"></i>
@@ -5238,7 +5249,7 @@
             </div>
 
             <!-- Risk Management Screen -->
-            <div id="risk-management" class="content-screen hidden">
+            <div id="risk-management" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">
                         <i class="fas fa-shield-alt" style="color: var(--status-warning); margin-right: 0.5rem;"></i>
@@ -5412,7 +5423,7 @@
             </div>
 
             <!-- Risk & Exposure Screen -->
-            <div id="risk-exposure" class="content-screen hidden">
+            <div id="risk-exposure" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">Risk & Exposure</h1>
                     <p class="content-subtitle">Monitor risk metrics and position exposure</p>
@@ -5425,7 +5436,7 @@
             </div>
 
             <!-- Analytics Dashboard Screen -->
-            <div id="analytics-dashboard" class="content-screen hidden">
+            <div id="analytics-dashboard" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">Analytics Dashboard</h1>
                     <p class="content-subtitle">Comprehensive performance analytics and market insights</p>
@@ -5667,7 +5678,7 @@
             </div>
 
             <!-- Global Settings Screen (HIDDEN TO PREVENT CUTOFF) -->
-            <div id="global-settings" class="content-screen hidden">
+            <div id="global-settings" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">Global Settings</h1>
                     <p class="content-subtitle">Configure system settings and preferences</p>
@@ -5776,7 +5787,7 @@
             </div>
 
             <!-- Testing Framework Screen -->
-            <div id="testing-framework" class="content-screen hidden">
+            <div id="testing-framework" class="content-screen">
                 <div class="content-header">
                     <h1 class="content-title">🧪 AuraQuant Testing Framework</h1>
                     <p class="content-subtitle">Comprehensive testing suite for system validation and quality assurance</p>
@@ -6080,14 +6091,13 @@
                         
                         // Show target screen
                         contentScreens.forEach(screen => {
-                            screen.classList.add('hidden');
                             screen.classList.remove('active');
                         });
                         
                         const targetElement = document.getElementById(targetScreen);
                         if (targetElement) {
-                            targetElement.classList.remove('hidden');
                             targetElement.classList.add('active');
+                            console.log(`Switched to tab: ${targetScreen}`);
                         }
                     });
                 });
