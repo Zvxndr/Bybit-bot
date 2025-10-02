@@ -49,13 +49,9 @@
 
     .main-container {
         position: relative !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: auto !important;
         width: 100vw !important;
-        height: calc(100vh - 20px) !important;
-        display: block !important;
+        height: 100vh !important;
+        display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
         margin: 0 !important;
@@ -92,15 +88,13 @@
 
     .main-content {
         padding: 1rem !important;
-        height: calc(100vh - 165px) !important;
-        overflow-y: auto !important;
+        height: calc(100vh - 120px) !important;
+        overflow: hidden !important;
         display: flex !important;
         flex-direction: column !important;
-        position: absolute !important;
-        top: 165px !important;
-        left: 0 !important;
-        right: 0 !important;
+        position: relative !important;
         width: 100% !important;
+        flex: 1 !important;
     }
 
     .content-header {
@@ -368,8 +362,14 @@
     /* Content screens - simple layout */
     .content-screen {
         flex: 1 !important;
-        display: flex !important;
+        display: none !important;
         flex-direction: column !important;
+        overflow-y: auto !important;
+        padding: 0.5rem !important;
+    }
+    
+    .content-screen.active {
+        display: flex !important;
     }
 
     /* System Overview - clean */
@@ -1743,15 +1743,6 @@
         .bg-danger { background-color: var(--status-loss); }
         .bg-info { background-color: var(--status-info); }
 
-        .content-screen {
-            display: none;
-        }
-        
-        .content-screen.active {
-            display: flex !important;
-            flex-direction: column;
-        }
-        
         .hidden { 
             display: none;
         }
@@ -6072,17 +6063,22 @@
             }
 
             initializeNavigation() {
+                console.log('🔧 Initializing navigation system...');
                 const navLinks = document.querySelectorAll('.nav-link');
                 const navButtons = document.querySelectorAll('.nav-button');
                 const contentScreens = document.querySelectorAll('.content-screen');
 
+                console.log(`Found ${navButtons.length} navigation buttons`);
+                console.log(`Found ${contentScreens.length} content screens`);
+
                 // Handle both sidebar links and compact nav buttons
                 const allNavElements = [...navLinks, ...navButtons];
 
-                allNavElements.forEach(element => {
+                allNavElements.forEach((element, index) => {
                     element.addEventListener('click', (e) => {
                         e.preventDefault();
                         const targetScreen = element.getAttribute('data-screen');
+                        console.log(`🖱️ Navigation clicked: ${targetScreen}`);
                         
                         // Update active navigation for both types
                         navLinks.forEach(nl => nl.classList.remove('active'));
@@ -6097,10 +6093,14 @@
                         const targetElement = document.getElementById(targetScreen);
                         if (targetElement) {
                             targetElement.classList.add('active');
-                            console.log(`Switched to tab: ${targetScreen}`);
+                            console.log(`✅ Successfully switched to tab: ${targetScreen}`);
+                        } else {
+                            console.error(`❌ Target element not found: ${targetScreen}`);
                         }
                     });
                 });
+                
+                console.log('✅ Navigation system initialized successfully');
             }
 
             initializeCharts() {
