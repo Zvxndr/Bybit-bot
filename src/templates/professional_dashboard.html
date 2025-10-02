@@ -48,14 +48,12 @@
     }
 
     .main-container {
-        position: relative !important;
-        width: 100vw !important;
-        height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
+        height: 100vh !important;
+        width: 100vw !important;
         overflow: hidden !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        position: relative !important;
     }
 
     /* Sidebar removed - using top navigation only */
@@ -87,16 +85,12 @@
     }
 
     .main-content {
-        padding: 1rem !important;
-        height: calc(100vh - 140px) !important;
-        overflow: hidden !important;
+        flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        position: absolute !important;
-        top: 140px !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
+        padding: 1rem !important;
+        overflow: hidden !important;
+        position: relative !important;
     }
 
     .content-header {
@@ -369,13 +363,14 @@
         margin-top: 1rem !important;
     }
 
-    /* Content screens - simple layout */
+    /* Content screens - unified navigation system */
     .content-screen {
-        flex: 1 !important;
         display: none !important;
         flex-direction: column !important;
+        flex: 1 !important;
+        padding: 1rem !important;
         overflow-y: auto !important;
-        padding: 0.5rem !important;
+        height: 100% !important;
     }
     
     .content-screen.active {
@@ -4276,12 +4271,7 @@
             font-size: var(--font-size-sm);
         }
 
-        /* Content Screen Height Fix */
-        .content-screen {
-            height: calc(100vh - 100px);
-            overflow-y: auto;
-            padding: 2rem;
-        }
+        /* Conflicting CSS removed - using unified .content-screen definition above */
 
         /* Responsive Chart Layout */
         @media (max-width: 1024px) {
@@ -6439,13 +6429,10 @@
             }
 
             initializeNavigation() {
-                console.log('🔧 Initializing navigation system...');
+                console.log('Professional Glass Box Dashboard: Navigation initialized');
                 const navLinks = document.querySelectorAll('.nav-link');
                 const navButtons = document.querySelectorAll('.nav-button');
                 const contentScreens = document.querySelectorAll('.content-screen');
-
-                console.log(`Found ${navButtons.length} navigation buttons`);
-                console.log(`Found ${contentScreens.length} content screens`);
 
                 // Handle both sidebar links and compact nav buttons
                 const allNavElements = [...navLinks, ...navButtons];
@@ -6454,7 +6441,6 @@
                     element.addEventListener('click', (e) => {
                         e.preventDefault();
                         const targetScreen = element.getAttribute('data-screen');
-                        console.log(`🖱️ Navigation clicked: ${targetScreen}`);
                         
                         // Update active navigation for both types
                         navLinks.forEach(nl => nl.classList.remove('active'));
@@ -6469,14 +6455,14 @@
                         const targetElement = document.getElementById(targetScreen);
                         if (targetElement) {
                             targetElement.classList.add('active');
-                            console.log(`✅ Successfully switched to tab: ${targetScreen}`);
+                            console.log(`Navigation: Switched to ${targetScreen}`);
                         } else {
-                            console.error(`❌ Target element not found: ${targetScreen}`);
+                            console.error(`Navigation error: Target not found - ${targetScreen}`);
                         }
                     });
                 });
                 
-                console.log('✅ Navigation system initialized successfully');
+
             }
 
             initializeCharts() {
