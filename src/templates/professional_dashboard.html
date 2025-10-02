@@ -408,7 +408,7 @@
         height: 180px !important;
     }
 
-    /* OPTIMIZED LAYOUT V28.0 - FINE-TUNED PROPORTIONS */
+    /* RESPONSIVE CHART FIX V30.0 - PROPER CANVAS SIZING */
     .charts-section {
         height: 200px !important;
         overflow: visible !important;
@@ -420,6 +420,13 @@
         min-height: 200px !important;
         max-height: 200px !important;
         padding: 0.75rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .chart-container canvas {
+        width: 100% !important;
+        height: 100% !important;
     }
     
     .main-content {
@@ -3759,8 +3766,8 @@
                     </div>
                 </div>
 
-                <!-- Charts Section - BALANCED SIZING -->
-                <div class="charts-section" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <!-- Charts Section - FIXED PROPORTIONS -->
+                <div class="charts-section" style="display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; margin-bottom: 1rem;">
                     <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title">Performance Timeline</h3>
@@ -3771,14 +3778,18 @@
                                 <button class="timeframe-btn" data-timeframe="1W">1W</button>
                             </div>
                         </div>
-                        <canvas id="performance-chart" width="380" height="140"></canvas>
+                        <div style="height: 140px;">
+                            <canvas id="performance-chart"></canvas>
+                        </div>
                     </div>
                     
                     <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title">Strategy Allocation</h3>
                         </div>
-                        <canvas id="allocation-chart" width="180" height="180"></canvas>
+                        <div style="height: 140px;">
+                            <canvas id="allocation-chart"></canvas>
+                        </div>
                     </div>
                 </div>
 
