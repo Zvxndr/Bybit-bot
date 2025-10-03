@@ -461,20 +461,31 @@ class FrontendHandler(BaseHTTPRequestHandler):
             # Get data from shared state
             shared_data = shared_state.get_all_data()
             
+            # Get debug manager status for accurate trading mode
+            debug_status = self.debug_manager.get_debug_status()
+            debug_mode = debug_status.get('debug_mode', True)
+            
             # Check database status
             db_path = Path("data/trading_bot.db")
             db_status = "ready" if db_path.exists() else "initializing"
             
+            # Determine actual system status and mode
+            actual_mode = "paper_trading" if debug_mode else "live_trading"
+            actual_status = "paper_trading" if debug_mode else shared_data["system"]["status"]
+            
             status_data = {
                 "trading_bot": {
-                    "status": shared_data["system"]["status"],
+                    "status": actual_status,
                     "version": shared_data["system"]["version"],
-                    "mode": shared_data["system"]["mode"],
+                    "mode": actual_mode,
+                    "trading_mode": "Paper Trading" if debug_mode else "Live Trading",
+                    "debug_mode": debug_mode,
                     "strategies_active": shared_data["trading"]["strategies_active"],
                     "positions": shared_data["trading"]["positions_count"],
                     "balance": shared_data["trading"]["balance"],
                     "daily_pnl": shared_data["trading"]["daily_pnl"],
-                    "uptime": shared_data["system"].get("uptime_str", "00:00:00")
+                    "uptime": shared_data["system"].get("uptime_str", "00:00:00"),
+                    "environment": "testnet" if debug_mode else "mainnet"
                 },
                 "system": {
                     "cpu_usage": f"{cpu_percent:.1f}%",
@@ -482,6 +493,12 @@ class FrontendHandler(BaseHTTPRequestHandler):
                     "disk_space": f"{100 - disk.percent:.1f}% available",
                     "network": "connected",
                     "database": db_status
+                },
+                "debug_info": {
+                    "phase": debug_status.get('phase', 'UNKNOWN'),
+                    "trading_allowed": debug_status.get('trading_allowed', False),
+                    "runtime_seconds": debug_status.get('runtime_seconds', 0),
+                    "max_runtime_seconds": debug_status.get('max_runtime_seconds', 3600)
                 },
                 "last_update": shared_data["last_update"]
             }
