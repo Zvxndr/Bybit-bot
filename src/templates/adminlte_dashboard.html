@@ -77,25 +77,25 @@
         .text-danger { color: #dc3545 !important; }
         .text-muted { color: #6c757d !important; }
         
-        /* Loading States & Animations */
+        /* Loading States & Animations - Subtle & Non-Intrusive */
         .loading-overlay {
             position: relative;
-            pointer-events: none;
-            opacity: 0.6;
+            pointer-events: auto;
+            opacity: 1;
         }
         
         .loading-overlay::after {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007bff;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+            border-top: 1px solid #007bff;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
+            z-index: 1000;
         }
         
         @keyframes spin {
@@ -3168,22 +3168,21 @@ function startRealTimeUpdates() {
 
 function refreshPortfolioData() {
     console.log('💼 PORTFOLIO: Refreshing data...');
-    showLoadingState('section-portfolio');
     
-    // Update timestamp
-    document.getElementById('portfolio-timestamp').textContent = 
-        'Last updated: ' + new Date().toLocaleTimeString();
+    // Update timestamp silently
+    const timestampEl = document.getElementById('portfolio-timestamp');
+    if (timestampEl) {
+        timestampEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+    }
     
-    // Fetch portfolio data
+    // Fetch portfolio data silently
     apiCall('multi-balance', function(data) {
         updatePortfolioMetrics(data);
-        hideLoadingState('section-portfolio');
     }, function(error) {
         console.error('❌ PORTFOLIO: Update failed', error);
-        hideLoadingState('section-portfolio');
     });
     
-    // Fetch positions data
+    // Fetch positions data silently
     apiCall('positions', function(data) {
         updatePositionsTable(data);
         updateAllocationChart(data);
@@ -3428,7 +3427,6 @@ function setupKeyboardShortcuts() {
                 case 'r':
                     e.preventDefault();
                     refreshData();
-                    showNotification('System', 'Refreshing all data...', 'info');
                     break;
             }
         }
@@ -3469,34 +3467,23 @@ if (checkMobile()) {
 // 🔄 ENHANCED API INTEGRATION
 // =============================================================================
 
-// Override existing refreshData function with enhanced version
+// Override existing refreshData function with seamless version
 const originalRefreshData = refreshData;
 refreshData = function() {
-    console.log('🔄 ENHANCED REFRESH: Starting comprehensive update...');
-    showNotification('System', 'Refreshing all data...', 'info');
+    console.log('🔄 SEAMLESS REFRESH: Starting background update...');
     
-    // Show loading on all sections
-    ['section-overview', 'section-portfolio', 'section-trading'].forEach(id => {
-        showLoadingState(id);
-    });
-    
-    // Call original refresh
+    // Call original refresh silently
     if (typeof originalRefreshData === 'function') {
         originalRefreshData();
     }
     
-    // Enhanced refresh with real-time updates
+    // Enhanced refresh with seamless real-time updates
     refreshPortfolioData();
     updateSystemStatusReal();
     updateAPIStatusReal();
     
-    // Hide loading after 2 seconds
-    setTimeout(() => {
-        ['section-overview', 'section-portfolio', 'section-trading'].forEach(id => {
-            hideLoadingState(id);
-        });
-        showNotification('System', 'Data refresh complete!', 'success');
-    }, 2000);
+    // Only log completion to console, no user notifications
+    console.log('✅ SEAMLESS REFRESH: Background update complete');
 };
 
 // =============================================================================
@@ -3505,17 +3492,15 @@ refreshData = function() {
 
 function refreshStrategyCharts() {
     console.log('📈 STRATEGY CHARTS: Refreshing...');
-    showNotification('AI Lab', 'Updating strategy performance data...', 'info');
     
-    // Simulate API call for backtest results
+    // Simulate API call for backtest results silently
     apiCall('backtest/results', function(data) {
         if (backtestPerformanceChart && data) {
             updateBacktestChart(data);
         }
-        showNotification('AI Lab', 'Strategy charts updated!', 'success');
+        console.log('✅ STRATEGY CHARTS: Updated silently');
     }, function(error) {
         console.error('❌ STRATEGY CHARTS: Update failed', error);
-        showNotification('AI Lab', 'Chart update failed', 'error');
     });
 }
 
@@ -3544,43 +3529,41 @@ function updateBacktestChart(data) {
 
 // Add export strategies function
 function exportStrategies() {
-    showNotification('AI Lab', 'Exporting strategy data...', 'info');
+    console.log('📁 EXPORT: Starting strategy data export...');
     
-    // Simulate export
-    setTimeout(() => {
-        const exportData = {
-            timestamp: new Date().toISOString(),
-            strategies: [
-                {
-                    name: 'ML_BTC_Scalping_v2',
-                    winRate: 73.2,
-                    profitFactor: 2.47,
-                    maxDrawdown: -8.4,
-                    sharpeRatio: 1.89,
-                    status: 'Active'
-                },
-                {
-                    name: 'Mean_Reversion_ETH',
-                    winRate: 68.1,
-                    profitFactor: 1.94,
-                    maxDrawdown: -5.2,
-                    sharpeRatio: 1.56,
-                    status: 'Testing'
-                }
-            ]
-        };
-        
-        // Create and download JSON file
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "strategy_export_" + Date.now() + ".json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        
-        showNotification('AI Lab', 'Strategy data exported successfully!', 'success');
-    }, 1000);
+    // Immediate export without delay
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        strategies: [
+            {
+                name: 'ML_BTC_Scalping_v2',
+                winRate: 73.2,
+                profitFactor: 2.47,
+                maxDrawdown: -8.4,
+                sharpeRatio: 1.89,
+                status: 'Active'
+            },
+            {
+                name: 'Mean_Reversion_ETH',
+                winRate: 68.1,
+                profitFactor: 1.94,
+                maxDrawdown: -5.2,
+                sharpeRatio: 1.56,
+                status: 'Testing'
+            }
+        ]
+    };
+    
+    // Create and download JSON file
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "strategy_export_" + Date.now() + ".json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    
+    console.log('✅ EXPORT: Strategy data exported successfully');
 }
 
 console.log('✅ API INTEGRATION: Script loaded');
