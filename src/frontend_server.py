@@ -927,41 +927,26 @@ class FrontendHandler(BaseHTTPRequestHandler):
             logger.warning(f"❌ Static file not found: {full_path}")
     
     def get_dashboard_html(self):
-        """Load the AdminLTE Professional dashboard template"""
+        """Load the AdminLTE dashboard template (SINGLE SOURCE OF TRUTH)"""
         try:
-            # Check templates directory for the AdminLTE dashboard
-            # Fix path resolution - when running from src/, look for templates/ directly
+            # Simplified path resolution - check both local and parent directories
             possible_paths = [
-                Path("templates/adminlte_dashboard.html"),  # LOCAL path (PRIMARY)
-                Path("src/templates/adminlte_dashboard.html"),  # PARENT path (FALLBACK)
-                Path("templates/professional_dashboard.html"),  # LOCAL fallback
-                Path("src/templates/professional_dashboard.html"),  # PARENT fallback
+                Path("templates/adminlte_dashboard.html"),  # LOCAL path (when running from src/)
+                Path("src/templates/adminlte_dashboard.html"),  # PARENT path (when running from root)
             ]
             
             for template_path in possible_paths:
-                logger.info(f"🔍 Checking template path: {template_path} (exists: {template_path.exists()})")
+                logger.info(f"🔍 Checking AdminLTE template path: {template_path} (exists: {template_path.exists()})")
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                         logger.info(f"✅ SUCCESS: AdminLTE dashboard loaded from: {template_path}")
                         logger.info(f"📊 Template size: {len(content)} characters")
-                        logger.info(f"🎯 Template type: {'AdminLTE' if 'adminlte' in str(template_path) else 'Professional'}")
+                        logger.info(f"🎯 Primary AdminLTE template with navigation fixes loaded")
                         return content
             
-            # If professional template not found, try local paths for fire dashboard
-            logger.warning("AdminLTE template not found in any expected location - trying fire dashboard fallbacks")
-            fallback_paths = [
-                Path("templates/fire_dashboard_redesign.html"),  # LOCAL path
-                Path("src/templates/fire_dashboard_redesign.html"),  # PARENT path
-                Path("templates/fire_dashboard.html"),  # LOCAL original
-                Path("src/templates/fire_dashboard.html")  # PARENT original
-            ]
-            
-            for template_path in fallback_paths:
-                if template_path.exists():
-                    with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info(f"✅ Fire dashboard template loaded as fallback from: {template_path}")
-                        return f.read()
+            # No fallbacks - AdminLTE is the single source of truth
+            logger.error("❌ CRITICAL: AdminLTE dashboard template not found in any expected location!")
         except Exception as e:
             logger.warning(f"Could not load Professional dashboard template: {e}")
         
