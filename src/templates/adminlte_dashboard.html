@@ -235,12 +235,7 @@
                         </a>
                     </li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link" data-section="debug" onclick="switchSection('debug'); return false;">
-                            <i class="nav-icon fas fa-bug"></i>
-                            <p>Debug Console</p>
-                        </a>
-                    </li>
+
                     
                 </ul>
             </nav>
@@ -1272,26 +1267,15 @@
                         </div>
                     </div>
                 </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- Debug Console Section -->
-        <div class="content-section" id="section-debug" style="display: none;">
-            <div class="content-header">
-                <h1>�️ Safety Validation & Debug Console</h1>
-            </div>
-            <section class="content">
-                <div class="row">
-                    <!-- 8-Point Safety Validation Dashboard -->
-                    <div class="col-md-8">
+                
+                <!-- Safety Validation Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">🔍 8-Point Safety Validation System</h3>
+                            <div class="card-header bg-success">
+                                <h3 class="card-title">🔍 Safety Validation System</h3>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-sm btn-primary" onclick="runSafetyValidation()">
+                                    <button type="button" class="btn btn-sm btn-light" onclick="runSafetyValidation()">
                                         <i class="fas fa-sync"></i> Run Validation
                                     </button>
                                 </div>
@@ -1325,17 +1309,91 @@
                                                 <span class="badge badge-success">✅ PASS</span>
                                             </div>
                                             
-                                            <!-- Safety Check 3: Testnet Enforcement -->
-                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-testnet">
+                                            <!-- Safety Check 3: API Configuration -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-api">
                                                 <div>
-                                                    <i class="fas fa-vial text-primary"></i>
-                                                    <strong>3. Testnet Enforcement</strong><br>
-                                                    <small class="text-muted">Ensure testnet-only trading</small>
+                                                    <i class="fas fa-key text-warning"></i>
+                                                    <strong>3. API Configuration</strong><br>
+                                                    <small class="text-muted">Validate API keys and permissions</small>
                                                 </div>
                                                 <span class="badge badge-success">✅ PASS</span>
                                             </div>
                                             
-                                            <!-- Safety Check 4: API Key Protection -->
+                                            <!-- Safety Check 4: File System -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-files">
+                                                <div>
+                                                    <i class="fas fa-file-alt text-primary"></i>
+                                                    <strong>4. File System Validation</strong><br>
+                                                    <small class="text-muted">Check configuration files</small>
+                                                </div>
+                                                <span class="badge badge-success">✅ PASS</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="list-group" id="safety-checks-2">
+                                            <!-- Safety Check 5: Network -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-network">
+                                                <div>
+                                                    <i class="fas fa-wifi text-info"></i>
+                                                    <strong>5. Network Connectivity</strong><br>
+                                                    <small class="text-muted">Test API connections</small>
+                                                </div>
+                                                <span class="badge badge-success">✅ PASS</span>
+                                            </div>
+                                            
+                                            <!-- Safety Check 6: Resources -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-resources">
+                                                <div>
+                                                    <i class="fas fa-memory text-warning"></i>
+                                                    <strong>6. Resource Monitoring</strong><br>
+                                                    <small class="text-muted">Check system resources</small>
+                                                </div>
+                                                <span class="badge badge-success">✅ PASS</span>
+                                            </div>
+                                            
+                                            <!-- Safety Check 7: Trading Safety -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-trading">
+                                                <div>
+                                                    <i class="fas fa-ban text-danger"></i>
+                                                    <strong>7. Trading Disabled</strong><br>
+                                                    <small class="text-muted">Confirm all trading blocked</small>
+                                                </div>
+                                                <span class="badge badge-success">✅ PASS</span>
+                                            </div>
+                                            
+                                            <!-- Safety Check 8: Safety Config -->
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" id="check-safety-config">
+                                                <div>
+                                                    <i class="fas fa-cog text-success"></i>
+                                                    <strong>8. Safety Configuration</strong><br>
+                                                    <small class="text-muted">Verify private use config</small>
+                                                </div>
+                                                <span class="badge badge-success">✅ PASS</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </div>
+</div>
+
+<!-- JavaScript Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
                                             <div class="list-group-item d-flex justify-content-between align-items-center" id="check-api-keys">
                                                 <div>
                                                     <i class="fas fa-key text-warning"></i>
