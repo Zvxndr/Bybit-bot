@@ -2262,6 +2262,49 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
             }
         };
 
+        // ===== BULLETPROOF VANILLA JS NAVIGATION SETUP =====
+        // This MUST work even if jQuery fails to load
+        function setupBulletproofNavigation() {
+            console.log('🛡️ BULLETPROOF NAVIGATION: Setting up fail-safe event handlers...');
+            
+            // Remove ALL href attributes to prevent URL navigation
+            const navLinks = document.querySelectorAll('.nav-sidebar .nav-link[data-section]');
+            console.log(`🔧 Found ${navLinks.length} navigation links to secure`);
+            
+            navLinks.forEach((link, index) => {
+                const section = link.getAttribute('data-section');
+                console.log(`  Processing link ${index + 1}: ${section}`);
+                
+                // Remove href to prevent URL navigation
+                link.removeAttribute('href');
+                
+                // Add bulletproof click handler
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    console.log(`🛡️ BULLETPROOF CLICK: ${section}`);
+                    
+                    // Call navigation function
+                    if (window.switchToSection && typeof window.switchToSection === 'function') {
+                        window.switchToSection(section);
+                    } else {
+                        console.error('❌ switchToSection function not available!');
+                    }
+                    
+                    return false;
+                }, true); // Use capture phase for higher priority
+                
+                // Add visual feedback
+                link.style.cursor = 'pointer';
+                link.setAttribute('role', 'button');
+                console.log(`✅ Secured navigation link: ${section}`);
+            });
+            
+            console.log('🛡️ BULLETPROOF NAVIGATION: All links secured against URL navigation!');
+        }
+
         // ===== DOCUMENT READY INITIALIZATION =====
         $(document).ready(function() {
             console.log('🚀 Open Alpha AdminLTE Dashboard Initialized');
@@ -2278,6 +2321,9 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
 
             // ===== NAVIGATION EVENT HANDLERS =====
             console.log('🔧 Setting up navigation event handlers...');
+            
+            // Setup bulletproof navigation immediately
+            setupBulletproofNavigation();
             
             // CRITICAL: Disable AdminLTE's treeview and pushmenu widgets to prevent interference
             setTimeout(function() {
@@ -2869,6 +2915,45 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
             fetchSystemStats();
             setTimeout(updateMetrics, 1000); // Refresh metrics after 1 second
         }
+
+        // ===== FAILSAFE NAVIGATION INITIALIZATION =====
+        // This MUST run even if jQuery fails completely!
+        console.log('🛡️ FAILSAFE: Starting bulletproof navigation initialization...');
+        
+        // Run immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🛡️ FAILSAFE: DOMContentLoaded - initializing navigation...');
+                setTimeout(setupBulletproofNavigation, 100);
+            });
+        } else {
+            console.log('🛡️ FAILSAFE: DOM already loaded - initializing navigation now...');
+            setTimeout(setupBulletproofNavigation, 100);
+        }
+
+        // Additional failsafe - run after window load
+        window.addEventListener('load', function() {
+            console.log('🛡️ FAILSAFE: Window loaded - double-checking navigation...');
+            setTimeout(function() {
+                // Double-check that navigation is working
+                const navLinks = document.querySelectorAll('.nav-sidebar .nav-link[data-section]');
+                console.log(`🔍 FAILSAFE CHECK: Found ${navLinks.length} navigation links`);
+                
+                if (navLinks.length > 0) {
+                    navLinks.forEach(link => {
+                        if (link.hasAttribute('href')) {
+                            console.log('⚠️ FAILSAFE: Found link still has href, removing...', link);
+                            link.removeAttribute('href');
+                        }
+                    });
+                    console.log('✅ FAILSAFE: All navigation links secured');
+                } else {
+                    console.error('❌ FAILSAFE: No navigation links found!');
+                }
+            }, 500);
+        });
+
+        console.log('🛡️ FAILSAFE NAVIGATION: Bulletproof initialization complete!');
     </script>
 
 </body>
