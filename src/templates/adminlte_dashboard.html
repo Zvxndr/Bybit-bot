@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AuraQuant AI Wealth Platform | Professional Trading Dashboard</title>
+    <title>Professional Trading Dashboard | Open Alpha System</title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -168,12 +168,10 @@
 
 <body class="hold-transition sidebar-mini layout-fixed">
 
-    <!-- Debug Banner -->
-    <div class="debug-banner">
-        🔥 FINAL VERSION 4.0 - ADMINLTE PROFESSIONAL DASHBOARD - NO CSS CONFLICTS GUARANTEED 🔥 TIME: 2024-12-30-19:45
-    </div>
-
-    <div class="wrapper">
+        <!-- Debug Banner -->
+        <div class="debug-banner">
+            🚨 DEBUG MODE ACTIVE - ALL TRADING DISABLED - SAFE TESTING ENVIRONMENT - NO FINANCIAL RISK 🚨
+        </div>    <div class="wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-dark">
             <!-- Left navbar links -->
@@ -209,8 +207,8 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="#" class="brand-link">
-                <i class="fas fa-rocket brand-image"></i>
-                <span class="brand-text font-weight-bold">AuraQuant AI</span>
+                <i class="fas fa-chart-line brand-image"></i>
+                <span class="brand-text font-weight-bold">Open Alpha</span>
             </a>
 
             <!-- Sidebar -->
@@ -1104,7 +1102,7 @@
 
         <!-- Footer -->
         <footer class="main-footer">
-            <strong>Copyright &copy; 2025 <a href="#">AuraQuant AI Wealth Platform</a>.</strong>
+            <strong>Copyright &copy; 2025 <a href="#">Open Alpha Trading System</a>.</strong>
             All rights reserved. Professional Trading Dashboard v4.0
             <div class="float-right d-none d-sm-inline-block">
                 <b>Status:</b> Debug Mode Active - Safe Testing Environment
@@ -1125,7 +1123,7 @@
     <!-- Custom JavaScript -->
     <script>
         $(document).ready(function() {
-            console.log('🚀 AuraQuant AdminLTE Dashboard Initialized');
+            console.log('🚀 Open Alpha AdminLTE Dashboard Initialized');
             
             // Initialize DataTables
             $('.table').DataTable({
@@ -1159,39 +1157,190 @@
                 console.log(`✅ Successfully switched to: ${section}`);
             });
 
-            // Real-time updates simulation
+            // Real-time API data fetching
             function updateMetrics() {
                 const timestamp = new Date().toLocaleTimeString();
                 $('#connection-status').text('Connected • ' + timestamp);
                 
-                // Simulate some data updates
-                const aum = (47291.32 + (Math.random() * 100 - 50)).toFixed(2);
-                $('#total-aum').text('$' + aum);
-                
-                const pnl = (2847.50 + (Math.random() * 50 - 25)).toFixed(2);
-                $('#todays-pnl').text('+$' + pnl);
+                // Fetch real data from backend APIs
+                fetchSystemStats();
+                fetchBalance();
+                fetchTradeHistory();
             }
 
+            // Fetch system statistics
+            function fetchSystemStats() {
+                fetch('/api/system-stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.strategies) {
+                            $('#active-strategies').text(data.strategies.active || '0');
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Using mock data - API not available:', error);
+                    });
+            }
+
+            // Fetch balance data
+            function fetchBalance() {
+                fetch('/api/multi-balance')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.total_value) {
+                            $('#total-aum').text('$' + parseFloat(data.total_value).toFixed(2));
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Using mock balance - API not available:', error);
+                    });
+            }
+
+            // Fetch trade history
+            function fetchTradeHistory() {
+                fetch('/api/trades/testnet')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.trades && data.trades.length > 0) {
+                            updateTradeHistoryTable(data.trades);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Using mock trades - API not available:', error);
+                    });
+            }
+
+            // Update trade history table with real data
+            function updateTradeHistoryTable(trades) {
+                const tbody = $('#trade-history-tbody');
+                tbody.empty();
+                
+                trades.slice(0, 10).forEach(trade => {
+                    const side = trade.side || 'Buy';
+                    const sideClass = side.toLowerCase() === 'buy' ? 'trade-side-buy' : 'trade-side-sell';
+                    const pnl = parseFloat(trade.pnl || 0);
+                    const pnlClass = pnl >= 0 ? 'trade-pnl-positive' : 'trade-pnl-negative';
+                    const pnlText = pnl >= 0 ? '+$' + Math.abs(pnl).toFixed(2) : '-$' + Math.abs(pnl).toFixed(2);
+                    
+                    const row = `
+                        <tr>
+                            <td><small>${new Date(trade.timestamp).toLocaleTimeString()}</small></td>
+                            <td><strong>${trade.symbol || 'BTCUSDT'}</strong></td>
+                            <td><span class="${sideClass}">${side.toUpperCase()}</span></td>
+                            <td>${parseFloat(trade.qty || 0).toFixed(3)}</td>
+                            <td>$${parseFloat(trade.price || 0).toFixed(2)}</td>
+                            <td class="${pnlClass}">${pnlText}</td>
+                            <td><span class="badge badge-success">FILLED</span></td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
+
+            // Check debug status on load
+            checkDebugStatus();
+            
             // Update metrics every 30 seconds
             setInterval(updateMetrics, 30000);
+            
+            // Check debug status every 60 seconds
+            setInterval(checkDebugStatus, 60000);
             
             console.log('✅ AdminLTE Dashboard fully loaded and functional');
         });
 
-        // Emergency Functions (to be connected to backend)
+        // Check debug status from backend
+        function checkDebugStatus() {
+            fetch('/api/debug-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.debug_mode) {
+                        $('.debug-banner').show().text('🚨 DEBUG MODE ACTIVE - ALL TRADING DISABLED - SAFE TESTING ENVIRONMENT - NO FINANCIAL RISK 🚨');
+                        $('#system-health').text('Debug Mode');
+                        $('.navbar-text strong').text('DEBUG MODE');
+                    } else {
+                        $('.debug-banner').hide();
+                        $('#system-health').text('Operational');
+                        $('.navbar-text strong').text('LIVE MODE');
+                    }
+                })
+                .catch(error => {
+                    console.log('Debug status check failed - assuming safe debug mode:', error);
+                    $('.debug-banner').show().text('🚨 DEBUG MODE ACTIVE - ALL TRADING DISABLED - SAFE TESTING ENVIRONMENT 🚨');
+                });
+        });
+
+        // Emergency Control Functions with Backend Integration
         function emergencyStop() {
-            alert('Emergency Stop Activated - All trading operations halted');
-            console.log('🚨 Emergency stop triggered');
+            if (confirm('🚨 EMERGENCY STOP: This will halt all trading operations immediately. Are you sure?')) {
+                fetch('/api/emergency-stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Emergency Stop Activated - All trading operations halted');
+                        updateSystemStatus();
+                    } else {
+                        alert('❌ Emergency Stop Failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Emergency stop error:', error);
+                    alert('⚠️ Emergency stop request failed - check console');
+                });
+            }
         }
 
         function pauseStrategies() {
-            alert('All strategies paused');
-            console.log('⏸️ Strategies paused');
+            if (confirm('⏸️ PAUSE ALL: This will pause all active trading strategies. Continue?')) {
+                fetch('/api/pause', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ All strategies paused successfully');
+                        updateSystemStatus();
+                    } else {
+                        alert('❌ Pause failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Pause error:', error);
+                    alert('⚠️ Pause request failed - check console');
+                });
+            }
         }
 
         function resumeStrategies() {
-            alert('Strategies resumed');
-            console.log('▶️ Strategies resumed');
+            if (confirm('▶️ RESUME ALL: This will resume all paused trading strategies. Continue?')) {
+                fetch('/api/resume', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ All strategies resumed successfully');
+                        updateSystemStatus();
+                    } else {
+                        alert('❌ Resume failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Resume error:', error);
+                    alert('⚠️ Resume request failed - check console');
+                });
+            }
+        }
+
+        // Update system status after control actions
+        function updateSystemStatus() {
+            fetchSystemStats();
+            setTimeout(updateMetrics, 1000); // Refresh metrics after 1 second
         }
     </script>
 

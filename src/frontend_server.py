@@ -478,6 +478,11 @@ class FrontendHandler(BaseHTTPRequestHandler):
             
             response = {
                 "success": True,
+                "strategies": {
+                    "active": debug_status.get('strategies_active', 0),
+                    "paper": debug_status.get('strategies_paper', 0),
+                    "testing": debug_status.get('strategies_testing', 0)
+                },
                 "data": {
                     "cpu_usage": "15.2%",
                     "memory_usage": "48.7%", 
@@ -489,6 +494,27 @@ class FrontendHandler(BaseHTTPRequestHandler):
                     "runtime_minutes": int(debug_status.get('runtime_seconds', 0) / 60),
                     "time_remaining_minutes": int(debug_status.get('time_remaining', 0) / 60) if debug_status.get('time_remaining', 0) > 0 else 0
                 }
+            }
+            self.wfile.write(json.dumps(response).encode())
+
+        elif self.path == '/api/debug-status':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            # Get debug status for frontend
+            debug_status = self.debug_manager.get_debug_status()
+            
+            response = {
+                "success": True,
+                "debug_mode": debug_status.get('debug_mode', True),
+                "phase": debug_status.get('phase', 'DEBUG'),
+                "trading_allowed": debug_status.get('trading_allowed', False),
+                "runtime_seconds": debug_status.get('runtime_seconds', 0),
+                "max_runtime_seconds": debug_status.get('max_runtime_seconds', 3600),
+                "time_remaining": debug_status.get('time_remaining', 0),
+                "timestamp": dt.now().isoformat()
             }
             self.wfile.write(json.dumps(response).encode())
 
