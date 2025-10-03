@@ -2106,6 +2106,52 @@
 
     <!-- Custom JavaScript -->
     <script>
+        // ===== GLOBAL NAVIGATION SYSTEM =====
+        // Make switchToSection globally accessible
+        window.switchToSection = function(sectionName) {
+            console.log(`🎯 Switching to section: ${sectionName}`);
+            
+            try {
+                // Validate section exists
+                const targetSection = $(`#section-${sectionName}`);
+                if (targetSection.length === 0) {
+                    console.error(`❌ Section not found: #section-${sectionName}`);
+                    return false;
+                }
+                
+                // Remove active class from all nav links
+                $('.nav-sidebar .nav-link').removeClass('active');
+                
+                // Add active class to clicked link
+                const navLink = $(`.nav-sidebar .nav-link[data-section="${sectionName}"]`);
+                navLink.addClass('active');
+                
+                // Visual feedback - briefly highlight the nav item
+                navLink.css('background-color', 'rgba(59, 130, 246, 0.3)');
+                setTimeout(() => {
+                    navLink.css('background-color', '');
+                }, 200);
+                
+                // Hide all sections
+                $('.content-section').hide();
+                
+                // Show target section with animation
+                targetSection.fadeIn(300);
+                
+                // Update page title
+                const sectionTitle = navLink.find('p').text() || sectionName;
+                document.title = `${sectionTitle} | Professional Trading Dashboard`;
+                
+                console.log(`✅ Successfully switched to: ${sectionName} (${sectionTitle})`);
+                return true;
+                
+            } catch (error) {
+                console.error(`❌ Error switching to section ${sectionName}:`, error);
+                return false;
+            }
+        };
+
+        // ===== DOCUMENT READY INITIALIZATION =====
         $(document).ready(function() {
             console.log('🚀 Open Alpha AdminLTE Dashboard Initialized');
             
@@ -2119,53 +2165,90 @@
                 "info": false
             });
 
-            // Enhanced Navigation System (Override AdminLTE)
-            function switchToSection(sectionName) {
-                console.log(`🎯 Switching to section: ${sectionName}`);
-                
-                // Remove active class from all nav links
-                $('.nav-sidebar .nav-link').removeClass('active');
-                
-                // Add active class to clicked link
-                $(`.nav-sidebar .nav-link[data-section="${sectionName}"]`).addClass('active');
-                
-                // Hide all sections
-                $('.content-section').hide();
-                
-                // Show target section with animation
-                $(`#section-${sectionName}`).fadeIn(300);
-                
-                console.log(`✅ Successfully switched to: ${sectionName}`);
-            }
+            // ===== NAVIGATION EVENT HANDLERS =====
+            console.log('🔧 Setting up navigation event handlers...');
             
-            // Enhanced click handlers with explicit event handling
-            $('.nav-sidebar .nav-link[data-section]').off('click').on('click', function(e) {
+            // Remove any existing AdminLTE navigation handlers
+            $('.nav-sidebar').off('click');
+            
+            // Set up our custom navigation handlers with higher priority
+            $(document).off('click', '.nav-sidebar .nav-link[data-section]').on('click', '.nav-sidebar .nav-link[data-section]', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 
                 const section = $(this).data('section');
+                console.log(`🖱️ Navigation clicked: ${section}`);
+                
                 if (section) {
-                    switchToSection(section);
+                    window.switchToSection(section);
+                } else {
+                    console.warn('⚠️ No section data found on clicked element');
                 }
                 
                 return false;
             });
             
-            // Also handle direct clicks on navigation items
-            $('.nav-sidebar .nav-item').off('click').on('click', function(e) {
+            // Additional handler for nav-item clicks  
+            $(document).off('click', '.nav-sidebar .nav-item').on('click', '.nav-sidebar .nav-item', function(e) {
                 const link = $(this).find('.nav-link[data-section]');
                 if (link.length > 0) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
                     
                     const section = link.data('section');
+                    console.log(`🖱️ Nav-item clicked: ${section}`);
+                    
                     if (section) {
-                        switchToSection(section);
+                        window.switchToSection(section);
                     }
                     
                     return false;
                 }
             });
+
+            // ===== NAVIGATION DEBUGGING =====
+            console.log('🔍 Debugging navigation setup...');
+            console.log('📊 Nav links found:', $('.nav-sidebar .nav-link[data-section]').length);
+            console.log('📋 Sections found:', $('.content-section').length);
+            
+            // Log all navigation items for debugging
+            $('.nav-sidebar .nav-link[data-section]').each(function(index, element) {
+                const section = $(element).data('section');
+                console.log(`📌 Nav item ${index + 1}: data-section="${section}"`);
+            });
+            
+            // Log all sections for debugging  
+            $('.content-section').each(function(index, element) {
+                const id = $(element).attr('id');
+                console.log(`📄 Section ${index + 1}: id="${id}"`);
+            });
+
+            // Ensure overview is shown by default
+            console.log('📊 Initializing default section: overview');
+            window.switchToSection('overview');
+            
+            // ===== FALLBACK VANILLA JAVASCRIPT NAVIGATION =====
+            // Add vanilla JS event listeners as backup
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('.nav-sidebar .nav-link[data-section]');
+                if (target) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const section = target.getAttribute('data-section');
+                    console.log(`🔄 Fallback navigation triggered: ${section}`);
+                    
+                    if (section && window.switchToSection) {
+                        window.switchToSection(section);
+                    }
+                    
+                    return false;
+                }
+            });
+            
+            console.log('✅ Navigation system fully initialized with jQuery + Vanilla JS backup');
 
             // Real-time API data fetching
             function updateMetrics() {
