@@ -128,6 +128,9 @@ jobs:
         context: .
         file: ./Dockerfile.deployment
         push: true
+        no-cache: true  # Force fresh build without cache
+        build-args: |
+          CACHE_BUST=${{ github.run_number }}-${{ github.sha }}
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
