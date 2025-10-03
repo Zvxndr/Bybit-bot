@@ -249,59 +249,59 @@
 
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link active" data-section="overview">
+                            <a href="#" class="nav-link active" data-section="overview" onclick="window.switchToSection('overview'); return false;">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>System Overview</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="ai-lab">
+                            <a href="#" class="nav-link" data-section="ai-lab" onclick="window.switchToSection('ai-lab'); return false;">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>AI Strategy Lab</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="strategy">
+                            <a href="#" class="nav-link" data-section="strategy" onclick="window.switchToSection('strategy'); return false;">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>Strategy Manager</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="trading">
+                            <a href="#" class="nav-link" data-section="trading" onclick="window.switchToSection('trading'); return false;">
                                 <i class="nav-icon fas fa-rocket"></i>
                                 <p>Live Trading</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="risk">
+                            <a href="#" class="nav-link" data-section="risk" onclick="window.switchToSection('risk'); return false;">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>Risk Management</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="analytics">
+                            <a href="#" class="nav-link" data-section="analytics" onclick="window.switchToSection('analytics'); return false;">
                                 <i class="nav-icon fas fa-chart-bar"></i>
                                 <p>Analytics</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="testing">
+                            <a href="#" class="nav-link" data-section="testing" onclick="window.switchToSection('testing'); return false;">
                                 <i class="nav-icon fas fa-vial"></i>
                                 <p>Testing Framework</p>
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="#" class="nav-link" data-section="settings">
+                            <a href="#" class="nav-link" data-section="settings" onclick="window.switchToSection('settings'); return false;">
                                 <i class="nav-icon fas fa-sliders-h"></i>
                                 <p>Settings</p>
                             </a>
@@ -2168,6 +2168,18 @@
             // ===== NAVIGATION EVENT HANDLERS =====
             console.log('🔧 Setting up navigation event handlers...');
             
+            // CRITICAL: Disable AdminLTE's treeview and pushmenu widgets to prevent interference
+            setTimeout(function() {
+                // Remove AdminLTE widget data attributes that cause conflicts
+                $('.nav-sidebar').removeAttr('data-widget');
+                $('.nav-sidebar').off(); // Remove all AdminLTE handlers
+                
+                // Disable AdminLTE's Treeview plugin completely
+                if (window.AdminLTE && window.AdminLTE.Treeview) {
+                    console.log('🔧 Disabling AdminLTE Treeview...');
+                }
+            }, 100);
+            
             // Remove any existing AdminLTE navigation handlers
             $('.nav-sidebar').off('click');
             
@@ -2230,10 +2242,13 @@
             window.switchToSection('overview');
             
             // ===== FALLBACK VANILLA JAVASCRIPT NAVIGATION =====
-            // Add vanilla JS event listeners as backup
+            // Add vanilla JS event listeners as backup with capture phase
             document.addEventListener('click', function(e) {
+                console.log('🔍 Document click detected:', e.target);
+                
                 const target = e.target.closest('.nav-sidebar .nav-link[data-section]');
                 if (target) {
+                    console.log('🎯 Navigation target found:', target);
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -2246,9 +2261,52 @@
                     
                     return false;
                 }
+            }, true); // Use capture phase to intercept before AdminLTE
+            
+            // ===== AGGRESSIVE CLICK INTERCEPTION =====
+            // Override all clicks on navigation items at the earliest possible moment
+            $('.nav-sidebar .nav-link[data-section]').each(function() {
+                this.addEventListener('click', function(e) {
+                    console.log('🚀 Direct element click handler triggered');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    const section = this.getAttribute('data-section');
+                    console.log(`🎯 Direct navigation: ${section}`);
+                    
+                    if (section && window.switchToSection) {
+                        window.switchToSection(section);
+                    }
+                    
+                    return false;
+                }, true);
             });
             
             console.log('✅ Navigation system fully initialized with jQuery + Vanilla JS backup');
+            
+            // ===== MANUAL TESTING FUNCTIONS =====
+            // Add global test functions for debugging
+            window.testNavigation = function() {
+                console.log('🧪 Testing navigation manually...');
+                console.log('🔍 Available sections:', $('.content-section').map(function() { return this.id; }).get());
+                console.log('🔍 Available nav links:', $('.nav-sidebar .nav-link[data-section]').map(function() { return $(this).data('section'); }).get());
+                
+                // Test switching to AI Lab
+                console.log('🧪 Testing switch to AI Lab...');
+                window.switchToSection('ai-lab');
+            };
+            
+            window.debugNavigation = function() {
+                console.log('🔍 NAVIGATION DEBUG REPORT:');
+                console.log('Nav links count:', $('.nav-sidebar .nav-link[data-section]').length);
+                console.log('Sections count:', $('.content-section').length);
+                console.log('Current active section:', $('.content-section:visible').attr('id'));
+                console.log('Active nav link:', $('.nav-sidebar .nav-link.active').data('section'));
+            };
+            
+            // Make test functions available in console
+            console.log('🧪 Test functions available: window.testNavigation(), window.debugNavigation()');
 
             // Real-time API data fetching
             function updateMetrics() {
