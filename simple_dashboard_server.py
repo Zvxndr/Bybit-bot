@@ -22,8 +22,8 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             return
             
         if self.path == '/' or self.path == '/dashboard':
-            # Serve the professional dashboard
-            dashboard_path = Path(__file__).parent / 'src' / 'templates' / 'professional_dashboard.html'
+            # Serve the AdminLTE dashboard (single source of truth)
+            dashboard_path = Path(__file__).parent / 'src' / 'templates' / 'adminlte_dashboard.html'
             if dashboard_path.exists():
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')

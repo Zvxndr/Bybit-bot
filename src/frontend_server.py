@@ -72,6 +72,12 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 logger.debug(f"🔧 Handling health check")
                 self.handle_health_check()
                 return
+            
+            # Handle diagnostic endpoint for debugging navigation issues
+            if self.path == '/diagnostic' or self.path == '/debug':
+                logger.debug(f"🔍 Serving diagnostic page")
+                self.serve_diagnostic()
+                return
                 
             # Handle frontend routes
             if self.path == '/' or self.path == '/dashboard':
@@ -354,6 +360,85 @@ class FrontendHandler(BaseHTTPRequestHandler):
         }
         
         self.wfile.write(json.dumps(health_data, indent=2).encode())
+    
+    def serve_diagnostic(self):
+        """Serve diagnostic page for debugging navigation issues"""
+        try:
+            logger.info("🔍 DIAGNOSTIC: Serving navigation diagnostic page")
+            
+            # Try to read diagnostic template
+            diagnostic_path = Path("diagnostic.html")
+            if not diagnostic_path.exists():
+                diagnostic_path = Path("../diagnostic.html")
+            
+            if diagnostic_path.exists():
+                with open(diagnostic_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    
+                # Add deployment info to diagnostic
+                deployment_info = f"""
+                <!-- DEPLOYMENT INFO -->
+                <script>
+                console.log('🔍 DIAGNOSTIC: Digital Ocean deployment info');
+                console.log('🕐 Server time: {dt.now().isoformat()}');
+                console.log('🌐 Server environment: Digital Ocean');
+                console.log('📂 Template path check starting...');
+                
+                // Check which template is being served
+                setTimeout(function() {{
+                    console.log('🔍 TEMPLATE CHECK: Looking for AdminLTE indicators...');
+                    console.log('📊 Current page title:', document.title);
+                    console.log('📊 AdminLTE CSS:', document.querySelectorAll('link[href*="adminlte"]').length);
+                    console.log('📊 Navigation sidebar:', document.querySelector('.nav-sidebar') ? 'FOUND' : 'NOT FOUND');
+                    console.log('📊 Content sections:', document.querySelectorAll('.content-section').length);
+                }}, 1000);
+                </script>
+                """
+                
+                # Insert deployment info before closing body tag
+                content = content.replace('</body>', deployment_info + '</body>')
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self.send_header('Pragma', 'no-cache')
+                self.send_header('Expires', '0')
+                self.end_headers()
+                
+                self.wfile.write(content.encode('utf-8'))
+                logger.info("✅ DIAGNOSTIC: Page served successfully")
+            else:
+                # Fallback diagnostic content
+                logger.warning("⚠️ DIAGNOSTIC: Template file not found, using fallback")
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+                
+                fallback_html = f"""
+                <!DOCTYPE html>
+                <html><head><title>🔍 Digital Ocean Diagnostic - Fallback</title>
+                <style>body{{background:#000;color:#0ff;font-family:monospace;padding:20px;}}</style>
+                </head><body>
+                <h1>🔍 DIGITAL OCEAN DIAGNOSTIC - FALLBACK MODE</h1>
+                <p>⚠️ Primary diagnostic template not found</p>
+                <p>🕐 Server time: {dt.now().isoformat()}</p>
+                <p>🌐 Environment: Digital Ocean Production</p>
+                <p>📋 Navigation issue diagnostic active</p>
+                <script>
+                console.log('🔍 FALLBACK DIAGNOSTIC: Starting analysis...');
+                console.log('📊 switchToSection function:', typeof window.switchToSection);
+                console.log('📊 jQuery loaded:', typeof $);
+                console.log('📊 Navigation links:', document.querySelectorAll('.nav-sidebar .nav-link[data-section]').length);
+                </script>
+                </body></html>
+                """
+                
+                self.wfile.write(fallback_html.encode('utf-8'))
+                
+        except Exception as e:
+            logger.error(f"❌ DIAGNOSTIC: Error serving diagnostic page: {e}")
+            self.send_response(500)
+            self.end_headers()
     
     def handle_api_request(self):
         """Handle API requests with real trading bot data"""
@@ -892,12 +977,27 @@ class FrontendHandler(BaseHTTPRequestHandler):
     
     def serve_dashboard(self):
         """Serve the Professional Glass Box dashboard HTML with debug safety"""
+        logger.info("🔍 DASHBOARD: Starting to serve dashboard...")
+        logger.info(f"🌐 Request path: {self.path}")
+        logger.info(f"👤 Client IP: {self.client_address[0]}")
+        logger.info(f"🕐 Server time: {dt.now().isoformat()}")
+        
         self.send_response(200)
         self.send_header('Content-Type', 'text/html')
-        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        self.send_header('X-Digital-Ocean-Debug', 'navigation-debugging')
         self.end_headers()
         
         html_content = self.get_dashboard_html()
+        content_size = len(html_content.encode())
+        logger.info(f"📊 Dashboard content size: {content_size} bytes")
+        logger.info(f"🔍 Content contains AdminLTE: {'adminlte' in html_content.lower()}")
+        logger.info(f"🔍 Content contains switchToSection: {'switchToSection' in html_content}")
+        logger.info(f"🔍 Content contains nav-sidebar: {'nav-sidebar' in html_content}")
+        logger.info("✅ DASHBOARD: Sending content to browser...")
+        
         self.wfile.write(html_content.encode())
     
     def serve_static_file(self):
@@ -943,6 +1043,26 @@ class FrontendHandler(BaseHTTPRequestHandler):
                         logger.info(f"✅ SUCCESS: AdminLTE dashboard loaded from: {template_path}")
                         logger.info(f"📊 Template size: {len(content)} characters")
                         logger.info(f"🎯 Primary AdminLTE template with navigation fixes loaded")
+                        
+                        # NAVIGATION DIAGNOSTIC LOGGING
+                        nav_sidebar_count = content.count('nav-sidebar')
+                        nav_link_count = content.count('data-section=')
+                        switch_function_count = content.count('switchToSection')
+                        href_count = content.count('href="#"')
+                        onclick_count = content.count('onclick=')
+                        
+                        logger.info(f"🔍 NAVIGATION ANALYSIS:")
+                        logger.info(f"  📊 nav-sidebar elements: {nav_sidebar_count}")
+                        logger.info(f"  📊 data-section attributes: {nav_link_count}")
+                        logger.info(f"  📊 switchToSection references: {switch_function_count}")
+                        logger.info(f"  📊 href='#' attributes: {href_count}")
+                        logger.info(f"  📊 onclick handlers: {onclick_count}")
+                        
+                        if switch_function_count > 0 and nav_link_count > 0:
+                            logger.info("✅ NAVIGATION: Template contains navigation fixes")
+                        else:
+                            logger.warning("⚠️ NAVIGATION: Template may be missing navigation elements")
+                        
                         return content
             
             # No fallbacks - AdminLTE is the single source of truth
