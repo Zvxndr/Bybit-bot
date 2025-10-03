@@ -166,9 +166,17 @@
 
         /* Content Section Display Fix */
         .content-section {
-            display: none;
             width: 100%;
             min-height: 400px;
+            /* Removed display: none to allow JavaScript control */
+        }
+        
+        .content-section.hidden {
+            display: none !important;
+        }
+        
+        .content-section.active {
+            display: block !important;
         }
 
         .content-section:first-of-type,
@@ -505,7 +513,7 @@
             </section>
 
             <!-- AI Strategy Lab Section -->
-            <section class="content-section" id="section-ai-lab" style="display: none;">
+            <section class="content-section hidden" id="section-ai-lab">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -654,7 +662,7 @@
             </section>
 
             <!-- Strategy Manager Section -->
-            <section class="content-section" id="section-strategy" style="display: none;">
+            <section class="content-section hidden" id="section-strategy">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -922,7 +930,7 @@
             </section>
 
             <!-- Live Trading Section -->
-            <section class="content-section" id="section-trading" style="display: none;">
+            <section class="content-section hidden" id="section-trading">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -1241,7 +1249,7 @@
             </section>
 
             <!-- Risk Management Section -->
-            <section class="content-section" id="section-risk" style="display: none;">
+            <section class="content-section hidden" id="section-risk">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -1583,7 +1591,7 @@
             </section>
 
             <!-- Analytics Section -->
-            <section class="content-section" id="section-analytics" style="display: none;">
+            <section class="content-section hidden" id="section-analytics">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -1956,7 +1964,7 @@
             </section>
 
             <!-- Testing Framework Section -->
-            <section class="content-section" id="section-testing" style="display: none;">
+            <section class="content-section hidden" id="section-testing">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -2024,7 +2032,7 @@
             </section>
 
             <!-- Settings Section -->
-            <section class="content-section" id="section-settings" style="display: none;">
+            <section class="content-section hidden" id="section-settings">
                 <div class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
@@ -2169,30 +2177,41 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
         // ===== PRODUCTION-GRADE VANILLA JAVASCRIPT NAVIGATION =====
         // Make switchToSection globally accessible with NO jQuery dependencies
         window.switchToSection = function(sectionName) {
-            console.log(`🎯 PRODUCTION NAVIGATION: Switching to section: ${sectionName}`);
+            console.log(`🚨🚨 NAVIGATION CALLED: switchToSection('${sectionName}') 🚨🚨`);
             console.log(`📊 Function called at: ${new Date().toLocaleTimeString()}`);
+            console.log(`🔍 Document ready state: ${document.readyState}`);
+            console.log(`📊 DOM fully loaded: ${document.querySelectorAll('.content-section').length} sections found`);
             
             try {
                 // Validate section exists (VANILLA JS - NO JQUERY)
                 console.log(`🔍 Looking for section: #section-${sectionName}`);
                 const targetSection = document.getElementById(`section-${sectionName}`);
+                console.log(`📊 Target section element:`, targetSection);
                 console.log(`📊 Target section found: ${targetSection ? 'YES' : 'NO'}`);
                 
                 if (!targetSection) {
-                    console.error(`❌ Section not found: #section-${sectionName}`);
+                    console.error(`❌ CRITICAL: Section not found: #section-${sectionName}`);
                     const availableSections = Array.from(document.querySelectorAll('.content-section')).map(el => el.id);
                     console.log(`📊 Available sections:`, availableSections);
+                    console.log(`📊 Total sections in DOM:`, document.querySelectorAll('.content-section').length);
                     return false;
                 }
                 
+                console.log(`✅ STEP 1: Target section found, proceeding with navigation...`);
+                
                 // Remove active class from all nav links (VANILLA JS)
+                console.log(`🔧 STEP 2: Removing active class from all navigation links...`);
                 const allNavLinks = document.querySelectorAll('.nav-sidebar .nav-link');
+                console.log(`📊 Found ${allNavLinks.length} navigation links`);
                 allNavLinks.forEach(link => link.classList.remove('active'));
                 
                 // Add active class to clicked link (VANILLA JS)
+                console.log(`🔧 STEP 3: Adding active class to target navigation link...`);
                 const navLink = document.querySelector(`.nav-sidebar .nav-link[data-section="${sectionName}"]`);
+                console.log(`📊 Target nav link found:`, navLink ? 'YES' : 'NO');
                 if (navLink) {
                     navLink.classList.add('active');
+                    console.log(`✅ Active class added to navigation link`);
                     
                     // Visual feedback - briefly highlight the nav item
                     navLink.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
@@ -2201,26 +2220,40 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
                     }, 200);
                 }
                 
-                // Hide all sections (VANILLA JS)
+                // Hide all sections (VANILLA JS WITH !IMPORTANT)
+                console.log(`🔧 STEP 4: Hiding all content sections...`);
                 const allSections = document.querySelectorAll('.content-section');
-                allSections.forEach(section => {
-                    section.style.display = 'none';
+                console.log(`📊 Found ${allSections.length} content sections to hide`);
+                allSections.forEach((section, index) => {
+                    console.log(`  Hiding section ${index + 1}: ${section.id}`);
+                    section.style.setProperty('display', 'none', 'important');
+                    section.classList.remove('active');
+                    section.classList.add('hidden');
                 });
                 
-                // Show target section (VANILLA JS - NO JQUERY ANIMATION)
-                targetSection.style.display = 'block';
+                // Show target section (VANILLA JS - OVERRIDE CSS !IMPORTANT)
+                console.log(`🔧 STEP 5: Showing target section ${sectionName}...`);
+                targetSection.style.setProperty('display', 'block', 'important');
+                targetSection.classList.remove('hidden');
+                targetSection.classList.add('active');
                 targetSection.style.opacity = '0';
                 targetSection.style.transition = 'opacity 0.3s ease-in-out';
+                console.log(`📊 Target section display set with !important: ${targetSection.style.display}`);
                 setTimeout(() => {
                     targetSection.style.opacity = '1';
+                    console.log(`✅ Target section fade-in completed`);
                 }, 10);
                 
                 // Update page title
+                console.log(`🔧 STEP 6: Updating page title...`);
                 const sectionTitleElement = navLink ? navLink.querySelector('p') : null;
                 const sectionTitle = sectionTitleElement ? sectionTitleElement.textContent : sectionName;
                 document.title = `${sectionTitle} | Professional Trading Dashboard`;
+                console.log(`📊 Page title updated to: ${document.title}`);
                 
-                console.log(`✅ PRODUCTION SUCCESS: Switched to ${sectionName} (${sectionTitle})`);
+                console.log(`🎉🎉 NAVIGATION SUCCESS: Switched to ${sectionName} (${sectionTitle}) 🎉🎉`);
+                console.log(`📊 Final target section display:`, targetSection.style.display);
+                console.log(`📊 Final target section opacity:`, targetSection.style.opacity);
                 return true;
                 
             } catch (error) {
