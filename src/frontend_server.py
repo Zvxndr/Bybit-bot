@@ -711,17 +711,18 @@ class FrontendHandler(BaseHTTPRequestHandler):
             logger.warning(f"❌ Static file not found: {full_path}")
     
     def get_dashboard_html(self):
-        """Load the Professional Glass Box dashboard template"""
+        """Load the AdminLTE Professional dashboard template"""
         try:
-            # Check templates directory for the professional dashboard
+            # Check templates directory for the AdminLTE dashboard
             possible_paths = [
-                Path("src/templates/professional_dashboard.html"),  # Templates folder (CORRECT LOCATION)
+                Path("src/templates/adminlte_dashboard.html"),  # NEW AdminLTE template (PRIMARY)
+                Path("src/templates/professional_dashboard.html"),  # Old template (FALLBACK)
             ]
             
             for template_path in possible_paths:
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info(f"✅ Professional Glass Box dashboard template loaded from: {template_path}")
+                        logger.info(f"✅ AdminLTE Professional dashboard template loaded from: {template_path}")
                         return f.read()
             
             # If professional template not found, fallback to fire dashboard

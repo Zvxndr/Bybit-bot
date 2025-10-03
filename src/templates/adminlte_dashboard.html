@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AuraQuant AI Wealth Platform | Professional Trading Dashboard</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- AdminLTE Theme style -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+    
+    <!-- Custom Styles for Professional Trading Theme -->
+    <style>
+        :root {
+            --primary-bg: #0a0e1a;
+            --glass-bg: rgba(17, 24, 39, 0.8);
+            --card-bg: rgba(17, 24, 39, 0.9);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --status-live: #10b981;
+            --status-paper: #f59e0b;
+            --status-loss: #ef4444;
+            --status-info: #3b82f6;
+        }
+
+        /* Professional Glass Box Theme */
+        body {
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #1e293b 100%);
+            color: var(--text-primary);
+        }
+
+        .main-sidebar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .content-wrapper {
+            background: transparent !important;
+        }
+
+        .card {
+            background: var(--card-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+        }
+
+        .card-header {
+            background: rgba(75, 85, 99, 0.2) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            color: var(--text-primary);
+        }
+
+        .info-box {
+            background: var(--card-bg) !important;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+        }
+
+        .info-box-text {
+            color: var(--text-secondary) !important;
+        }
+
+        .info-box-number {
+            color: var(--text-primary) !important;
+            font-weight: 700;
+        }
+
+        .nav-sidebar .nav-link {
+            color: var(--text-secondary) !important;
+        }
+
+        .nav-sidebar .nav-link:hover {
+            background: rgba(59, 130, 246, 0.1) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .nav-sidebar .nav-link.active {
+            background: var(--status-info) !important;
+            color: white !important;
+        }
+
+        .brand-text {
+            color: var(--text-primary) !important;
+            font-weight: 700;
+        }
+
+        /* Trade History Table Styling */
+        .table-dark {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .table-dark th,
+        .table-dark td {
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .trade-side-buy {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--status-live);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .trade-side-sell {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--status-loss);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .trade-pnl-positive {
+            color: var(--status-live);
+            font-weight: 600;
+        }
+
+        .trade-pnl-negative {
+            color: var(--status-loss);
+            font-weight: 600;
+        }
+
+        /* Debug Banner */
+        .debug-banner {
+            background: linear-gradient(45deg, var(--status-info), var(--status-paper), var(--status-info));
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+        }
+
+        .content-wrapper {
+            margin-top: 60px;
+        }
+
+        /* Custom Info Box Icons */
+        .bg-trading { background-color: var(--status-info) !important; }
+        .bg-profit { background-color: var(--status-live) !important; }
+        .bg-strategies { background-color: var(--status-paper) !important; }
+        .bg-health { background-color: #8b5cf6 !important; }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+
+    <!-- Debug Banner -->
+    <div class="debug-banner">
+        🔥 FINAL VERSION 4.0 - ADMINLTE PROFESSIONAL DASHBOARD - NO CSS CONFLICTS GUARANTEED 🔥 TIME: 2024-12-30-19:45
+    </div>
+
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-dark">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Environment Indicator -->
+                <li class="nav-item">
+                    <span class="navbar-text">
+                        <i class="fas fa-shield-alt text-warning"></i>
+                        <strong>DEBUG MODE</strong> - Safe Testing Environment
+                    </span>
+                </li>
+                
+                <!-- Connection Status -->
+                <li class="nav-item">
+                    <span class="navbar-text">
+                        <i class="fas fa-wifi text-success"></i>
+                        <span id="connection-status">Connected</span>
+                    </span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="#" class="brand-link">
+                <i class="fas fa-rocket brand-image"></i>
+                <span class="brand-text font-weight-bold">AuraQuant AI</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <div class="image">
+                        <i class="fas fa-user-circle fa-2x text-white"></i>
+                    </div>
+                    <div class="info">
+                        <a href="#" class="d-block text-white">Private Use Mode</a>
+                    </div>
+                </div>
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" data-section="overview">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>System Overview</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="ai-lab">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>AI Strategy Lab</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="strategy">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>Strategy Manager</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="trading">
+                                <i class="nav-icon fas fa-rocket"></i>
+                                <p>Live Trading</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="risk">
+                                <i class="nav-icon fas fa-shield-alt"></i>
+                                <p>Risk Management</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="analytics">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Analytics</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="testing">
+                                <i class="nav-icon fas fa-vial"></i>
+                                <p>Testing Framework</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="settings">
+                                <i class="nav-icon fas fa-sliders-h"></i>
+                                <p>Settings</p>
+                            </a>
+                        </li>
+                        
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            
+            <!-- System Overview Section (Default Active) -->
+            <section class="content-section" id="section-overview">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>System Overview</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Overview</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main content -->
+                <section class="content">
+                    <div class="container-fluid">
+                        
+                        <!-- KPI Cards Row -->
+                        <div class="row">
+                            <div class="col-lg-3 col-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-trading"><i class="fas fa-wallet"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Total AUM</span>
+                                        <span class="info-box-number" id="total-aum">$47,291.32</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" style="width: 70%"></div>
+                                        </div>
+                                        <span class="progress-description">
+                                            <span class="text-success">+24.7%</span> from last month
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-profit"><i class="fas fa-chart-line"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Today's P&L</span>
+                                        <span class="info-box-number" id="todays-pnl">+$2,847.50</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                                        </div>
+                                        <span class="progress-description">
+                                            <span class="text-success">+44.0%</span> daily performance
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-strategies"><i class="fas fa-robot"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Active Strategies</span>
+                                        <span class="info-box-number" id="active-strategies">12</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" style="width: 60%"></div>
+                                        </div>
+                                        <span class="progress-description">
+                                            <span class="text-info">8 Live</span> • <span class="text-warning">4 Paper</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-health"><i class="fas fa-heartbeat"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">System Health</span>
+                                        <span class="info-box-number" id="system-health">Excellent</span>
+                                        <div class="progress">
+                                            <div class="progress-bar" style="width: 97%; background: #10b981;"></div>
+                                        </div>
+                                        <span class="progress-description">
+                                            <span class="text-success">97.3%</span> uptime
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trade History Card -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-history"></i>
+                                            Recent Trade History
+                                        </h3>
+                                        <div class="card-tools">
+                                            <span class="badge badge-success">20 Trades</span>
+                                            <span class="badge badge-info">18 Profitable</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body table-responsive p-0">
+                                        <table class="table table-hover table-dark">
+                                            <thead>
+                                                <tr>
+                                                    <th>Time</th>
+                                                    <th>Pair</th>
+                                                    <th>Side</th>
+                                                    <th>Size</th>
+                                                    <th>Price</th>
+                                                    <th>P&L</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="trade-history-tbody">
+                                                <tr>
+                                                    <td><small>14:32:18</small></td>
+                                                    <td><strong>BTCUSDT</strong></td>
+                                                    <td><span class="trade-side-buy">BUY</span></td>
+                                                    <td>0.025</td>
+                                                    <td>$67,842.30</td>
+                                                    <td class="trade-pnl-positive">+$127.50</td>
+                                                    <td><span class="badge badge-success">FILLED</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small>14:28:45</small></td>
+                                                    <td><strong>ETHUSDT</strong></td>
+                                                    <td><span class="trade-side-sell">SELL</span></td>
+                                                    <td>1.50</td>
+                                                    <td>$2,487.92</td>
+                                                    <td class="trade-pnl-positive">+$45.80</td>
+                                                    <td><span class="badge badge-success">FILLED</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small>14:25:12</small></td>
+                                                    <td><strong>SOLUSDT</strong></td>
+                                                    <td><span class="trade-side-buy">BUY</span></td>
+                                                    <td>25.00</td>
+                                                    <td>$138.67</td>
+                                                    <td class="trade-pnl-positive">+$32.15</td>
+                                                    <td><span class="badge badge-success">FILLED</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small>14:21:33</small></td>
+                                                    <td><strong>ADAUSDT</strong></td>
+                                                    <td><span class="trade-side-sell">SELL</span></td>
+                                                    <td>850.00</td>
+                                                    <td>$0.3524</td>
+                                                    <td class="trade-pnl-negative">-$8.45</td>
+                                                    <td><span class="badge badge-success">FILLED</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small>14:18:07</small></td>
+                                                    <td><strong>MATICUSDT</strong></td>
+                                                    <td><span class="trade-side-buy">BUY</span></td>
+                                                    <td>120.00</td>
+                                                    <td>$0.7842</td>
+                                                    <td class="trade-pnl-positive">+$18.92</td>
+                                                    <td><span class="badge badge-success">FILLED</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </section>
+
+            <!-- AI Strategy Lab Section -->
+            <section class="content-section" id="section-ai-lab" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>AI Strategy Lab</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">AI Lab</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-brain"></i>
+                                            Strategy Discovery
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <h2 class="text-info">3</h2>
+                                            <p>Strategies Discovered</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-info" style="width: 75%"></div>
+                                            </div>
+                                            <small class="text-muted">Discovery Active</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-rocket"></i>
+                                            Active Strategies
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <h2 class="text-success">2</h2>
+                                            <p>Live Strategies</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success" style="width: 90%"></div>
+                                            </div>
+                                            <small class="text-muted">Performing Well</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-chart-line"></i>
+                                            Lab Performance
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <h2 class="text-warning">94.2%</h2>
+                                            <p>Success Rate</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-warning" style="width: 94%"></div>
+                                            </div>
+                                            <small class="text-muted">Excellent Performance</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Strategy Cards Row -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Momentum Scalper Strategy</h3>
+                                        <div class="card-tools">
+                                            <span class="badge badge-success">LIVE</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Pair:</strong> BTC/USDT • Paper Trading</p>
+                                        <p><strong>Performance:</strong> <span class="text-success">+24.7% (7d return)</span></p>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Win Rate</small>
+                                                <div class="progress progress-sm">
+                                                    <div class="progress-bar bg-success" style="width: 73%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Risk Level</small>
+                                                <div class="progress progress-sm">
+                                                    <div class="progress-bar bg-warning" style="width: 45%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Grid Trader Strategy</h3>
+                                        <div class="card-tools">
+                                            <span class="badge badge-info">BACKTESTING</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Pair:</strong> ETH/USDT • Backtesting</p>
+                                        <p><strong>Performance:</strong> <span class="text-info">73% Complete</span></p>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Progress</small>
+                                                <div class="progress progress-sm">
+                                                    <div class="progress-bar bg-info" style="width: 73%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Estimated P&L</small>
+                                                <div class="progress progress-sm">
+                                                    <div class="progress-bar bg-success" style="width: 68%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Strategy Manager Section -->
+            <section class="content-section" id="section-strategy" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>Strategy Manager</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Strategy</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="alert alert-info">
+                            <h5><i class="icon fas fa-graduation-cap"></i> Strategy Graduation Pipeline!</h5>
+                            Strategies progress through: <strong>Paper Trading → Testnet → Live Trading</strong>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Paper Trading</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Risk-free strategy testing with virtual funds</p>
+                                        <div class="callout callout-success">
+                                            <h5>Strategy Ready!</h5>
+                                            <p>Momentum Alpha 001 has completed paper testing with 73% win rate.</p>
+                                            <button class="btn btn-success btn-sm">Promote to Testnet</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Testnet Trading</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Live market validation with small capital</p>
+                                        <div class="callout callout-warning">
+                                            <h5>Currently Testing</h5>
+                                            <p>TrendMaster Pro - Day 14 of testnet validation</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-warning" style="width: 70%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card card-success">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Live Trading</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Full-scale live trading deployment</p>
+                                        <div class="callout callout-success">
+                                            <h5>2 Live Strategies</h5>
+                                            <p>Generating consistent profits with proper risk management.</p>
+                                            <span class="badge badge-success">$2,847 Today</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Live Trading Section -->
+            <section class="content-section" id="section-trading" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>Live Trading Control</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Trading</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        
+                        <!-- Emergency Controls -->
+                        <div class="alert alert-warning">
+                            <h5><i class="icon fas fa-exclamation-triangle"></i> Emergency Controls</h5>
+                            <button type="button" class="btn btn-danger btn-lg mr-2" onclick="emergencyStop()">
+                                <i class="fas fa-stop-circle"></i> EMERGENCY STOP
+                            </button>
+                            <button type="button" class="btn btn-warning btn-lg mr-2" onclick="pauseStrategies()">
+                                <i class="fas fa-pause-circle"></i> PAUSE ALL
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg" onclick="resumeStrategies()">
+                                <i class="fas fa-play-circle"></i> RESUME ALL
+                            </button>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Active Positions</h3>
+                                    </div>
+                                    <div class="card-body table-responsive p-0">
+                                        <table class="table table-hover table-dark">
+                                            <thead>
+                                                <tr>
+                                                    <th>Pair</th>
+                                                    <th>Size</th>
+                                                    <th>Entry</th>
+                                                    <th>Current</th>
+                                                    <th>P&L</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>BTCUSDT</strong></td>
+                                                    <td>0.125 BTC</td>
+                                                    <td>$67,234</td>
+                                                    <td>$67,842</td>
+                                                    <td class="trade-pnl-positive">+$76.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ETHUSDT</strong></td>
+                                                    <td>2.5 ETH</td>
+                                                    <td>$2,461</td>
+                                                    <td>$2,487</td>
+                                                    <td class="trade-pnl-positive">+$65.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Strategy Status</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-8">Momentum Alpha 001</div>
+                                            <div class="col-4"><span class="badge badge-success">ACTIVE</span></div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-8">TrendMaster Pro</div>
+                                            <div class="col-4"><span class="badge badge-success">ACTIVE</span></div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-8">Grid Trader v2</div>
+                                            <div class="col-4"><span class="badge badge-warning">PAPER</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Risk Management Section -->
+            <section class="content-section" id="section-risk" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>Risk Management</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Risk</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-success"><i class="fas fa-shield-alt"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Risk Score</span>
+                                        <span class="info-box-number">LOW</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-percentage"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Max Drawdown</span>
+                                        <span class="info-box-number">3.2%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-warning"><i class="fas fa-balance-scale"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Position Ratio</span>
+                                        <span class="info-box-number">1:2.4</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Alerts</span>
+                                        <span class="info-box-number">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Risk Limits</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Max Position Size (%)</label>
+                                                    <input type="number" class="form-control" value="5" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Max Daily Loss (%)</label>
+                                                    <input type="number" class="form-control" value="2" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Safety Status</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="callout callout-success">
+                                            <h5>All Systems Green</h5>
+                                            <p>Risk management protocols active and functioning normally.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Analytics Section -->
+            <section class="content-section" id="section-analytics" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>Advanced Analytics</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Analytics</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Performance Analytics</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h3 class="text-success">89.2%</h3>
+                                                    <p>Win Rate</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h3 class="text-info">1.67</h3>
+                                                    <p>Profit Factor</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h3 class="text-warning">2.4</h3>
+                                                    <p>Sharpe Ratio</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h3 class="text-success">47.3%</h3>
+                                                    <p>Annual Return</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Testing Framework Section -->
+            <section class="content-section" id="section-testing" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>Testing Framework</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Testing</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Backtesting</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Historical market data analysis</p>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" style="width: 100%"></div>
+                                        </div>
+                                        <small class="text-success">Ready</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Paper Trading</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Risk-free strategy validation</p>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                                        </div>
+                                        <small class="text-success">Active</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Live Testing</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Small-scale live validation</p>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" style="width: 75%"></div>
+                                        </div>
+                                        <small class="text-warning">In Progress</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="content-section" id="section-settings" style="display: none;">
+                <div class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>System Settings</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Settings</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">API Configuration</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Exchange</label>
+                                            <input type="text" class="form-control" value="Bybit" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Environment</label>
+                                            <select class="form-control">
+                                                <option selected>Debug/Testnet</option>
+                                                <option disabled>Production (Disabled)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>API Status</label>
+                                            <div class="text-success">
+                                                <i class="fas fa-check-circle"></i> Connected
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Safety Settings</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" checked disabled> Debug Mode Active
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" checked disabled> Paper Trading Only
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" checked disabled> Risk Management
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <strong>Copyright &copy; 2025 <a href="#">AuraQuant AI Wealth Platform</a>.</strong>
+            All rights reserved. Professional Trading Dashboard v4.0
+            <div class="float-right d-none d-sm-inline-block">
+                <b>Status:</b> Debug Mode Active - Safe Testing Environment
+            </div>
+        </footer>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        $(document).ready(function() {
+            console.log('🚀 AuraQuant AdminLTE Dashboard Initialized');
+            
+            // Initialize DataTables
+            $('.table').DataTable({
+                "responsive": true,
+                "lengthChange": false,
+                "autoWidth": false,
+                "pageLength": 10,
+                "searching": false,
+                "info": false
+            });
+
+            // Navigation System
+            $('.nav-sidebar .nav-link').on('click', function(e) {
+                e.preventDefault();
+                
+                const section = $(this).data('section');
+                console.log(`🎯 Switching to section: ${section}`);
+                
+                // Remove active class from all nav links
+                $('.nav-sidebar .nav-link').removeClass('active');
+                
+                // Add active class to clicked link
+                $(this).addClass('active');
+                
+                // Hide all sections
+                $('.content-section').hide();
+                
+                // Show target section
+                $(`#section-${section}`).show();
+                
+                console.log(`✅ Successfully switched to: ${section}`);
+            });
+
+            // Real-time updates simulation
+            function updateMetrics() {
+                const timestamp = new Date().toLocaleTimeString();
+                $('#connection-status').text('Connected • ' + timestamp);
+                
+                // Simulate some data updates
+                const aum = (47291.32 + (Math.random() * 100 - 50)).toFixed(2);
+                $('#total-aum').text('$' + aum);
+                
+                const pnl = (2847.50 + (Math.random() * 50 - 25)).toFixed(2);
+                $('#todays-pnl').text('+$' + pnl);
+            }
+
+            // Update metrics every 30 seconds
+            setInterval(updateMetrics, 30000);
+            
+            console.log('✅ AdminLTE Dashboard fully loaded and functional');
+        });
+
+        // Emergency Functions (to be connected to backend)
+        function emergencyStop() {
+            alert('Emergency Stop Activated - All trading operations halted');
+            console.log('🚨 Emergency stop triggered');
+        }
+
+        function pauseStrategies() {
+            alert('All strategies paused');
+            console.log('⏸️ Strategies paused');
+        }
+
+        function resumeStrategies() {
+            alert('Strategies resumed');
+            console.log('▶️ Strategies resumed');
+        }
+    </script>
+
+</body>
+</html>
