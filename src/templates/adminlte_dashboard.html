@@ -142,7 +142,7 @@
                                 <span class="info-box-icon"><i class="fas fa-chart-line"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Active Strategies</span>
-                                    <span class="info-box-number">3</span>
+                                    <span class="info-box-number" data-metric="strategies">Loading...</span>
                                 </div>
                             </div>
                         </div>
@@ -151,7 +151,7 @@
                                 <span class="info-box-icon"><i class="fas fa-coins"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Portfolio Value</span>
-                                    <span class="info-box-number">$25,430</span>
+                                    <span class="info-box-number" data-metric="portfolio">Loading...</span>
                                 </div>
                             </div>
                         </div>
@@ -159,17 +159,43 @@
                             <div class="info-box bg-warning">
                                 <span class="info-box-icon"><i class="fas fa-robot"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">AI Engine</span>
-                                    <span class="info-box-number">Online</span>
+                                    <span class="info-box-text">Active Positions</span>
+                                    <span class="info-box-number" data-metric="positions">Loading...</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="info-box bg-danger">
-                                <span class="info-box-icon"><i class="fas fa-shield-alt"></i></span>
+                                <span class="info-box-icon"><i class="fas fa-chart-bar"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">Risk Level</span>
-                                    <span class="info-box-number">Low</span>
+                                    <span class="info-box-text">Daily P&L</span>
+                                    <span class="info-box-number" data-metric="pnl">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">System Metrics</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <p><strong><span data-metric="cpu">CPU: Loading...</span></strong></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p><strong><span data-metric="memory">Memory: Loading...</span></strong></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p><strong><span data-metric="disk">Disk: Loading...</span></strong></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p><strong>Status: <span class="status-indicator status-paper">CONNECTING</span></strong></p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -454,16 +480,39 @@
                     <p>Real-time system monitoring and debugging tools.</p>
                     
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Navigation Log</h3>
+                                    <h3 class="card-title">🚨 Emergency Controls</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button type="button" class="btn btn-danger mb-2" onclick="emergencyStop()">
+                                            <i class="fas fa-stop"></i> EMERGENCY STOP
+                                        </button>
+                                        <button type="button" class="btn btn-warning mb-2" onclick="pauseTrading()">
+                                            <i class="fas fa-pause"></i> Pause Trading
+                                        </button>
+                                        <button type="button" class="btn btn-success mb-2" onclick="resumeTrading()">
+                                            <i class="fas fa-play"></i> Resume Trading
+                                        </button>
+                                        <button type="button" class="btn btn-info" onclick="refreshData()">
+                                            <i class="fas fa-sync"></i> Refresh Data
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">System Log</h3>
                                 </div>
                                 <div class="card-body">
                                     <div id="debug-log" style="background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 300px; overflow-y: auto;">
-                                        <div>🔧 NAVIGATION: System initialized</div>
-                                        <div>✅ NAVIGATION: All sections loaded successfully</div>
-                                        <div>🎯 NAVIGATION: Ready for interaction</div>
+                                        <div>🔧 SYSTEM: Initializing...</div>
+                                        <div>✅ NAVIGATION: System ready</div>
+                                        <div>🔌 API: Connecting to backend...</div>
                                     </div>
                                 </div>
                             </div>
@@ -578,6 +627,245 @@ window.onload = function() {
 };
 
 console.log('✅ CLEAN NAVIGATION: Script loaded without errors');
+
+// ===== BACKEND API INTEGRATION =====
+console.log('🔌 API INTEGRATION: Loading...');
+
+// Global data storage
+var apiData = {
+    system: {},
+    positions: [],
+    balance: {},
+    lastUpdate: null
+};
+
+// API call function with error handling
+function apiCall(endpoint, callback, errorCallback) {
+    fetch('/api/' + endpoint)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            addDebugLog('✅ API SUCCESS: ' + endpoint);
+            if (callback) callback(data);
+        })
+        .catch(error => {
+            addDebugLog('❌ API ERROR: ' + endpoint + ' - ' + error.message);
+            console.error('API Error:', endpoint, error);
+            if (errorCallback) errorCallback(error);
+        });
+}
+
+// POST API call function
+function apiPost(endpoint, data, callback, errorCallback) {
+    fetch('/api/' + endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data || {})
+    })
+    .then(response => response.json())
+    .then(result => {
+        addDebugLog('✅ POST SUCCESS: ' + endpoint);
+        if (callback) callback(result);
+    })
+    .catch(error => {
+        addDebugLog('❌ POST ERROR: ' + endpoint + ' - ' + error.message);
+        console.error('API POST Error:', endpoint, error);
+        if (errorCallback) errorCallback(error);
+    });
+}
+
+// Update System Overview with real data
+function updateSystemOverview(data) {
+    try {
+        if (data.trading_bot) {
+            // Update system status
+            var statusEl = document.querySelector('#section-overview .status-indicator');
+            if (statusEl && data.trading_bot.status) {
+                statusEl.textContent = data.trading_bot.status.toUpperCase();
+                statusEl.className = 'status-indicator ' + 
+                    (data.trading_bot.status === 'running' ? 'status-live' : 'status-paper');
+            }
+            
+            // Update info boxes
+            var strategiesEl = document.querySelector('[data-metric="strategies"] .info-box-number');
+            if (strategiesEl) strategiesEl.textContent = data.trading_bot.strategies_active || '0';
+            
+            var portfolioEl = document.querySelector('[data-metric="portfolio"] .info-box-number');
+            if (portfolioEl) portfolioEl.textContent = data.trading_bot.balance || '$0.00';
+            
+            var positionsEl = document.querySelector('[data-metric="positions"] .info-box-number');
+            if (positionsEl) positionsEl.textContent = data.trading_bot.positions || '0';
+            
+            var pnlEl = document.querySelector('[data-metric="pnl"] .info-box-number');
+            if (pnlEl) pnlEl.textContent = data.trading_bot.daily_pnl || '$0.00';
+        }
+        
+        if (data.system) {
+            // Update system metrics
+            var cpuEl = document.querySelector('[data-metric="cpu"]');
+            if (cpuEl) cpuEl.textContent = 'CPU: ' + (data.system.cpu_usage || '0%');
+            
+            var memoryEl = document.querySelector('[data-metric="memory"]');
+            if (memoryEl) memoryEl.textContent = 'Memory: ' + (data.system.memory_usage || '0%');
+            
+            var diskEl = document.querySelector('[data-metric="disk"]');
+            if (diskEl) diskEl.textContent = 'Disk: ' + (data.system.disk_space || '100% available');
+        }
+        
+        console.log('✅ OVERVIEW: Updated with live data');
+        addDebugLog('✅ OVERVIEW: Live data refresh completed');
+        
+    } catch (error) {
+        console.error('Overview update error:', error);
+        addDebugLog('❌ OVERVIEW: Update error - ' + error.message);
+    }
+}
+
+// Update Live Trading section with positions
+function updateLiveTrading(positions) {
+    try {
+        var tbody = document.querySelector('#section-trading table tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = ''; // Clear existing rows
+        
+        if (positions && positions.length > 0) {
+            positions.forEach(position => {
+                var row = document.createElement('tr');
+                var sideClass = position.side === 'long' ? 'text-success' : 'text-danger';
+                var pnlClass = parseFloat(position.pnl || 0) >= 0 ? 'text-success' : 'text-danger';
+                
+                row.innerHTML = `
+                    <td>${position.symbol || 'N/A'}</td>
+                    <td class="${sideClass}">${(position.side || 'UNKNOWN').toUpperCase()}</td>
+                    <td>${position.size || '0'}</td>
+                    <td>$${position.entry_price || '0.00'}</td>
+                    <td>$${position.current_price || '0.00'}</td>
+                    <td class="${pnlClass}">${position.pnl >= 0 ? '+' : ''}$${position.pnl || '0.00'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            addDebugLog('✅ TRADING: Updated ' + positions.length + ' positions');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No active positions</td></tr>';
+            addDebugLog('ℹ️ TRADING: No active positions');
+        }
+        
+    } catch (error) {
+        console.error('Trading update error:', error);
+        addDebugLog('❌ TRADING: Update error - ' + error.message);
+    }
+}
+
+// Emergency Controls
+function emergencyStop() {
+    if (confirm('⚠️ EMERGENCY STOP: This will immediately stop all trading. Continue?')) {
+        addDebugLog('🚨 EMERGENCY: Stopping all trading...');
+        apiPost('emergency-stop', {}, function(result) {
+            addDebugLog('🚨 EMERGENCY: All trading stopped');
+            alert('✅ Emergency stop completed');
+            refreshData(); // Refresh data to show new status
+        }, function(error) {
+            addDebugLog('❌ EMERGENCY: Stop failed - ' + error.message);
+            alert('❌ Emergency stop failed: ' + error.message);
+        });
+    }
+}
+
+function pauseTrading() {
+    addDebugLog('⏸️ CONTROL: Pausing trading...');
+    apiPost('pause', {}, function(result) {
+        addDebugLog('⏸️ CONTROL: Trading paused');
+        alert('⏸️ Trading paused');
+        refreshData();
+    }, function(error) {
+        addDebugLog('❌ CONTROL: Pause failed - ' + error.message);
+        alert('❌ Pause failed: ' + error.message);
+    });
+}
+
+function resumeTrading() {
+    addDebugLog('▶️ CONTROL: Resuming trading...');
+    apiPost('resume', {}, function(result) {
+        addDebugLog('▶️ CONTROL: Trading resumed');
+        alert('▶️ Trading resumed');
+        refreshData();
+    }, function(error) {
+        addDebugLog('❌ CONTROL: Resume failed - ' + error.message);
+        alert('❌ Resume failed: ' + error.message);
+    });
+}
+
+// Data refresh function
+function refreshData() {
+    addDebugLog('🔄 REFRESH: Loading live data...');
+    
+    // Get system status
+    apiCall('status', function(data) {
+        apiData.system = data;
+        updateSystemOverview(data);
+    });
+    
+    // Get positions
+    apiCall('positions', function(data) {
+        apiData.positions = data;
+        updateLiveTrading(data);
+    });
+    
+    // Get balance info
+    apiCall('multi-balance', function(data) {
+        apiData.balance = data;
+        // Update portfolio section if needed
+    });
+    
+    apiData.lastUpdate = new Date().toLocaleTimeString();
+    addDebugLog('🔄 REFRESH: Completed at ' + apiData.lastUpdate);
+}
+
+// Auto-refresh every 5 seconds
+var refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(refreshData, 5000);
+    addDebugLog('🔄 AUTO-REFRESH: Started (5 second intervals)');
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+        addDebugLog('⏹️ AUTO-REFRESH: Stopped');
+    }
+}
+
+// Initialize API integration when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔌 API INTEGRATION: Initializing...');
+    addDebugLog('🔌 API: Initializing backend integration...');
+    
+    // Initial data load
+    setTimeout(refreshData, 1000); // Wait 1 second for UI to settle
+    
+    // Start auto-refresh
+    setTimeout(startAutoRefresh, 2000); // Start auto-refresh after 2 seconds
+    
+    console.log('✅ API INTEGRATION: Ready');
+    addDebugLog('✅ API: Backend integration ready');
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
+});
+
+console.log('✅ API INTEGRATION: Script loaded');
 </script>
 
 </body>
