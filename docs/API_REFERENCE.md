@@ -1,53 +1,134 @@
-# ML Trading Bot API Reference
+# 📡 **API REFERENCE DOCUMENTATION**
+**Backend Server:** `src/frontend_server.py`  
+**Total Endpoints:** 27 (23 original + 4 email system)  
+**Framework:** Flask with comprehensive error handling  
+**Status:** All endpoints operational and tested
 
-## Overview
+---
 
-The ML Trading Bot provides a comprehensive FastAPI-based REST and WebSocket interface for real-time predictions, system management, and monitoring. This production-ready API includes advanced ML model serving, authentication, rate limiting, and comprehensive health monitoring.
+## 📊 **API ENDPOINT OVERVIEW**
 
-**Features:**
-- **Real-time ML Predictions**: Advanced ensemble models with confidence scores
-- **WebSocket Streaming**: Live prediction feeds with sub-second latency
-- **Authentication & Security**: JWT-based authentication with role-based access
-- **Model Management**: Dynamic model selection, retraining, and versioning
-- **Production Monitoring**: Health checks, metrics, and performance analytics
+### **System APIs** (6 endpoints)
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/status` | GET | System health check | ✅ Active |
+| `/api/system-info` | GET | System information | ✅ Active |
+| `/api/system-overview` | GET | Dashboard overview data | ✅ Active |
+| `/api/debug-safety` | GET | Safety system status | ✅ Active |
+| `/api/config` | GET | Configuration data | ✅ Active |
+| `/api/logs` | GET | System log access | ✅ Active |
 
-## Base URLs
+### **Trading APIs** (5 endpoints) 
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/trading/balance` | GET | Account balance (mock) | ✅ Active (Safe) |
+| `/api/trading/positions` | GET | Open positions (mock) | ✅ Active (Safe) |
+| `/api/trading/orders` | GET | Order history (mock) | ✅ Active (Safe) |
+| `/api/trading/performance` | GET | Trading performance | ✅ Active (Safe) |
+| `/api/trading/place-order` | POST | Place order (BLOCKED) | 🛡️ Safely Blocked |
 
-- **Development**: `http://localhost:8000`
-- **Production**: `https://your-production-domain.com`
-- **Kubernetes**: `https://trading-bot.cluster.local` (internal)
+### **Market Data APIs** (4 endpoints)
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/market/prices` | GET | Current market prices | ✅ Active |
+| `/api/market/historical` | GET | Historical price data | ✅ Active |
+| `/api/market/analysis` | GET | Technical analysis | ✅ Active |
+| `/api/market/indicators` | GET | Technical indicators | ✅ Active |
 
-## Authentication
+### **AI Strategy APIs** (3 endpoints)
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/ai/strategies` | GET | Available strategies | ✅ Active |
+| `/api/ai/backtest` | POST | Run backtesting (5-year max) | ✅ Active |
+| `/api/ai/performance` | GET | Strategy performance | ✅ Active |
 
-### JWT Token Authentication (Primary)
+### **Risk Management APIs** (3 endpoints)
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/risk/portfolio` | GET | Portfolio risk metrics | ✅ Active |
+| `/api/risk/position-sizing` | POST | Calculate position size | ✅ Active |
+| `/api/risk/limits` | GET | Risk limit configuration | ✅ Active |
 
-JWT tokens provide secure, stateless authentication for all API access:
+### **Portfolio APIs** (2 endpoints)
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/portfolio/holdings` | GET | Current holdings | ✅ Active |
+| `/api/portfolio/allocation` | GET | Asset allocation | ✅ Active |
 
-```bash
-# Login to get JWT token
-curl -X POST "http://localhost:8000/auth/login" \
-     -H "Content-Type: application/json" \
-     -d '{"username": "your_username", "password": "your_password"}'
+### **Email Notification APIs** (4 endpoints) 🆕 **NEW**
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/email/test-config` | POST | Test email configuration | ✅ Active |
+| `/api/email/send-test` | POST | Send test email | ✅ Active |
+| `/api/email/daily-report` | POST | Generate daily report | ✅ Active |
+| `/api/email/status` | GET | Email system status | ✅ Active |
 
-# Use JWT token for API calls
-curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-     "http://localhost:8000/predict"
+---
+
+## 🔧 **API IMPLEMENTATION DETAILS**
+
+### **System Status API** - `/api/status`
+```python
+@app.route('/api/status')
+def get_system_status():
+    """Comprehensive system health check"""
+    return {
+        'status': 'operational',
+        'timestamp': datetime.now().isoformat(),
+        'debug_mode': True,  # Always True in private mode
+        'safety_systems': {
+            'trading_blocked': True,
+            'testnet_only': True,
+            'ultra_safe_mode': True
+        },
+        'api_connections': {
+            'bybit': check_bybit_connection(),
+            'websocket': check_websocket_connection(),
+            'market_data': check_market_data_connection(),
+            'trading': False,  # Always False (blocked)
+            'risk_manager': check_risk_manager_connection(),
+            'email': check_email_connection()
+        }
+    }
 ```
 
-### API Key Authentication (Service-to-Service)
-
-API keys are used for programmatic access and service integration:
-
-```bash
-curl -H "X-API-Key: your_api_key_here" \
-     "http://localhost:8000/health"
+### **AI Strategy Backtesting API** - `/api/ai/backtest` 🆕 **ENHANCED**
+```python
+@app.route('/api/ai/backtest', methods=['POST'])
+def run_backtest():
+    """Enhanced backtesting with 5-year maximum period"""
+    data = request.json
+    
+    # Validate timeframe (max 5 years for private use)
+    timeframe = data.get('timeframe', '30d')
+    max_days = {
+        '30d': 30,
+        '3m': 90,
+        '6m': 180,
+        '1y': 365,
+        '2y': 730,
+        '5y': 1825  # 5 years maximum
+    }
+    
+    if timeframe not in max_days:
+        return {'error': 'Invalid timeframe'}, 400
+        
+    # Run safe backtesting (no real money involved)
+    results = run_safe_backtest(
+        strategy=data.get('strategy'),
+        timeframe=timeframe,
+        risk_params=get_ultra_safe_params()
+    )
+    
+    return {
+        'backtest_results': results,
+        'timeframe': timeframe,
+        'safety_note': 'Backtesting only - no real trading'
+    }
 ```
 
-### WebSocket Authentication
-
-WebSocket connections require JWT token authentication:
-
-```javascript
+### **Email Configuration Test API** - `/api/email/test-config` 🆕 **NEW**
+```python
 const ws = new WebSocket('ws://localhost:8000/ws/predictions?token=eyJ0eXAiOiJKV1QiLCJh...');
 ```
 
