@@ -582,27 +582,12 @@ function addDebugLog(message) {
     }
 }
 
-// Initialize on page load
+// Simplified initialization
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 CLEAN NAVIGATION: DOM Ready');
-    addDebugLog('🚀 SYSTEM: DOM loaded, initializing...');
-    
-    // Show overview section by default
+    addDebugLog('🚀 SYSTEM: Initializing dashboard...');
     switchSection('overview');
-    
-    console.log('✅ CLEAN NAVIGATION: Initialized successfully');
-    addDebugLog('✅ SYSTEM: Navigation system ready');
+    addDebugLog('✅ SYSTEM: Dashboard ready');
 });
-
-// Fallback initialization
-window.onload = function() {
-    console.log('🔄 FALLBACK: Window loaded');
-    if (!document.querySelector('.content-section[style*="block"]')) {
-        switchSection('overview');
-    }
-};
-
-console.log('✅ CLEAN NAVIGATION: Script loaded without errors');
 
 // ===== BACKEND API INTEGRATION =====
 console.log('🔌 API INTEGRATION: Loading...');
@@ -615,22 +600,65 @@ var apiData = {
     lastUpdate: null
 };
 
-// API call function with error handling
+// Enhanced API call function with better error handling
 function apiCall(endpoint, callback, errorCallback) {
+    addDebugLog('🔄 API CALL: Requesting ' + endpoint);
+    
     fetch('/api/' + endpoint)
         .then(response => {
+            addDebugLog('📡 API RESPONSE: ' + endpoint + ' - Status: ' + response.status);
+            
             if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
+                return response.text().then(text => {
+                    addDebugLog('❌ HTTP ERROR: ' + response.status + ' - Response: ' + text.substring(0, 100));
+                    throw new Error('HTTP ' + response.status + ' - Server Error');
+                });
             }
-            return response.json();
+            
+            // Try to parse JSON with better error handling
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (parseError) {
+                    addDebugLog('❌ JSON PARSE ERROR: ' + text.substring(0, 50) + '...');
+                    throw new Error('Invalid JSON response from server');
+                }
+            });
         })
         .then(data => {
-            addDebugLog('✅ API SUCCESS: ' + endpoint);
+            addDebugLog('✅ API SUCCESS: ' + endpoint + ' - Data received');
             if (callback) callback(data);
         })
         .catch(error => {
             addDebugLog('❌ API ERROR: ' + endpoint + ' - ' + error.message);
-            console.error('API Error:', endpoint, error);
+            console.error('API Error Details:', {
+                endpoint: endpoint,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Handle specific endpoint failures with fallbacks
+            if (endpoint === 'status') {
+                addDebugLog('🔄 FALLBACK: Using offline mode for status');
+                var fallbackStatus = {
+                    trading_bot: {
+                        status: "offline",
+                        trading_mode: "Paper Trading",
+                        debug_mode: true,
+                        strategies_active: 0,
+                        positions: 0,
+                        balance: "Offline",
+                        daily_pnl: "N/A"
+                    },
+                    system: {
+                        cpu_usage: "Offline",
+                        memory_usage: "Offline",
+                        disk_space: "Offline"
+                    }
+                };
+                if (callback) callback(fallbackStatus);
+            }
+            
             if (errorCallback) errorCallback(error);
         });
 }
@@ -862,6 +890,79 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('beforeunload', function() {
     stopAutoRefresh();
 });
+
+// Fallback mode for when backend is unavailable
+function showFallbackMode(failedEndpoint) {
+    addDebugLog('🔄 FALLBACK: Backend unavailable, showing offline mode');
+    
+    if (failedEndpoint === 'status') {
+        // Update system overview with fallback data
+        var statusEl = document.querySelector('#section-overview .status-indicator');
+        if (statusEl) {
+            statusEl.textContent = 'BACKEND OFFLINE';
+            statusEl.className = 'status-indicator status-inactive';
+        }
+        
+        // Update title
+        var titleEl = document.querySelector('#section-overview h3');
+        if (titleEl) {
+            titleEl.textContent = '🚀 Open Alpha Trading System (Offline Mode)';
+        }
+        
+        // Update metrics with offline status
+        var strategiesEl = document.querySelector('[data-metric="strategies"] .info-box-number');
+        if (strategiesEl) strategiesEl.textContent = 'Offline';
+        
+        var portfolioEl = document.querySelector('[data-metric="portfolio"] .info-box-number');
+        if (portfolioEl) portfolioEl.textContent = 'Offline';
+        
+        var positionsEl = document.querySelector('[data-metric="positions"] .info-box-number');
+        if (positionsEl) positionsEl.textContent = 'Offline';
+        
+        var pnlEl = document.querySelector('[data-metric="pnl"] .info-box-number');
+        if (pnlEl) pnlEl.textContent = 'Offline';
+        
+        // Update system metrics
+        var cpuEl = document.querySelector('[data-metric="cpu"]');
+        if (cpuEl) cpuEl.textContent = 'CPU: Backend Offline';
+        
+        var memoryEl = document.querySelector('[data-metric="memory"]');
+        if (memoryEl) memoryEl.textContent = 'Memory: Backend Offline';
+        
+        var diskEl = document.querySelector('[data-metric="disk"]');
+        if (diskEl) diskEl.textContent = 'Disk: Backend Offline';
+    }
+    
+    if (failedEndpoint === 'positions') {
+        // Update positions table
+        var tbody = document.querySelector('#section-trading table tbody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Backend offline - Cannot load positions</td></tr>';
+        }
+    }
+}
+
+// Test backend connectivity
+function testBackendConnection() {
+    addDebugLog('🔍 CONNECTIVITY: Testing backend connection...');
+    
+    // Simple fetch to test if backend is responding
+    fetch('/api/status')
+        .then(response => {
+            if (response.ok) {
+                addDebugLog('✅ CONNECTIVITY: Backend is online');
+                return true;
+            } else {
+                addDebugLog('❌ CONNECTIVITY: Backend returned error ' + response.status);
+                return false;
+            }
+        })
+        .catch(error => {
+            addDebugLog('❌ CONNECTIVITY: Backend is offline - ' + error.message);
+            showFallbackMode('status');
+            return false;
+        });
+}
 
 console.log('✅ API INTEGRATION: Script loaded');
 </script>

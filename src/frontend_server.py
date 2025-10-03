@@ -443,67 +443,112 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def handle_api_request(self):
         """Handle API requests with real trading bot data"""
         if self.path == '/api/status':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            
-            # Get real system data
-            import psutil
-            import datetime
-            from pathlib import Path
-            
-            # Real system metrics
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-            memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            
-            # Get data from shared state
-            shared_data = shared_state.get_all_data()
-            
-            # Get debug manager status for accurate trading mode
-            debug_status = self.debug_manager.get_debug_status()
-            debug_mode = debug_status.get('debug_mode', True)
-            
-            # Check database status
-            db_path = Path("data/trading_bot.db")
-            db_status = "ready" if db_path.exists() else "initializing"
-            
-            # Determine actual system status and mode
-            actual_mode = "paper_trading" if debug_mode else "live_trading"
-            actual_status = "paper_trading" if debug_mode else shared_data["system"]["status"]
-            
-            status_data = {
-                "trading_bot": {
-                    "status": actual_status,
-                    "version": shared_data["system"]["version"],
-                    "mode": actual_mode,
-                    "trading_mode": "Paper Trading" if debug_mode else "Live Trading",
-                    "debug_mode": debug_mode,
-                    "strategies_active": shared_data["trading"]["strategies_active"],
-                    "positions": shared_data["trading"]["positions_count"],
-                    "balance": shared_data["trading"]["balance"],
-                    "daily_pnl": shared_data["trading"]["daily_pnl"],
-                    "uptime": shared_data["system"].get("uptime_str", "00:00:00"),
-                    "environment": "testnet" if debug_mode else "mainnet"
-                },
-                "system": {
-                    "cpu_usage": f"{cpu_percent:.1f}%",
-                    "memory_usage": f"{memory.percent:.1f}%",
-                    "disk_space": f"{100 - disk.percent:.1f}% available",
-                    "network": "connected",
-                    "database": db_status
-                },
-                "debug_info": {
-                    "phase": debug_status.get('phase', 'UNKNOWN'),
-                    "trading_allowed": debug_status.get('trading_allowed', False),
-                    "runtime_seconds": debug_status.get('runtime_seconds', 0),
-                    "max_runtime_seconds": debug_status.get('max_runtime_seconds', 3600)
-                },
-                "last_update": shared_data["last_update"]
-            }
-            
-            self.wfile.write(json.dumps(status_data, indent=2).encode())
+            try:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                # Get real system data with fallbacks
+                try:
+                    import psutil
+                    cpu_percent = psutil.cpu_percent(interval=0.1)
+                    memory = psutil.virtual_memory()
+                    disk = psutil.disk_usage('/')
+                    system_metrics = {
+                        "cpu_usage": f"{cpu_percent:.1f}%",
+                        "memory_usage": f"{memory.percent:.1f}%",
+                        "disk_space": f"{100 - disk.percent:.1f}% available"
+                    }
+                except Exception as e:
+                    logger.warning(f"System metrics error: {e}")
+                    system_metrics = {
+                        "cpu_usage": "N/A",
+                        "memory_usage": "N/A", 
+                        "disk_space": "N/A"
+                    }
+                
+                # Get data from shared state with fallbacks
+                try:
+                    shared_data = shared_state.get_all_data()
+                except Exception as e:
+                    logger.warning(f"Shared state error: {e}")
+                    shared_data = {
+                        "system": {"status": "initializing", "version": "2.0.0"},
+                        "trading": {"strategies_active": 0, "positions_count": 0, 
+                                  "balance": "N/A", "daily_pnl": "N/A"},
+                        "last_update": "N/A"
+                    }
+                
+                # Get debug manager status with fallbacks
+                try:
+                    debug_status = self.debug_manager.get_debug_status()
+                    debug_mode = debug_status.get('debug_mode', True)
+                except Exception as e:
+                    logger.warning(f"Debug manager error: {e}")
+                    debug_status = {"debug_mode": True, "phase": "ERROR"}
+                    debug_mode = True
+                
+                # Check database status
+                try:
+                    from pathlib import Path
+                    db_path = Path("data/trading_bot.db")
+                    db_status = "ready" if db_path.exists() else "initializing"
+                except:
+                    db_status = "unknown"
+                
+                # Build response with safe data
+                actual_mode = "paper_trading" if debug_mode else "live_trading"
+                actual_status = "paper_trading" if debug_mode else shared_data["system"]["status"]
+                
+                status_data = {
+                    "trading_bot": {
+                        "status": actual_status,
+                        "version": shared_data["system"].get("version", "2.0.0"),
+                        "mode": actual_mode,
+                        "trading_mode": "Paper Trading" if debug_mode else "Live Trading",
+                        "debug_mode": debug_mode,
+                        "strategies_active": shared_data["trading"].get("strategies_active", 0),
+                        "positions": shared_data["trading"].get("positions_count", 0),
+                        "balance": shared_data["trading"].get("balance", "N/A"),
+                        "daily_pnl": shared_data["trading"].get("daily_pnl", "N/A"),
+                        "uptime": shared_data["system"].get("uptime_str", "00:00:00"),
+                        "environment": "testnet" if debug_mode else "mainnet"
+                    },
+                    "system": {
+                        **system_metrics,
+                        "network": "connected",
+                        "database": db_status
+                    },
+                    "debug_info": {
+                        "phase": debug_status.get('phase', 'UNKNOWN'),
+                        "trading_allowed": debug_status.get('trading_allowed', False),
+                        "runtime_seconds": debug_status.get('runtime_seconds', 0),
+                        "max_runtime_seconds": debug_status.get('max_runtime_seconds', 3600)
+                    },
+                    "last_update": shared_data.get("last_update", "N/A")
+                }
+                
+                self.wfile.write(json.dumps(status_data, indent=2).encode())
+                
+            except Exception as e:
+                logger.error(f"Status API error: {e}")
+                # Send minimal fallback response
+                fallback_data = {
+                    "trading_bot": {
+                        "status": "error",
+                        "mode": "paper_trading",
+                        "trading_mode": "Paper Trading",
+                        "debug_mode": True,
+                        "strategies_active": 0,
+                        "positions": 0,
+                        "balance": "Error",
+                        "daily_pnl": "Error"
+                    },
+                    "system": {"cpu_usage": "Error", "memory_usage": "Error", "disk_space": "Error"},
+                    "error": str(e)
+                }
+                self.wfile.write(json.dumps(fallback_data).encode())
             
         elif self.path == '/api/positions':
             self.send_response(200)
