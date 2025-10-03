@@ -163,6 +163,30 @@
         .bg-profit { background-color: var(--status-live) !important; }
         .bg-strategies { background-color: var(--status-paper) !important; }
         .bg-health { background-color: #8b5cf6 !important; }
+
+        /* Content Section Display Fix */
+        .content-section {
+            display: none;
+            width: 100%;
+            min-height: 400px;
+        }
+
+        .content-section:first-of-type,
+        .content-section#section-overview {
+            display: block !important;
+        }
+
+        /* Navigation Enhancement */
+        .nav-sidebar .nav-link {
+            cursor: pointer !important;
+            transition: all 0.3s ease;
+        }
+
+        .nav-sidebar .nav-link:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: var(--text-primary) !important;
+            transform: translateX(5px);
+        }
     </style>
 </head>
 
@@ -1102,8 +1126,7 @@
 
         <!-- Footer -->
         <footer class="main-footer">
-            <strong>Copyright &copy; 2025 <a href="#">Open Alpha Trading System</a>.</strong>
-            All rights reserved. Professional Trading Dashboard v4.0
+            Professional Trading Dashboard v4.0
             <div class="float-right d-none d-sm-inline-block">
                 <b>Status:</b> Debug Mode Active - Safe Testing Environment
             </div>
@@ -1135,26 +1158,52 @@
                 "info": false
             });
 
-            // Navigation System
-            $('.nav-sidebar .nav-link').on('click', function(e) {
-                e.preventDefault();
-                
-                const section = $(this).data('section');
-                console.log(`🎯 Switching to section: ${section}`);
+            // Enhanced Navigation System (Override AdminLTE)
+            function switchToSection(sectionName) {
+                console.log(`🎯 Switching to section: ${sectionName}`);
                 
                 // Remove active class from all nav links
                 $('.nav-sidebar .nav-link').removeClass('active');
                 
                 // Add active class to clicked link
-                $(this).addClass('active');
+                $(`.nav-sidebar .nav-link[data-section="${sectionName}"]`).addClass('active');
                 
                 // Hide all sections
                 $('.content-section').hide();
                 
-                // Show target section
-                $(`#section-${section}`).show();
+                // Show target section with animation
+                $(`#section-${sectionName}`).fadeIn(300);
                 
-                console.log(`✅ Successfully switched to: ${section}`);
+                console.log(`✅ Successfully switched to: ${sectionName}`);
+            }
+            
+            // Enhanced click handlers with explicit event handling
+            $('.nav-sidebar .nav-link[data-section]').off('click').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const section = $(this).data('section');
+                if (section) {
+                    switchToSection(section);
+                }
+                
+                return false;
+            });
+            
+            // Also handle direct clicks on navigation items
+            $('.nav-sidebar .nav-item').off('click').on('click', function(e) {
+                const link = $(this).find('.nav-link[data-section]');
+                if (link.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const section = link.data('section');
+                    if (section) {
+                        switchToSection(section);
+                    }
+                    
+                    return false;
+                }
             });
 
             // Real-time API data fetching
@@ -1245,6 +1294,11 @@
             
             // Check debug status every 60 seconds
             setInterval(checkDebugStatus, 60000);
+            
+            // Test navigation functionality
+            console.log('🔧 Testing navigation system...');
+            console.log('📊 Available sections:', $('.content-section').map(function() { return this.id; }).get());
+            console.log('🎯 Navigation links:', $('.nav-sidebar .nav-link[data-section]').map(function() { return $(this).data('section'); }).get());
             
             console.log('✅ AdminLTE Dashboard fully loaded and functional');
         });
