@@ -307,6 +307,22 @@
                             </a>
                         </li>
                         
+                        <!-- DIAGNOSTIC TEST BUTTON -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" style="background-color: #ff6b6b !important; color: white !important;" onclick="alert('ONCLICK WORKS!'); window.testClickHandler(); return false;">
+                                <i class="nav-icon fas fa-bug"></i>
+                                <p>🧪 TEST CLICK</p>
+                            </a>
+                        </li>
+                        
+                        <!-- SIMPLE ALERT TEST -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" style="background-color: #00ff00 !important; color: black !important;" onclick="alert('Simple alert test - if you see this, onclick handlers work!'); return false;">
+                                <i class="nav-icon fas fa-check"></i>
+                                <p>✅ SIMPLE TEST</p>
+                            </a>
+                        </li>
+                        
                     </ul>
                 </nav>
             </div>
@@ -2106,43 +2122,105 @@
 
     <!-- Custom JavaScript -->
     <script>
-        // ===== GLOBAL NAVIGATION SYSTEM =====
-        // Make switchToSection globally accessible
+        // ===== IMMEDIATE DIAGNOSTIC TESTS =====
+        console.log('🔍 NAVIGATION DIAGNOSTIC STARTING...');
+        console.log('📊 jQuery available:', typeof $ !== 'undefined');
+        console.log('📊 Document ready state:', document.readyState);
+        
+        // Test if onclick works immediately
+        window.testClickHandler = function() {
+            console.log('🧪 PRODUCTION TEST: Click handler executed successfully!');
+            
+            const diagnostics = {
+                jquery: typeof $ !== 'undefined',
+                switchFunction: typeof window.switchToSection === 'function',
+                sectionsFound: document.querySelectorAll('.content-section').length,
+                navLinksFound: document.querySelectorAll('.nav-sidebar .nav-link[data-section]').length,
+                currentTime: new Date().toLocaleTimeString()
+            };
+            
+            console.log('🔍 PRODUCTION DIAGNOSTICS:', diagnostics);
+            
+            alert(`PRODUCTION DIAGNOSTIC REPORT:
+            
+✅ Click Handler: WORKING
+📊 jQuery Available: ${diagnostics.jquery ? 'YES' : 'NO'}
+🔧 switchToSection: ${diagnostics.switchFunction ? 'AVAILABLE' : 'MISSING'}
+📄 Content Sections: ${diagnostics.sectionsFound} found
+🔗 Navigation Links: ${diagnostics.navLinksFound} found
+⏰ Test Time: ${diagnostics.currentTime}
+
+${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Navigation function missing!'}`);
+            
+            return false;
+        };
+        
+        // PRODUCTION: Test manual navigation without onclick
+        window.productionTestNavigation = function(sectionName) {
+            console.log(`🧪 PRODUCTION MANUAL TEST: ${sectionName}`);
+            if (window.switchToSection) {
+                return window.switchToSection(sectionName);
+            } else {
+                console.error('❌ PRODUCTION: switchToSection not available');
+                return false;
+            }
+        };
+        
+        // ===== PRODUCTION-GRADE VANILLA JAVASCRIPT NAVIGATION =====
+        // Make switchToSection globally accessible with NO jQuery dependencies
         window.switchToSection = function(sectionName) {
-            console.log(`🎯 Switching to section: ${sectionName}`);
+            console.log(`🎯 PRODUCTION NAVIGATION: Switching to section: ${sectionName}`);
+            console.log(`📊 Function called at: ${new Date().toLocaleTimeString()}`);
             
             try {
-                // Validate section exists
-                const targetSection = $(`#section-${sectionName}`);
-                if (targetSection.length === 0) {
+                // Validate section exists (VANILLA JS - NO JQUERY)
+                console.log(`🔍 Looking for section: #section-${sectionName}`);
+                const targetSection = document.getElementById(`section-${sectionName}`);
+                console.log(`📊 Target section found: ${targetSection ? 'YES' : 'NO'}`);
+                
+                if (!targetSection) {
                     console.error(`❌ Section not found: #section-${sectionName}`);
+                    const availableSections = Array.from(document.querySelectorAll('.content-section')).map(el => el.id);
+                    console.log(`📊 Available sections:`, availableSections);
                     return false;
                 }
                 
-                // Remove active class from all nav links
-                $('.nav-sidebar .nav-link').removeClass('active');
+                // Remove active class from all nav links (VANILLA JS)
+                const allNavLinks = document.querySelectorAll('.nav-sidebar .nav-link');
+                allNavLinks.forEach(link => link.classList.remove('active'));
                 
-                // Add active class to clicked link
-                const navLink = $(`.nav-sidebar .nav-link[data-section="${sectionName}"]`);
-                navLink.addClass('active');
+                // Add active class to clicked link (VANILLA JS)
+                const navLink = document.querySelector(`.nav-sidebar .nav-link[data-section="${sectionName}"]`);
+                if (navLink) {
+                    navLink.classList.add('active');
+                    
+                    // Visual feedback - briefly highlight the nav item
+                    navLink.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+                    setTimeout(() => {
+                        navLink.style.backgroundColor = '';
+                    }, 200);
+                }
                 
-                // Visual feedback - briefly highlight the nav item
-                navLink.css('background-color', 'rgba(59, 130, 246, 0.3)');
+                // Hide all sections (VANILLA JS)
+                const allSections = document.querySelectorAll('.content-section');
+                allSections.forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show target section (VANILLA JS - NO JQUERY ANIMATION)
+                targetSection.style.display = 'block';
+                targetSection.style.opacity = '0';
+                targetSection.style.transition = 'opacity 0.3s ease-in-out';
                 setTimeout(() => {
-                    navLink.css('background-color', '');
-                }, 200);
-                
-                // Hide all sections
-                $('.content-section').hide();
-                
-                // Show target section with animation
-                targetSection.fadeIn(300);
+                    targetSection.style.opacity = '1';
+                }, 10);
                 
                 // Update page title
-                const sectionTitle = navLink.find('p').text() || sectionName;
+                const sectionTitleElement = navLink ? navLink.querySelector('p') : null;
+                const sectionTitle = sectionTitleElement ? sectionTitleElement.textContent : sectionName;
                 document.title = `${sectionTitle} | Professional Trading Dashboard`;
                 
-                console.log(`✅ Successfully switched to: ${sectionName} (${sectionTitle})`);
+                console.log(`✅ PRODUCTION SUCCESS: Switched to ${sectionName} (${sectionTitle})`);
                 return true;
                 
             } catch (error) {
@@ -2284,6 +2362,39 @@
             });
             
             console.log('✅ Navigation system fully initialized with jQuery + Vanilla JS backup');
+            
+            // ===== PRODUCTION FALLBACK: EVENT LISTENERS (NO ONCLICK) =====
+            console.log('🔧 PRODUCTION: Setting up fallback event listeners...');
+            
+            // Additional event listeners as backup to onclick handlers
+            const productionNavLinks = document.querySelectorAll('.nav-sidebar .nav-link[data-section]');
+            console.log(`📊 PRODUCTION: Found ${productionNavLinks.length} navigation links`);
+            
+            productionNavLinks.forEach((link, index) => {
+                const section = link.getAttribute('data-section');
+                console.log(`📌 PRODUCTION: Setting up listener ${index + 1}: ${section}`);
+                
+                // Remove any existing listeners
+                link.removeEventListener('click', handleNavigation);
+                
+                // Add new listener
+                link.addEventListener('click', function(e) {
+                    console.log(`🎯 PRODUCTION EVENT: Navigation clicked via event listener: ${section}`);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    if (window.switchToSection) {
+                        window.switchToSection(section);
+                    } else {
+                        console.error('❌ PRODUCTION ERROR: switchToSection function not available');
+                    }
+                    
+                    return false;
+                }, true); // Use capture phase
+            });
+            
+            console.log('✅ PRODUCTION: Fallback event listeners initialized');
             
             // ===== MANUAL TESTING FUNCTIONS =====
             // Add global test functions for debugging
