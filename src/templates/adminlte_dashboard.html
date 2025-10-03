@@ -582,12 +582,7 @@ function addDebugLog(message) {
     }
 }
 
-// Simplified initialization
-document.addEventListener('DOMContentLoaded', function() {
-    addDebugLog('🚀 SYSTEM: Initializing dashboard...');
-    switchSection('overview');
-    addDebugLog('✅ SYSTEM: Dashboard ready');
-});
+// Consolidated initialization - FIRST PART ONLY (second part below)
 
 // ===== BACKEND API INTEGRATION =====
 console.log('🔌 API INTEGRATION: Loading...');
@@ -703,11 +698,11 @@ function updateSystemOverview(data) {
                 }
             }
             
-            // Update info boxes with real data (no mock values)
-            var strategiesEl = document.querySelector('[data-metric="strategies"] .info-box-number');
+            // Update info boxes with real data (FIXED SELECTORS)
+            var strategiesEl = document.querySelector('[data-metric="strategies"]');
             if (strategiesEl) strategiesEl.textContent = data.trading_bot.strategies_active || '0';
             
-            var portfolioEl = document.querySelector('[data-metric="portfolio"] .info-box-number');
+            var portfolioEl = document.querySelector('[data-metric="portfolio"]');
             if (portfolioEl) {
                 // Show actual balance or indicate if not available
                 var balanceText = data.trading_bot.balance;
@@ -718,10 +713,10 @@ function updateSystemOverview(data) {
                 }
             }
             
-            var positionsEl = document.querySelector('[data-metric="positions"] .info-box-number');
+            var positionsEl = document.querySelector('[data-metric="positions"]');
             if (positionsEl) positionsEl.textContent = data.trading_bot.positions || '0';
             
-            var pnlEl = document.querySelector('[data-metric="pnl"] .info-box-number');
+            var pnlEl = document.querySelector('[data-metric="pnl"]');
             if (pnlEl) {
                 var pnlText = data.trading_bot.daily_pnl;
                 if (pnlText === "Calculating...") {
@@ -871,9 +866,17 @@ function stopAutoRefresh() {
     }
 }
 
-// Initialize API integration when DOM is ready
+// CONSOLIDATED INITIALIZATION - Single DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔌 API INTEGRATION: Initializing...');
+    console.log('� DASHBOARD: Initializing complete system...');
+    addDebugLog('🚀 SYSTEM: Initializing dashboard...');
+    
+    // Initialize dashboard navigation
+    switchSection('overview');
+    addDebugLog('✅ SYSTEM: Dashboard ready');
+    
+    // Initialize API integration
+    console.log('�🔌 API INTEGRATION: Initializing...');
     addDebugLog('🔌 API: Initializing backend integration...');
     
     // Initial data load
@@ -882,7 +885,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start auto-refresh
     setTimeout(startAutoRefresh, 2000); // Start auto-refresh after 2 seconds
     
-    console.log('✅ API INTEGRATION: Ready');
+    console.log('✅ DASHBOARD: Complete system ready');
     addDebugLog('✅ API: Backend integration ready');
 });
 
