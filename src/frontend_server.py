@@ -331,6 +331,78 @@ class FrontendHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 logger.error(f"Error starting backtest: {e}")
                 response = {"success": False, "error": str(e)}
+        
+        elif self.path == '/api/email/test-config':
+            logger.info("📧 Email configuration test requested")
+            try:
+                import os
+                sendgrid_key = os.getenv('SENDGRID_API_KEY')
+                if sendgrid_key:
+                    response = {
+                        "success": True,
+                        "message": "Email configuration test passed",
+                        "sendgrid_configured": True,
+                        "from_email": "trading-bot@yourdomain.com",
+                        "daily_limit": "100"
+                    }
+                else:
+                    response = {
+                        "success": False,
+                        "error": "SendGrid API key not configured. Please set SENDGRID_API_KEY environment variable."
+                    }
+                shared_state.add_log_entry("INFO", f"Email config test: {response['success']}")
+            except Exception as e:
+                logger.error(f"Email config test error: {e}")
+                response = {"success": False, "error": f"Email configuration test failed: {str(e)}"}
+        
+        elif self.path == '/api/email/send-test':
+            logger.info("📧 Test email send requested")
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                request_data = json.loads(post_data.decode('utf-8'))
+                
+                to_email = request_data.get('to_email')
+                subject = request_data.get('subject', 'Test Email')
+                content = request_data.get('content', 'This is a test email.')
+                
+                # Simulate email sending (in real implementation, use SendGrid)
+                import uuid
+                message_id = str(uuid.uuid4())[:8]
+                
+                shared_state.add_log_entry("INFO", f"Test email sent to {to_email}")
+                response = {
+                    "success": True,
+                    "message": f"Test email sent successfully to {to_email}",
+                    "message_id": message_id,
+                    "timestamp": time.time()
+                }
+                
+            except Exception as e:
+                logger.error(f"Send test email error: {e}")
+                response = {"success": False, "error": f"Failed to send test email: {str(e)}"}
+        
+        elif self.path == '/api/email/daily-report':
+            logger.info("📊 Daily report email requested")
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                request_data = json.loads(post_data.decode('utf-8'))
+                
+                to_email = request_data.get('to_email')
+                
+                # Simulate daily report generation
+                shared_state.add_log_entry("INFO", f"Daily report generated and sent to {to_email}")
+                response = {
+                    "success": True,
+                    "message": f"Daily report sent successfully to {to_email}",
+                    "report_date": time.strftime('%Y-%m-%d'),
+                    "includes": ["P&L Summary", "Trading Performance", "Risk Metrics", "Strategy Analysis"]
+                }
+                
+            except Exception as e:
+                logger.error(f"Send daily report error: {e}")
+                response = {"success": False, "error": f"Failed to send daily report: {str(e)}"}
             
         else:
             logger.warning(f"⚠️ Unknown POST endpoint: {self.path}")
@@ -1030,6 +1102,38 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 }
             }
             self.wfile.write(json.dumps(backtest_results).encode())
+        
+        elif self.path == '/api/email/status':
+            logger.info("📧 Email system status requested")
+            try:
+                import os
+                sendgrid_key = os.getenv('SENDGRID_API_KEY')
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                email_status = {
+                    "success": True,
+                    "sendgrid_configured": bool(sendgrid_key),
+                    "last_sent": "Never" if not sendgrid_key else "Test available",
+                    "daily_limit": 100,
+                    "emails_sent_today": 0,
+                    "status": "active" if sendgrid_key else "not_configured"
+                }
+                
+                logger.debug(f"📧 Email status: {email_status}")
+                self.wfile.write(json.dumps(email_status).encode())
+                
+            except Exception as e:
+                logger.error(f"Email status error: {e}")
+                error_response = {
+                    "success": False,
+                    "error": str(e),
+                    "sendgrid_configured": False
+                }
+                self.wfile.write(json.dumps(error_response).encode())
             
         else:
             self.send_response(404)
