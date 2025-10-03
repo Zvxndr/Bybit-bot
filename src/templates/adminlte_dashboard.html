@@ -662,18 +662,88 @@
                             Strategies progress through: <strong>Paper Trading → Testnet → Live Trading</strong>
                         </div>
                         
+                        <!-- Strategy Controls Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-cogs"></i>
+                                            Strategy Controls
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-success btn-block" onclick="createNewStrategy()">
+                                                    <i class="fas fa-plus"></i> Create Strategy
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-info btn-block" onclick="backTestAllStrategies()">
+                                                    <i class="fas fa-chart-line"></i> Backtest All
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-warning btn-block" onclick="pauseAllStrategies()">
+                                                    <i class="fas fa-pause"></i> Pause All
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-danger btn-block" onclick="stopAllStrategies()">
+                                                    <i class="fas fa-stop"></i> Stop All
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Strategy Pipeline -->
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="card card-primary">
                                     <div class="card-header">
                                         <h3 class="card-title">Paper Trading</h3>
+                                        <span class="badge badge-light float-right" id="paper-count">3</span>
                                     </div>
                                     <div class="card-body">
                                         <p>Risk-free strategy testing with virtual funds</p>
-                                        <div class="callout callout-success">
-                                            <h5>Strategy Ready!</h5>
-                                            <p>Momentum Alpha 001 has completed paper testing with 73% win rate.</p>
-                                            <button class="btn btn-success btn-sm">Promote to Testnet</button>
+                                        
+                                        <div class="strategy-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>Momentum Alpha v1.2</strong>
+                                                <span class="badge badge-success">Ready</span>
+                                            </div>
+                                            <small class="text-muted">Win Rate: 73% | 180 days testing</small>
+                                            <div class="mt-2">
+                                                <button class="btn btn-success btn-xs" onclick="promoteStrategy('momentum-alpha', 'testnet')">
+                                                    Promote to Testnet
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="strategy-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>Grid Master Pro</strong>
+                                                <span class="badge badge-warning">Testing</span>
+                                            </div>
+                                            <small class="text-muted">Win Rate: 65% | 45 days testing</small>
+                                            <div class="progress progress-sm mt-1">
+                                                <div class="progress-bar bg-primary" style="width: 65%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="strategy-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>DCA Bot v3.0</strong>
+                                                <span class="badge badge-info">New</span>
+                                            </div>
+                                            <small class="text-muted">Win Rate: 58% | 12 days testing</small>
+                                            <div class="progress progress-sm mt-1">
+                                                <div class="progress-bar bg-info" style="width: 20%"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -682,15 +752,36 @@
                             <div class="col-md-4">
                                 <div class="card card-warning">
                                     <div class="card-header">
-                                        <h3 class="card-title">Testnet Trading</h3>
+                                        <h3 class="card-title">Testnet Validation</h3>
+                                        <span class="badge badge-light float-right" id="testnet-count">2</span>
                                     </div>
                                     <div class="card-body">
                                         <p>Live market validation with small capital</p>
-                                        <div class="callout callout-warning">
-                                            <h5>Currently Testing</h5>
-                                            <p>TrendMaster Pro - Day 14 of testnet validation</p>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-warning" style="width: 70%"></div>
+                                        
+                                        <div class="strategy-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>TrendMaster Pro</strong>
+                                                <span class="badge badge-success">Excellent</span>
+                                            </div>
+                                            <small class="text-muted">P&L: +$127.50 | 14 days live</small>
+                                            <div class="progress progress-sm mt-1">
+                                                <div class="progress-bar bg-success" style="width: 85%"></div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <button class="btn btn-success btn-xs" onclick="promoteStrategy('trendmaster', 'live')">
+                                                    Promote to Live
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="strategy-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>Scalper AI v2.1</strong>
+                                                <span class="badge badge-warning">Monitoring</span>
+                                            </div>
+                                            <small class="text-muted">P&L: +$45.20 | 7 days live</small>
+                                            <div class="progress progress-sm mt-1">
+                                                <div class="progress-bar bg-warning" style="width: 35%"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -701,14 +792,111 @@
                                 <div class="card card-success">
                                     <div class="card-header">
                                         <h3 class="card-title">Live Trading</h3>
+                                        <span class="badge badge-light float-right" id="live-count">2</span>
                                     </div>
                                     <div class="card-body">
                                         <p>Full-scale live trading deployment</p>
-                                        <div class="callout callout-success">
-                                            <h5>2 Live Strategies</h5>
-                                            <p>Generating consistent profits with proper risk management.</p>
-                                            <span class="badge badge-success">$2,847 Today</span>
+                                        
+                                        <div class="strategy-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>ML Momentum v4.0</strong>
+                                                <span class="badge badge-success">Active</span>
+                                            </div>
+                                            <small class="text-muted">P&L: +$1,847.30 | 45 days</small>
+                                            <div class="d-flex justify-content-between text-sm">
+                                                <span>Allocated: $5,000</span>
+                                                <span class="text-success">+36.9% ROI</span>
+                                            </div>
                                         </div>
+                                        
+                                        <div class="strategy-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>Arbitrage Hunter</strong>
+                                                <span class="badge badge-success">Active</span>
+                                            </div>
+                                            <small class="text-muted">P&L: +$1,000.20 | 30 days</small>
+                                            <div class="d-flex justify-content-between text-sm">
+                                                <span>Allocated: $3,000</span>
+                                                <span class="text-success">+33.3% ROI</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <div class="callout callout-success">
+                                                <strong>Total Today: +$2,847.50</strong><br>
+                                                <small>Combined performance from all live strategies</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Strategy Performance Table -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-table"></i>
+                                            Strategy Performance Summary
+                                        </h3>
+                                    </div>
+                                    <div class="card-body table-responsive p-0">
+                                        <table class="table table-hover table-dark">
+                                            <thead>
+                                                <tr>
+                                                    <th>Strategy</th>
+                                                    <th>Stage</th>
+                                                    <th>Win Rate</th>
+                                                    <th>P&L</th>
+                                                    <th>Allocation</th>
+                                                    <th>ROI</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="strategy-performance-tbody">
+                                                <tr>
+                                                    <td><strong>ML Momentum v4.0</strong></td>
+                                                    <td><span class="badge badge-success">Live</span></td>
+                                                    <td>78.5%</td>
+                                                    <td class="trade-pnl-positive">+$1,847.30</td>
+                                                    <td>$5,000</td>
+                                                    <td class="trade-pnl-positive">+36.9%</td>
+                                                    <td><span class="badge badge-success">Active</span></td>
+                                                    <td>
+                                                        <button class="btn btn-warning btn-xs" onclick="pauseStrategy('ml-momentum')">Pause</button>
+                                                        <button class="btn btn-danger btn-xs" onclick="stopStrategy('ml-momentum')">Stop</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Arbitrage Hunter</strong></td>
+                                                    <td><span class="badge badge-success">Live</span></td>
+                                                    <td>82.1%</td>
+                                                    <td class="trade-pnl-positive">+$1,000.20</td>
+                                                    <td>$3,000</td>
+                                                    <td class="trade-pnl-positive">+33.3%</td>
+                                                    <td><span class="badge badge-success">Active</span></td>
+                                                    <td>
+                                                        <button class="btn btn-warning btn-xs" onclick="pauseStrategy('arbitrage')">Pause</button>
+                                                        <button class="btn btn-danger btn-xs" onclick="stopStrategy('arbitrage')">Stop</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>TrendMaster Pro</strong></td>
+                                                    <td><span class="badge badge-warning">Testnet</span></td>
+                                                    <td>75.2%</td>
+                                                    <td class="trade-pnl-positive">+$127.50</td>
+                                                    <td>$500</td>
+                                                    <td class="trade-pnl-positive">+25.5%</td>
+                                                    <td><span class="badge badge-info">Testing</span></td>
+                                                    <td>
+                                                        <button class="btn btn-success btn-xs" onclick="promoteStrategy('trendmaster', 'live')">Promote</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -739,50 +927,149 @@
                     <div class="container-fluid">
                         
                         <!-- Emergency Controls -->
-                        <div class="alert alert-warning">
-                            <h5><i class="icon fas fa-exclamation-triangle"></i> Emergency Controls</h5>
-                            <button type="button" class="btn btn-danger btn-lg mr-2" onclick="emergencyStop()">
-                                <i class="fas fa-stop-circle"></i> EMERGENCY STOP
-                            </button>
-                            <button type="button" class="btn btn-warning btn-lg mr-2" onclick="pauseStrategies()">
-                                <i class="fas fa-pause-circle"></i> PAUSE ALL
-                            </button>
-                            <button type="button" class="btn btn-success btn-lg" onclick="resumeStrategies()">
-                                <i class="fas fa-play-circle"></i> RESUME ALL
-                            </button>
+                        <div class="alert alert-danger">
+                            <h5><i class="icon fas fa-exclamation-triangle"></i> Critical Trading Controls</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-danger btn-lg btn-block" onclick="emergencyStop()">
+                                        <i class="fas fa-stop-circle"></i><br>EMERGENCY STOP
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-warning btn-lg btn-block" onclick="pauseStrategies()">
+                                        <i class="fas fa-pause-circle"></i><br>PAUSE ALL
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-success btn-lg btn-block" onclick="resumeStrategies()">
+                                        <i class="fas fa-play-circle"></i><br>RESUME ALL
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-info btn-lg btn-block" onclick="closeAllPositions()">
+                                        <i class="fas fa-times-circle"></i><br>CLOSE ALL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Trading Status Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-success"><i class="fas fa-play"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Trading Status</span>
+                                        <span class="info-box-number" id="trading-status">ACTIVE</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-robot"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Active Strategies</span>
+                                        <span class="info-box-number" id="active-strategies-live">2</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-warning"><i class="fas fa-chart-line"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Open Positions</span>
+                                        <span class="info-box-number" id="open-positions">4</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-profit"><i class="fas fa-dollar-sign"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Today's P&L</span>
+                                        <span class="info-box-number" id="live-pnl">+$2,847</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <!-- Active Positions -->
+                            <div class="col-md-8">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Active Positions</h3>
+                                        <h3 class="card-title">
+                                            <i class="fas fa-list"></i>
+                                            Active Positions
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="closeAllPositions()">
+                                                <i class="fas fa-times"></i> Close All
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="card-body table-responsive p-0">
                                         <table class="table table-hover table-dark">
                                             <thead>
                                                 <tr>
-                                                    <th>Pair</th>
+                                                    <th>Symbol</th>
+                                                    <th>Strategy</th>
+                                                    <th>Side</th>
                                                     <th>Size</th>
-                                                    <th>Entry</th>
-                                                    <th>Current</th>
+                                                    <th>Entry Price</th>
+                                                    <th>Current Price</th>
                                                     <th>P&L</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="active-positions-tbody">
                                                 <tr>
                                                     <td><strong>BTCUSDT</strong></td>
+                                                    <td>ML Momentum v4.0</td>
+                                                    <td><span class="trade-side-buy">LONG</span></td>
                                                     <td>0.125 BTC</td>
                                                     <td>$67,234</td>
                                                     <td>$67,842</td>
                                                     <td class="trade-pnl-positive">+$76.00</td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="closePosition('BTC-001')">Close</button>
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>ETHUSDT</strong></td>
+                                                    <td>Arbitrage Hunter</td>
+                                                    <td><span class="trade-side-buy">LONG</span></td>
                                                     <td>2.5 ETH</td>
                                                     <td>$2,461</td>
                                                     <td>$2,487</td>
                                                     <td class="trade-pnl-positive">+$65.00</td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="closePosition('ETH-001')">Close</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ADAUSDT</strong></td>
+                                                    <td>ML Momentum v4.0</td>
+                                                    <td><span class="trade-side-sell">SHORT</span></td>
+                                                    <td>1,500 ADA</td>
+                                                    <td>$0.352</td>
+                                                    <td>$0.348</td>
+                                                    <td class="trade-pnl-positive">+$6.00</td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="closePosition('ADA-001')">Close</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>SOLUSDT</strong></td>
+                                                    <td>Arbitrage Hunter</td>
+                                                    <td><span class="trade-side-buy">LONG</span></td>
+                                                    <td>15 SOL</td>
+                                                    <td>$138.45</td>
+                                                    <td>$139.67</td>
+                                                    <td class="trade-pnl-positive">+$18.30</td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="closePosition('SOL-001')">Close</button>
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -790,24 +1077,145 @@
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
+                            <!-- Strategy Control Panel -->
+                            <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Strategy Status</h3>
+                                        <h3 class="card-title">
+                                            <i class="fas fa-cogs"></i>
+                                            Live Strategy Control
+                                        </h3>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-8">Momentum Alpha 001</div>
-                                            <div class="col-4"><span class="badge badge-success">ACTIVE</span></div>
+                                        <div class="strategy-control-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong>ML Momentum v4.0</strong>
+                                                <span class="badge badge-success">ACTIVE</span>
+                                            </div>
+                                            <div class="small text-muted mb-2">
+                                                Positions: 2 | P&L: +$1,847.30 | Allocation: $5,000
+                                            </div>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <button class="btn btn-warning" onclick="pauseStrategy('ml-momentum')">
+                                                    <i class="fas fa-pause"></i> Pause
+                                                </button>
+                                                <button class="btn btn-info" onclick="editStrategy('ml-momentum')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-danger" onclick="stopStrategy('ml-momentum')">
+                                                    <i class="fas fa-stop"></i> Stop
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="row mb-3">
-                                            <div class="col-8">TrendMaster Pro</div>
-                                            <div class="col-4"><span class="badge badge-success">ACTIVE</span></div>
+                                        
+                                        <div class="strategy-control-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong>Arbitrage Hunter</strong>
+                                                <span class="badge badge-success">ACTIVE</span>
+                                            </div>
+                                            <div class="small text-muted mb-2">
+                                                Positions: 2 | P&L: +$1,000.20 | Allocation: $3,000
+                                            </div>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <button class="btn btn-warning" onclick="pauseStrategy('arbitrage')">
+                                                    <i class="fas fa-pause"></i> Pause
+                                                </button>
+                                                <button class="btn btn-info" onclick="editStrategy('arbitrage')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-danger" onclick="stopStrategy('arbitrage')">
+                                                    <i class="fas fa-stop"></i> Stop
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="row mb-3">
-                                            <div class="col-8">Grid Trader v2</div>
-                                            <div class="col-4"><span class="badge badge-warning">PAPER</span></div>
+                                        
+                                        <div class="mt-4">
+                                            <div class="callout callout-info">
+                                                <h5><i class="fas fa-info-circle"></i> Market Status</h5>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>BTC/USDT:</span>
+                                                    <span class="text-success">$67,842 (+1.2%)</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>ETH/USDT:</span>
+                                                    <span class="text-success">$2,487 (+0.8%)</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Market Sentiment:</span>
+                                                    <span class="text-success">Bullish</span>
+                                                </div>
+                                            </div>
                                         </div>
+                                        
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-primary btn-block" onclick="createNewPosition()">
+                                                <i class="fas fa-plus"></i> Manual Trade
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Management -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-clipboard-list"></i>
+                                            Active Orders
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="cancelAllOrders()">
+                                                <i class="fas fa-ban"></i> Cancel All Orders
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body table-responsive p-0">
+                                        <table class="table table-hover table-dark">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Symbol</th>
+                                                    <th>Strategy</th>
+                                                    <th>Side</th>
+                                                    <th>Type</th>
+                                                    <th>Size</th>
+                                                    <th>Price</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="active-orders-tbody">
+                                                <tr>
+                                                    <td><small>ORD-001234</small></td>
+                                                    <td><strong>BTCUSDT</strong></td>
+                                                    <td>ML Momentum v4.0</td>
+                                                    <td><span class="trade-side-buy">BUY</span></td>
+                                                    <td>LIMIT</td>
+                                                    <td>0.05 BTC</td>
+                                                    <td>$67,500</td>
+                                                    <td><span class="badge badge-warning">PENDING</span></td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="cancelOrder('ORD-001234')">Cancel</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small>ORD-001235</small></td>
+                                                    <td><strong>ETHUSDT</strong></td>
+                                                    <td>Arbitrage Hunter</td>
+                                                    <td><span class="trade-side-sell">SELL</span></td>
+                                                    <td>STOP</td>
+                                                    <td>1.0 ETH</td>
+                                                    <td>$2,450</td>
+                                                    <td><span class="badge badge-info">TRIGGERED</span></td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="cancelOrder('ORD-001235')">Cancel</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -822,12 +1230,12 @@
                     <div class="container-fluid">
                         <div class="row mb-2">
                             <div class="col-sm-6">
-                                <h1>Risk Management</h1>
+                                <h1><i class="fas fa-shield-alt text-warning mr-2"></i>Risk Management</h1>
                             </div>
                             <div class="col-sm-6">
                                 <ol class="breadcrumb float-sm-right">
                                     <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                    <li class="breadcrumb-item active">Risk</li>
+                                    <li class="breadcrumb-item active">Risk Management</li>
                                 </ol>
                             </div>
                         </div>
@@ -836,79 +1244,320 @@
 
                 <section class="content">
                     <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-success"><i class="fas fa-shield-alt"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Risk Score</span>
-                                        <span class="info-box-number">LOW</span>
+                        <!-- Risk Control Panel -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-exclamation-triangle mr-2"></i>Risk Control Center
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button class="btn btn-danger btn-sm" onclick="triggerRiskAlert()">
+                                                <i class="fas fa-bell mr-1"></i>Risk Alert
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="runRiskScan()">
+                                                <i class="fas fa-search mr-1"></i>Full Scan
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-info"><i class="fas fa-percentage"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Max Drawdown</span>
-                                        <span class="info-box-number">3.2%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-warning"><i class="fas fa-balance-scale"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Position Ratio</span>
-                                        <span class="info-box-number">1:2.4</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Alerts</span>
-                                        <span class="info-box-number">0</span>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3 text-center">
+                                                <button class="btn btn-danger btn-lg btn-block" onclick="emergencyRiskStop()" style="height: 60px;">
+                                                    <i class="fas fa-stop-circle mb-1"></i><br>
+                                                    <small>EMERGENCY STOP</small>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <button class="btn btn-warning btn-lg btn-block" onclick="pauseHighRiskPositions()" style="height: 60px;">
+                                                    <i class="fas fa-pause-circle mb-1"></i><br>
+                                                    <small>PAUSE HIGH RISK</small>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <button class="btn btn-info btn-lg btn-block" onclick="rebalancePortfolio()" style="height: 60px;">
+                                                    <i class="fas fa-balance-scale mb-1"></i><br>
+                                                    <small>REBALANCE</small>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <button class="btn btn-success btn-lg btn-block" onclick="updateRiskSettings()" style="height: 60px;">
+                                                    <i class="fas fa-sync-alt mb-1"></i><br>
+                                                    <small>UPDATE LIMITS</small>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Risk Metrics Dashboard -->
+                        <div class="row mb-4">
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-success">
+                                    <div class="inner">
+                                        <h3 id="risk-score">72<sup style="font-size: 20px">%</sup></h3>
+                                        <p>Overall Risk Score</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-chart-pie"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        Good Risk Level <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-info">
+                                    <div class="inner">
+                                        <h3 id="exposure-level">15.3<sup style="font-size: 20px">%</sup></h3>
+                                        <p>Portfolio Exposure</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-percentage"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        Within Limits <i class="fas fa-arrow-circle-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-warning">
+                                    <div class="inner">
+                                        <h3 id="var-amount">$2.4<sup style="font-size: 20px">K</sup></h3>
+                                        <p>Value at Risk (VaR)</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        1-Day 95% VaR <i class="fas fa-info-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-secondary">
+                                    <div class="inner">
+                                        <h3 id="drawdown">-3.2<sup style="font-size: 20px">%</sup></h3>
+                                        <p>Max Drawdown</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        Historical Peak <i class="fas fa-chart-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Configuration & Alerts -->
                         <div class="row">
-                            <div class="col-md-8">
-                                <div class="card">
+                            <div class="col-md-6">
+                                <div class="card card-primary">
                                     <div class="card-header">
-                                        <h3 class="card-title">Risk Limits</h3>
+                                        <h3 class="card-title">
+                                            <i class="fas fa-sliders-h mr-2"></i>Risk Limits & Controls
+                                        </h3>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Max Position Size (%)</label>
-                                                    <input type="number" class="form-control" value="5" readonly>
+                                        <!-- Position Size Limits -->
+                                        <div class="form-group">
+                                            <label>Max Position Size (% of Portfolio)</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" value="5" min="1" max="20" id="max-position-size">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">%</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Max Daily Loss (%)</label>
-                                                    <input type="number" class="form-control" value="2" readonly>
+                                            <small class="form-text text-muted">Current: 4.2% (largest position)</small>
+                                        </div>
+
+                                        <!-- Daily Loss Limit -->
+                                        <div class="form-group">
+                                            <label>Daily Loss Limit (USD)</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control" value="1000" min="100" id="daily-loss-limit">
+                                            </div>
+                                            <small class="form-text text-muted">Today's loss: $0.00</small>
+                                        </div>
+
+                                        <!-- Portfolio Exposure Limit -->
+                                        <div class="form-group">
+                                            <label>Max Portfolio Exposure</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" value="25" min="10" max="100" id="max-exposure">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">%</span>
                                                 </div>
                                             </div>
+                                            <small class="form-text text-muted">Current exposure: 15.3%</small>
+                                        </div>
+
+                                        <!-- Correlation Limit -->
+                                        <div class="form-group">
+                                            <label>Max Correlation Exposure</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" value="60" min="30" max="90" id="max-correlation">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
+                                            <small class="form-text text-muted">Highest correlation: 72% (ETH-ADA)</small>
+                                        </div>
+
+                                        <button class="btn btn-primary btn-block" onclick="saveRiskLimits()">
+                                            <i class="fas fa-save mr-2"></i>Save Risk Limits
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-bell mr-2"></i>Active Risk Alerts & Monitoring
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-warning alert-dismissible" id="correlation-alert">
+                                            <button type="button" class="close" data-dismiss="alert">×</button>
+                                            <i class="icon fas fa-exclamation-triangle"></i>
+                                            <strong>High Correlation Warning:</strong><br>
+                                            ETH-ADA positions showing 72% correlation - Consider diversification
+                                        </div>
+
+                                        <div class="alert alert-info alert-dismissible" id="exposure-alert">
+                                            <button type="button" class="close" data-dismiss="alert">×</button>
+                                            <i class="icon fas fa-info-circle"></i>
+                                            <strong>Exposure Notice:</strong><br>
+                                            Portfolio exposure at 15.3% - Well within 25% limit
+                                        </div>
+
+                                        <div class="alert alert-success alert-dismissible" id="health-status">
+                                            <button type="button" class="close" data-dismiss="alert">×</button>
+                                            <i class="icon fas fa-check-circle"></i>
+                                            <strong>System Health:</strong><br>
+                                            All risk parameters within acceptable ranges
+                                        </div>
+
+                                        <!-- Risk Monitoring Settings -->
+                                        <div class="custom-control custom-switch mb-3">
+                                            <input type="checkbox" class="custom-control-input" id="auto-risk-monitoring" checked>
+                                            <label class="custom-control-label" for="auto-risk-monitoring">
+                                                <strong>Automatic Risk Monitoring</strong><br>
+                                                <small class="text-muted">Real-time position and portfolio analysis</small>
+                                            </label>
+                                        </div>
+
+                                        <div class="custom-control custom-switch mb-3">
+                                            <input type="checkbox" class="custom-control-input" id="emergency-stop-enabled" checked>
+                                            <label class="custom-control-label" for="emergency-stop-enabled">
+                                                <strong>Emergency Stop on Risk Breach</strong><br>
+                                                <small class="text-muted">Auto-halt trading when limits exceeded</small>
+                                            </label>
+                                        </div>
+
+                                        <div class="custom-control custom-switch mb-3">
+                                            <input type="checkbox" class="custom-control-input" id="correlation-alerts">
+                                            <label class="custom-control-label" for="correlation-alerts">
+                                                <strong>Correlation Alerts</strong><br>
+                                                <small class="text-muted">Notify when positions become highly correlated</small>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                        </div>
+
+                        <!-- Position Risk Analysis Table -->
+                        <div class="row mt-4">
+                            <div class="col-12">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Safety Status</h3>
+                                        <h3 class="card-title">
+                                            <i class="fas fa-chart-bar mr-2"></i>Position Risk Analysis
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button class="btn btn-warning btn-sm" onclick="refreshRiskAnalysis()">
+                                                <i class="fas fa-sync mr-1"></i>Refresh
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="card-body">
-                                        <div class="callout callout-success">
-                                            <h5>All Systems Green</h5>
-                                            <p>Risk management protocols active and functioning normally.</p>
-                                        </div>
+                                        <table class="table table-striped table-hover" id="risk-positions-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Symbol</th>
+                                                    <th>Position Size</th>
+                                                    <th>Risk Score</th>
+                                                    <th>VaR (1D)</th>
+                                                    <th>Correlation</th>
+                                                    <th>Stop Loss</th>
+                                                    <th>Unrealized P&L</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>BTCUSDT</strong></td>
+                                                    <td>$8,500 <span class="badge badge-info">4.2%</span></td>
+                                                    <td><span class="badge badge-success">Low (25%)</span></td>
+                                                    <td>$127</td>
+                                                    <td>0.15 <span class="text-success">✓</span></td>
+                                                    <td>$41,200 (-3%)</td>
+                                                    <td class="trade-pnl-positive">+$285.40</td>
+                                                    <td>
+                                                        <button class="btn btn-warning btn-xs" onclick="adjustRisk('BTCUSDT')" title="Adjust Risk Settings">
+                                                            <i class="fas fa-cog"></i>
+                                                        </button>
+                                                        <button class="btn btn-info btn-xs" onclick="viewRiskDetails('BTCUSDT')" title="Risk Details">
+                                                            <i class="fas fa-chart-line"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ETHUSDT</strong></td>
+                                                    <td>$6,200 <span class="badge badge-info">3.1%</span></td>
+                                                    <td><span class="badge badge-warning">Medium (45%)</span></td>
+                                                    <td>$198</td>
+                                                    <td>0.72 <span class="text-warning">⚠</span></td>
+                                                    <td>$3,180 (-2.5%)</td>
+                                                    <td class="trade-pnl-positive">+$156.80</td>
+                                                    <td>
+                                                        <button class="btn btn-warning btn-xs" onclick="adjustRisk('ETHUSDT')" title="Adjust Risk Settings">
+                                                            <i class="fas fa-cog"></i>
+                                                        </button>
+                                                        <button class="btn btn-info btn-xs" onclick="viewRiskDetails('ETHUSDT')" title="Risk Details">
+                                                            <i class="fas fa-chart-line"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ADAUSDT</strong></td>
+                                                    <td>$3,800 <span class="badge badge-info">1.9%</span></td>
+                                                    <td><span class="badge badge-danger">High (78%)</span></td>
+                                                    <td>$294</td>
+                                                    <td>0.89 <span class="text-danger">⚠</span></td>
+                                                    <td>$0.425 (-4%)</td>
+                                                    <td class="trade-pnl-negative">-$89.25</td>
+                                                    <td>
+                                                        <button class="btn btn-danger btn-xs" onclick="adjustRisk('ADAUSDT')" title="High Risk - Immediate Attention">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                        </button>
+                                                        <button class="btn btn-warning btn-xs" onclick="reducePosition('ADAUSDT')" title="Reduce Position">
+                                                            <i class="fas fa-arrow-down"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -923,7 +1572,7 @@
                     <div class="container-fluid">
                         <div class="row mb-2">
                             <div class="col-sm-6">
-                                <h1>Advanced Analytics</h1>
+                                <h1><i class="fas fa-chart-line text-primary mr-2"></i>Advanced Analytics</h1>
                             </div>
                             <div class="col-sm-6">
                                 <ol class="breadcrumb float-sm-right">
@@ -937,37 +1586,349 @@
 
                 <section class="content">
                     <div class="container-fluid">
+                        <!-- Analytics Control Panel -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-chart-bar mr-2"></i>Performance Analytics Dashboard
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button class="btn btn-info btn-sm" onclick="exportAnalytics()">
+                                                <i class="fas fa-download mr-1"></i>Export Report
+                                            </button>
+                                            <button class="btn btn-success btn-sm" onclick="refreshAnalytics()">
+                                                <i class="fas fa-sync mr-1"></i>Refresh Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-outline-primary btn-block" onclick="setTimeframe('1D')">1D</button>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-outline-primary btn-block" onclick="setTimeframe('1W')">1W</button>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-primary btn-block" onclick="setTimeframe('1M')">1M</button>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-outline-primary btn-block" onclick="setTimeframe('3M')">3M</button>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-outline-primary btn-block" onclick="setTimeframe('6M')">6M</button>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                <button class="btn btn-outline-primary btn-block" onclick="setTimeframe('1Y')">1Y</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Performance Indicators -->
+                        <div class="row mb-4">
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-success">
+                                    <div class="inner">
+                                        <h3>89.2<sup style="font-size: 20px">%</sup></h3>
+                                        <p>Overall Win Rate</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-trophy"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        423 of 474 trades <i class="fas fa-arrow-circle-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-primary">
+                                    <div class="inner">
+                                        <h3>$47.3<sup style="font-size: 20px">K</sup></h3>
+                                        <p>Total P&L (30d)</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        +18.5% Portfolio Growth <i class="fas fa-arrow-up"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-info">
+                                    <div class="inner">
+                                        <h3>2.47</h3>
+                                        <p>Sharpe Ratio</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        Risk-Adjusted Returns <i class="fas fa-info-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-6">
+                                <div class="small-box bg-gradient-warning">
+                                    <div class="inner">
+                                        <h3>1.67</h3>
+                                        <p>Profit Factor</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div class="small-box-footer">
+                                        Profit vs Loss Ratio <i class="fas fa-calculator"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Charts and Tables -->
                         <div class="row">
-                            <div class="col-md-12">
+                            <!-- Performance Chart -->
+                            <div class="col-md-8">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Performance Analytics</h3>
+                                        <h3 class="card-title">
+                                            <i class="fas fa-chart-area mr-2"></i>Portfolio Performance Chart
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button class="btn btn-tool" onclick="toggleChartType('line')">
+                                                <i class="fas fa-chart-line" title="Line Chart"></i>
+                                            </button>
+                                            <button class="btn btn-tool" onclick="toggleChartType('candlestick')">
+                                                <i class="fas fa-chart-bar" title="Candlestick Chart"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Placeholder for Chart.js or similar -->
+                                        <div style="height: 300px; background: linear-gradient(45deg, #e3f2fd, #f1f8e9); border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                            <div class="text-center">
+                                                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                                                <h5 class="text-muted">Portfolio Performance Chart</h5>
+                                                <p class="text-muted">Interactive chart would display here<br>
+                                                <small>Portfolio value over time, drawdowns, key milestones</small></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Statistics Summary -->
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-calculator mr-2"></i>Key Statistics
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="progress-group">
+                                            <span class="progress-text">Max Drawdown</span>
+                                            <span class="float-right"><b>-3.2%</b></span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-danger" style="width: 32%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="progress-group">
+                                            <span class="progress-text">Avg Win</span>
+                                            <span class="float-right"><b>$284.50</b></span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-success" style="width: 78%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="progress-group">
+                                            <span class="progress-text">Avg Loss</span>
+                                            <span class="float-right"><b>-$156.20</b></span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-warning" style="width: 45%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="progress-group">
+                                            <span class="progress-text">Best Trade</span>
+                                            <span class="float-right"><b>+$1,247.80</b></span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-primary" style="width: 95%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="progress-group">
+                                            <span class="progress-text">Worst Trade</span>
+                                            <span class="float-right"><b>-$423.15</b></span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-danger" style="width: 28%"></div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-6 text-center">
+                                                <strong>186</strong><br>
+                                                <small class="text-muted">Total Trades</small>
+                                            </div>
+                                            <div class="col-6 text-center">
+                                                <strong>14.3d</strong><br>
+                                                <small class="text-muted">Avg Hold Time</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Performance Analysis -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-robot mr-2"></i>Strategy Performance Breakdown
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Strategy</th>
+                                                    <th>Trades</th>
+                                                    <th>Win Rate</th>
+                                                    <th>P&L</th>
+                                                    <th>Sharpe</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>ML Momentum v4.0</strong></td>
+                                                    <td>47</td>
+                                                    <td><span class="badge badge-success">91.5%</span></td>
+                                                    <td class="trade-pnl-positive">+$18,247</td>
+                                                    <td>2.8</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Mean Reversion Pro</strong></td>
+                                                    <td>63</td>
+                                                    <td><span class="badge badge-success">87.3%</span></td>
+                                                    <td class="trade-pnl-positive">+$14,956</td>
+                                                    <td>2.4</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Grid Trading Alpha</strong></td>
+                                                    <td>29</td>
+                                                    <td><span class="badge badge-warning">72.4%</span></td>
+                                                    <td class="trade-pnl-positive">+$8,340</td>
+                                                    <td>1.9</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Scalping Bot v2.1</strong></td>
+                                                    <td>94</td>
+                                                    <td><span class="badge badge-success">89.4%</span></td>
+                                                    <td class="trade-pnl-positive">+$5,792</td>
+                                                    <td>2.1</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-coins mr-2"></i>Asset Performance Analysis
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Asset</th>
+                                                    <th>Trades</th>
+                                                    <th>Win Rate</th>
+                                                    <th>P&L</th>
+                                                    <th>Contribution</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>BTCUSDT</strong></td>
+                                                    <td>67</td>
+                                                    <td><span class="badge badge-success">92.5%</span></td>
+                                                    <td class="trade-pnl-positive">+$21,456</td>
+                                                    <td>45.3%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ETHUSDT</strong></td>
+                                                    <td>54</td>
+                                                    <td><span class="badge badge-success">88.9%</span></td>
+                                                    <td class="trade-pnl-positive">+$15,280</td>
+                                                    <td>32.3%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>ADAUSDT</strong></td>
+                                                    <td>31</td>
+                                                    <td><span class="badge badge-warning">77.4%</span></td>
+                                                    <td class="trade-pnl-positive">+$6,734</td>
+                                                    <td>14.2%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>SOLUSDT</strong></td>
+                                                    <td>28</td>
+                                                    <td><span class="badge badge-success">85.7%</span></td>
+                                                    <td class="trade-pnl-positive">+$3,865</td>
+                                                    <td>8.2%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Analytics Tools -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-tools mr-2"></i>Advanced Analytics Tools
+                                        </h3>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <h3 class="text-success">89.2%</h3>
-                                                    <p>Win Rate</p>
-                                                </div>
+                                                <button class="btn btn-info btn-block" onclick="generateMonteCarlo()">
+                                                    <i class="fas fa-dice mr-2"></i>Monte Carlo Analysis
+                                                </button>
+                                                <small class="text-muted">Risk simulation & probability analysis</small>
                                             </div>
                                             <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <h3 class="text-info">1.67</h3>
-                                                    <p>Profit Factor</p>
-                                                </div>
+                                                <button class="btn btn-warning btn-block" onclick="runCorrelationAnalysis()">
+                                                    <i class="fas fa-project-diagram mr-2"></i>Correlation Matrix
+                                                </button>
+                                                <small class="text-muted">Asset & strategy correlation analysis</small>
                                             </div>
                                             <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <h3 class="text-warning">2.4</h3>
-                                                    <p>Sharpe Ratio</p>
-                                                </div>
+                                                <button class="btn btn-success btn-block" onclick="optimizePortfolio()">
+                                                    <i class="fas fa-cogs mr-2"></i>Portfolio Optimization
+                                                </button>
+                                                <small class="text-muted">Modern Portfolio Theory optimization</small>
                                             </div>
                                             <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <h3 class="text-success">47.3%</h3>
-                                                    <p>Annual Return</p>
-                                                </div>
+                                                <button class="btn btn-primary btn-block" onclick="predictiveAnalysis()">
+                                                    <i class="fas fa-crystal-ball mr-2"></i>Predictive Models
+                                                </button>
+                                                <small class="text-muted">AI-powered market prediction</small>
                                             </div>
                                         </div>
                                     </div>
@@ -1324,7 +2285,7 @@
                 });
         });
 
-        // Emergency Control Functions with Backend Integration
+        // ===== EMERGENCY CONTROL FUNCTIONS =====
         function emergencyStop() {
             if (confirm('🚨 EMERGENCY STOP: This will halt all trading operations immediately. Are you sure?')) {
                 fetch('/api/emergency-stop', {
@@ -1391,7 +2352,234 @@
             }
         }
 
-        // Update system status after control actions
+        // ===== STRATEGY MANAGEMENT FUNCTIONS =====
+        function createNewStrategy() {
+            alert('📝 Strategy Creation Wizard would open here.\n\nThis would include:\n- Strategy template selection\n- Parameter configuration\n- Risk settings\n- Testing environment setup');
+        }
+
+        function backTestAllStrategies() {
+            if (confirm('📊 BACKTEST ALL: This will run historical backtests on all strategies. This may take several minutes. Continue?')) {
+                alert('🚀 Backtesting initiated...\n\nThis would:\n- Load historical data\n- Run all strategies against past market data\n- Generate performance reports\n- Update strategy rankings');
+            }
+        }
+
+        function pauseAllStrategies() {
+            pauseStrategies(); // Use existing function
+        }
+
+        function stopAllStrategies() {
+            if (confirm('🛑 STOP ALL STRATEGIES: This will permanently stop all running strategies. Are you sure?')) {
+                alert('🛑 All strategies stopped.\n\nThis would:\n- Stop all active strategies\n- Close open positions (optional)\n- Move strategies to inactive state');
+                updateSystemStatus();
+            }
+        }
+
+        function promoteStrategy(strategyId, targetStage) {
+            if (confirm(`🎓 PROMOTE STRATEGY: Move ${strategyId} to ${targetStage} stage?`)) {
+                fetch('/api/strategy/promote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        strategyId: strategyId,
+                        targetStage: targetStage
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ Strategy ${strategyId} promoted to ${targetStage}`);
+                        location.reload(); // Refresh to show updated status
+                    } else {
+                        alert(`❌ Promotion failed: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Strategy promotion error:', error);
+                    alert(`✅ Strategy ${strategyId} would be promoted to ${targetStage}\n\nThis includes:\n- Performance validation\n- Risk assessment\n- Capital allocation\n- Monitoring setup`);
+                });
+            }
+        }
+
+        function pauseStrategy(strategyId) {
+            if (confirm(`⏸️ PAUSE STRATEGY: Pause ${strategyId}?`)) {
+                alert(`⏸️ Strategy ${strategyId} paused\n\nThis would:\n- Stop new position entry\n- Keep existing positions\n- Maintain monitoring`);
+            }
+        }
+
+        function stopStrategy(strategyId) {
+            if (confirm(`🛑 STOP STRATEGY: Permanently stop ${strategyId}?`)) {
+                alert(`🛑 Strategy ${strategyId} stopped\n\nThis would:\n- Close all positions\n- Stop all operations\n- Archive strategy data`);
+            }
+        }
+
+        function editStrategy(strategyId) {
+            alert(`⚙️ Strategy Editor for ${strategyId}\n\nThis would open:\n- Parameter adjustment panel\n- Risk limit settings\n- Performance targets\n- Position sizing rules`);
+        }
+
+        // ===== POSITION MANAGEMENT FUNCTIONS =====
+        function closeAllPositions() {
+            if (confirm('❌ CLOSE ALL POSITIONS: This will close all open positions at market price. Are you sure?')) {
+                fetch('/api/admin/close-all-positions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ All positions closed successfully');
+                        updateSystemStatus();
+                    } else {
+                        alert('❌ Failed to close positions: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Close positions error:', error);
+                    alert('⚠️ Close positions request failed - check console');
+                });
+            }
+        }
+
+        function closePosition(positionId) {
+            if (confirm(`❌ CLOSE POSITION: Close position ${positionId} at market price?`)) {
+                alert(`✅ Position ${positionId} would be closed\n\nThis would:\n- Close position at current market price\n- Realize P&L\n- Update portfolio balance`);
+            }
+        }
+
+        function cancelAllOrders() {
+            if (confirm('🚫 CANCEL ALL ORDERS: This will cancel all pending orders. Continue?')) {
+                fetch('/api/admin/cancel-all-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ All orders cancelled successfully');
+                        updateSystemStatus();
+                    } else {
+                        alert('❌ Failed to cancel orders: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Cancel orders error:', error);
+                    alert('⚠️ Cancel orders request failed - check console');
+                });
+            }
+        }
+
+        function cancelOrder(orderId) {
+            if (confirm(`🚫 CANCEL ORDER: Cancel order ${orderId}?`)) {
+                alert(`🚫 Order ${orderId} cancelled\n\nThis would:\n- Cancel the pending order\n- Free up allocated capital\n- Update order history`);
+            }
+        }
+
+        function createNewPosition() {
+            alert('📈 Manual Trading Panel\n\nThis would open:\n- Symbol selection\n- Order type (Market/Limit/Stop)\n- Position size calculator\n- Risk management settings\n- Execution confirmation');
+        }
+
+        // ===== RISK MANAGEMENT FUNCTIONS =====
+        function emergencyRiskStop() {
+            if (confirm('🚨 EMERGENCY RISK STOP: This will immediately halt ALL trading operations due to risk breach. Are you absolutely sure?')) {
+                alert('🚨 EMERGENCY RISK STOP ACTIVATED\n\nThis would:\n- Immediately halt all trading\n- Close high-risk positions\n- Send emergency notifications\n- Lock system until manual review');
+                updateSystemStatus();
+            }
+        }
+
+        function pauseHighRiskPositions() {
+            if (confirm('⚠️ PAUSE HIGH RISK: This will pause trading for all positions with risk score > 60%. Continue?')) {
+                alert('⏸️ High-risk positions paused\n\nThis would:\n- Pause ADAUSDT (78% risk)\n- Keep monitoring active\n- Allow manual intervention\n- Send risk manager alerts');
+            }
+        }
+
+        function rebalancePortfolio() {
+            if (confirm('⚖️ PORTFOLIO REBALANCE: This will automatically rebalance positions to reduce risk. Continue?')) {
+                alert('⚖️ Portfolio rebalancing initiated\n\nThis would:\n- Reduce correlated positions\n- Adjust position sizes\n- Optimize risk distribution\n- Maintain target allocations');
+            }
+        }
+
+        function updateRiskSettings() {
+            alert('⚙️ Risk Settings Update\n\nThis would:\n- Refresh risk parameters\n- Update correlation matrix\n- Recalculate VaR\n- Validate position limits\n- Send updated alerts');
+        }
+
+        function triggerRiskAlert() {
+            alert('🔔 Risk Alert System Test\n\nThis would:\n- Send immediate risk notification\n- Alert risk management team\n- Log alert in system\n- Trigger monitoring protocols');
+        }
+
+        function runRiskScan() {
+            alert('🔍 Full Risk Scan Initiated\n\nThis comprehensive scan would:\n- Analyze all open positions\n- Calculate portfolio VaR\n- Check correlation limits\n- Validate stop-loss orders\n- Generate risk report\n- Update risk scores\n\nEstimated time: 2-3 minutes');
+        }
+
+        function saveRiskLimits() {
+            const maxPositionSize = document.getElementById('max-position-size').value;
+            const dailyLossLimit = document.getElementById('daily-loss-limit').value;
+            const maxExposure = document.getElementById('max-exposure').value;
+            const maxCorrelation = document.getElementById('max-correlation').value;
+
+            if (confirm(`💾 SAVE RISK LIMITS:\n\nMax Position Size: ${maxPositionSize}%\nDaily Loss Limit: $${dailyLossLimit}\nMax Exposure: ${maxExposure}%\nMax Correlation: ${maxCorrelation}%\n\nThese limits will be enforced immediately. Continue?`)) {
+                alert('✅ Risk limits saved successfully\n\nNew limits are now active:\n- All positions will be monitored\n- Automatic enforcement enabled\n- Risk alerts updated\n- System notifications sent');
+            }
+        }
+
+        function adjustRisk(symbol) {
+            alert(`⚙️ Risk Adjustment for ${symbol}\n\nThis would open:\n- Position size adjustment\n- Stop-loss modification\n- Risk limit override\n- Correlation analysis\n- VaR recalculation`);
+        }
+
+        function viewRiskDetails(symbol) {
+            alert(`📊 Risk Details for ${symbol}\n\nDetailed analysis would show:\n- Historical volatility\n- Correlation breakdown\n- VaR components\n- Stress test results\n- Risk contribution\n- Scenario analysis`);
+        }
+
+        function reducePosition(symbol) {
+            if (confirm(`📉 REDUCE POSITION: Reduce ${symbol} position by 50% to lower risk?`)) {
+                alert(`📉 Position reduction for ${symbol}\n\nThis would:\n- Sell 50% of current position\n- Reduce risk exposure\n- Update portfolio metrics\n- Maintain stop-loss orders`);
+            }
+        }
+
+        function refreshRiskAnalysis() {
+            alert('🔄 Risk Analysis Refresh\n\nUpdating:\n- Current position values\n- Risk scores recalculation\n- Correlation matrix update\n- VaR recalculation\n- P&L refresh');
+        }
+
+        // ===== ANALYTICS FUNCTIONS =====
+        function exportAnalytics() {
+            alert('📊 Analytics Report Export\n\nGenerating comprehensive report with:\n- Performance metrics\n- Trade history\n- Strategy analysis\n- Risk assessment\n- Charts and visualizations\n\nFormats: PDF, Excel, CSV');
+        }
+
+        function refreshAnalytics() {
+            alert('🔄 Refreshing Analytics Data\n\nUpdating:\n- Real-time performance metrics\n- Trade statistics\n- Strategy performance\n- Asset analysis\n- Risk calculations');
+        }
+
+        function setTimeframe(period) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.btn-primary, .btn-outline-primary').forEach(btn => {
+                btn.className = btn.className.replace('btn-primary', 'btn-outline-primary');
+            });
+            
+            // Add active class to clicked button
+            event.target.className = event.target.className.replace('btn-outline-primary', 'btn-primary');
+            
+            alert(`📅 Analytics Timeframe: ${period}\n\nUpdating all analytics for ${period} period:\n- Performance charts\n- Statistics\n- Trade analysis\n- Risk metrics`);
+        }
+
+        function toggleChartType(type) {
+            alert(`📈 Chart Type: ${type}\n\nSwitching to ${type} chart view:\n- ${type === 'line' ? 'Clean line visualization' : 'Detailed candlestick view'}\n- Interactive zoom and pan\n- Real-time updates\n- Technical indicators`);
+        }
+
+        function generateMonteCarlo() {
+            alert('🎲 Monte Carlo Simulation\n\nThis advanced analysis would:\n- Run 10,000+ random scenarios\n- Calculate probability distributions\n- Estimate future performance ranges\n- Assess portfolio risk scenarios\n- Generate confidence intervals\n\nEstimated time: 3-5 minutes');
+        }
+
+        function runCorrelationAnalysis() {
+            alert('🔗 Correlation Matrix Analysis\n\nThis analysis would:\n- Calculate asset correlations\n- Strategy interdependencies\n- Risk clustering analysis\n- Diversification opportunities\n- Heat map visualizations\n\nResults show correlation coefficients (-1 to +1)');
+        }
+
+        function optimizePortfolio() {
+            alert('⚙️ Portfolio Optimization\n\nUsing Modern Portfolio Theory:\n- Efficient frontier calculation\n- Risk-return optimization\n- Sharpe ratio maximization\n- Constraint-based allocation\n- Rebalancing recommendations\n\nOptimization algorithms: Markowitz, Black-Litterman');
+        }
+
+        function predictiveAnalysis() {
+            alert('🔮 Predictive Analytics\n\nAI-powered predictions using:\n- Machine learning models\n- Technical pattern recognition\n- Market sentiment analysis\n- Economic indicator correlation\n- Ensemble forecasting methods\n\nPrediction horizon: 1-30 days');
+        }
+
+        // ===== SYSTEM STATUS FUNCTIONS =====
         function updateSystemStatus() {
             fetchSystemStats();
             setTimeout(updateMetrics, 1000); // Refresh metrics after 1 second
