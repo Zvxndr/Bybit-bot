@@ -930,30 +930,37 @@ class FrontendHandler(BaseHTTPRequestHandler):
         """Load the AdminLTE Professional dashboard template"""
         try:
             # Check templates directory for the AdminLTE dashboard
+            # Fix path resolution - when running from src/, look for templates/ directly
             possible_paths = [
-                Path("src/templates/adminlte_dashboard.html"),  # NEW AdminLTE template (PRIMARY)
-                Path("src/templates/professional_dashboard.html"),  # Old template (FALLBACK)
+                Path("templates/adminlte_dashboard.html"),  # LOCAL path (PRIMARY)
+                Path("src/templates/adminlte_dashboard.html"),  # PARENT path (FALLBACK)
+                Path("templates/professional_dashboard.html"),  # LOCAL fallback
+                Path("src/templates/professional_dashboard.html"),  # PARENT fallback
             ]
             
             for template_path in possible_paths:
+                logger.info(f"🔍 Checking template path: {template_path} (exists: {template_path.exists()})")
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info(f"✅ AdminLTE Professional dashboard template loaded from: {template_path}")
-                        return f.read()
+                        content = f.read()
+                        logger.info(f"✅ SUCCESS: AdminLTE dashboard loaded from: {template_path}")
+                        logger.info(f"📊 Template size: {len(content)} characters")
+                        logger.info(f"🎯 Template type: {'AdminLTE' if 'adminlte' in str(template_path) else 'Professional'}")
+                        return content
             
-            # If professional template not found, fallback to fire dashboard
-            logger.warning("Professional template not found in any expected location")
-            template_path = Path("src/templates/fire_dashboard_redesign.html")
-            if template_path.exists():
-                with open(template_path, 'r', encoding='utf-8') as f:
-                    logger.info("✅ Fire dashboard REDESIGN template loaded as fallback")
-                    return f.read()
-            else:
-                # Final fallback to original fire dashboard
-                template_path = Path("src/templates/fire_dashboard.html")
+            # If professional template not found, try local paths for fire dashboard
+            logger.warning("AdminLTE template not found in any expected location - trying fire dashboard fallbacks")
+            fallback_paths = [
+                Path("templates/fire_dashboard_redesign.html"),  # LOCAL path
+                Path("src/templates/fire_dashboard_redesign.html"),  # PARENT path
+                Path("templates/fire_dashboard.html"),  # LOCAL original
+                Path("src/templates/fire_dashboard.html")  # PARENT original
+            ]
+            
+            for template_path in fallback_paths:
                 if template_path.exists():
                     with open(template_path, 'r', encoding='utf-8') as f:
-                        logger.info("✅ Fire dashboard original template loaded as final fallback")
+                        logger.info(f"✅ Fire dashboard template loaded as fallback from: {template_path}")
                         return f.read()
         except Exception as e:
             logger.warning(f"Could not load Professional dashboard template: {e}")
