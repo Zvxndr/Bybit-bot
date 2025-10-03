@@ -1071,12 +1071,15 @@ class FrontendHandler(BaseHTTPRequestHandler):
             logger.warning(f"Could not load Professional dashboard template: {e}")
         
         # Fallback to minimal dashboard if template fails
+        logger.error("❌ SERVING FALLBACK TEMPLATE - AdminLTE template not found!")
         return """<!DOCTYPE html>
 <html lang="en">
+<!-- 🚨 TEMPLATE SOURCE: FALLBACK - AdminLTE Template Not Found! -->
+<!-- ❌ This means the main template is missing or inaccessible -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bybit Trading Bot - Advanced Dashboard</title>
+    <title>Bybit Trading Bot - FALLBACK Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
