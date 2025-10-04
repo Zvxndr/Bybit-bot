@@ -1,5 +1,39 @@
 # Complete UI/UX & Backend Implementation Plan
 
+## 💰 **CRYPTO INVESTMENT FOCUS: USDT PAIRS ONLY**
+
+### **🎯 Trading Scope & Asset Universe**
+- **Primary Focus**: Cryptocurrency investment strategies
+- **Trading Pairs**: USDT pairs exclusively (BTCUSDT, ETHUSDT, SOLUSDT, etc.)
+- **Asset Universe**: Top 20+ cryptocurrencies paired with USDT
+- **Strategy Types**: Momentum, mean reversion, volatility, trend, ML-based
+- **Timeframes**: 1m to 1d (optimized for crypto market dynamics)
+
+### **🚫 Excluded Assets**
+- ❌ Stock markets (SPY, AAPL, etc.)
+- ❌ Forex pairs (EUR/USD, GBP/USD, etc.)  
+- ❌ Commodities (Gold, Oil, etc.)
+- ❌ Other crypto base pairs (BTC pairs, ETH pairs)
+
+### **✅ Supported USDT Pairs**
+```yaml
+Primary Pairs:
+  - BTCUSDT: Bitcoin (flagship crypto)
+  - ETHUSDT: Ethereum (smart contracts)
+  - SOLUSDT: Solana (high-speed blockchain)
+  - ADAUSDT: Cardano (academic blockchain)
+  - DOTUSDT: Polkadot (interoperability)
+
+Secondary Pairs:
+  - MATICUSDT: Polygon (layer 2 scaling)
+  - AVAXUSDT: Avalanche (fast consensus)
+  - LINKUSDT: Chainlink (oracle network)
+  - UNIUSDT: Uniswap (DeFi exchange)
+  - BNBUSDT: Binance Coin (exchange token)
+```
+
+---
+
 ## 🏗️ **Backend Implementation: Automatic Strategy Naming**
 
 ### **1. Strategy ID Generation System**
@@ -14,10 +48,12 @@ from typing import Dict, List
 
 class StrategyNamingEngine:
     def __init__(self):
+        # USDT Trading Pairs Only - Crypto Investment Focus
         self.asset_codes = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana',
-            'ADA': 'cardano', 'DOT': 'polkadot', 'MATIC': 'polygon',
-            'AVAX': 'avalanche', 'LINK': 'chainlink', 'UNI': 'uniswap'
+            'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'SOLUSDT': 'solana',
+            'ADAUSDT': 'cardano', 'DOTUSDT': 'polkadot', 'MATICUSDT': 'polygon',
+            'AVAXUSDT': 'avalanche', 'LINKUSDT': 'chainlink', 'UNIUSDT': 'uniswap',
+            'BNBUSDT': 'binancecoin', 'XRPUSDT': 'ripple', 'LTCUSDT': 'litecoin'
         }
         
         self.strategy_types = {
@@ -34,17 +70,18 @@ class StrategyNamingEngine:
     def generate_strategy_id(self, strategy_data: Dict) -> str:
         """Generate unique strategy ID based on strategy characteristics"""
         
-        # Extract core parameters for naming
-        asset = strategy_data['asset']
+        # Extract core parameters for naming (USDT pairs only)
+        asset_pair = strategy_data['asset']  # e.g., 'BTCUSDT'
+        asset_base = asset_pair.replace('USDT', '')  # e.g., 'BTC'
         strategy_type = self._detect_strategy_type(strategy_data)
         timeframe = strategy_data.get('timeframe', '1h')
         
         # Create deterministic hash for uniqueness
-        strategy_fingerprint = f"{asset}_{strategy_type}_{timeframe}_{datetime.now().timestamp()}"
+        strategy_fingerprint = f"{asset_base}_{strategy_type}_{timeframe}_{datetime.now().timestamp()}"
         unique_hash = hashlib.md5(strategy_fingerprint.encode()).hexdigest()[:5].upper()
         
-        # Format: ASSET_TYPE_RANDOMID
-        strategy_id = f"{asset}_{strategy_type}_{unique_hash}"
+        # Format: ASSET_TYPE_HASH (e.g., BTC_MR_A4F2D)
+        strategy_id = f"{asset_base}_{strategy_type}_{unique_hash}"
         
         return strategy_id
     
@@ -706,9 +743,11 @@ def generate_sample_strategies():
     naming_engine = StrategyNamingEngine()
     
     sample_strategies = [
-        {"asset": "BTC", "indicators": ["rsi", "macd"]},
-        {"asset": "ETH", "indicators": ["bollinger_bands", "atr"]},
-        {"asset": "SOL", "indicators": ["ichimoku", "ema_crossover"]}
+        {"asset": "BTCUSDT", "indicators": ["rsi", "macd"]},
+        {"asset": "ETHUSDT", "indicators": ["bollinger_bands", "atr"]},
+        {"asset": "SOLUSDT", "indicators": ["ichimoku", "ema_crossover"]},
+        {"asset": "ADAUSDT", "indicators": ["stochastic", "volume"]},
+        {"asset": "MATICUSDT", "indicators": ["supertrend", "rsi"]}
     ]
     
     for strategy_data in sample_strategies:

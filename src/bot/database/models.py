@@ -414,3 +414,186 @@ class StrategyMetadata(Base):
     
     def __repr__(self):
         return f"<StrategyMetadata({self.strategy_id}: {self.status})>"
+
+
+class StrategyPipeline(Base):
+    """
+    AI Pipeline state tracking for automated strategy progression.
+    
+    Tracks strategies as they move through the three-column pipeline:
+    Backtest → Paper Trading → Live Trading
+    """
+    
+    __tablename__ = "strategy_pipeline"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    strategy_id = Column(String(100), nullable=False, unique=True)
+    strategy_name = Column(String(200), nullable=False)  # Human-readable name
+    
+    # Pipeline phase tracking
+    current_phase = Column(String(20), nullable=False)  # 'backtest', 'paper', 'live', 'rejected'
+    previous_phase = Column(String(20))
+    phase_start_time = Column(DateTime, nullable=False, default=func.now())
+    phase_duration = Column(Integer)  # Duration in current phase (seconds)
+    
+    # Asset and strategy details
+    asset_pair = Column(String(20), nullable=False)  # e.g., 'BTCUSDT'
+    base_asset = Column(String(10), nullable=False)   # e.g., 'BTC'
+    strategy_type = Column(String(50), nullable=False) # e.g., 'mean_reversion'
+    strategy_description = Column(Text)
+    
+    # Backtest phase results
+    backtest_score = Column(Float)     # Overall backtest score (0-100)
+    backtest_return = Column(Float)    # Percentage return in backtest
+    sharpe_ratio = Column(Float)       # Risk-adjusted return
+    max_drawdown = Column(Float)       # Maximum drawdown percentage
+    win_rate = Column(Float)           # Percentage of winning trades
+    profit_factor = Column(Float)      # Profit factor ratio
+    
+    # Paper trading phase results
+    paper_start_date = Column(DateTime)
+    paper_end_date = Column(DateTime)
+    paper_pnl = Column(Float)          # Paper trading P&L in USD
+    paper_return_pct = Column(Float)   # Paper trading return percentage
+    paper_trade_count = Column(Integer, default=0)
+    paper_win_count = Column(Integer, default=0)
+    
+    # Live trading phase results
+    live_start_date = Column(DateTime)
+    live_pnl = Column(Float)           # Live trading P&L in USD
+    live_return_pct = Column(Float)    # Live trading return percentage
+    live_trade_count = Column(Integer, default=0)
+    live_win_count = Column(Integer, default=0)
+    
+    # Pipeline transition criteria
+    promotion_threshold = Column(Float, default=10.0)  # Percentage return needed for promotion
+    graduation_threshold = Column(Float, default=10.0) # Percentage return needed for graduation
+    rejection_threshold = Column(Float, default=-5.0)  # Maximum loss before rejection
+    
+    # Automation settings
+    auto_promote = Column(Boolean, default=True)       # Auto-promote from backtest to paper
+    auto_graduate = Column(Boolean, default=True)      # Auto-graduate from paper to live
+    max_paper_duration = Column(Integer, default=604800) # Max paper trading time (7 days)
+    
+    # Status and metadata
+    is_active = Column(Boolean, default=True)
+    rejection_reason = Column(String(200))
+    notes = Column(Text)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    promoted_at = Column(DateTime)      # Backtest → Paper
+    graduated_at = Column(DateTime)     # Paper → Live
+    rejected_at = Column(DateTime)
+    
+    # Risk metrics
+    risk_score = Column(Float)          # Overall risk assessment (0-100)
+    volatility_score = Column(Float)    # Volatility assessment
+    correlation_risk = Column(Float)    # Correlation with other strategies
+    
+    # Performance tracking
+    total_pnl = Column(Float, default=0.0)  # Combined P&L across all phases
+    best_return = Column(Float)             # Best single-day return
+    worst_return = Column(Float)            # Worst single-day return
+    consistency_score = Column(Float)       # Performance consistency metric
+    
+    __table_args__ = (
+        Index('idx_pipeline_strategy_id', strategy_id),
+        Index('idx_pipeline_phase', current_phase),
+        Index('idx_pipeline_asset', asset_pair),
+        Index('idx_pipeline_active', is_active),
+        Index('idx_pipeline_created', created_at),
+        CheckConstraint(backtest_score >= 0, name='valid_backtest_score'),
+        CheckConstraint(backtest_score <= 100, name='max_backtest_score'),
+        CheckConstraint(risk_score >= 0, name='valid_risk_score'),
+        CheckConstraint(risk_score <= 100, name='max_risk_score'),
+    )
+    
+    def __repr__(self):
+        return f"<StrategyPipeline({self.strategy_id}: {self.current_phase})>"
+    
+    @property
+    def is_in_backtest(self) -> bool:
+        """Check if strategy is in backtest phase."""
+        return self.current_phase == 'backtest'
+    
+    @property
+    def is_in_paper(self) -> bool:
+        """Check if strategy is in paper trading phase."""
+        return self.current_phase == 'paper'
+    
+    @property
+    def is_live(self) -> bool:
+        """Check if strategy is in live trading phase."""
+        return self.current_phase == 'live'
+    
+    @property
+    def is_rejected(self) -> bool:
+        """Check if strategy has been rejected."""
+        return self.current_phase == 'rejected'
+    
+    @property
+    def current_phase_duration_hours(self) -> float:
+        """Get current phase duration in hours."""
+        if not self.phase_start_time:
+            return 0.0
+        
+        duration = datetime.utcnow() - self.phase_start_time
+        return duration.total_seconds() / 3600
+    
+    @property
+    def paper_duration_hours(self) -> float:
+        """Get paper trading duration in hours."""
+        if not self.paper_start_date:
+            return 0.0
+        
+        end_date = self.paper_end_date or datetime.utcnow()
+        duration = end_date - self.paper_start_date
+        return duration.total_seconds() / 3600
+    
+    @property
+    def live_duration_hours(self) -> float:
+        """Get live trading duration in hours."""
+        if not self.live_start_date:
+            return 0.0
+        
+        duration = datetime.utcnow() - self.live_start_date
+        return duration.total_seconds() / 3600
+    
+    def ready_for_promotion(self) -> bool:
+        """Check if strategy is ready for promotion to paper trading."""
+        if self.current_phase != 'backtest':
+            return False
+        
+        return (
+            self.backtest_score and self.backtest_score >= 75.0 and
+            self.sharpe_ratio and self.sharpe_ratio >= 1.5 and
+            self.backtest_return and self.backtest_return >= 10.0
+        )
+    
+    def ready_for_graduation(self) -> bool:
+        """Check if strategy is ready for graduation to live trading."""
+        if self.current_phase != 'paper':
+            return False
+        
+        return (
+            self.paper_return_pct and self.paper_return_pct >= self.graduation_threshold and
+            self.paper_trade_count and self.paper_trade_count >= 5 and
+            self.paper_duration_hours >= 72  # At least 3 days
+        )
+    
+    def should_be_rejected(self) -> bool:
+        """Check if strategy should be rejected from pipeline."""
+        if self.current_phase == 'backtest':
+            return (
+                self.backtest_score and self.backtest_score < 60.0 or
+                self.backtest_return and self.backtest_return <= self.rejection_threshold
+            )
+        elif self.current_phase == 'paper':
+            return (
+                self.paper_return_pct and self.paper_return_pct <= self.rejection_threshold or
+                self.paper_duration_hours > (self.max_paper_duration / 3600)
+            )
+        
+        return False
