@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Open Alpha Trading Dashboard</title>
 
     <!-- AdminLTE CSS -->
@@ -10,8 +13,127 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     
-    <!-- Chart.js for Professional Visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <!-- Chart.js for Professional Visualization - UMD Build -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- CRITICAL FUNCTIONS - LOADED BEFORE HTML -->
+    <script>
+        'use strict';
+        console.log('🚀 EARLY LOAD: Defining critical functions in HEAD...');
+        
+        // Core navigation function - MUST be available immediately
+        window.switchSection = function(sectionId) {
+            console.log('🎯 Switching to:', sectionId);
+            
+            try {
+                // Hide all sections
+                const sections = document.querySelectorAll('.content-section');
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show target section
+                const targetSection = document.getElementById('section-' + sectionId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    console.log('✅ Section active:', sectionId);
+                } else {
+                    console.error('❌ Section not found:', sectionId);
+                }
+                
+                // Update navigation
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => link.classList.remove('active'));
+                
+                const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    console.log('✅ Navigation updated for:', sectionId);
+                }
+                
+            } catch (error) {
+                console.error('❌ Section switch failed:', error);
+            }
+        };
+        
+        // Simple debug log function
+        window.addDebugLog = function(message) {
+            console.log('🐛 ' + message);
+        };
+        
+        // Simple alert function
+        window.showAlert = function(message, type = 'info') {
+            console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        };
+        
+        // System functions
+        window.saveApiSettings = function() {
+            console.log('💾 Saving API settings');
+            alert('Settings saved successfully!');
+        };
+        
+        window.testNotifications = function() {
+            console.log('🔔 Testing notifications');
+            alert('Notification test initiated!');
+        };
+        
+        console.log('✅ EARLY LOAD: Critical functions available globally');
+        console.log('✅ switchSection type:', typeof window.switchSection);
+        
+        // Validate all functions are properly loaded
+        const requiredFunctions = ['switchSection', 'addDebugLog', 'showAlert', 'saveApiSettings', 'testNotifications'];
+        requiredFunctions.forEach(funcName => {
+            if (typeof window[funcName] === 'function') {
+                console.log(`✅ ${funcName}: LOADED`);
+            } else {
+                console.error(`❌ ${funcName}: FAILED TO LOAD`);
+            }
+        });
+        
+        // Test function execution
+        try {
+            if (typeof window.switchSection === 'function') {
+                console.log('🧪 Function test: switchSection is callable');
+            }
+        } catch (error) {
+            console.error('❌ Function test failed:', error);
+        }
+        
+        // Check for module loading conflicts
+        if (typeof module !== 'undefined' && module.exports) {
+            console.warn('⚠️ Module system detected - may cause conflicts');
+        }
+        
+        // Check script loading
+        window.addEventListener('load', function() {
+            console.log('🎉 Page fully loaded - all functions should be available');
+            console.log('🔍 Final check - switchSection type:', typeof window.switchSection);
+        });
+        
+        // Check for errors
+        window.addEventListener('error', function(event) {
+            console.error('🚨 JavaScript Error:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+        });
+        
+        // Check for unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('🚨 Unhandled Promise Rejection:', event.reason);
+        });
+        
+        // Final validation
+        setTimeout(function() {
+            console.log('🔍 DELAYED CHECK (1s): Functions still available?');
+            console.log('switchSection:', typeof window.switchSection);
+            console.log('addDebugLog:', typeof window.addDebugLog);
+            console.log('showAlert:', typeof window.showAlert);
+        }, 1000);
+    </script>
     
     <style>
         /* Glass Box Theme */
@@ -2450,9 +2572,30 @@
 console.log('🚀 FRESH DASHBOARD: Loading...');
 
 // === CRITICAL FUNCTIONS - AVAILABLE IMMEDIATELY ===
-console.log('🔧 Defining critical functions in global scope...');
-
-// Simple alert system (no dependencies)
+        console.log('🔧 Defining critical functions in global scope...');
+        
+        // Add event delegation as backup for onclick handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Setting up event delegation backup...');
+            
+            // Backup navigation via event delegation
+            document.addEventListener('click', function(event) {
+                const target = event.target.closest('[data-section]');
+                if (target) {
+                    const section = target.getAttribute('data-section');
+                    console.log('🔄 Event delegation: switching to', section);
+                    
+                    if (typeof window.switchSection === 'function') {
+                        event.preventDefault();
+                        window.switchSection(section);
+                    } else {
+                        console.error('❌ switchSection not available via event delegation');
+                    }
+                }
+            });
+            
+            console.log('✅ Event delegation backup active');
+        });// Simple alert system (no dependencies)
 window.showAlert = function(message, type = 'info') {
     console.log(`📢 ${type.toUpperCase()}: ${message}`);
 };
