@@ -151,6 +151,292 @@
             padding: 15px;
             backdrop-filter: blur(8px);
         }
+        
+        /* Pipeline Stage Headers */
+        .pipeline-stage-header {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .pipeline-stage-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pipeline-stage-header .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar-wrapper {
+            margin-top: 15px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            min-width: 50px;
+            transition: width 0.5s ease;
+        }
+        
+        .backtest-progress { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .paper-progress { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .live-progress { background: linear-gradient(90deg, #10b981, #34d399); }
+        
+        /* Three-Column Pipeline Monitor */
+        .pipeline-monitor {
+            min-height: 600px;
+        }
+        
+        .pipeline-column {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .pipeline-column:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .column-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .column-header h5 {
+            margin: 0;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .column-content {
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .column-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .column-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .column-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .column-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .discovery-indicator,
+        .paper-indicator,
+        .live-indicator {
+            font-size: 0.9rem;
+            color: #34d399;
+            margin-top: 5px;
+        }
+        
+        /* Pipeline Strategy Cards */
+        .pipeline-strategy-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .pipeline-strategy-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .strategy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .strategy-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .strategy-title h6 {
+            margin: 0;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .phase-icon {
+            font-size: 1.2rem;
+        }
+        
+        .strategy-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .strategy-name {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+        }
+        
+        .strategy-metrics {
+            margin-bottom: 12px;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        
+        .metric-row span {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .strategy-progress {
+            margin-bottom: 12px;
+        }
+        
+        .progress-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar-mini {
+            background: rgba(255, 255, 255, 0.2);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .strategy-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .strategy-actions .btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Loading States */
+        .loading-card {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Pipeline Analytics */
+        .pipeline-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-item label {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+        
+        .metric-item .metric-value {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        /* Pipeline Controls */
+        .pipeline-controls {
+            margin-bottom: 15px;
+        }
+        
+        .pipeline-controls .btn {
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 
@@ -380,76 +666,151 @@
             <section class="content">
                 <div class="container-fluid">
                     
-                    <!-- AI Pipeline Overview -->
-                    <div class="row">
+                    <!-- Pipeline Stage Counter Header -->
+                    <div class="row mb-4">
                         <div class="col-md-4">
-                            <div class="pipeline-stage">
-                                <h4><i class="fas fa-vial text-primary"></i> Backtest</h4>
+                            <div class="pipeline-stage-header">
+                                <h4><i class="fas fa-vial text-primary"></i> Backtest Phase</h4>
                                 <div class="metric-value" id="backtest-count">0</div>
                                 <p>Strategies Testing</p>
-                                <span class="status-indicator status-backtest">RUNNING</span>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar backtest-progress" id="backtest-progress">0%</div>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="col-md-4">
-                            <div class="pipeline-stage">
+                            <div class="pipeline-stage-header">
                                 <h4><i class="fas fa-paper-plane text-warning"></i> Paper Trading</h4>
                                 <div class="metric-value" id="paper-count">0</div>
                                 <p>Live Testing</p>
-                                <span class="status-indicator status-paper">ACTIVE</span>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar paper-progress" id="paper-progress">0%</div>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="col-md-4">
-                            <div class="pipeline-stage">
+                            <div class="pipeline-stage-header">
                                 <h4><i class="fas fa-rocket text-success"></i> Live Trading</h4>
                                 <div class="metric-value" id="live-count">0</div>
                                 <p>Production Ready</p>
-                                <span class="status-indicator status-live">DEPLOYED</span>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar live-progress" id="live-progress">0%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Strategy Discovery -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="dashboard-card">
-                                <h3><i class="fas fa-search mr-2"></i>Strategy Discovery & Management</h3>
+                    <!-- Three-Column Dynamic Pipeline Monitor -->
+                    <div class="row pipeline-monitor">
+                        <!-- Backtest Column -->
+                        <div class="col-md-4">
+                            <div class="pipeline-column backtest-column">
+                                <div class="column-header">
+                                    <h5><i class="fas fa-flask"></i> Backtest Laboratory</h5>
+                                    <span class="status-indicator status-backtest" id="backtest-status">ACTIVE</span>
+                                </div>
                                 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h5>🔍 Discovery Pipeline</h5>
-                                        <div class="strategy-card">
-                                            <h6>Auto-Discovery Engine</h6>
-                                            <p>Continuously scanning for new market patterns and opportunities.</p>
-                                            <span class="status-indicator status-live">SCANNING</span>
-                                        </div>
-                                        
-                                        <div class="strategy-card">
-                                            <h6>ML Pattern Recognition</h6>
-                                            <p>Advanced machine learning algorithms identifying profitable patterns.</p>
-                                            <span class="status-indicator status-live">LEARNING</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <h5>📈 Active Strategies</h5>
-                                        <div id="active-strategies-list">
-                                            <div class="strategy-card">
-                                                <h6>Momentum Breakout v2.1</h6>
-                                                <p>7-day performance: <span class="text-success">+12.4%</span></p>
-                                                <span class="status-indicator status-live">LIVE</span>
-                                            </div>
-                                            
-                                            <div class="strategy-card">
-                                                <h6>Mean Reversion Alpha</h6>
-                                                <p>Testing phase: <span class="text-warning">Day 3 of 7</span></p>
-                                                <span class="status-indicator status-paper">PAPER</span>
-                                            </div>
-                                        </div>
+                                <div class="column-content" id="backtest-strategies">
+                                    <div class="strategy-card loading-card">
+                                        <div class="loading-spinner"></div>
+                                        <p>Loading strategies...</p>
                                     </div>
                                 </div>
                                 
+                                <div class="column-footer">
+                                    <small class="text-muted">Auto-discovery running</small>
+                                    <div class="discovery-indicator">🔍 Scanning...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paper Trading Column -->
+                        <div class="col-md-4">
+                            <div class="pipeline-column paper-column">
+                                <div class="column-header">
+                                    <h5><i class="fas fa-chart-line"></i> Paper Trading</h5>
+                                    <span class="status-indicator status-paper" id="paper-status">MONITORING</span>
+                                </div>
+                                
+                                <div class="column-content" id="paper-strategies">
+                                    <div class="strategy-card loading-card">
+                                        <div class="loading-spinner"></div>
+                                        <p>Loading strategies...</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="column-footer">
+                                    <small class="text-muted">Real market testing</small>
+                                    <div class="paper-indicator">📊 Live Data</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Live Trading Column -->
+                        <div class="col-md-4">
+                            <div class="pipeline-column live-column">
+                                <div class="column-header">
+                                    <h5><i class="fas fa-rocket"></i> Live Production</h5>
+                                    <span class="status-indicator status-live" id="live-status">DEPLOYED</span>
+                                </div>
+                                
+                                <div class="column-content" id="live-strategies">
+                                    <div class="strategy-card loading-card">
+                                        <div class="loading-spinner"></div>
+                                        <p>Loading strategies...</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="column-footer">
+                                    <small class="text-muted">Production trading</small>
+                                    <div class="live-indicator">🚀 Active</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pipeline Analytics Row -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <h5><i class="fas fa-chart-bar mr-2"></i>Pipeline Performance</h5>
+                                <div class="pipeline-metrics" id="pipeline-metrics">
+                                    <div class="metric-item">
+                                        <label>Graduation Rate:</label>
+                                        <span class="metric-value">---%</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <label>Avg. Backtest Time:</label>
+                                        <span class="metric-value">--- hrs</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <label>Success Rate:</label>
+                                        <span class="metric-value">---%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="dashboard-card">
+                                <h5><i class="fas fa-cogs mr-2"></i>Pipeline Controls</h5>
+                                <div class="pipeline-controls">
+                                    <button class="btn btn-primary btn-sm" onclick="refreshPipelineData()">
+                                        <i class="fas fa-sync"></i> Refresh Data
+                                    </button>
+                                    <button class="btn btn-success btn-sm ml-2" onclick="triggerDiscovery()">
+                                        <i class="fas fa-search-plus"></i> Force Discovery
+                                    </button>
+                                    <button class="btn btn-warning btn-sm ml-2" onclick="pausePipeline()">
+                                        <i class="fas fa-pause"></i> Pause Pipeline
+                                    </button>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">Last Update: <span id="last-update">Never</span></small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -954,6 +1315,511 @@ function initializeCharts() {
     }
 }
 
+// API Client for Pipeline Integration
+class PipelineAPIClient {
+    constructor() {
+        this.baseUrl = '/api/pipeline';
+        this.websocket = null;
+        this.isConnected = false;
+    }
+
+    // Fetch pipeline strategies
+    async fetchPipelineData() {
+        try {
+            const response = await fetch(`${this.baseUrl}/strategies`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log('📊 Pipeline data received:', data);
+            addDebugLog(`📊 API: Pipeline data loaded (${data.backtest?.length || 0} backtest, ${data.paper?.length || 0} paper, ${data.live?.length || 0} live)`);
+            return data;
+        } catch (error) {
+            console.error('❌ API Error:', error);
+            addDebugLog(`❌ API ERROR: ${error.message}`);
+            // Return mock data as fallback
+            return this.getMockPipelineData();
+        }
+    }
+
+    // Fetch pipeline metrics
+    async fetchPipelineMetrics() {
+        try {
+            const response = await fetch(`${this.baseUrl}/metrics`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const metrics = await response.json();
+            console.log('📈 Pipeline metrics received:', metrics);
+            addDebugLog(`📈 METRICS: Discovery rate: ${metrics.discovery?.successRate || 0}%`);
+            return metrics;
+        } catch (error) {
+            console.error('❌ Metrics Error:', error);
+            addDebugLog(`❌ METRICS ERROR: ${error.message}`);
+            return this.getMockMetrics();
+        }
+    }
+
+    // WebSocket connection for real-time updates
+    connectWebSocket() {
+        try {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/api/pipeline/ws`;
+            
+            this.websocket = new WebSocket(wsUrl);
+            
+            this.websocket.onopen = () => {
+                this.isConnected = true;
+                console.log('🔗 WebSocket connected');
+                addDebugLog('🔗 WEBSOCKET: Connected to pipeline updates');
+            };
+            
+            this.websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('📡 WebSocket message:', data);
+                this.handleWebSocketMessage(data);
+            };
+            
+            this.websocket.onclose = () => {
+                this.isConnected = false;
+                console.log('🔗 WebSocket disconnected');
+                addDebugLog('🔗 WEBSOCKET: Disconnected, retrying in 5s...');
+                // Retry connection after 5 seconds
+                setTimeout(() => this.connectWebSocket(), 5000);
+            };
+            
+        } catch (error) {
+            console.error('❌ WebSocket Error:', error);
+            addDebugLog(`❌ WEBSOCKET ERROR: ${error.message}`);
+        }
+    }
+
+    // Handle WebSocket messages
+    handleWebSocketMessage(data) {
+        if (data.type === 'pipeline_update') {
+            addDebugLog(`🚀 LIVE UPDATE: Strategy ${data.strategy_id} → ${data.new_phase}`);
+            updatePipelineDisplay(data);
+        } else if (data.type === 'metrics_update') {
+            addDebugLog(`📊 METRICS UPDATE: ${data.metric} = ${data.value}`);
+            updateMetricsDisplay(data);
+        }
+    }
+
+    // Mock data for development/fallback
+    getMockPipelineData() {
+        return {
+            backtest: [
+                {
+                    id: 'BTC_MR_A4F2D',
+                    name: 'Bitcoin Mean Reversion Alpha',
+                    asset: 'BTC',
+                    phase: 'backtest',
+                    status: 'passing',
+                    metrics: { sharpe: 1.89, winRate: 73.2, return: 12.4 },
+                    progress: { current: 3, total: 5, label: 'Day 3 of 5' }
+                },
+                {
+                    id: 'ETH_TF_B8K3L',
+                    name: 'Ethereum Trend Following Beta',
+                    asset: 'ETH',
+                    phase: 'backtest',
+                    status: 'watching',
+                    metrics: { sharpe: 1.24, winRate: 68.5, return: 8.9 },
+                    progress: { current: 2, total: 5, label: 'Day 2 of 5' }
+                }
+            ],
+            paper: [
+                {
+                    id: 'SOL_BB_C9X7M',
+                    name: 'Solana Bollinger Bands Gamma',
+                    asset: 'SOL',
+                    phase: 'paper',
+                    status: 'passing',
+                    metrics: { sharpe: 2.15, winRate: 78.1, return: 15.7 },
+                    progress: { current: 5, total: 7, label: 'Day 5 of 7' }
+                }
+            ],
+            live: [
+                {
+                    id: 'BTC_MA_D2P4N',
+                    name: 'Bitcoin Moving Average Delta',
+                    asset: 'BTC',
+                    phase: 'live',
+                    status: 'passing',
+                    metrics: { sharpe: 2.47, winRate: 81.3, return: 18.2 },
+                    progress: { current: 12, total: 30, label: '12 days active' }
+                }
+            ]
+        };
+    }
+
+    // Mock metrics for development/fallback
+    getMockMetrics() {
+        return {
+            discovery: {
+                testedToday: 47,
+                candidatesFound: 12,
+                successRate: 25.5
+            },
+            pipeline: {
+                graduationRate: 68.2,
+                avgPaperDuration: 5.2,
+                totalActive: 16
+            }
+        };
+    }
+}
+
+// Global pipeline API client
+const pipelineAPI = new PipelineAPIClient();
+
+// Initialize Pipeline System
+async function initializePipelineSystem() {
+    console.log('🧪 Initializing AI Pipeline System...');
+    addDebugLog('🧪 PIPELINE: Initializing system...');
+    
+    try {
+        // Connect WebSocket for real-time updates
+        pipelineAPI.connectWebSocket();
+        
+        // Load initial pipeline data
+        const pipelineData = await pipelineAPI.fetchPipelineData();
+        const metrics = await pipelineAPI.fetchPipelineMetrics();
+        
+        // Update displays
+        updatePipelineCounters(pipelineData);
+        updatePipelineMetrics(metrics);
+        updateStrategyCards(pipelineData);
+        
+        console.log('✅ Pipeline system initialized');
+        addDebugLog('✅ PIPELINE: System ready');
+        
+    } catch (error) {
+        console.error('❌ Pipeline initialization failed:', error);
+        addDebugLog(`❌ PIPELINE ERROR: ${error.message}`);
+    }
+}
+
+// Update pipeline counters in overview
+function updatePipelineCounters(data) {
+    const backtestCount = document.getElementById('backtest-count');
+    const paperCount = document.getElementById('paper-count');
+    const liveCount = document.getElementById('live-count');
+    const activeStrategies = document.getElementById('active-strategies');
+    
+    if (backtestCount) backtestCount.textContent = data.backtest?.length || 0;
+    if (paperCount) paperCount.textContent = data.paper?.length || 0;
+    if (liveCount) liveCount.textContent = data.live?.length || 0;
+    if (activeStrategies) activeStrategies.textContent = (data.paper?.length || 0) + (data.live?.length || 0);
+    
+    console.log('📊 Pipeline counters updated');
+}
+
+// Update pipeline metrics display
+function updatePipelineMetrics(metrics) {
+    // This will be used when we add the metrics header
+    console.log('📈 Metrics ready for display:', metrics);
+}
+
+// Update strategy cards with real data
+function updateStrategyCards(data) {
+    const strategiesList = document.getElementById('active-strategies-list');
+    if (!strategiesList) return;
+    
+    // Clear existing content
+    strategiesList.innerHTML = '';
+    
+    // Combine paper and live strategies
+    const allStrategies = [...(data.paper || []), ...(data.live || [])];
+    
+    allStrategies.forEach(strategy => {
+        const card = createStrategyCard(strategy);
+        strategiesList.appendChild(card);
+    });
+    
+    console.log(`📋 Updated ${allStrategies.length} strategy cards`);
+    addDebugLog(`📋 STRATEGIES: Displaying ${allStrategies.length} active strategies`);
+}
+
+// Create individual strategy card
+function createStrategyCard(strategy) {
+    const card = document.createElement('div');
+    card.className = 'strategy-card';
+    card.id = `strategy-${strategy.id}`;
+    
+    const statusClass = `status-${strategy.status === 'passing' ? 'live' : strategy.status === 'watching' ? 'paper' : 'inactive'}`;
+    const statusIcon = strategy.status === 'passing' ? '✅' : strategy.status === 'watching' ? '⚠️' : '❌';
+    const phaseIcon = strategy.phase === 'live' ? '🚀' : strategy.phase === 'paper' ? '📝' : '🧪';
+    
+    card.innerHTML = `
+        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 8px;">
+            <h6 style="margin: 0; font-weight: 600;">${phaseIcon} ${strategy.id}</h6>
+            <span class="status-indicator ${statusClass}">${statusIcon} ${strategy.status.toUpperCase()}</span>
+        </div>
+        <p style="margin: 0 0 8px 0; font-size: 0.9em; opacity: 0.8;">${strategy.name}</p>
+        <div style="display: flex; justify-content: between; font-size: 0.85em;">
+            <span>Sharpe: <strong>${strategy.metrics.sharpe}</strong></span>
+            <span>Win Rate: <strong>${strategy.metrics.winRate}%</strong></span>
+            <span class="text-success">Return: <strong>+${strategy.metrics.return}%</strong></span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.8em; opacity: 0.7;">
+            ${strategy.progress.label}
+        </div>
+    `;
+    
+    return card;
+}
+
+// Handle real-time pipeline updates
+function updatePipelineDisplay(update) {
+    console.log('📡 Processing pipeline update:', update);
+    
+    // Strategy moved to new phase
+    if (update.type === 'strategy_graduated') {
+        addDebugLog(`🎓 GRADUATION: ${update.strategy_id} → ${update.new_phase}`);
+        // Refresh pipeline data
+        refreshPipelineData();
+    }
+    
+    // New strategy discovered
+    if (update.type === 'strategy_discovered') {
+        addDebugLog(`🔍 DISCOVERY: New strategy ${update.strategy_id} in backtest`);
+        // Refresh pipeline data
+        refreshPipelineData();
+    }
+}
+
+// Handle real-time metrics updates
+function updateMetricsDisplay(update) {
+    console.log('📊 Processing metrics update:', update);
+    
+    // Update specific metric counters
+    if (update.metric === 'backtest_count') {
+        const element = document.getElementById('backtest-count');
+        if (element) element.textContent = update.value;
+    }
+    
+    // Add more metric updates as needed
+}
+
+// Refresh pipeline data
+async function refreshPipelineData() {
+    try {
+        const pipelineData = await pipelineAPI.fetchPipelineData();
+        const metrics = await pipelineAPI.fetchPipelineMetrics();
+        
+        updatePipelineCounters(pipelineData);
+        updatePipelineMetrics(metrics);
+        updatePipelineColumns(pipelineData);
+        
+        // Update last refresh time
+        const lastUpdate = document.getElementById('last-update');
+        if (lastUpdate) {
+            lastUpdate.textContent = new Date().toLocaleTimeString();
+        }
+        
+        console.log('🔄 Pipeline data refreshed');
+        addDebugLog('🔄 PIPELINE: Data refreshed successfully');
+    } catch (error) {
+        console.error('❌ Refresh failed:', error);
+        addDebugLog(`❌ REFRESH ERROR: ${error.message}`);
+    }
+}
+
+// Update the three-column pipeline display
+function updatePipelineColumns(data) {
+    updateColumnContent('backtest-strategies', data.backtest || [], 'backtest');
+    updateColumnContent('paper-strategies', data.paper || [], 'paper');
+    updateColumnContent('live-strategies', data.live || [], 'live');
+    
+    // Update progress bars
+    updateProgressBars(data);
+    
+    console.log('🏛️ Pipeline columns updated');
+}
+
+// Update individual column content
+function updateColumnContent(columnId, strategies, phase) {
+    const column = document.getElementById(columnId);
+    if (!column) return;
+    
+    // Clear loading state
+    column.innerHTML = '';
+    
+    if (strategies.length === 0) {
+        column.innerHTML = `
+            <div class="strategy-card empty-state">
+                <i class="fas fa-search text-muted" style="font-size: 2em; opacity: 0.3;"></i>
+                <p class="text-muted mt-2">No strategies in ${phase}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    strategies.forEach(strategy => {
+        const card = createPipelineStrategyCard(strategy, phase);
+        column.appendChild(card);
+    });
+    
+    console.log(`📋 Updated ${phase} column with ${strategies.length} strategies`);
+}
+
+// Create strategy card for pipeline columns
+function createPipelineStrategyCard(strategy, phase) {
+    const card = document.createElement('div');
+    card.className = 'strategy-card pipeline-strategy-card';
+    card.id = `strategy-${strategy.id}-${phase}`;
+    
+    const phaseIcons = {
+        'backtest': '🧪',
+        'paper': '📊',
+        'live': '🚀'
+    };
+    
+    const statusColors = {
+        'passing': 'text-success',
+        'watching': 'text-warning',
+        'failing': 'text-danger',
+        'inactive': 'text-muted'
+    };
+    
+    const progressPercent = strategy.progress?.percent || 0;
+    const progressLabel = strategy.progress?.label || 'Initializing...';
+    
+    card.innerHTML = `
+        <div class="strategy-header">
+            <div class="strategy-title">
+                <span class="phase-icon">${phaseIcons[phase]}</span>
+                <h6>${strategy.id}</h6>
+            </div>
+            <div class="strategy-status ${statusColors[strategy.status] || 'text-muted'}">
+                ${strategy.status?.toUpperCase() || 'UNKNOWN'}
+            </div>
+        </div>
+        
+        <div class="strategy-name">
+            ${strategy.name}
+        </div>
+        
+        <div class="strategy-metrics">
+            <div class="metric-row">
+                <span>Sharpe:</span>
+                <strong>${strategy.metrics?.sharpe || 'N/A'}</strong>
+            </div>
+            <div class="metric-row">
+                <span>Win Rate:</span>
+                <strong>${strategy.metrics?.winRate || 0}%</strong>
+            </div>
+            <div class="metric-row">
+                <span>Return:</span>
+                <strong class="${(strategy.metrics?.return || 0) >= 0 ? 'text-success' : 'text-danger'}">
+                    ${(strategy.metrics?.return || 0) >= 0 ? '+' : ''}${strategy.metrics?.return || 0}%
+                </strong>
+            </div>
+        </div>
+        
+        <div class="strategy-progress">
+            <div class="progress-label">${progressLabel}</div>
+            <div class="progress-bar-mini">
+                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+            </div>
+            <small class="text-muted">${progressPercent}% Complete</small>
+        </div>
+        
+        <div class="strategy-actions">
+            <button class="btn btn-sm btn-outline-primary" onclick="viewStrategy('${strategy.id}')">
+                <i class="fas fa-eye"></i>
+            </button>
+            ${phase === 'backtest' ? `
+                <button class="btn btn-sm btn-outline-success" onclick="promoteStrategy('${strategy.id}')">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            ` : ''}
+            ${phase !== 'live' ? `
+                <button class="btn btn-sm btn-outline-danger" onclick="stopStrategy('${strategy.id}')">
+                    <i class="fas fa-stop"></i>
+                </button>
+            ` : ''}
+        </div>
+    `;
+    
+    return card;
+}
+
+// Update progress bars in headers
+function updateProgressBars(data) {
+    const backtestProgress = document.getElementById('backtest-progress');
+    const paperProgress = document.getElementById('paper-progress');
+    const liveProgress = document.getElementById('live-progress');
+    
+    // Calculate progress based on strategy counts and activity
+    const totalStrategies = (data.backtest?.length || 0) + (data.paper?.length || 0) + (data.live?.length || 0);
+    
+    if (backtestProgress) {
+        const backtestPercent = totalStrategies > 0 ? Math.round((data.backtest?.length || 0) / totalStrategies * 100) : 0;
+        backtestProgress.style.width = `${backtestPercent}%`;
+        backtestProgress.textContent = `${backtestPercent}%`;
+    }
+    
+    if (paperProgress) {
+        const paperPercent = totalStrategies > 0 ? Math.round((data.paper?.length || 0) / totalStrategies * 100) : 0;
+        paperProgress.style.width = `${paperPercent}%`;
+        paperProgress.textContent = `${paperPercent}%`;
+    }
+    
+    if (liveProgress) {
+        const livePercent = totalStrategies > 0 ? Math.round((data.live?.length || 0) / totalStrategies * 100) : 0;
+        liveProgress.style.width = `${livePercent}%`;
+        liveProgress.textContent = `${livePercent}%`;
+    }
+}
+
+// Pipeline control functions
+function triggerDiscovery() {
+    console.log('🔍 Triggering strategy discovery...');
+    addDebugLog('🔍 DISCOVERY: Manual trigger activated');
+    
+    // This would call the backend discovery endpoint
+    // For now, just show feedback
+    const discoveryIndicator = document.querySelector('.discovery-indicator');
+    if (discoveryIndicator) {
+        discoveryIndicator.textContent = '🔄 Discovering...';
+        discoveryIndicator.style.animation = 'pulse 1s infinite';
+        
+        setTimeout(() => {
+            discoveryIndicator.textContent = '🔍 Scanning...';
+            discoveryIndicator.style.animation = '';
+        }, 3000);
+    }
+}
+
+function pausePipeline() {
+    console.log('⏸️ Pausing pipeline...');
+    addDebugLog('⏸️ PIPELINE: Paused by user');
+    
+    // Update status indicators
+    const backtestStatus = document.getElementById('backtest-status');
+    const paperStatus = document.getElementById('paper-status');
+    
+    if (backtestStatus) backtestStatus.textContent = 'PAUSED';
+    if (paperStatus) paperStatus.textContent = 'PAUSED';
+}
+
+// Strategy action functions
+function viewStrategy(strategyId) {
+    console.log(`👁️ Viewing strategy: ${strategyId}`);
+    addDebugLog(`👁️ STRATEGY: Viewing details for ${strategyId}`);
+    // This would open a detailed view modal
+}
+
+function promoteStrategy(strategyId) {
+    console.log(`⬆️ Promoting strategy: ${strategyId}`);
+    addDebugLog(`⬆️ STRATEGY: Promoting ${strategyId} to next phase`);
+    // This would call the backend promotion endpoint
+}
+
+function stopStrategy(strategyId) {
+    console.log(`🛑 Stopping strategy: ${strategyId}`);
+    addDebugLog(`🛑 STRATEGY: Stopping ${strategyId}`);
+    // This would call the backend stop endpoint
+}
+
 // Document ready
 $(document).ready(function() {
     console.log('🚀 FRESH DASHBOARD: Initialized successfully');
@@ -961,6 +1827,9 @@ $(document).ready(function() {
     
     // Initialize charts
     initializeCharts();
+    
+    // Initialize pipeline system
+    initializePipelineSystem();
     
     // Start with overview section
     switchSection('overview');
