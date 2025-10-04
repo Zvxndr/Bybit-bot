@@ -17,53 +17,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     
-    <!-- 🚨🚨🚨 MEGA-NUCLEAR PROTECTION CSS - ELIMINATE ALL TEMPLATE CONFLICTS 🚨🚨🚨 -->
-    <link rel="stylesheet" href="/static/css/mega-nuclear-protection.css">
-    
     <style>
-        /* 🚨 NUCLEAR NAVIGATION SYSTEM - MAXIMUM SPECIFICITY AND FORCE */
-        
-        /* Target ALL possible AdminLTE body configurations */
-        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section,
-        body.hold-transition.sidebar-mini .content-wrapper .content-section,
-        body.sidebar-mini.layout-fixed .content-wrapper .content-section,
-        body.sidebar-mini .content-wrapper .content-section,
-        body .content-wrapper .content-section,
-        .wrapper .content-wrapper .content-section,
-        .content-wrapper .content-section,
         .content-section {
             padding: 20px;
-            display: none !important; /* NUCLEAR: Force hide ALL sections by default */
-            visibility: hidden !important; /* NUCLEAR: Double security */
-            opacity: 0 !important; /* NUCLEAR: Triple security */
-            position: absolute !important; /* NUCLEAR: Remove from flow */
-            top: -99999px !important; /* NUCLEAR: Move offscreen */
-            left: -99999px !important; /* NUCLEAR: Move offscreen */
-            width: 0 !important; /* NUCLEAR: Zero dimensions */
-            height: 0 !important; /* NUCLEAR: Zero dimensions */
-            overflow: hidden !important; /* NUCLEAR: Hide overflow */
-            z-index: -999 !important; /* NUCLEAR: Behind everything */
-        }
-        
-        /* ACTIVE section overrides - MAXIMUM force */
-        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section.active,
-        body.hold-transition.sidebar-mini .content-wrapper .content-section.active,
-        body.sidebar-mini.layout-fixed .content-wrapper .content-section.active,
-        body.sidebar-mini .content-wrapper .content-section.active,
-        body .content-wrapper .content-section.active,
-        .wrapper .content-wrapper .content-section.active,
-        .content-wrapper .content-section.active,
-        .content-section.active {
-            display: block !important; /* NUCLEAR: Force show active section */
-            visibility: visible !important; /* NUCLEAR: Force visible */
-            opacity: 1 !important; /* NUCLEAR: Force opaque */
-            position: relative !important; /* NUCLEAR: Back in flow */
-            top: auto !important; /* NUCLEAR: Reset position */
-            left: auto !important; /* NUCLEAR: Reset position */
-            width: auto !important; /* NUCLEAR: Reset width */
-            height: auto !important; /* NUCLEAR: Reset height */
-            overflow: visible !important; /* NUCLEAR: Show content */
-            z-index: 10 !important; /* NUCLEAR: On top */
         }
         
         /* NUCLEAR: Override any CSS animation or transition that might interfere */
@@ -2101,202 +2057,35 @@ console.log('🔧 CLEAN NAVIGATION: Loading...');
 
 // 🚨 NUCLEAR NAVIGATION SYSTEM - BULLETPROOF SECTION SWITCHING 🚨
 function switchSection(sectionId) {
-    console.log('🚨🚨🚨 NUCLEAR NAVIGATION: === SWITCHING TO ' + sectionId + ' === 🚨🚨🚨');
+    console.log('Switching to section: ' + sectionId);
     
-    try {
-        // NUCLEAR STEP 1: Disable ALL event listeners temporarily to prevent interference
-        var oldOnClick = window.onclick;
-        window.onclick = null;
-        
-        // NUCLEAR STEP 2: Remove active class from ALL sections with maximum force
-        var sections = document.querySelectorAll('.content-section, [class*="content-section"], [id*="section-"]');
-        console.log('🔥 NUCLEAR: Found ' + sections.length + ' sections to OBLITERATE');
-        
-        for (var i = 0; i < sections.length; i++) {
-            var section = sections[i];
-            var wasActive = section.classList.contains('active');
-            // NUCLEAR: Remove ALL possible active classes
-            section.classList.remove('active', 'show', 'visible', 'display-block', 'open');
-            section.className = section.className.replace(/active/g, '').replace(/show/g, '').replace(/visible/g, '');
-            
-            // NUCLEAR: Force hide via EVERY possible method
-            section.style.setProperty('display', 'none', 'important');
-            section.style.setProperty('visibility', 'hidden', 'important');
-            section.style.setProperty('opacity', '0', 'important');
-            section.style.setProperty('position', 'absolute', 'important');
-            section.style.setProperty('top', '-99999px', 'important');
-            section.style.setProperty('left', '-99999px', 'important');
-            section.style.setProperty('width', '0', 'important');
-            section.style.setProperty('height', '0', 'important');
-            section.style.setProperty('overflow', 'hidden', 'important');
-            section.style.setProperty('z-index', '-999', 'important');
-            
-            // NUCLEAR: Set multiple attributes to ensure hiding
-            section.setAttribute('hidden', 'hidden');
-            section.setAttribute('aria-hidden', 'true');
-            section.setAttribute('data-state', 'hidden');
-            
-            console.log('🔥 NUCLEAR OBLITERATION: ' + section.id + ' -> ' + (wasActive ? 'WAS ACTIVE' : 'was hidden') + ' -> NOW COMPLETELY DESTROYED');
-        }
-        
-        // Remove active class from all nav links
-        var navLinks = document.querySelectorAll('.nav-link');
-        for (var i = 0; i < navLinks.length; i++) {
-            navLinks[i].classList.remove('active');
-        }
-        
-        // NUCLEAR STEP 3: Show target section with MAXIMUM FORCE
-        var targetSection = document.getElementById('section-' + sectionId);
-        if (targetSection) {
-            // NUCLEAR: Add ALL possible active classes
-            targetSection.classList.add('active', 'show', 'visible', 'display-block', 'open');
-            
-            // NUCLEAR: Force show via EVERY possible method
-            targetSection.style.setProperty('display', 'block', 'important');
-            targetSection.style.setProperty('visibility', 'visible', 'important');
-            targetSection.style.setProperty('opacity', '1', 'important');
-            targetSection.style.setProperty('position', 'relative', 'important');
-            targetSection.style.setProperty('top', 'auto', 'important');
-            targetSection.style.setProperty('left', 'auto', 'important');
-            targetSection.style.setProperty('width', 'auto', 'important');
-            targetSection.style.setProperty('height', 'auto', 'important');
-            targetSection.style.setProperty('overflow', 'visible', 'important');
-            targetSection.style.setProperty('z-index', '10', 'important');
-            
-            // NUCLEAR: Remove hiding attributes
-            targetSection.removeAttribute('hidden');
-            targetSection.setAttribute('aria-hidden', 'false');
-            targetSection.setAttribute('data-state', 'active');
-            
-            // NUCLEAR: Force DOM reflow to ensure changes take effect
-            targetSection.offsetHeight;
-            
-            console.log('🚀🚀🚀 NUCLEAR SUCCESS: Section ' + sectionId + ' is now FORCEFULLY ACTIVE and VISIBLE');
-            console.log('Target section computed style: ' + window.getComputedStyle(targetSection).display);
-            
-            // NUCLEAR STEP 4: Multi-stage validation with aggressive cleanup
-            setTimeout(function() {
-                var activeSections = document.querySelectorAll('.content-section.active, .content-section[style*="block"]');
-                console.log('🔍 NUCLEAR VALIDATION: ' + activeSections.length + ' sections detected as potentially active');
-                
-                if (activeSections.length > 1) {
-                    console.error('🚨🚨🚨 NUCLEAR ALERT: Multiple sections detected - INITIATING EMERGENCY CLEANUP');
-                    
-                    // NUCLEAR EMERGENCY: Obliterate ALL except target
-                    for (var k = 0; k < activeSections.length; k++) {
-                        var section = activeSections[k];
-                        if (section.id !== 'section-' + sectionId) {
-                            console.error('🔥 EMERGENCY OBLITERATION: ' + section.id);
-                            section.classList.remove('active');
-                            section.style.setProperty('display', 'none', 'important');
-                            section.style.setProperty('visibility', 'hidden', 'important');
-                            section.style.setProperty('opacity', '0', 'important');
-                        }
-                    }
-                    
-                    // NUCLEAR: Re-validate after cleanup
-                    setTimeout(function() {
-                        var remaining = document.querySelectorAll('.content-section.active');
-                        console.log('🔍 POST-CLEANUP: ' + remaining.length + ' sections remain active');
-                    }, 50);
-                } else {
-                    console.log('✅✅✅ NUCLEAR VALIDATION PASSED: Only one section is active');
-                }
-            }, 100);
-            
-            // NUCLEAR STEP 5: Continuous monitoring for 5 seconds
-            var monitorCount = 0;
-            var nuclearMonitor = setInterval(function() {
-                var activeSections = document.querySelectorAll('.content-section.active');
-                if (activeSections.length > 1) {
-                    console.warn('🚨 NUCLEAR MONITOR: Multiple sections detected at ' + monitorCount + 's - auto-fixing');
-                    for (var i = 1; i < activeSections.length; i++) {
-                        activeSections[i].classList.remove('active');
-                        activeSections[i].style.display = 'none';
-                    }
-                }
-                monitorCount++;
-                if (monitorCount >= 50) { // Monitor for 5 seconds
-                    clearInterval(nuclearMonitor);
-                    console.log('🔍 NUCLEAR MONITOR: Surveillance complete');
-                }
-            }, 100);
-            
-            // NUCLEAR STEP 6: Update navigation with maximum force
-            var navLinks = document.querySelectorAll('.nav-link, [data-section]');
-            for (var n = 0; n < navLinks.length; n++) {
-                navLinks[n].classList.remove('active');
-            }
-            
-            var targetNavLink = document.querySelector('[data-section="' + sectionId + '"]');
-            if (targetNavLink) {
-                targetNavLink.classList.add('active');
-                console.log('🎯 NUCLEAR: Nav link activated for: ' + sectionId);
-            }
-            
-            // NUCLEAR STEP 7: Restore event listeners
-            setTimeout(function() {
-                window.onclick = oldOnClick;
-            }, 100);
-            
-        } else {
-            console.error('❌❌❌ NUCLEAR ERROR: Target section not found: section-' + sectionId);
-            console.log('Available sections:');
-            var allSections = document.querySelectorAll('.content-section');
-            for (var j = 0; j < allSections.length; j++) {
-                console.log('  - ' + allSections[j].id);
-            }
-            
-            // NUCLEAR: Restore event listeners even on error
-            window.onclick = oldOnClick;
-        }
-        
-    } catch (error) {
-        console.error('❌ NAVIGATION ERROR:', error);
+    // Hide all sections
+    var sections = document.querySelectorAll('.content-section');
+    for (var i = 0; i < sections.length; i++) {
+        sections[i].style.display = 'none';
+    }
+    
+    // Show target section
+    var targetSection = document.getElementById('section-' + sectionId);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+        console.log('Section ' + sectionId + ' is now visible');
+    }
+    
+    // Update navigation
+    var navLinks = document.querySelectorAll('.nav-link');
+    for (var i = 0; i < navLinks.length; i++) {
+        navLinks[i].classList.remove('active');
+    }
+    
+    var targetNavLink = document.querySelector('[data-section="' + sectionId + '"]');
+    if (targetNavLink) {
+        targetNavLink.classList.add('active');
     }
 }
 
 // Add mutation observer to detect external modifications
-function setupNavigationObserver() {
-    if (window.navigationObserver) return; // Already setup
-    
-    var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                var target = mutation.target;
-                if (target.classList.contains('content-section')) {
-                    console.log('🔍 MUTATION: Section class changed - ' + target.id);
-                    
-                    // Count active sections
-                    var activeSections = document.querySelectorAll('.content-section.active');
-                    if (activeSections.length > 1) {
-                        console.warn('🚨 MUTATION DETECTED: Multiple active sections - forcing cleanup');
-                        // Force cleanup
-                        setTimeout(function() {
-                            var allSections = document.querySelectorAll('.content-section');
-                            for (var i = 1; i < allSections.length; i++) {
-                                if (allSections[i].classList.contains('active')) {
-                                    allSections[i].classList.remove('active');
-                                    allSections[i].style.display = 'none';
-                                    console.log('Cleaned up section: ' + allSections[i].id);
-                                }
-                            }
-                        }, 10);
-                    }
-                }
-            }
-        });
-    });
-    
-    // Observe all content sections
-    var sections = document.querySelectorAll('.content-section');
-    for (var i = 0; i < sections.length; i++) {
-        observer.observe(sections[i], { attributes: true });
-    }
-    
-    window.navigationObserver = observer;
-    console.log('🔍 MUTATION OBSERVER: Monitoring ' + sections.length + ' sections for changes');
-}
+// Observer function removed - keeping navigation simple
 
 // Comprehensive debug function
 function debugNavigationState() {
@@ -2333,83 +2122,10 @@ function debugNavigationState() {
 window.debugNav = debugNavigationState;
 
 // Periodic navigation monitor
-function startNavigationMonitor() {
-    if (window.navigationMonitor) return; // Already running
-    
-    window.navigationMonitor = setInterval(function() {
-        var activeSections = document.querySelectorAll('.content-section.active');
-        
-        if (activeSections.length > 1) {
-            console.warn('🚨 MONITOR: Found ' + activeSections.length + ' active sections - fixing automatically');
-            
-            // Keep only the first active section, hide the rest
-            for (var i = 1; i < activeSections.length; i++) {
-                activeSections[i].classList.remove('active');
-                activeSections[i].style.display = 'none';
-                activeSections[i].style.visibility = 'hidden';
-                activeSections[i].style.opacity = '0';
-                console.log('MONITOR: Deactivated duplicate section: ' + activeSections[i].id);
-            }
-        } else if (activeSections.length === 0) {
-            console.warn('🚨 MONITOR: No active sections - activating overview');
-            var overview = document.getElementById('section-overview');
-            if (overview) {
-                overview.classList.add('active');
-                overview.style.display = 'block';
-                overview.style.visibility = 'visible';
-                overview.style.opacity = '1';
-            }
-        }
-    }, 1000); // Check every second
-    
-    console.log('🔄 NAVIGATION MONITOR: Started periodic checking (1s intervals)');
-}
+// Navigation monitor removed - keeping it simple
 
 // 🚨 NUCLEAR DOM PROTECTION SYSTEM
-function startNuclearDOMProtection() {
-    if (window.nuclearDOMProtector) return; // Already running
-    
-    console.log('🚨 NUCLEAR DOM PROTECTOR: Activating anti-interference system...');
-    
-    // NUCLEAR: Continuous section monitoring every 100ms
-    window.nuclearDOMProtector = setInterval(function() {
-        var sections = document.querySelectorAll('.content-section');
-        var activeCount = 0;
-        var activeSections = [];
-        
-        // Count active sections
-        for (var i = 0; i < sections.length; i++) {
-            var section = sections[i];
-            var isActive = section.classList.contains('active');
-            var isVisible = window.getComputedStyle(section).display !== 'none';
-            
-            if (isActive || isVisible) {
-                activeCount++;
-                activeSections.push(section);
-            }
-        }
-        
-        // NUCLEAR RESPONSE: If multiple sections are active, obliterate extras
-        if (activeCount > 1) {
-            console.warn('🚨 NUCLEAR DOM PROTECTOR: Multiple sections detected (' + activeCount + ') - OBLITERATING EXTRAS');
-            
-            // Keep only the first active section, destroy the rest
-            for (var j = 1; j < activeSections.length; j++) {
-                var section = activeSections[j];
-                console.warn('🔥 DOM PROTECTOR OBLITERATION: ' + section.id);
-                
-                // Nuclear obliteration
-                section.classList.remove('active', 'show', 'visible');
-                section.style.setProperty('display', 'none', 'important');
-                section.style.setProperty('visibility', 'hidden', 'important');
-                section.style.setProperty('opacity', '0', 'important');
-                section.setAttribute('hidden', 'hidden');
-            }
-        }
-    }, 100); // Check every 100ms for maximum protection
-    
-    console.log('🚨 NUCLEAR DOM PROTECTOR: Active - monitoring every 100ms');
-}
+// Nuclear DOM protector removed - simple is better
 
 // Update navigation state
 function updateNavigation(activeSection) {
@@ -3746,10 +3462,7 @@ document.addEventListener('DOMContentLoaded', function() {
         navLinks[i].classList.remove('active');
     }
     
-    // NUCLEAR: Setup aggressive monitoring systems
-    setupNavigationObserver();
-    startNavigationMonitor();
-    startNuclearDOMProtection();
+    // Simple navigation - no nuclear systems needed
     
     // 🚨🚨🚨 MEGA-NUCLEAR: OVERRIDE ALL CONFLICTING FUNCTION NAMES 🚨🚨🚨
     // Neutralize any conflicting navigation functions from other templates
