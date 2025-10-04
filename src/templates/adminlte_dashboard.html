@@ -18,12 +18,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     
     <style>
-        .content-section {
+        /* High-specificity navigation system to override AdminLTE defaults */
+        .content-wrapper .content-section {
             padding: 20px;
             display: none !important; /* Force hide all sections by default */
         }
         
-        .content-section.active {
+        .content-wrapper .content-section.active {
             display: block !important; /* Force show active section */
         }
         
@@ -345,7 +346,7 @@
     <div class="content-wrapper">
         
         <!-- System Overview Section -->
-        <div class="content-section active" id="section-overview" style="display: block !important;">
+        <div class="content-section active" id="section-overview">
             <div class="content-header">
                 <h1>🎯 System Overview</h1>
             </div>
@@ -495,7 +496,7 @@
         </div>
 
         <!-- AI Pipeline Monitor Section -->
-        <div class="content-section" id="section-ai-lab" style="display: none !important;">
+        <div class="content-section" id="section-ai-lab">
             <div class="content-header">
                 <h1>🤖 AI Pipeline Monitor</h1>
                 <div class="content-header-right">
@@ -1183,7 +1184,7 @@
         </div>
 
         <!-- Live Trading Section -->
-        <div class="content-section" id="section-trading" style="display: none !important;">
+        <div class="content-section" id="section-trading">
             <div class="content-header">
                 <h1>🚀 Live Trading Engine</h1>
             </div>
@@ -1226,7 +1227,7 @@
         </div>
 
         <!-- Portfolio Management Section -->
-        <div class="content-section" id="section-portfolio" style="display: none !important;">
+        <div class="content-section" id="section-portfolio">
             <div class="content-header">
                 <h1>💼 Portfolio Management <span class="real-time-indicator"></span><span class="timestamp" id="portfolio-timestamp"></span></h1>
             </div>
@@ -1343,7 +1344,7 @@
         </div>
 
         <!-- Performance Analytics Section -->
-        <div class="content-section" id="section-analytics" style="display: none !important;">
+        <div class="content-section" id="section-analytics">
             <div class="content-header">
                 <h1>📊 Performance Analytics</h1>
             </div>
@@ -1375,7 +1376,7 @@
         </div>
 
         <!-- Risk Management Section -->
-        <div class="content-section" id="section-risk" style="display: none !important;">
+        <div class="content-section" id="section-risk">
             <div class="content-header">
                 <h1>🛡️ Risk Management</h1>
             </div>
@@ -1414,7 +1415,7 @@
         </div>
 
         <!-- System Settings Section -->
-        <div class="content-section" id="section-settings" style="display: none !important;">
+        <div class="content-section" id="section-settings">
             <div class="content-header">
                 <h1>⚙️ Private Use Mode Settings</h1>
             </div>
@@ -2003,17 +2004,16 @@
 <script>
 console.log('🔧 CLEAN NAVIGATION: Loading...');
 
-// Improved navigation with CSS classes
+// Clean CSS-based navigation system
 function switchSection(sectionId) {
     console.log('🎯 NAVIGATION: Switching to ' + sectionId);
     
     try {
-        // Hide all sections
+        // Remove active class from ALL sections (this hides them via CSS)
         var sections = document.querySelectorAll('.content-section');
-        console.log('Found ' + sections.length + ' sections');
+        console.log('Found ' + sections.length + ' sections to hide');
         for (var i = 0; i < sections.length; i++) {
             sections[i].classList.remove('active');
-            sections[i].style.display = 'none';
             console.log('Hidden section: ' + sections[i].id);
         }
         
@@ -2023,12 +2023,11 @@ function switchSection(sectionId) {
             navLinks[i].classList.remove('active');
         }
         
-        // Show target section
+        // Show target section by adding active class (CSS handles display)
         var targetSection = document.getElementById('section-' + sectionId);
         if (targetSection) {
             targetSection.classList.add('active');
-            targetSection.style.display = 'block';
-            console.log('✅ SUCCESS: Section ' + sectionId + ' is now visible');
+            console.log('✅ SUCCESS: Section ' + sectionId + ' is now active');
             
             // Activate corresponding nav link
             var navLink = document.querySelector('[data-section="' + sectionId + '"]');
@@ -4823,6 +4822,37 @@ function refreshPipelineStatus() {
 // Initialize pipeline features when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔧 PIPELINE: Initializing pipeline features...');
+    
+    // Initialize navigation system - ensure only overview section is visible
+    console.log('🎯 NAVIGATION: Initializing section visibility...');
+    var sections = document.querySelectorAll('.content-section');
+    console.log('Found ' + sections.length + ' sections to initialize');
+    
+    // Hide ALL sections first
+    for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.remove('active');
+        console.log('Hiding section: ' + sections[i].id);
+    }
+    
+    // Show only the overview section
+    var overviewSection = document.getElementById('section-overview');
+    if (overviewSection) {
+        overviewSection.classList.add('active');
+        console.log('✅ NAVIGATION: Overview section activated');
+    } else {
+        console.error('❌ ERROR: Overview section not found!');
+    }
+    
+    // Ensure proper nav link state
+    var navLinks = document.querySelectorAll('.nav-link');
+    for (var i = 0; i < navLinks.length; i++) {
+        navLinks[i].classList.remove('active');
+    }
+    var overviewLink = document.querySelector('[data-section="overview"]');
+    if (overviewLink) {
+        overviewLink.classList.add('active');
+        console.log('✅ NAVIGATION: Overview nav link activated');
+    }
     
     // Initialize WebSocket connection
     setTimeout(() => {
