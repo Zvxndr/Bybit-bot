@@ -2449,8 +2449,8 @@
 <script>
 console.log('🚀 FRESH DASHBOARD: Loading...');
 
-// Simple, clean navigation function
-function switchSection(sectionId) {
+// Ensure all functions are available in global scope immediately
+window.switchSection = function(sectionId) {
     console.log('🎯 Switching to:', sectionId);
     addDebugLog('🎯 NAVIGATION: Switching to ' + sectionId);
     
@@ -2473,10 +2473,10 @@ function switchSection(sectionId) {
     
     // Update navigation
     updateNavigation(sectionId);
-}
+};
 
 // Update navigation active state
-function updateNavigation(activeSection) {
+window.updateNavigation = function(activeSection) {
     // Remove active class from all nav links
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -2489,10 +2489,10 @@ function updateNavigation(activeSection) {
         activeLink.classList.add('active');
         console.log('✅ Navigation updated for:', activeSection);
     }
-}
+};
 
 // Add system log entry (integrated debug logging)
-function addDebugLog(message) {
+window.addDebugLog = function(message) {
     // Log to console for development
     console.log(message);
     
@@ -2526,18 +2526,35 @@ function addDebugLog(message) {
             systemLog.removeChild(systemLog.firstChild);
         }
     }
-}
+};
+
+// Simple alert system
+window.showAlert = function(message, type = 'info') {
+    console.log(`📢 ${type.toUpperCase()}: ${message}`);
+    addDebugLog(`📢 ALERT (${type.toUpperCase()}): ${message}`);
+    
+    // You could enhance this to show Bootstrap alerts or toast notifications
+    if (type === 'error') {
+        console.error('Error: ' + message);
+    } else if (type === 'success') {
+        console.log('✅ ' + message);
+    } else if (type === 'warning') {
+        console.warn('⚠️ ' + message);
+    } else {
+        console.info('ℹ️ ' + message);
+    }
+};
 
 // System monitor functions
-function clearSystemLog() {
+window.clearSystemLog = function() {
     const systemLog = document.getElementById('system-log');
     if (systemLog) {
         systemLog.innerHTML = '';
         addDebugLog('🧹 SYSTEM: Log cleared by user');
     }
-}
+};
 
-function exportSystemLog() {
+window.exportSystemLog = function() {
     const systemLog = document.getElementById('system-log');
     if (systemLog) {
         const logs = Array.from(systemLog.children).map(entry => entry.textContent).join('\n');
@@ -2550,40 +2567,40 @@ function exportSystemLog() {
         URL.revokeObjectURL(url);
         addDebugLog('📥 SYSTEM: Log exported successfully');
     }
-}
+};
 
-function restartServices() {
+window.restartServices = function() {
     addDebugLog('🔄 SYSTEM: Service restart requested');
     // This would call the actual restart API
     alert('🔄 Service restart initiated. System will be back online shortly.');
-}
+};
 
-function flushCache() {
+window.flushCache = function() {
     addDebugLog('🧹 SYSTEM: Cache flush requested');
     // This would call the actual cache clear API
     alert('🧹 Cache cleared successfully.');
-}
+};
 
-function runHealthCheck() {
+window.runHealthCheck = function() {
     addDebugLog('🩺 SYSTEM: Running comprehensive health check...');
     // This would call the actual health check API
     setTimeout(() => {
         addDebugLog('✅ HEALTH CHECK: All systems operational');
         alert('✅ Health Check Complete: All systems are operational');
     }, 2000);
-}
+};
 
-function testConnections() {
+window.testConnections = function() {
     addDebugLog('🔗 SYSTEM: Testing all connections...');
     // This would test actual connections
     setTimeout(() => {
         addDebugLog('✅ CONNECTIONS: All endpoints responding normally');
         alert('✅ Connection Test Complete: All endpoints are responding');
     }, 1500);
-}
+};
 
 // Historical Database Testing Controls
-function testHistoricalDatabase() {
+window.testHistoricalDatabase = function() {
     addDebugLog('📊 DATABASE: Testing historical database connection...');
     // This would call the historical data provider test suite
     setTimeout(() => {
@@ -2676,12 +2693,12 @@ function emergencyStop() {
     notificationManager.showEmergencyAlert('All trading operations have been halted immediately');
 }
 
-function saveApiSettings() {
+window.saveApiSettings = function() {
     console.log('💾 Saving API settings');
     addDebugLog('💾 SETTINGS: API configuration saved');
 }
 
-function testNotifications() {
+window.testNotifications = function() {
     console.log('🔔 Testing notifications');
     
     // Test different notification types
@@ -4792,11 +4809,31 @@ $(document).ready(function() {
     // Initialize complete trading system
     initializeTradingSystem();
     
+    // Ensure all critical functions are available globally
+    const criticalFunctions = [
+        'switchSection', 'addDebugLog', 'showAlert', 'updateNavigation',
+        'clearSystemLog', 'exportSystemLog', 'testNotifications', 'saveApiSettings'
+    ];
+    
+    criticalFunctions.forEach(funcName => {
+        if (typeof window[funcName] !== 'function') {
+            console.warn(`⚠️ Function ${funcName} not found in global scope`);
+        } else {
+            console.log(`✅ Function ${funcName} available globally`);
+        }
+    });
+    
     // Start with overview section
-    switchSection('overview');
+    if (typeof switchSection === 'function') {
+        switchSection('overview');
+    } else {
+        console.error('❌ switchSection function not available');
+    }
     
     console.log('✅ Complete trading system ready');
-    addDebugLog('✅ READY: Professional trading system operational');
+    if (typeof addDebugLog === 'function') {
+        addDebugLog('✅ READY: Professional trading system operational');
+    }
 });
 
 </script>
