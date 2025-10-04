@@ -27,7 +27,7 @@ import json
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc, func
 
-from ..database.database_manager import DatabaseManager
+from ..database.manager import DatabaseManager
 from ..database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
 from ..ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
 from ..backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine

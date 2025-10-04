@@ -8,7 +8,7 @@ This script demonstrates how to add the pipeline endpoints to your FastAPI appli
 import asyncio
 import logging
 from fastapi import FastAPI
-from ..bot.database.database_manager import DatabaseManager
+from ..bot.database.manager import DatabaseManager
 from ..api.pipeline_api import PipelineAPI
 from ..bot.pipeline import pipeline_manager
 

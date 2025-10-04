@@ -20,6 +20,11 @@
     <style>
         .content-section {
             padding: 20px;
+            display: none; /* Hide all sections by default */
+        }
+        
+        .content-section.active {
+            display: block !important; /* Show active section */
         }
         
         .dashboard-card {
@@ -239,7 +244,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" role="menu" data-accordion="false">
                     
                     <li class="nav-item">
-                        <a class="nav-link" data-section="overview" onclick="switchSection('overview'); return false;">
+                        <a class="nav-link active" data-section="overview" onclick="switchSection('overview'); return false;">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>System Overview</p>
                         </a>
@@ -298,7 +303,7 @@
     <div class="content-wrapper">
         
         <!-- System Overview Section -->
-        <div class="content-section" id="section-overview">
+        <div class="content-section active" id="section-overview">
             <div class="content-header">
                 <h1>🎯 System Overview</h1>
             </div>
@@ -448,7 +453,7 @@
         </div>
 
         <!-- AI Pipeline Monitor Section -->
-        <div class="content-section" id="section-ai-lab" style="display: none;">
+        <div class="content-section" id="section-ai-lab">
             <div class="content-header">
                 <h1>🤖 AI Pipeline Monitor</h1>
                 <div class="content-header-right">
@@ -1136,7 +1141,7 @@
         </div>
 
         <!-- Live Trading Section -->
-        <div class="content-section" id="section-trading" style="display: none;">
+        <div class="content-section" id="section-trading">
             <div class="content-header">
                 <h1>🚀 Live Trading Engine</h1>
             </div>
@@ -1179,7 +1184,7 @@
         </div>
 
         <!-- Portfolio Management Section -->
-        <div class="content-section" id="section-portfolio" style="display: none;">
+        <div class="content-section" id="section-portfolio">
             <div class="content-header">
                 <h1>💼 Portfolio Management <span class="real-time-indicator"></span><span class="timestamp" id="portfolio-timestamp"></span></h1>
             </div>
@@ -1296,7 +1301,7 @@
         </div>
 
         <!-- Performance Analytics Section -->
-        <div class="content-section" id="section-analytics" style="display: none;">
+        <div class="content-section" id="section-analytics">
             <div class="content-header">
                 <h1>📊 Performance Analytics</h1>
             </div>
@@ -1328,7 +1333,7 @@
         </div>
 
         <!-- Risk Management Section -->
-        <div class="content-section" id="section-risk" style="display: none;">
+        <div class="content-section" id="section-risk">
             <div class="content-header">
                 <h1>🛡️ Risk Management</h1>
             </div>
@@ -1367,7 +1372,7 @@
         </div>
 
         <!-- System Settings Section -->
-        <div class="content-section" id="section-settings" style="display: none;">
+        <div class="content-section" id="section-settings">
             <div class="content-header">
                 <h1>⚙️ Private Use Mode Settings</h1>
             </div>
@@ -1956,7 +1961,7 @@
 <script>
 console.log('🔧 CLEAN NAVIGATION: Loading...');
 
-// Simple, syntax-error-free navigation
+// Improved navigation with CSS classes
 function switchSection(sectionId) {
     console.log('🎯 NAVIGATION: Switching to ' + sectionId);
     
@@ -1964,25 +1969,34 @@ function switchSection(sectionId) {
     addDebugLog('🎯 NAVIGATION: Switching to ' + sectionId);
     
     try {
-        // Hide all sections
+        // Remove active class from all sections
         var sections = document.querySelectorAll('.content-section');
         for (var i = 0; i < sections.length; i++) {
-            sections[i].style.display = 'none';
+            sections[i].classList.remove('active');
+        }
+        
+        // Remove active class from all nav links
+        var navLinks = document.querySelectorAll('.nav-link');
+        for (var i = 0; i < navLinks.length; i++) {
+            navLinks[i].classList.remove('active');
         }
         
         // Show target section
         var targetSection = document.getElementById('section-' + sectionId);
         if (targetSection) {
-            targetSection.style.display = 'block';
+            targetSection.classList.add('active');
             console.log('✅ SUCCESS: Section ' + sectionId + ' is now visible');
             addDebugLog('✅ SUCCESS: Section ' + sectionId + ' displayed');
+            
+            // Activate corresponding nav link
+            var navLink = document.querySelector('[data-section="' + sectionId + '"]');
+            if (navLink) {
+                navLink.classList.add('active');
+            }
         } else {
             console.error('❌ ERROR: Section not found: ' + sectionId);
             addDebugLog('❌ ERROR: Section not found: ' + sectionId);
         }
-        
-        // Update navigation
-        updateNavigation(sectionId);
         
     } catch (error) {
         console.error('❌ NAVIGATION ERROR:', error);

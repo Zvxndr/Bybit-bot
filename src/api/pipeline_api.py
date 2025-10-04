@@ -13,7 +13,7 @@ import asyncio
 from pydantic import BaseModel
 
 from ..bot.pipeline import pipeline_manager, AutomatedPipelineManager, PipelineConfig
-from ..bot.database.database_manager import DatabaseManager
+from ..bot.database.manager import DatabaseManager
 from ..bot.database.models import StrategyPipeline, StrategyPerformance
 
 logger = logging.getLogger(__name__)

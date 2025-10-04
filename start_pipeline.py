@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse
 # Import the pipeline integration
 from src.bot.pipeline_integration import integrate_pipeline_api, initialize_pipeline_system
 from src.bot.pipeline import pipeline_manager
-from src.bot.database.database_manager import DatabaseManager
+from src.bot.database.manager import DatabaseManager
 
 
 def create_app():
