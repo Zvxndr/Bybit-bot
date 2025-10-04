@@ -170,6 +170,9 @@
         .strategy-card {
             transition: all 0.3s ease;
             cursor: pointer;
+            min-height: 140px; /* Minimum height for cards */
+            padding: 16px !important; /* More padding for better spacing */
+            margin-bottom: 16px !important; /* Consistent spacing between cards */
         }
         
         .strategy-card:hover {
@@ -182,9 +185,48 @@
             font-size: 0.7em;
         }
         
+        /* Pipeline Column Layout Improvements */
+        .pipeline-column {
+            height: calc(100vh - 220px); /* Full height minus header space */
+            display: flex;
+            flex-direction: column;
+        }
+        
         .pipeline-column .card {
             border: none;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            height: 100%; /* Full height for each column */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pipeline-column .card-body {
+            flex: 1; /* Take remaining space */
+            overflow-y: auto; /* Scroll only if needed */
+            max-height: calc(100vh - 320px); /* Prevent excessive height */
+            padding: 20px; /* Better internal padding */
+        }
+        
+        .pipeline-column .card-header {
+            flex-shrink: 0; /* Don't shrink header */
+            padding: 15px 20px; /* Consistent header padding */
+        }
+        
+        /* Better spacing for strategy cards */
+        .strategy-card + .strategy-card {
+            margin-top: 16px; /* Consistent spacing between cards */
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .pipeline-column {
+                height: auto; /* Auto height on smaller screens */
+                margin-bottom: 20px;
+            }
+            
+            .pipeline-column .card-body {
+                max-height: 500px; /* Fixed height on smaller screens */
+            }
         }
         
         .bg-gradient-primary {
@@ -538,7 +580,7 @@
                 <!-- Three-Column Pipeline -->
                 <div class="row">
                     <!-- Backtest & Discovery Column -->
-                    <div class="col-md-4">
+                    <div class="col-md-4 pipeline-column">
                         <div class="card bg-gradient-primary">
                             <div class="card-header">
                                 <h3 class="card-title">🔍 Backtest & Discovery</h3>
@@ -546,7 +588,7 @@
                                     <span class="badge badge-light" id="backtest-count">8 candidates</span>
                                 </div>
                             </div>
-                            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                            <div class="card-body">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i>
                                     <strong>Discovery Phase:</strong> AI continuously tests new strategies on historical data
@@ -640,7 +682,7 @@
                     </div>
                     
                     <!-- Paper Trading Column -->
-                    <div class="col-md-4">
+                    <div class="col-md-4 pipeline-column">
                         <div class="card bg-gradient-warning">
                             <div class="card-header">
                                 <h3 class="card-title">📄 Paper Trading</h3>
@@ -648,7 +690,7 @@
                                     <span class="badge badge-light" id="paper-count">4 testing</span>
                                 </div>
                             </div>
-                            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                            <div class="card-body">
                                 <div class="alert alert-warning">
                                     <i class="fas fa-info-circle"></i>
                                     <strong>Validation Phase:</strong> Promising strategies tested with simulated trades
@@ -725,7 +767,7 @@
                     </div>
 
                     <!-- Live Trading Column -->
-                    <div class="col-md-4">
+                    <div class="col-md-4 pipeline-column">
                         <div class="card bg-gradient-success">
                             <div class="card-header">
                                 <h3 class="card-title">🚀 Live Trading</h3>
@@ -733,7 +775,7 @@
                                     <span class="badge badge-light" id="live-count">5 active</span>
                                 </div>
                             </div>
-                            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                            <div class="card-body">
                                 <div class="alert alert-success">
                                     <i class="fas fa-info-circle"></i>
                                     <strong>Production Phase:</strong> Validated strategies trading with real funds
