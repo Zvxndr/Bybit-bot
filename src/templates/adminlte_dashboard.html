@@ -112,12 +112,24 @@
         
         // Check for errors
         window.addEventListener('error', function(event) {
+            // Filter out external script errors (ads, extensions, etc.)
+            if (event.filename && (
+                event.filename.includes('italocean.app') || 
+                event.filename.includes('auto-wealth') ||
+                event.filename.includes('chrome-extension') ||
+                event.filename.includes('moz-extension')
+            )) {
+                console.warn('⚠️ External script error ignored:', event.filename);
+                return;
+            }
+            
             console.error('🚨 JavaScript Error:', {
                 message: event.message,
                 filename: event.filename,
                 lineno: event.lineno,
                 colno: event.colno,
-                error: event.error
+                errorType: event.error ? event.error.constructor.name : 'Unknown',
+                errorMessage: event.error ? event.error.message : 'No error object'
             });
         });
         
