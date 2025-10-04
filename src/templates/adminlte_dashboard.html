@@ -20,11 +20,11 @@
     <style>
         .content-section {
             padding: 20px;
-            display: none; /* Hide all sections by default */
+            display: none !important; /* Force hide all sections by default */
         }
         
         .content-section.active {
-            display: block !important; /* Show active section */
+            display: block !important; /* Force show active section */
         }
         
         .dashboard-card {
@@ -345,7 +345,7 @@
     <div class="content-wrapper">
         
         <!-- System Overview Section -->
-        <div class="content-section active" id="section-overview">
+        <div class="content-section active" id="section-overview" style="display: block !important;">
             <div class="content-header">
                 <h1>🎯 System Overview</h1>
             </div>
@@ -495,7 +495,7 @@
         </div>
 
         <!-- AI Pipeline Monitor Section -->
-        <div class="content-section" id="section-ai-lab">
+        <div class="content-section" id="section-ai-lab" style="display: none !important;">
             <div class="content-header">
                 <h1>🤖 AI Pipeline Monitor</h1>
                 <div class="content-header-right">
@@ -1183,7 +1183,7 @@
         </div>
 
         <!-- Live Trading Section -->
-        <div class="content-section" id="section-trading">
+        <div class="content-section" id="section-trading" style="display: none !important;">
             <div class="content-header">
                 <h1>🚀 Live Trading Engine</h1>
             </div>
@@ -1226,7 +1226,7 @@
         </div>
 
         <!-- Portfolio Management Section -->
-        <div class="content-section" id="section-portfolio">
+        <div class="content-section" id="section-portfolio" style="display: none !important;">
             <div class="content-header">
                 <h1>💼 Portfolio Management <span class="real-time-indicator"></span><span class="timestamp" id="portfolio-timestamp"></span></h1>
             </div>
@@ -1343,7 +1343,7 @@
         </div>
 
         <!-- Performance Analytics Section -->
-        <div class="content-section" id="section-analytics">
+        <div class="content-section" id="section-analytics" style="display: none !important;">
             <div class="content-header">
                 <h1>📊 Performance Analytics</h1>
             </div>
@@ -1375,7 +1375,7 @@
         </div>
 
         <!-- Risk Management Section -->
-        <div class="content-section" id="section-risk">
+        <div class="content-section" id="section-risk" style="display: none !important;">
             <div class="content-header">
                 <h1>🛡️ Risk Management</h1>
             </div>
@@ -1414,7 +1414,7 @@
         </div>
 
         <!-- System Settings Section -->
-        <div class="content-section" id="section-settings">
+        <div class="content-section" id="section-settings" style="display: none !important;">
             <div class="content-header">
                 <h1>⚙️ Private Use Mode Settings</h1>
             </div>
@@ -2007,14 +2007,14 @@ console.log('🔧 CLEAN NAVIGATION: Loading...');
 function switchSection(sectionId) {
     console.log('🎯 NAVIGATION: Switching to ' + sectionId);
     
-    // Log to debug console
-    addDebugLog('🎯 NAVIGATION: Switching to ' + sectionId);
-    
     try {
-        // Remove active class from all sections
+        // Hide all sections
         var sections = document.querySelectorAll('.content-section');
+        console.log('Found ' + sections.length + ' sections');
         for (var i = 0; i < sections.length; i++) {
             sections[i].classList.remove('active');
+            sections[i].style.display = 'none';
+            console.log('Hidden section: ' + sections[i].id);
         }
         
         // Remove active class from all nav links
@@ -2027,22 +2027,21 @@ function switchSection(sectionId) {
         var targetSection = document.getElementById('section-' + sectionId);
         if (targetSection) {
             targetSection.classList.add('active');
+            targetSection.style.display = 'block';
             console.log('✅ SUCCESS: Section ' + sectionId + ' is now visible');
-            addDebugLog('✅ SUCCESS: Section ' + sectionId + ' displayed');
             
             // Activate corresponding nav link
             var navLink = document.querySelector('[data-section="' + sectionId + '"]');
             if (navLink) {
                 navLink.classList.add('active');
+                console.log('✅ Nav link activated for: ' + sectionId);
             }
         } else {
-            console.error('❌ ERROR: Section not found: ' + sectionId);
-            addDebugLog('❌ ERROR: Section not found: ' + sectionId);
+            console.error('❌ ERROR: Section not found: section-' + sectionId);
         }
         
     } catch (error) {
         console.error('❌ NAVIGATION ERROR:', error);
-        addDebugLog('❌ ERROR: ' + error.message);
     }
 }
 
