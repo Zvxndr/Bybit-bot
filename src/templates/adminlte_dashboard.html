@@ -18,14 +18,72 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     
     <style>
-        /* High-specificity navigation system to override AdminLTE defaults */
-        .content-wrapper .content-section {
+        /* Ultra-high-specificity navigation system to override ALL conflicts */
+        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section {
             padding: 20px;
             display: none !important; /* Force hide all sections by default */
         }
         
-        .content-wrapper .content-section.active {
+        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section.active {
             display: block !important; /* Force show active section */
+        }
+        
+        /* Fallback for non-layout-fixed bodies */
+        .content-wrapper .content-section {
+            padding: 20px;
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        .content-wrapper .content-section.active {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        
+        /* Override any flex or grid properties */
+        .content-section:not(.active) {
+            flex: none !important;
+            grid-area: none !important;
+        }
+        
+        /* Override AdminLTE's default content styles */
+        .main-sidebar ~ .content-wrapper .content-section,
+        .wrapper .content-wrapper .content-section,
+        .content-wrapper > .content-section {
+            display: none !important;
+        }
+        
+        .main-sidebar ~ .content-wrapper .content-section.active,
+        .wrapper .content-wrapper .content-section.active,
+        .content-wrapper > .content-section.active {
+            display: block !important;
+        }
+        
+        /* Extremely high specificity - nuclear option */
+        html body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section {
+            display: none !important;
+        }
+        
+        html body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section.active {
+            display: block !important;
+        }
+        
+        /* Prevent CSS transitions/animations on content sections */
+        .content-section,
+        .content-section * {
+            transition: none !important;
+            animation: none !important;
+        }
+        
+        /* Ensure sections start properly hidden */
+        .content-section:not(.active) * {
+            display: inherit; /* Allow children to be visible when parent section is active */
         }
         
         .dashboard-card {
@@ -346,7 +404,7 @@
     <div class="content-wrapper">
         
         <!-- System Overview Section -->
-        <div class="content-section active" id="section-overview">
+        <div class="content-section" id="section-overview">
             <div class="content-header">
                 <h1>🎯 System Overview</h1>
             </div>
@@ -2004,17 +2062,25 @@
 <script>
 console.log('🔧 CLEAN NAVIGATION: Loading...');
 
-// Clean CSS-based navigation system
+// Ultra-robust CSS-based navigation system with comprehensive debugging
 function switchSection(sectionId) {
-    console.log('🎯 NAVIGATION: Switching to ' + sectionId);
+    console.log('🎯 NAVIGATION: === SWITCHING TO ' + sectionId + ' ===');
     
     try {
         // Remove active class from ALL sections (this hides them via CSS)
         var sections = document.querySelectorAll('.content-section');
-        console.log('Found ' + sections.length + ' sections to hide');
+        console.log('Found ' + sections.length + ' sections to process');
+        
         for (var i = 0; i < sections.length; i++) {
+            var wasActive = sections[i].classList.contains('active');
             sections[i].classList.remove('active');
-            console.log('Hidden section: ' + sections[i].id);
+            
+            // Force hide via multiple methods for safety
+            sections[i].style.display = 'none';
+            sections[i].style.visibility = 'hidden';
+            sections[i].style.opacity = '0';
+            
+            console.log('Section ' + sections[i].id + ': ' + (wasActive ? 'WAS ACTIVE' : 'was hidden') + ' -> NOW HIDDEN');
         }
         
         // Remove active class from all nav links
@@ -2023,11 +2089,32 @@ function switchSection(sectionId) {
             navLinks[i].classList.remove('active');
         }
         
-        // Show target section by adding active class (CSS handles display)
+        // Show target section by adding active class AND forcing display
         var targetSection = document.getElementById('section-' + sectionId);
         if (targetSection) {
             targetSection.classList.add('active');
-            console.log('✅ SUCCESS: Section ' + sectionId + ' is now active');
+            
+            // Force show via multiple methods for safety
+            targetSection.style.display = 'block';
+            targetSection.style.visibility = 'visible';
+            targetSection.style.opacity = '1';
+            
+            console.log('✅ SUCCESS: Section ' + sectionId + ' is now ACTIVE and VISIBLE');
+            console.log('Target section computed style: ' + window.getComputedStyle(targetSection).display);
+            
+            // FINAL VALIDATION: Check if multiple sections are still active
+            setTimeout(function() {
+                var activeSections = document.querySelectorAll('.content-section.active');
+                console.log('FINAL CHECK: ' + activeSections.length + ' sections are active');
+                if (activeSections.length > 1) {
+                    console.error('🚨 CRITICAL: Multiple sections are still active!');
+                    for (var k = 0; k < activeSections.length; k++) {
+                        console.error('  - Active section: ' + activeSections[k].id);
+                    }
+                } else {
+                    console.log('✅ VALIDATION PASSED: Only one section is active');
+                }
+            }, 100);
             
             // Activate corresponding nav link
             var navLink = document.querySelector('[data-section="' + sectionId + '"]');
@@ -2037,6 +2124,11 @@ function switchSection(sectionId) {
             }
         } else {
             console.error('❌ ERROR: Section not found: section-' + sectionId);
+            console.log('Available sections:');
+            var allSections = document.querySelectorAll('.content-section');
+            for (var j = 0; j < allSections.length; j++) {
+                console.log('  - ' + allSections[j].id);
+            }
         }
         
     } catch (error) {
@@ -2044,7 +2136,114 @@ function switchSection(sectionId) {
     }
 }
 
-// Update navigation state
+// Add mutation observer to detect external modifications
+function setupNavigationObserver() {
+    if (window.navigationObserver) return; // Already setup
+    
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                var target = mutation.target;
+                if (target.classList.contains('content-section')) {
+                    console.log('🔍 MUTATION: Section class changed - ' + target.id);
+                    
+                    // Count active sections
+                    var activeSections = document.querySelectorAll('.content-section.active');
+                    if (activeSections.length > 1) {
+                        console.warn('🚨 MUTATION DETECTED: Multiple active sections - forcing cleanup');
+                        // Force cleanup
+                        setTimeout(function() {
+                            var allSections = document.querySelectorAll('.content-section');
+                            for (var i = 1; i < allSections.length; i++) {
+                                if (allSections[i].classList.contains('active')) {
+                                    allSections[i].classList.remove('active');
+                                    allSections[i].style.display = 'none';
+                                    console.log('Cleaned up section: ' + allSections[i].id);
+                                }
+                            }
+                        }, 10);
+                    }
+                }
+            }
+        });
+    });
+    
+    // Observe all content sections
+    var sections = document.querySelectorAll('.content-section');
+    for (var i = 0; i < sections.length; i++) {
+        observer.observe(sections[i], { attributes: true });
+    }
+    
+    window.navigationObserver = observer;
+    console.log('🔍 MUTATION OBSERVER: Monitoring ' + sections.length + ' sections for changes');
+}
+
+// Comprehensive debug function
+function debugNavigationState() {
+    console.log('\n=== 🔍 NAVIGATION DEBUG REPORT ===');
+    var sections = document.querySelectorAll('.content-section');
+    var activeCount = 0;
+    
+    sections.forEach(function(section, index) {
+        var isActive = section.classList.contains('active');
+        var computedStyle = window.getComputedStyle(section);
+        var isVisible = computedStyle.display !== 'none';
+        
+        if (isActive) activeCount++;
+        
+        console.log('Section ' + (index + 1) + ': ' + section.id);
+        console.log('  - Has .active class: ' + isActive);
+        console.log('  - Computed display: ' + computedStyle.display);
+        console.log('  - Inline style: ' + (section.style.display || 'none'));
+        console.log('  - Visibility: ' + computedStyle.visibility);
+        console.log('  - Opacity: ' + computedStyle.opacity);
+        console.log('  - Is visible: ' + isVisible);
+        console.log('  - Classes: ' + section.className);
+    });
+    
+    console.log('\n📊 SUMMARY:');
+    console.log('Total sections: ' + sections.length);
+    console.log('Active sections: ' + activeCount);
+    console.log('Expected active: 1');
+    console.log('Status: ' + (activeCount === 1 ? '✅ PASS' : '❌ FAIL'));
+    console.log('=== END DEBUG REPORT ===\n');
+}
+
+    // Make debug function globally available
+window.debugNav = debugNavigationState;
+
+// Periodic navigation monitor
+function startNavigationMonitor() {
+    if (window.navigationMonitor) return; // Already running
+    
+    window.navigationMonitor = setInterval(function() {
+        var activeSections = document.querySelectorAll('.content-section.active');
+        
+        if (activeSections.length > 1) {
+            console.warn('🚨 MONITOR: Found ' + activeSections.length + ' active sections - fixing automatically');
+            
+            // Keep only the first active section, hide the rest
+            for (var i = 1; i < activeSections.length; i++) {
+                activeSections[i].classList.remove('active');
+                activeSections[i].style.display = 'none';
+                activeSections[i].style.visibility = 'hidden';
+                activeSections[i].style.opacity = '0';
+                console.log('MONITOR: Deactivated duplicate section: ' + activeSections[i].id);
+            }
+        } else if (activeSections.length === 0) {
+            console.warn('🚨 MONITOR: No active sections - activating overview');
+            var overview = document.getElementById('section-overview');
+            if (overview) {
+                overview.classList.add('active');
+                overview.style.display = 'block';
+                overview.style.visibility = 'visible';
+                overview.style.opacity = '1';
+            }
+        }
+    }, 1000); // Check every second
+    
+    console.log('🔄 NAVIGATION MONITOR: Started periodic checking (1s intervals)');
+}// Update navigation state
 function updateNavigation(activeSection) {
     try {
         // Remove active class from all nav links
@@ -3348,11 +3547,41 @@ setInterval(updateSessionTimer, 1000);
 
 // CONSOLIDATED INITIALIZATION - Single DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('� DASHBOARD: Initializing complete system...');
+    console.log('🚀 DASHBOARD: Initializing complete system...');
     addDebugLog('🚀 SYSTEM: Initializing dashboard...');
     
-    // Initialize dashboard navigation
-    switchSection('overview');
+    // CRITICAL: Initialize navigation system FIRST - ensure clean state
+    console.log('🎯 NAVIGATION: Initializing section visibility...');
+    var sections = document.querySelectorAll('.content-section');
+    console.log('Found ' + sections.length + ' sections to initialize');
+    
+    // Hide ALL sections first (critical for single-section display)
+    for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.remove('active');
+        console.log('Hiding section: ' + sections[i].id);
+    }
+    
+    // Reset all nav links
+    var navLinks = document.querySelectorAll('.nav-link');
+    for (var i = 0; i < navLinks.length; i++) {
+        navLinks[i].classList.remove('active');
+    }
+    
+    // Setup mutation observer for navigation monitoring
+    setupNavigationObserver();
+    
+    // Start periodic navigation monitor
+    startNavigationMonitor();
+    
+    // Initialize dashboard navigation to overview (now that everything is clean)
+    setTimeout(function() {
+        switchSection('overview');
+        console.log('✅ NAVIGATION: Overview section activated via switchSection');
+        
+        // Run debug report after initialization
+        setTimeout(debugNavigationState, 200);
+    }, 100);
+    
     addDebugLog('✅ SYSTEM: Dashboard ready');
     
     // Initialize API integration
@@ -3378,11 +3607,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check email system on startup
     setTimeout(checkEmailSystemStatus, 6000); // Check email system last
     
+    // Initialize pipeline features
+    setTimeout(() => {
+        console.log('🔧 PIPELINE: Initializing pipeline features...');
+        initializePipelineWebSocket();
+    }, 7000);
+    
+    // Load initial strategy data
+    setTimeout(() => {
+        refreshPipelineMetrics();
+        loadPipelineStrategies();
+        refreshPipelineStatus();
+    }, 8000);
+    
+    // Set up periodic updates (fallback for WebSocket)
+    setInterval(() => {
+        if (!pipelineWebSocket || pipelineWebSocket.readyState !== WebSocket.OPEN) {
+            refreshPipelineMetrics();
+        }
+    }, 30000); // Every 30 seconds
+    
     // Start session timer
     sessionStartTime = new Date();
     
     console.log('✅ DASHBOARD: Complete system ready');
     addDebugLog('✅ API: Backend integration ready');
+    addDebugLog('✅ PIPELINE: Initialization complete');
     addDebugLog('🛡️ PRIVATE USE MODE: Ultra-safe configuration active');
 });
 
@@ -4819,62 +5069,7 @@ function refreshPipelineStatus() {
 // 🚀 INITIALIZATION - AUTO-START PIPELINE FEATURES  
 // =============================================================================
 
-// Initialize pipeline features when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 PIPELINE: Initializing pipeline features...');
-    
-    // Initialize navigation system - ensure only overview section is visible
-    console.log('🎯 NAVIGATION: Initializing section visibility...');
-    var sections = document.querySelectorAll('.content-section');
-    console.log('Found ' + sections.length + ' sections to initialize');
-    
-    // Hide ALL sections first
-    for (var i = 0; i < sections.length; i++) {
-        sections[i].classList.remove('active');
-        console.log('Hiding section: ' + sections[i].id);
-    }
-    
-    // Show only the overview section
-    var overviewSection = document.getElementById('section-overview');
-    if (overviewSection) {
-        overviewSection.classList.add('active');
-        console.log('✅ NAVIGATION: Overview section activated');
-    } else {
-        console.error('❌ ERROR: Overview section not found!');
-    }
-    
-    // Ensure proper nav link state
-    var navLinks = document.querySelectorAll('.nav-link');
-    for (var i = 0; i < navLinks.length; i++) {
-        navLinks[i].classList.remove('active');
-    }
-    var overviewLink = document.querySelector('[data-section="overview"]');
-    if (overviewLink) {
-        overviewLink.classList.add('active');
-        console.log('✅ NAVIGATION: Overview nav link activated');
-    }
-    
-    // Initialize WebSocket connection
-    setTimeout(() => {
-        initializePipelineWebSocket();
-    }, 1000);
-    
-    // Load initial strategy data
-    setTimeout(() => {
-        refreshPipelineMetrics();
-        loadPipelineStrategies();
-        refreshPipelineStatus();
-    }, 2000);
-    
-    // Set up periodic updates (fallback for WebSocket)
-    setInterval(() => {
-        if (!pipelineWebSocket || pipelineWebSocket.readyState !== WebSocket.OPEN) {
-            refreshPipelineMetrics();
-        }
-    }, 30000); // Every 30 seconds
-    
-    console.log('✅ PIPELINE: Initialization complete');
-});
+// Pipeline initialization integrated into main DOMContentLoaded listener
 
 console.log('✅ API INTEGRATION: Script loaded');
 console.log('🤖 AI PIPELINE: Three-column pipeline system ready');
