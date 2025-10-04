@@ -826,6 +826,363 @@
         .system-alerts .alert-warning {
             border-color: rgba(245, 158, 11, 0.5);
         }
+        
+        /* === MOBILE RESPONSIVE OPTIMIZATION === */
+        
+        /* Mobile First Approach */
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 10px !important;
+            }
+            
+            .dashboard-card {
+                margin-bottom: 15px;
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .row > div {
+                margin-bottom: 15px;
+            }
+            
+            /* Mobile Navigation */
+            .nav-tabs {
+                flex-wrap: wrap;
+                border-bottom: none;
+            }
+            
+            .nav-tabs .nav-link {
+                font-size: 12px;
+                padding: 8px 12px;
+                margin-bottom: 5px;
+                border-radius: 20px;
+                background: rgba(102, 126, 234, 0.1);
+                border: 1px solid rgba(102, 126, 234, 0.3);
+                color: white;
+                text-align: center;
+                min-width: 80px;
+            }
+            
+            .nav-tabs .nav-link.active {
+                background: rgba(102, 126, 234, 0.8);
+                border-color: rgb(102, 126, 234);
+            }
+            
+            /* Mobile Cards Layout */
+            .info-box {
+                margin-bottom: 15px;
+                min-height: 80px;
+            }
+            
+            .info-box-content {
+                padding: 10px;
+            }
+            
+            .info-box-number {
+                font-size: 18px;
+            }
+            
+            .info-box-text {
+                font-size: 11px;
+            }
+            
+            /* Mobile Tables */
+            .table-responsive {
+                font-size: 12px;
+            }
+            
+            .table td, .table th {
+                padding: 6px 8px;
+                vertical-align: middle;
+            }
+            
+            /* Mobile Charts */
+            .chart-container {
+                height: 250px !important;
+                margin-bottom: 20px;
+            }
+            
+            /* Mobile Buttons */
+            .btn {
+                margin-bottom: 10px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            .btn-group {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .btn-group .btn {
+                border-radius: 5px !important;
+                margin-bottom: 5px;
+            }
+            
+            /* Mobile System Monitor */
+            .debug-console, .system-monitor {
+                height: 200px;
+                font-size: 11px;
+            }
+            
+            #debug-content, #system-content {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+            
+            /* Mobile Settings */
+            .settings-section .col-md-4 {
+                margin-bottom: 20px;
+            }
+            
+            /* Mobile Keyboard Shortcuts */
+            .keyboard-shortcuts-help {
+                font-size: 12px;
+            }
+            
+            .keyboard-shortcuts-help kbd {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+        }
+
+        /* Tablet Optimization */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .dashboard-card {
+                padding: 20px;
+            }
+            
+            .info-box-number {
+                font-size: 22px;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .nav-tabs .nav-link {
+                font-size: 13px;
+                padding: 10px 15px;
+            }
+        }
+
+        /* Large Screen Optimization */
+        @media (min-width: 1200px) {
+            .dashboard-card {
+                padding: 25px;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+            
+            .info-box-number {
+                font-size: 28px;
+            }
+        }
+
+        /* Touch Device Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .nav-link {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .table td {
+                min-height: 44px;
+                padding: 12px 8px;
+            }
+            
+            .fa {
+                font-size: 18px;
+                padding: 10px;
+            }
+            
+            .table-responsive, .system-monitor {
+                -webkit-overflow-scrolling: touch;
+                overflow-scrolling: touch;
+            }
+        }
+        
+        /* === LOADING STATES & ANIMATIONS === */
+        
+        /* Skeleton Loading Animation */
+        .skeleton {
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.1) 25%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.1) 75%);
+            background-size: 200% 100%;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Pulse Animation for Updates */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Fade In Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Slide In Animation */
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Data Update Highlight */
+        .data-highlight {
+            animation: highlight 1s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(102, 126, 234, 0.3); }
+            50% { background-color: rgba(102, 126, 234, 0.6); }
+            100% { background-color: transparent; }
+        }
+        
+        /* Success Animation */
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: rgba(16, 185, 129, 0.3); }
+            100% { transform: scale(1); background-color: transparent; }
+        }
+        
+        /* Error Animation */
+        .error-animation {
+            animation: errorShake 0.5s ease-in-out;
+        }
+        
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* Card Hover Animations */
+        .dashboard-card {
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+        
+        /* Button Animations */
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 46, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .loading-content .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 15px;
+        }
+        
+        /* Progress Bar Animation */
+        .progress-bar-animated {
+            animation: progressAnimation 2s ease-in-out infinite;
+        }
+        
+        @keyframes progressAnimation {
+            0% { width: 0%; }
+            50% { width: 75%; }
+            100% { width: 100%; }
+        }
+        
+        /* Notification Slide In */
+        .notification-slide {
+            animation: notificationSlide 0.5s ease-out;
+        }
+        
+        @keyframes notificationSlide {
+            from { 
+                transform: translateX(100%); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0); 
+                opacity: 1; 
+            }
+        }
     </style>
 </head>
 
@@ -1721,7 +2078,7 @@
                         <p>System configuration and API settings.</p>
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <h5>API Configuration</h5>
                                 <div class="mb-3">
                                     <label>API Key:</label>
@@ -1738,7 +2095,7 @@
                                 </button>
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <h5>Trading Preferences</h5>
                                 <div class="mb-3">
                                     <div class="form-check">
@@ -1755,6 +2112,81 @@
                                         <label class="form-check-label" for="email-alerts">
                                             Email Alerts
                                         </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <h5>Notification Settings</h5>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="browser-notifications" checked>
+                                        <label class="form-check-label" for="browser-notifications">
+                                            Browser Notifications
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="trade-notifications" checked>
+                                        <label class="form-check-label" for="trade-notifications">
+                                            Trade Execution Alerts
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="pnl-notifications">
+                                        <label class="form-check-label" for="pnl-notifications">
+                                            P&L Change Alerts
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="risk-notifications" checked>
+                                        <label class="form-check-label" for="risk-notifications">
+                                            Risk Level Alerts
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-info" onclick="testNotifications()">
+                                    <i class="fas fa-bell"></i> Test Notifications
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Keyboard Shortcuts Help -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="dashboard-card">
+                                    <h5>⌨️ Keyboard Shortcuts</h5>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <h6>Emergency Controls</h6>
+                                            <ul class="list-unstyled">
+                                                <li><kbd>ESC</kbd> - Emergency Stop</li>
+                                                <li><kbd>Space</kbd> - Pause Trading</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6>Navigation</h6>
+                                            <ul class="list-unstyled">
+                                                <li><kbd>1-8</kbd> - Switch Sections</li>
+                                                <li><kbd>F12</kbd> - System Monitor</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6>System Controls</h6>
+                                            <ul class="list-unstyled">
+                                                <li><kbd>F1</kbd> - Show Help</li>
+                                                <li><kbd>F5</kbd> - Refresh All Data</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2241,6 +2673,7 @@ function toggleTrading() {
 function emergencyStop() {
     console.log('🚨 Emergency stop activated');
     addDebugLog('🚨 EMERGENCY: Stop activated');
+    notificationManager.showEmergencyAlert('All trading operations have been halted immediately');
 }
 
 function saveApiSettings() {
@@ -2248,83 +2681,782 @@ function saveApiSettings() {
     addDebugLog('💾 SETTINGS: API configuration saved');
 }
 
-// Initialize charts
-function initializeCharts() {
-    // Performance Chart
-    const performanceCtx = document.getElementById('performance-chart');
-    if (performanceCtx) {
-        new Chart(performanceCtx, {
+function testNotifications() {
+    console.log('🔔 Testing notifications');
+    
+    // Test different notification types
+    setTimeout(() => {
+        notificationManager.sendAlert('emergency', 'Test Emergency Alert', 'This is a test emergency notification');
+    }, 500);
+    
+    setTimeout(() => {
+        notificationManager.sendAlert('trade', 'Test Trade Alert', 'Test trade executed successfully');
+    }, 1000);
+    
+    setTimeout(() => {
+        notificationManager.sendAlert('pnl', 'Test P&L Alert', 'Portfolio value increased by 2.5%');
+    }, 1500);
+    
+    setTimeout(() => {
+        notificationManager.sendAlert('risk', 'Test Risk Alert', 'Risk level increased to medium');
+    }, 2000);
+    
+    setTimeout(() => {
+        notificationManager.sendAlert('system', 'Test System Alert', 'System status notification test');
+    }, 2500);
+    
+    showAlert('Notification test sequence initiated', 'info');
+}
+
+// Browser Push Notifications System
+class NotificationManager {
+    constructor() {
+        this.permission = null;
+        this.enabled = false;
+        this.initializeNotifications();
+    }
+
+    async initializeNotifications() {
+        if ('Notification' in window) {
+            this.permission = await Notification.requestPermission();
+            this.enabled = this.permission === 'granted';
+            
+            if (this.enabled) {
+                addDebugLog('🔔 NOTIFICATIONS: Browser notifications enabled');
+            } else {
+                addDebugLog('⚠️ NOTIFICATIONS: Permission denied or not supported');
+            }
+        }
+    }
+
+    showNotification(title, options = {}) {
+        if (!this.enabled) return;
+
+        const defaultOptions = {
+            icon: '/static/images/icon.png',
+            badge: '/static/images/badge.png',
+            requireInteraction: true,
+            tag: 'bybit-bot'
+        };
+
+        const notification = new Notification(title, { ...defaultOptions, ...options });
+        
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+
+        addDebugLog(`🔔 NOTIFICATION: ${title}`);
+        
+        // Auto-close after 10 seconds for non-critical alerts
+        if (!options.requireInteraction) {
+            setTimeout(() => notification.close(), 10000);
+        }
+
+        return notification;
+    }
+
+    // Critical trading alerts
+    showEmergencyAlert(message) {
+        this.showNotification('🚨 EMERGENCY STOP', {
+            body: message,
+            tag: 'emergency',
+            requireInteraction: true,
+            actions: [
+                { action: 'view', title: 'View Dashboard' },
+                { action: 'dismiss', title: 'Dismiss' }
+            ]
+        });
+    }
+
+    showPnLAlert(pnl, percentage) {
+        const isPositive = pnl >= 0;
+        this.showNotification(`${isPositive ? '📈' : '📉'} P&L Update`, {
+            body: `${isPositive ? 'Profit' : 'Loss'}: $${Math.abs(pnl).toFixed(2)} (${percentage}%)`,
+            tag: 'pnl-update',
+            requireInteraction: false
+        });
+    }
+
+    showRiskAlert(level, message) {
+        const icons = { low: '🟢', medium: '🟡', high: '🟠', critical: '🔴' };
+        this.showNotification(`${icons[level]} Risk Alert`, {
+            body: message,
+            tag: 'risk-alert',
+            requireInteraction: level === 'critical'
+        });
+    }
+
+    showSystemAlert(type, message) {
+        this.showNotification('🔧 System Alert', {
+            body: `${type}: ${message}`,
+            tag: 'system-alert',
+            requireInteraction: false
+        });
+    }
+
+    showTradeAlert(symbol, side, quantity, price) {
+        this.showNotification('💹 Trade Executed', {
+            body: `${side} ${quantity} ${symbol} @ $${price}`,
+            tag: 'trade-alert',
+            requireInteraction: false
+        });
+    }
+}
+
+// Global notification manager
+const notificationManager = new NotificationManager();
+
+// Keyboard Shortcuts System
+class KeyboardShortcuts {
+    constructor() {
+        this.shortcuts = {
+            // Emergency controls
+            'Escape': () => this.emergencyStop(),
+            'Space': () => this.pauseTrading(),
+            
+            // Navigation shortcuts
+            '1': () => switchSection('overview'),
+            '2': () => switchSection('ai-lab'),
+            '3': () => switchSection('trading'),
+            '4': () => switchSection('portfolio'),
+            '5': () => switchSection('analytics'),
+            '6': () => switchSection('risk'),
+            '7': () => switchSection('settings'),
+            '8': () => switchSection('system'),
+            
+            // Function keys
+            'F1': () => this.showHelp(),
+            'F5': () => this.refreshAll(),
+            'F12': () => switchSection('system')
+        };
+        
+        this.initializeShortcuts();
+    }
+
+    initializeShortcuts() {
+        document.addEventListener('keydown', (event) => {
+            // Only activate shortcuts when not typing in inputs
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            const key = event.key;
+            const shortcut = this.shortcuts[key];
+            
+            if (shortcut) {
+                event.preventDefault();
+                shortcut();
+                addDebugLog(`⌨️ SHORTCUT: ${key} pressed`);
+            }
+        });
+        
+        addDebugLog('⌨️ SHORTCUTS: Keyboard navigation enabled');
+    }
+
+    emergencyStop() {
+        if (confirm('🚨 EMERGENCY STOP: This will halt all trading immediately. Continue?')) {
+            emergencyStop();
+            notificationManager.showEmergencyAlert('Emergency stop activated via keyboard shortcut');
+        }
+    }
+
+    pauseTrading() {
+        pauseAllStrategies();
+        notificationManager.showSystemAlert('Trading', 'Trading paused via keyboard shortcut');
+    }
+
+    showHelp() {
+        alert(`⌨️ Keyboard Shortcuts:
+
+🚨 Emergency Controls:
+  ESC - Emergency Stop
+  Space - Pause Trading
+
+🔢 Navigation:
+  1-8 - Switch sections
+  F1 - This help
+  F5 - Refresh all data
+  F12 - System Monitor
+
+Press any key while typing in forms to disable shortcuts.`);
+    }
+
+    refreshAll() {
+        location.reload();
+    }
+}
+
+// Global keyboard shortcuts
+const keyboardShortcuts = new KeyboardShortcuts();
+
+// Advanced Chart Manager
+class AdvancedChartManager {
+    constructor() {
+        this.charts = {};
+        this.realTimeData = {
+            performance: [],
+            portfolio: [],
+            volume: [],
+            pnl: []
+        };
+        this.maxDataPoints = 50;
+    }
+
+    // Initialize all charts with advanced features
+    initializeCharts() {
+        this.createPerformanceChart();
+        this.createPortfolioChart();
+        this.createVolumeChart();
+        this.createPnLChart();
+        
+        // Start real-time updates
+        this.startRealTimeUpdates();
+    }
+
+    createPerformanceChart() {
+        const ctx = document.getElementById('performance-chart');
+        if (!ctx) return;
+
+        this.charts.performance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: this.generateTimeLabels(),
                 datasets: [{
-                    label: 'Portfolio Value',
-                    data: [10000, 10500, 11200, 10800, 11500, 12000],
+                    label: 'Portfolio Value ($)',
+                    data: [10000, 10500, 11200, 10800, 11500, 12000, 12300, 11900, 12500],
                     borderColor: 'rgb(102, 126, 234)',
                     backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: 'rgb(102, 126, 234)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Benchmark',
+                    data: [10000, 10200, 10400, 10300, 10600, 10800, 11000, 10900, 11200],
+                    borderColor: 'rgba(255, 193, 7, 0.8)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.05)',
+                    tension: 0.4,
+                    borderDash: [5, 5]
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 plugins: {
                     legend: {
+                        labels: { color: 'white' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            color: 'white',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+    }
+
+    createPortfolioChart() {
+        const ctx = document.getElementById('portfolio-chart');
+        if (!ctx) return;
+
+        this.charts.portfolio = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['BTC', 'ETH', 'SOL', 'ADA', 'Cash'],
+                datasets: [{
+                    data: [40, 25, 15, 10, 10],
+                    backgroundColor: [
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(102, 126, 234, 0.8)', 
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(108, 117, 125, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(102, 126, 234, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(108, 117, 125, 1)'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
                         labels: {
-                            color: 'white'
+                            color: 'white',
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${percentage}% ($${(value * 1000).toLocaleString()})`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1500
+                }
+            }
+        });
+    }
+
+    createVolumeChart() {
+        const ctx = document.getElementById('analytics-chart');
+        if (!ctx) return;
+
+        this.charts.volume = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: this.generateTimeLabels(),
+                datasets: [{
+                    label: 'Trading Volume ($)',
+                    data: [50000, 75000, 60000, 90000, 65000, 80000, 95000, 70000, 85000],
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: 'white' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Volume: $' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white',
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'K';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                },
+                animation: {
+                    delay: (context) => context.dataIndex * 100,
+                    duration: 1000
+                }
+            }
+        });
+    }
+
+    createPnLChart() {
+        // Create a new canvas for P&L chart if needed
+        const existingPnL = document.getElementById('pnl-chart');
+        if (!existingPnL) {
+            // Add P&L chart canvas to dashboard if not exists
+            console.log('📊 P&L chart canvas not found, would need to add to HTML structure');
+            return;
+        }
+
+        this.charts.pnl = new Chart(existingPnL, {
+            type: 'line',
+            data: {
+                labels: this.generateTimeLabels(),
+                datasets: [{
+                    label: 'Daily P&L ($)',
+                    data: [120, -85, 240, 180, -45, 320, 150, -90, 280],
+                    borderColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
+                    },
+                    backgroundColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                    },
+                    tension: 0.4,
+                    fill: true,
+                    segment: {
+                        borderColor: function(context) {
+                            const curr = context.p1.parsed.y;
+                            const prev = context.p0.parsed.y;
+                            return curr >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
+                        }
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: 'white' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                const sign = value >= 0 ? '+' : '';
+                                return 'P&L: ' + sign + '$' + value.toLocaleString();
+                            }
                         }
                     }
                 },
                 scales: {
                     y: {
                         ticks: {
-                            color: 'white'
+                            color: 'white',
+                            callback: function(value) {
+                                const sign = value >= 0 ? '+' : '';
+                                return sign + '$' + value.toLocaleString();
+                            }
                         },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
+                        grid: { 
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
                         }
                     },
                     x: {
-                        ticks: {
-                            color: 'white'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        }
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
                     }
                 }
             }
         });
     }
-    
-    // Portfolio Chart
-    const portfolioCtx = document.getElementById('portfolio-chart');
-    if (portfolioCtx) {
-        new Chart(portfolioCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['BTC', 'ETH', 'SOL', 'Cash'],
-                datasets: [{
-                    data: [40, 30, 20, 10],
-                    backgroundColor: [
-                        'rgba(255, 193, 7, 0.8)',
-                        'rgba(102, 126, 234, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(108, 117, 125, 0.8)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'white'
-                        }
-                    }
-                }
-            }
-        });
+
+    // Generate time labels for charts
+    generateTimeLabels() {
+        const labels = [];
+        const now = new Date();
+        for (let i = 8; i >= 0; i--) {
+            const date = new Date(now - i * 24 * 60 * 60 * 1000);
+            labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+        return labels;
     }
+
+    // Start real-time chart updates
+    startRealTimeUpdates() {
+        setInterval(() => {
+            this.updateChartsWithRealTimeData();
+        }, 5000); // Update every 5 seconds
+    }
+
+    // Update charts with new real-time data
+    updateChartsWithRealTimeData() {
+        // Simulate real-time data updates
+        if (this.charts.performance) {
+            const chart = this.charts.performance;
+            const lastValue = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
+            const change = (Math.random() - 0.5) * 200; // Random change
+            const newValue = Math.max(0, lastValue + change);
+            
+            chart.data.datasets[0].data.push(newValue);
+            chart.data.labels.push(new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            }));
+            
+            // Keep only last 20 data points
+            if (chart.data.datasets[0].data.length > 20) {
+                chart.data.datasets[0].data.shift();
+                chart.data.labels.shift();
+            }
+            
+            chart.update('none'); // Update without animation for performance
+        }
+    }
+
+    // Update specific chart with external data
+    updateChart(chartName, data) {
+        if (this.charts[chartName]) {
+            const chart = this.charts[chartName];
+            if (chartName === 'portfolio' && data.allocation) {
+                chart.data.datasets[0].data = data.allocation;
+                chart.update();
+            } else if (chartName === 'performance' && data.value) {
+                chart.data.datasets[0].data.push(data.value);
+                chart.data.labels.push(data.timestamp || new Date().toLocaleTimeString());
+                if (chart.data.datasets[0].data.length > this.maxDataPoints) {
+                    chart.data.datasets[0].data.shift();
+                    chart.data.labels.shift();
+                }
+                chart.update();
+            }
+        }
+    }
+}
+
+// Initialize advanced charts
+function initializeCharts() {
+    window.chartManager = new AdvancedChartManager();
+    window.chartManager.initializeCharts();
+}
+
+// === LOADING STATES & ANIMATIONS MANAGER ===
+
+class LoadingManager {
+    constructor() {
+        this.activeLoaders = new Set();
+    }
+
+    // Show loading state for a specific element
+    showLoading(elementId, message = 'Loading...') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        this.activeLoaders.add(elementId);
+        
+        // Create loading overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay fade-in';
+        overlay.id = `loading-${elementId}`;
+        
+        const content = document.createElement('div');
+        content.className = 'loading-content';
+        content.innerHTML = `
+            <div class="loading-spinner"></div>
+            <div>${message}</div>
+        `;
+        
+        overlay.appendChild(content);
+        
+        // Position relative for overlay
+        const originalPosition = element.style.position;
+        element.style.position = 'relative';
+        element.appendChild(overlay);
+        
+        // Store original position to restore later
+        overlay.dataset.originalPosition = originalPosition;
+    }
+
+    // Hide loading state
+    hideLoading(elementId) {
+        const overlay = document.getElementById(`loading-${elementId}`);
+        const element = document.getElementById(elementId);
+        
+        if (overlay && element) {
+            // Restore original position
+            const originalPosition = overlay.dataset.originalPosition;
+            if (originalPosition) {
+                element.style.position = originalPosition;
+            } else {
+                element.style.position = '';
+            }
+            
+            // Remove overlay with animation
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            }, 300);
+            
+            this.activeLoaders.delete(elementId);
+        }
+    }
+
+    // Show skeleton loading for lists/tables
+    showSkeletonLoading(containerId, itemCount = 5) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        for (let i = 0; i < itemCount; i++) {
+            const skeletonItem = document.createElement('div');
+            skeletonItem.className = 'skeleton';
+            skeletonItem.style.height = '40px';
+            skeletonItem.style.marginBottom = '10px';
+            skeletonItem.style.borderRadius = '8px';
+            container.appendChild(skeletonItem);
+        }
+        
+        this.activeLoaders.add(containerId);
+    }
+
+    // Highlight element when data updates
+    highlightUpdate(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.classList.add('data-highlight');
+        setTimeout(() => {
+            element.classList.remove('data-highlight');
+        }, 1000);
+    }
+
+    // Show success animation
+    showSuccess(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.classList.add('success-animation');
+        setTimeout(() => {
+            element.classList.remove('success-animation');
+        }, 600);
+    }
+
+    // Show error animation
+    showError(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.classList.add('error-animation');
+        setTimeout(() => {
+            element.classList.remove('error-animation');
+        }, 500);
+    }
+
+    // Animate number changes
+    animateNumber(elementId, newValue, duration = 1000) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const startValue = parseFloat(element.textContent.replace(/[^0-9.-]/g, '')) || 0;
+        const endValue = parseFloat(newValue);
+        const startTime = Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const currentValue = startValue + (endValue - startValue) * this.easeInOutQuart(progress);
+            
+            // Format number appropriately
+            if (element.dataset.format === 'currency') {
+                element.textContent = '$' + currentValue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            } else if (element.dataset.format === 'percentage') {
+                element.textContent = currentValue.toFixed(2) + '%';
+            } else {
+                element.textContent = Math.round(currentValue).toLocaleString();
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    // Easing function for smooth animations
+    easeInOutQuart(t) {
+        return t < 0.5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t;
+    }
+
+    // Show progress bar animation
+    showProgress(elementId, percentage, message = '') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.innerHTML = `
+            <div class="progress mb-2">
+                <div class="progress-bar bg-primary progress-bar-animated" 
+                     role="progressbar" 
+                     style="width: ${percentage}%"
+                     aria-valuenow="${percentage}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    ${percentage}%
+                </div>
+            </div>
+            ${message ? `<small class="text-muted">${message}</small>` : ''}
+        `;
+    }
+
+    // Check if any loaders are active
+    hasActiveLoaders() {
+        return this.activeLoaders.size > 0;
+    }
+
+    // Clear all loading states
+    clearAllLoading() {
+        this.activeLoaders.forEach(loaderId => {
+            this.hideLoading(loaderId);
+        });
+        this.activeLoaders.clear();
+    }
+}
+
+// Initialize loading manager
+window.loadingManager = new LoadingManager();
     
     // Analytics Chart
     const analyticsCtx = document.getElementById('analytics-chart');
@@ -2593,6 +3725,9 @@ class TradingSystemAPI {
             case 'pipeline_update':
                 addDebugLog(`🚀 LIVE UPDATE: Strategy ${data.strategy_id} → ${data.new_phase}`);
                 updatePipelineDisplay(data);
+                if (data.new_phase === 'live') {
+                    notificationManager.showSystemAlert('Strategy Promotion', `Strategy ${data.strategy_id} promoted to LIVE trading`);
+                }
                 break;
             case 'metrics_update':
                 addDebugLog(`📊 METRICS UPDATE: ${data.metric} = ${data.value}`);
@@ -2601,18 +3736,30 @@ class TradingSystemAPI {
             case 'trade_executed':
                 addDebugLog(`💹 TRADE ALERT: ${data.side} ${data.symbol} @ $${data.price}`);
                 updateTradeDisplay(data);
+                notificationManager.showTradeAlert(data.symbol, data.side, data.quantity, data.price);
                 break;
             case 'portfolio_update':
                 addDebugLog(`💼 PORTFOLIO UPDATE: Total P&L $${data.totalPnl}`);
                 updatePortfolioDisplay(data);
+                if (data.pnlChange && Math.abs(data.pnlChange) > 100) {
+                    notificationManager.showPnLAlert(data.pnlChange, data.pnlPercentage);
+                }
                 break;
             case 'risk_alert':
                 addDebugLog(`⚠️ RISK ALERT: ${data.level} - ${data.message}`);
                 updateRiskDisplay(data);
+                notificationManager.showRiskAlert(data.level, data.message);
                 break;
             case 'system_status':
                 addDebugLog(`🔋 SYSTEM UPDATE: ${data.component} = ${data.status}`);
                 updateSystemStatus(data);
+                if (data.status === 'error' || data.status === 'disconnected') {
+                    notificationManager.showSystemAlert('System Error', `${data.component} is ${data.status}`);
+                }
+                break;
+            case 'emergency_stop':
+                addDebugLog(`🚨 EMERGENCY STOP: ${data.reason}`);
+                notificationManager.showEmergencyAlert(`Emergency stop triggered: ${data.reason}`);
                 break;
         }
     }
