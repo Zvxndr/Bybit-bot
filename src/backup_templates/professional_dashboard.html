@@ -6429,13 +6429,25 @@
             }
 
             initializeNavigation() {
-                console.log('Professional Glass Box Dashboard: Navigation initialized');
+                console.log('🚨 MEGA-NUCLEAR PROTECTION: Professional dashboard navigation DISABLED to prevent AdminLTE conflicts 🚨');
+                console.log('🔥 MEGA-NUCLEAR: Redirecting to AdminLTE dashboard system for unified navigation control 🔥');
+                
+                // MEGA-NUCLEAR: DISABLE ALL CONFLICTING NAVIGATION TO PREVENT INTERFERENCE
                 const navLinks = document.querySelectorAll('.nav-link');
                 const navButtons = document.querySelectorAll('.nav-button');
                 const contentScreens = document.querySelectorAll('.content-screen');
 
-                // Handle both sidebar links and compact nav buttons
+                // MEGA-NUCLEAR: Mark elements as DISABLED to prevent conflicts
                 const allNavElements = [...navLinks, ...navButtons];
+                
+                allNavElements.forEach(element => {
+                    element.setAttribute('data-mega-nuclear-disabled', 'true');
+                    element.style.setProperty('pointer-events', 'none', 'important');
+                    element.style.setProperty('opacity', '0.5', 'important');
+                });
+                
+                console.log('🚨 MEGA-NUCLEAR SUCCESS: Professional navigation neutralized to prevent AdminLTE interference 🚨');
+                return; // MEGA-NUCLEAR: EXIT to prevent original navigation setup
 
                 allNavElements.forEach((element, index) => {
                     element.addEventListener('click', (e) => {

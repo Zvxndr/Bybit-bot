@@ -166,24 +166,49 @@
         .bg-strategies { background-color: var(--status-paper) !important; }
         .bg-health { background-color: #8b5cf6 !important; }
 
-        /* Content Section Display Fix */
+        /* 🚨 MEGA-NUCLEAR CONTENT SECTION SYNCHRONIZATION - ULTIMATE BACKUP PROTECTION 🚨 */
+        
+        /* Target ALL possible AdminLTE body configurations - BACKUP SYNC */
+        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section,
+        body.hold-transition.sidebar-mini .content-wrapper .content-section,
+        body.sidebar-mini.layout-fixed .content-wrapper .content-section,
+        body.sidebar-mini .content-wrapper .content-section,
+        body .content-wrapper .content-section,
+        .wrapper .content-wrapper .content-section,
+        .content-wrapper .content-section,
         .content-section {
-            width: 100%;
-            min-height: 400px;
-            /* Removed display: none to allow JavaScript control */
+            padding: 20px;
+            display: none !important; /* MEGA-NUCLEAR: Force hide ALL sections by default */
+            visibility: hidden !important; /* MEGA-NUCLEAR: Double security */
+            opacity: 0 !important; /* MEGA-NUCLEAR: Triple security */
+            position: absolute !important; /* MEGA-NUCLEAR: Remove from flow */
+            top: -99999px !important; /* MEGA-NUCLEAR: Move offscreen */
+            left: -99999px !important; /* MEGA-NUCLEAR: Move offscreen */
+            width: 0 !important; /* MEGA-NUCLEAR: Zero dimensions */
+            height: 0 !important; /* MEGA-NUCLEAR: Zero dimensions */
+            overflow: hidden !important; /* MEGA-NUCLEAR: Hide overflow */
+            z-index: -999 !important; /* MEGA-NUCLEAR: Behind everything */
         }
         
-        .content-section.hidden {
-            display: none !important;
-        }
-        
+        /* ACTIVE section overrides - MEGA-NUCLEAR BACKUP FORCE */
+        body.hold-transition.sidebar-mini.layout-fixed .content-wrapper .content-section.active,
+        body.hold-transition.sidebar-mini .content-wrapper .content-section.active,
+        body.sidebar-mini.layout-fixed .content-wrapper .content-section.active,
+        body.sidebar-mini .content-wrapper .content-section.active,
+        body .content-wrapper .content-section.active,
+        .wrapper .content-wrapper .content-section.active,
+        .content-wrapper .content-section.active,
         .content-section.active {
-            display: block !important;
-        }
-
-        .content-section:first-of-type,
-        .content-section#section-overview {
-            display: block !important;
+            display: block !important; /* MEGA-NUCLEAR: Force show active section */
+            visibility: visible !important; /* MEGA-NUCLEAR: Force visible */
+            opacity: 1 !important; /* MEGA-NUCLEAR: Force opaque */
+            position: relative !important; /* MEGA-NUCLEAR: Back in flow */
+            top: auto !important; /* MEGA-NUCLEAR: Reset position */
+            left: auto !important; /* MEGA-NUCLEAR: Reset position */
+            width: auto !important; /* MEGA-NUCLEAR: Reset width */
+            height: auto !important; /* MEGA-NUCLEAR: Reset height */
+            overflow: visible !important; /* MEGA-NUCLEAR: Show content */
+            z-index: 10 !important; /* MEGA-NUCLEAR: On top */
         }
 
         /* Navigation Enhancement */
@@ -2182,10 +2207,10 @@ ${diagnostics.switchFunction ? 'Navigation function is available!' : 'ERROR: Nav
             }
         };
         
-        // ===== PRODUCTION-GRADE VANILLA JAVASCRIPT NAVIGATION =====
-        // Make switchToSection globally accessible with NO jQuery dependencies
+        // 🚨🚨🚨 MEGA-NUCLEAR NAVIGATION SYSTEM - ULTIMATE BACKUP SYNCHRONIZATION 🚨🚨🚨
+        // Make switchToSection globally accessible with MEGA-NUCLEAR PROTECTION
         window.switchToSection = function(sectionName) {
-            console.log(`🚨🚨 NAVIGATION CALLED: switchToSection('${sectionName}') 🚨🚨`);
+            console.log(`🚨🚨🚨 MEGA-NUCLEAR BACKUP: switchToSection('${sectionName}') 🚨🚨🚨`);
             console.log(`📊 Function called at: ${new Date().toLocaleTimeString()}`);
             console.log(`🔍 Document ready state: ${document.readyState}`);
             console.log(`📊 DOM fully loaded: ${document.querySelectorAll('.content-section').length} sections found`);

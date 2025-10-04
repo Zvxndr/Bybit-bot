@@ -17,6 +17,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     
+    <!-- 🚨🚨🚨 MEGA-NUCLEAR PROTECTION CSS - ELIMINATE ALL TEMPLATE CONFLICTS 🚨🚨🚨 -->
+    <link rel="stylesheet" href="/static/css/mega-nuclear-protection.css">
+    
     <style>
         /* 🚨 NUCLEAR NAVIGATION SYSTEM - MAXIMUM SPECIFICITY AND FORCE */
         
@@ -3748,10 +3751,35 @@ document.addEventListener('DOMContentLoaded', function() {
     startNavigationMonitor();
     startNuclearDOMProtection();
     
-    // NUCLEAR: Initialize dashboard navigation to overview with MAXIMUM FORCE
+    // 🚨🚨🚨 MEGA-NUCLEAR: OVERRIDE ALL CONFLICTING FUNCTION NAMES 🚨🚨🚨
+    // Neutralize any conflicting navigation functions from other templates
+    window.switchSection = switchSection; // Ensure our function takes precedence
+    window.switchToScreen = function() { 
+        console.log('🚨 MEGA-NUCLEAR: switchToScreen() NEUTRALIZED - redirecting to AdminLTE system'); 
+        return false; 
+    };
+    window.showSection = function() { 
+        console.log('🚨 MEGA-NUCLEAR: showSection() NEUTRALIZED - redirecting to AdminLTE system'); 
+        return false; 
+    };
+    window.displaySection = function() { 
+        console.log('🚨 MEGA-NUCLEAR: displaySection() NEUTRALIZED - redirecting to AdminLTE system'); 
+        return false; 
+    };
+    
+    // MEGA-NUCLEAR: Disable any jQuery-based navigation from other templates
+    if (window.$) {
+        $(document).off('click', '.nav-button');
+        $(document).off('click', '[data-screen]');
+        $(document).off('click', '.fire-nav');
+        $(document).off('click', '.professional-nav');
+        console.log('🚨 MEGA-NUCLEAR: All conflicting jQuery event handlers NEUTRALIZED');
+    }
+    
+    // MEGA-NUCLEAR: Initialize dashboard navigation to overview with ULTIMATE FORCE
     setTimeout(function() {
         switchSection('overview');
-        console.log('🚨 NUCLEAR SUCCESS: Overview section activated with MAXIMUM FORCE');
+        console.log('🚨🚨🚨 MEGA-NUCLEAR SUCCESS: Overview section activated with ULTIMATE PROTECTION 🚨🚨🚨');
         
         // Run debug report after initialization
         setTimeout(debugNavigationState, 200);

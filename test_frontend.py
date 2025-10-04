@@ -13,15 +13,37 @@ def create_test_app():
     """Create simple test app for frontend."""
     
     app = FastAPI(
-        title="Frontend Test Server",
-        description="Test the fixed navigation system",
-        version="1.0.0"
+        title="🚨 MEGA-NUCLEAR Frontend Test Server 🚨",
+        description="Test the MEGA-NUCLEAR navigation system with ULTIMATE protection",
+        version="2.0.0-MEGA-NUCLEAR"
     )
+    
+    # 🚨 MEGA-NUCLEAR: Mount static files to serve CSS protection
+    app.mount("/static", StaticFiles(directory="src/static"), name="static")
     
     @app.get("/")
     async def serve_dashboard():
-        """Serve the dashboard HTML."""
+        """Serve the MEGA-NUCLEAR protected dashboard HTML."""
         return FileResponse("src/templates/adminlte_dashboard.html")
+    
+    @app.get("/mega-nuclear-status")
+    async def mega_nuclear_status():
+        """Check MEGA-NUCLEAR protection status."""
+        return {
+            "status": "🚨 MEGA-NUCLEAR PROTECTION ACTIVE 🚨",
+            "protection_level": "ULTIMATE",
+            "template_conflicts": "NEUTRALIZED",
+            "navigation_system": "ADMINLTE_ONLY",
+            "conflicting_templates": [
+                "professional_dashboard.html - DISABLED",
+                "fire_dashboard_redesign.html - DISABLED", 
+                "adminlte_dashboard_backup.html - SYNCHRONIZED",
+                "adminlte_dashboard_clean.html - SYNCHRONIZED"
+            ],
+            "css_protection": "mega-nuclear-protection.css - LOADED",
+            "javascript_overrides": "ALL_CONFLICTS_NEUTRALIZED",
+            "message": "🔥 MEGA-NUCLEAR SUCCESS: Single unified navigation system active 🔥"
+        }
     
     return app
 

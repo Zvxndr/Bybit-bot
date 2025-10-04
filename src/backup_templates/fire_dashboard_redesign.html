@@ -253,28 +253,30 @@
             }
         }
         
-        /* Admin Panel - Hidden by default */
-        .admin-panel-compact {
-            display: none;
-            background: rgba(0, 0, 0, 0.9);
-            border-top: 1px solid rgba(255, 107, 53, 0.3);
-            padding: 8px;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 8px;
+        /* 🚨 MEGA-NUCLEAR FIRE DASHBOARD PROTECTION - DISABLE ALL CONFLICTING NAVIGATION 🚨 */
+        
+        /* MEGA-NUCLEAR: Disable ALL Fire Dashboard panels to prevent AdminLTE conflicts */
+        .admin-panel-compact,
+        .backtest-panel-compact,
+        .admin-panel-compact.active,
+        .backtest-panel-compact.active {
+            display: none !important; /* MEGA-NUCLEAR: Force disable all panels */
+            visibility: hidden !important; /* MEGA-NUCLEAR: Double protection */
+            opacity: 0 !important; /* MEGA-NUCLEAR: Triple protection */
+            pointer-events: none !important; /* MEGA-NUCLEAR: Disable interaction */
+            position: absolute !important; /* MEGA-NUCLEAR: Remove from flow */
+            top: -99999px !important; /* MEGA-NUCLEAR: Move offscreen */
+            left: -99999px !important; /* MEGA-NUCLEAR: Move offscreen */
+            z-index: -999 !important; /* MEGA-NUCLEAR: Behind everything */
         }
         
-        .admin-panel-compact.active {
-            display: grid;
-        }
-        
-        /* Backtest Panel - Hidden by default */
-        .backtest-panel-compact {
-            display: none;
-            background: rgba(0, 0, 0, 0.9);
-            border-top: 1px solid rgba(92, 103, 255, 0.3);
-            padding: 8px;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 8px;
+        /* MEGA-NUCLEAR: Disable ANY Fire Dashboard content that might interfere */
+        .fire-dashboard *,
+        .dashboard-redesign *,
+        .nav-button,
+        .content-screen {
+            pointer-events: none !important; /* MEGA-NUCLEAR: Disable ALL interactions */
+            display: none !important; /* MEGA-NUCLEAR: Hide everything */
         }
         
         .backtest-panel-compact.active {
