@@ -21,36 +21,56 @@ except ImportError:
         @staticmethod
         def safe_load(content):
             # Basic YAML parsing for debug config
-            if isinstance(content, str):
-                lines = content.split('\n')
-            else:
-                lines = content.read().split('\n')
-            
-            config = {}
-            for line in lines:
-                if ':' in line and not line.strip().startswith('#'):
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    
-                    # Convert basic types
-                    if value.lower() == 'true':
-                        config[key] = True
-                    elif value.lower() == 'false':
-                        config[key] = False
-                    elif value.isdigit():
-                        config[key] = int(value)
-                    else:
-                        config[key] = value.strip('"\'')
-            
-            # Provide safe defaults if parsing fails
-            if not config:
+            try:
+                if hasattr(content, 'read'):
+                    # It's a file object
+                    text = content.read()
+                else:
+                    # It's already a string
+                    text = content
+                
+                if not text or not isinstance(text, str):
+                    return {
+                        'debug_mode': True,
+                        'debug_settings': {'disable_real_trading': True},
+                        'phase': {'trading_allowed': False}
+                    }
+                
+                lines = text.split('\n')
+                config = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if line and ':' in line and not line.startswith('#'):
+                        key, value = line.split(':', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Convert basic types
+                        if value.lower() == 'true':
+                            config[key] = True
+                        elif value.lower() == 'false':
+                            config[key] = False
+                        elif value.isdigit():
+                            config[key] = int(value)
+                        else:
+                            config[key] = value.strip('"\'')
+                
+                # Provide safe defaults if parsing fails
+                if not config:
+                    return {
+                        'debug_mode': True,
+                        'debug_settings': {'disable_real_trading': True},
+                        'phase': {'trading_allowed': False}
+                    }
+                return config
+            except Exception:
+                # Always return a valid dict on any error
                 return {
                     'debug_mode': True,
                     'debug_settings': {'disable_real_trading': True},
                     'phase': {'trading_allowed': False}
                 }
-            return config
         
         @staticmethod
         def dump(data, f, **kwargs):
@@ -81,8 +101,13 @@ class DebugSafetyManager:
             if config_file.exists():
                 with open(config_file, 'r') as f:
                     config = yaml.safe_load(f)
-                    logger.info("🔧 Debug configuration loaded successfully")
-                    return config
+                    # Ensure we have a valid dictionary
+                    if isinstance(config, dict):
+                        logger.info("🔧 Debug configuration loaded successfully")
+                        return config
+                    else:
+                        logger.warning(f"⚠️ Invalid config format, using defaults")
+                        return self._get_default_debug_config()
             else:
                 logger.warning(f"⚠️ Debug config file not found: {self.config_path}")
                 return self._get_default_debug_config()

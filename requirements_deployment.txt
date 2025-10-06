@@ -1,8 +1,5 @@
-# Ultra-minimal deployment requirements
-# Our backend_server.py uses only Python standard library!
-
-# Optional: For real Bybit API integration (not needed for current backend)
-# pybit>=5.6.0
-
-# Optional: For environment file support
-python-dotenv>=1.0.0
+# DEPRECATED - DO NOT USE
+# This file is deprecated. Use requirements.txt instead.
+# 
+# The main application now uses src/main.py with proper FastAPI backend
+# See requirements.txt for current dependencies
