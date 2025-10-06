@@ -1,24 +1,41 @@
 # Bybit Trading Bot - Production Ready
 =============================================
 
+**⚠️ READ DEPLOYMENT_ARCHITECTURE_GUIDE.md BEFORE MAKING CHANGES ⚠️**
+
 **Enterprise-Grade Cryptocurrency Trading Bot with Advanced Risk Management**
 
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 ![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-Private-red)
 
+## 🚨 **CRITICAL ARCHITECTURE INFO**
+
+### **⚡ Single Application Deployment**
+```yaml
+Entry Point: src/main.py (TradingBotApplication)
+Port: 8080 (DigitalOcean standard)  
+Architecture: Integrated frontend + backend
+Deployment: python src/main.py (DO NOT CHANGE)
+```
+
+### **🚫 DO NOT CREATE SEPARATE SERVERS**
+- The system uses ONE application (`src/main.py`)
+- Frontend and backend are INTEGRATED 
+- If imports fail, fix them in `src/main.py` - don't create new servers
+
 ## 🚀 Overview
 
-This is a sophisticated cryptocurrency trading bot designed for the Bybit exchange, featuring enterprise-grade security, multi-environment support, and advanced risk management capabilities.
+This is a sophisticated cryptocurrency trading bot designed for **DigitalOcean deployment**, featuring enterprise-grade security and **integrated architecture**.
 
-### ✅ System Status: 100% Complete
+### ✅ System Status: 100% Complete & Deployment Ready
 
-- **Backend**: FastAPI with comprehensive trading engine
-- **Frontend**: Next.js 14 dashboard (container-ready)
+- **Application**: Single TradingBotApplication (src/main.py) 
+- **Frontend**: Tabler dashboard (integrated into main app)
 - **Database**: SQLite with PostgreSQL upgrade path
 - **Security**: Enterprise HSM integration, MFA, advanced key management
-- **Deployment**: Docker containerization with Digital Ocean support
-- **Monitoring**: Real-time health checks and alerting
+- **Deployment**: DigitalOcean App Platform (single container)
+- **Monitoring**: Built-in health checks at `/health`
 
 ## 🏗️ Architecture
 

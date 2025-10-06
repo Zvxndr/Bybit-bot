@@ -1,19 +1,8 @@
-# Deployment requirements for dashboard 
-# Includes dependencies needed by the application modules
+# Ultra-minimal deployment requirements
+# Our backend_server.py uses only Python standard library!
 
-# Core Web Framework
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-jinja2>=3.1.0  
-python-multipart>=0.0.6
+# Optional: For real Bybit API integration (not needed for current backend)
+# pybit>=5.6.0
 
-# File and HTTP handling
-aiofiles>=23.2.0
-aiohttp>=3.8.0
-
-# Environment and utilities
+# Optional: For environment file support
 python-dotenv>=1.0.0
-pydantic>=2.0.0
-
-# Date/time utilities
-python-dateutil>=2.8.0

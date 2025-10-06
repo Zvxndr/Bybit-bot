@@ -9,11 +9,7 @@
 ## 🎯 **DEPLOYMENT OVERVIEW**
 
 ### **Private Use Mode Characteristics**
-- **Ultra-Safe Configuration**: Maximum safety parameters with 0.5% risk limits
-- **Debug Mode Lock**: System permanently locked in non-trading debug mode
-- **API Order Blocking**: All real trading prevented at multiple security layers
-- **Session Management**: Auto-shutdown after 1 hour for safety
-- **Cross-Platform Support**: Windows batch files, PowerShell, Python launchers
+- Private use tax logging for Australia
 
 ### **Zero Financial Risk Guarantee**
 - ✅ **All trading operations disabled** at API level

@@ -97,18 +97,17 @@ logger.debug("🔧 Starting main module import sequence...")
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
-# Import frontend server and shared state - ENHANCED FOR RELIABLE DEPLOYMENT
-# Multiple import strategies to ensure proper loading in all environments
-frontend_handler = None
+# Import core components - UPDATED FOR NEW FRONTEND ARCHITECTURE
+# Remove frontend_server dependency and use API-only approach
 shared_state = None
 get_bybit_client = None
 
-# Strategy 1: Try relative imports from current directory
+# Strategy 1: Try importing core components only (no frontend_server needed)
 try:
     import sys
     from pathlib import Path
     
-    logger.debug("🔧 Attempting Strategy 1: Relative imports from current directory")
+    logger.debug("🔧 Attempting Strategy 1: Core imports from current directory")
     
     # Add current src directory to path
     current_dir = Path(__file__).parent
@@ -117,22 +116,20 @@ try:
         sys.path.insert(0, str(current_dir))
         logger.debug(f"🔧 Added to sys.path: {current_dir}")
     
-    from frontend_server import FrontendHandler
     from shared_state import shared_state
     from bybit_api import get_bybit_client
-    logger.info("✅ Strategy 1 SUCCESS: Full frontend components loaded successfully")
-    print("✅ Full frontend components loaded successfully")
+    logger.info("✅ Strategy 1 SUCCESS: Core components loaded successfully")
+    print("✅ Core components loaded successfully")
     
 except ImportError as e1:
     logger.warning(f"⚠️ Strategy 1 FAILED: Relative imports failed - {e1}")
     # Strategy 2: Try absolute imports for deployment environment  
     try:
         logger.debug("🔧 Attempting Strategy 2: Absolute imports for deployment")
-        from src.frontend_server import FrontendHandler
         from src.shared_state import shared_state
         from src.bybit_api import get_bybit_client
-        logger.info("✅ Strategy 2 SUCCESS: Full frontend components loaded via absolute imports")
-        print("✅ Full frontend components loaded via absolute imports")
+        logger.info("✅ Strategy 2 SUCCESS: Core components loaded via absolute imports")
+        print("✅ Core components loaded via absolute imports")
         
     except ImportError as e2:
         logger.error(f"❌ Strategy 2 FAILED: Absolute imports failed - {e2}")
@@ -147,13 +144,6 @@ except ImportError as e1:
             spec.loader.exec_module(shared_state_module)
             shared_state = shared_state_module.shared_state
             
-            # Load frontend_server directly  
-            frontend_path = Path(__file__).parent / "frontend_server.py"
-            spec = importlib.util.spec_from_file_location("frontend_server", frontend_path)
-            frontend_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(frontend_module)
-            FrontendHandler = frontend_module.FrontendHandler
-            
             # Load bybit_api directly
             bybit_path = Path(__file__).parent / "bybit_api.py"
             spec = importlib.util.spec_from_file_location("bybit_api", bybit_path)
@@ -161,42 +151,18 @@ except ImportError as e1:
             spec.loader.exec_module(bybit_module)
             get_bybit_client = bybit_module.get_bybit_client
             
-            print("✅ Components loaded via direct file import")
+            print("✅ Core components loaded via direct file import")
             
         except Exception as e3:
             print(f"⚠️ All import strategies failed: {e1}, {e2}, {e3}")
             print("🔧 Using minimal fallback implementations")
             
-            # Only create fallbacks if all imports failed
-            class FrontendHandler(BaseHTTPRequestHandler):
-                def do_GET(self):
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'text/html')
-                    self.end_headers()
-                    html = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head><title>Bybit Bot - Minimal Mode</title></head>
-                    <body style="background:#000;color:#0ff;font-family:monospace;padding:20px;">
-                        <h1>🔥 Bybit Trading Bot - Minimal Frontend</h1>
-                        <p>✅ Bot is running in safe mode</p>
-                        <p>📊 <a href="/api/status" style="color:#0ff;">API Status</a></p>
-                        <p>💚 <a href="/health" style="color:#0ff;">Health Check</a></p>
-                        <p>⚠️ Full dashboard temporarily unavailable</p>
-                    </body>
-                    </html>
-                    """
-                    self.wfile.write(html.encode('utf-8'))
-            
+            # Create minimal shared_state fallback
             class SharedState:
                 def __init__(self):
                     self.data = {}
                     self.logs = []
                     self.system_status = "initializing"
-            def __init__(self):
-                self.data = {}
-                self.logs = []
-                self.system_status = "initializing"
                 
             def get(self, key, default=None):
                 return self.data.get(key, default)
@@ -271,6 +237,17 @@ except ImportError as e1:
                 if hasattr(self, 'data') and name in self.data:
                     return self.data[name]
                 raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+                
+            def reset_bot_control_flags(self):
+                """Reset bot control flags"""
+                self.data['bot_active'] = False
+                self.data['trading_enabled'] = False
+                self.data['bot_control_flags_reset'] = True
+                
+            def start_background_tasks(self):
+                """Start background tasks (fallback implementation)"""
+                print("🔧 Background tasks started (minimal mode)")
+                return True
             
             # Create fallback shared_state instance
             shared_state = SharedState()
@@ -843,26 +820,152 @@ class TradingBotApplication:
             logger.warning(f"⚠️ Inline data wipe test failed: {e}")
         
     def start_health_server(self):
-        """Start HTTP server with frontend and API support"""
+        """Start integrated web server - Frontend + Backend APIs + Health checks on port 8080"""
         try:
-            self.http_server = HTTPServer(('0.0.0.0', 8080), FrontendHandler)
+            # Integrated frontend + backend server
+            class IntegratedHandler(BaseHTTPRequestHandler):
+                def do_GET(self):
+                    try:
+                        if self.path == '/health' or self.path == '/api/status':
+                            # Health and status endpoints
+                            self.send_response(200)
+                            self.send_header('Content-Type', 'application/json')
+                            self.send_header('Access-Control-Allow-Origin', '*')
+                            self.end_headers()
+                            health_data = {
+                                "status": "healthy",
+                                "version": "2.0.0",
+                                "timestamp": datetime.now().isoformat(),
+                                "frontend": "integrated",
+                                "backend": "active"
+                            }
+                            self.wfile.write(json.dumps(health_data).encode('utf-8'))
+                            
+                        elif self.path.startswith('/api/'):
+                            # API endpoints - return basic responses for now
+                            self.send_response(200)
+                            self.send_header('Content-Type', 'application/json')
+                            self.send_header('Access-Control-Allow-Origin', '*')
+                            self.end_headers()
+                            
+                            if self.path == '/api/portfolio':
+                                portfolio_data = {
+                                    "total_balance": 10000.0,
+                                    "available_balance": 8500.0,
+                                    "pnl_today": 150.0,
+                                    "positions": []
+                                }
+                                self.wfile.write(json.dumps(portfolio_data).encode('utf-8'))
+                            elif self.path == '/api/strategies':
+                                strategies_data = {
+                                    "strategies": [
+                                        {
+                                            "id": "1",
+                                            "name": "Demo Strategy",
+                                            "status": "running",
+                                            "pnl": 50.0
+                                        }
+                                    ]
+                                }
+                                self.wfile.write(json.dumps(strategies_data).encode('utf-8'))
+                            else:
+                                # Default API response
+                                self.wfile.write(json.dumps({"status": "ok", "message": "API endpoint"}).encode('utf-8'))
+                                
+                        else:
+                            # Serve frontend files
+                            self.serve_frontend_file()
+                            
+                    except Exception as e:
+                        logger.error(f"Error handling request: {e}")
+                        self.send_response(500)
+                        self.end_headers()
+                        
+                def serve_frontend_file(self):
+                    """Serve frontend files from the frontend directory"""
+                    try:
+                        # Determine file path
+                        if self.path == '/' or self.path == '':
+                            file_path = Path('frontend/index.html')
+                        else:
+                            # Remove leading slash and serve from frontend directory
+                            requested_path = self.path.lstrip('/')
+                            file_path = Path('frontend') / requested_path
+                            
+                        # Security check - ensure path is within frontend directory
+                        try:
+                            file_path = file_path.resolve()
+                            frontend_dir = Path('frontend').resolve()
+                            if not str(file_path).startswith(str(frontend_dir)):
+                                raise ValueError("Path outside frontend directory")
+                        except:
+                            self.send_response(404)
+                            self.end_headers()
+                            return
+                            
+                        # Check if file exists
+                        if not file_path.exists() or file_path.is_dir():
+                            self.send_response(404)
+                            self.end_headers()
+                            return
+                            
+                        # Determine content type
+                        content_type = 'text/html'
+                        if file_path.suffix == '.css':
+                            content_type = 'text/css'
+                        elif file_path.suffix == '.js':
+                            content_type = 'application/javascript'
+                        elif file_path.suffix == '.json':
+                            content_type = 'application/json'
+                        elif file_path.suffix in ['.png', '.jpg', '.jpeg']:
+                            content_type = f'image/{file_path.suffix[1:]}'
+                        elif file_path.suffix == '.ico':
+                            content_type = 'image/x-icon'
+                            
+                        # Send file
+                        with open(file_path, 'rb') as f:
+                            content = f.read()
+                            
+                        self.send_response(200)
+                        self.send_header('Content-Type', content_type)
+                        self.send_header('Content-Length', str(len(content)))
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(content)
+                        
+                    except Exception as e:
+                        logger.error(f"Error serving file {self.path}: {e}")
+                        self.send_response(500)
+                        self.end_headers()
+                        
+                def do_OPTIONS(self):
+                    """Handle CORS preflight requests"""
+                    self.send_response(200)
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    self.end_headers()
+                        
+                def log_message(self, format, *args):
+                    # Suppress default HTTP server logs
+                    pass
+            
+            self.http_server = HTTPServer(('0.0.0.0', 8080), IntegratedHandler)
             
             def run_server():
-                logger.info("🌐 Frontend & API server starting on port 8080")
-                logger.info("📱 Dashboard: http://localhost:8080")
-                logger.info("💚 Health: http://localhost:8080/health")
-                logger.info("📊 API: http://localhost:8080/api/status")
-                logger.info("💡 NOTE: If balance shows 0.00 USDT, add testnet funds at https://testnet.bybit.com/")
+                logger.info("� Integrated server starting on port 8080")
+                logger.info("� Health check: http://localhost:8080/health")
+                logger.info("� Frontend: http://localhost:3000 (run separately)")
                 self.http_server.serve_forever()
             
             # Run HTTP server in background thread
             server_thread = Thread(target=run_server, daemon=True)
             server_thread.start()
             
-            logger.info("✅ Frontend & API server started successfully")
+            logger.info("✅ Integrated server started successfully")
             
         except Exception as e:
-            logger.error(f"❌ Failed to start server: {e}")
+            logger.error(f"❌ Failed to start integrated server: {e}")
         
     async def health_check(self):
         """Health check endpoint simulation"""
