@@ -884,18 +884,18 @@ class TradingBotApplication:
                 def serve_frontend_file(self):
                     """Serve frontend files from the frontend directory"""
                     try:
-                        # Determine file path
+                        # Determine file path (frontend is in parent directory)
                         if self.path == '/' or self.path == '':
-                            file_path = Path('frontend/index.html')
+                            file_path = Path('../frontend/index.html')
                         else:
                             # Remove leading slash and serve from frontend directory
                             requested_path = self.path.lstrip('/')
-                            file_path = Path('frontend') / requested_path
+                            file_path = Path('../frontend') / requested_path
                             
                         # Security check - ensure path is within frontend directory
                         try:
                             file_path = file_path.resolve()
-                            frontend_dir = Path('frontend').resolve()
+                            frontend_dir = Path('../frontend').resolve()
                             if not str(file_path).startswith(str(frontend_dir)):
                                 raise ValueError("Path outside frontend directory")
                         except:
