@@ -513,6 +513,22 @@ async def health_check():
         "port": PORT
     }
 
+@app.get("/debug")
+async def debug_info():
+    """Debug endpoint to check what's available"""
+    try:
+        strategies = pipeline.get_strategies_by_phase()
+        metrics = pipeline.get_pipeline_metrics()
+        return {
+            "status": "success",
+            "strategies": strategies,
+            "metrics": metrics,
+            "pipeline_running": pipeline.is_running,
+            "environment": ENV
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/pipeline/strategies")
 async def get_strategies():
     """Get all strategies grouped by phase"""
