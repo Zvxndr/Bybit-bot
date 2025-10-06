@@ -452,7 +452,7 @@ export const PipelineMonitor: React.FC<PipelineMonitorProps> = ({
         {/* Backtest Column */}
         <div className="pipeline-column">
           <div className="column-header">
-            <h3>Backtest & Discovery</h3>
+            <h3>ML Discovery (Historical Backtesting)</h3>
             <span className="count-badge">{data.backtest.length} candidates</span>
           </div>
           <div className="strategy-list">
@@ -802,7 +802,7 @@ if __name__ == "__main__":
 
 **Target AI Pipeline System:**
 - 🎯 Automated strategy discovery
-- 🎯 Three-phase pipeline (backtest → paper → live)
+- 🎯 Three-phase pipeline (ML Discovery/Backtesting → paper → live)
 - 🎯 Real-time strategy monitoring
 - 🎯 Automatic graduation system
 - 🎯 Glass box transparency

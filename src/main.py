@@ -68,11 +68,11 @@ def main():
                 "message": "Application is running in simplified mode"
             }
         
-        # Speed Demon dynamic risk calculation
+        # Dynamic risk calculation based on account size
         import math
         
-        def calculate_speed_demon_risk(balance_usd: float):
-            """Speed Demon core feature - dynamic risk scaling"""
+        def calculate_dynamic_risk(balance_usd: float):
+            """Core feature - dynamic risk scaling based on account size"""
             if balance_usd <= 10000:
                 risk_ratio = 0.02  # 2% for small accounts
                 tier = "small"
@@ -98,21 +98,21 @@ def main():
                 "portfolio_risk_score": min(risk_ratio * 2000, 100)
             }
         
-        # Risk metrics endpoint with Speed Demon
+        # Risk metrics endpoint with dynamic scaling
         @app.get("/api/risk-metrics")
         async def get_risk_metrics():
             # Default balance for demo
             balance = 5000.0
-            speed_demon_data = calculate_speed_demon_risk(balance)
+            risk_data = calculate_dynamic_risk(balance)
             return {
-                **speed_demon_data,
-                "message": "Speed Demon dynamic risk scaling active"
+                **risk_data,
+                "message": "Dynamic risk scaling active"
             }
         
         # Dynamic risk calculation endpoint
         @app.get("/api/calculate-risk/{balance}")
         async def calculate_risk(balance: float):
-            return calculate_speed_demon_risk(balance)
+            return calculate_dynamic_risk(balance)
         
         # Serve frontend if it exists
         frontend_dir = Path(__file__).parent.parent / "frontend"

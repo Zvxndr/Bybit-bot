@@ -11,7 +11,7 @@
 - ✅ **Individual Strategy Display**: Table-based strategy listing with basic metrics
 
 ### **🎯 Target AI Pipeline System**
-- 🎯 **Three-Column Pipeline**: Backtest → Paper → Live progression visualization
+- 🎯 **Three-Column Pipeline**: ML Discovery (Backtesting) → Paper → Live progression visualization
 - 🎯 **Automated Strategy Naming**: `BTC_MR_A4F2D` format with auto-generated IDs
 - 🎯 **Real-time Strategy Cards**: Individual cards showing progression and status
 - 🎯 **Automated Graduations**: Zero manual intervention with automatic promotions
@@ -38,7 +38,7 @@
 ```html
 <!-- Three-Column Pipeline -->
 <div class="pipeline-columns">
-    <div class="pipeline-column">Backtest & Discovery</div>
+    <div class="pipeline-column">ML Discovery (Historical Backtesting)</div>
     <div class="pipeline-column">Paper Trading</div>
     <div class="pipeline-column">Live Trading</div>
 </div>
@@ -107,7 +107,7 @@ ws.onmessage = (event) => {
 ```
 
 ### **2. Three-Column Pipeline Layout**
-**Replace:** Single discovery interface with automated three-phase pipeline
+**Replace:** Single discovery interface with automated three-phase pipeline (ML Discovery/Backtesting → Paper → Live)
 
 ```css
 /* NEW: Pipeline Column System */

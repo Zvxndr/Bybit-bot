@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Pipeline - Automated Strategy Discovery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .pipeline-container {
+            padding: 2rem;
+        }
+        
+        .pipeline-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .pipeline-metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-width: 150px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .pipeline-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .pipeline-column {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .column-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .strategy-count {
+            background: #4CAF50;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .strategy-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .strategy-details {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .strategy-metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.2rem 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-backtest { background-color: #FFC107; }
+        .status-paper { background-color: #2196F3; }
+        .status-live { background-color: #4CAF50; }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .btn-pipeline {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-pipeline:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .backtest-column { border-left-color: #FFC107; }
+        .paper-column { border-left-color: #2196F3; }
+        .live-column { border-left-color: #4CAF50; }
+        
+        .phase-description {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        
+        .architecture-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        .refresh-indicator {
+            color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pipeline-container">
+        <!-- Header -->
+        <div class="pipeline-header">
+            <h1>🤖 AI Trading Pipeline System</h1>
+            <p class="lead">ML Discovery (Historical Backtesting) → Paper Trading → Live Trading</p>
+            <div class="architecture-info">
+                ✅ <strong>Correct Architecture:</strong> ML discovery IS historical backtesting (same process), 
+                successful ML strategies graduate to Bybit testnet paper trading, then to live trading. 
+                Order placement is a basic feature. Manual controls for emergency stops only.
+            </div>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="pipeline-metrics">
+            <div class="metric-card">
+                <div class="metric-value" id="total-strategies">-</div>
+                <div class="metric-label">Total Strategies</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="discovery-rate">6</div>
+                <div class="metric-label">Discovery Rate/Hour</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="graduation-rate">-</div>
+                <div class="metric-label">Graduation Rate %</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="total-pnl">$0</div>
+                <div class="metric-label">Total Live P&L</div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-pipeline" onclick="emergencyStop()">🛑 Emergency Stop</button>
+            <button class="btn btn-pipeline" onclick="startPipeline()">▶️ Start Pipeline</button>
+            <span class="refresh-indicator">🔄 Auto-refreshing every 5s</span>
+        </div>
+        
+        <!-- Three-Column Pipeline -->
+        <div class="pipeline-columns">
+            <!-- ML Discovery Column -->
+            <div class="pipeline-column backtest-column">
+                <div class="column-header">
+                    <div>
+                        <span class="status-indicator status-backtest"></span>
+                        <span class="column-title">ML Discovery (Historical Backtesting)</span>
+                    </div>
+                    <span class="strategy-count" id="backtest-count">0</span>
+                </div>
+                <div class="phase-description">
+                    ML algorithm discovers and validates strategies through historical backtesting. 
+                    Score ≥78%, Sharpe ≥1.5, Return ≥10% → Graduate to Paper Trading
+                </div>
+                <div id="backtest-strategies">
+                    <!-- ML Discovery strategies will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Paper Trading Column -->
+            <div class="pipeline-column paper-column">
+                <div class="column-header">
+                    <div>
+                        <span class="status-indicator status-paper"></span>
+                        <span class="column-title">Paper Trading (Testnet)</span>
+                    </div>
+                    <span class="strategy-count" id="paper-count">0</span>
+                </div>
+                <div class="phase-description">
+                    Simulated trading on Bybit testnet with virtual funds. 
+                    3+ days, 3+ trades, positive P&L → Graduate to Live Trading
+                </div>
+                <div id="paper-strategies">
+                    <!-- Paper strategies will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Live Trading Column -->
+            <div class="pipeline-column live-column">
+                <div class="column-header">
+                    <div>
+                        <span class="status-indicator status-live"></span>
+                        <span class="column-title">Live Trading</span>
+                    </div>
+                    <span class="strategy-count" id="live-count">0</span>
+                </div>
+                <div class="phase-description">
+                    Real money trading with validated strategies. 
+                    Continuous performance monitoring with automated risk management.
+                </div>
+                <div id="live-strategies">
+                    <!-- Live strategies will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update pipeline display
+        async function updatePipeline() {
+            try {
+                // Get strategies
+                const strategiesResponse = await fetch('/api/pipeline/strategies');
+                const strategies = await strategiesResponse.json();
+                
+                // Get metrics
+                const metricsResponse = await fetch('/api/pipeline/metrics');
+                const metrics = await metricsResponse.json();
+                
+                // Update metrics
+                document.getElementById('total-strategies').textContent = metrics.total_strategies;
+                document.getElementById('graduation-rate').textContent = 
+                    Math.round(metrics.graduation_rate) + '%';
+                document.getElementById('total-pnl').textContent = 
+                    '$' + Math.round(metrics.total_live_pnl);
+                
+                // Update counts
+                document.getElementById('backtest-count').textContent = metrics.ml_backtest_count;
+                document.getElementById('paper-count').textContent = metrics.paper_count;
+                document.getElementById('live-count').textContent = metrics.live_count;
+                
+                // Update strategy lists
+                updateStrategyList('backtest-strategies', strategies.ml_backtest, 'ml_backtest');
+                updateStrategyList('paper-strategies', strategies.paper, 'paper');
+                updateStrategyList('live-strategies', strategies.live, 'live');
+                
+            } catch (error) {
+                console.error('Failed to update pipeline:', error);
+            }
+        }
+        
+        function updateStrategyList(containerId, strategies, phase) {
+            const container = document.getElementById(containerId);
+            
+            if (strategies.length === 0) {
+                container.innerHTML = '<div class="text-center" style="color: rgba(255,255,255,0.6); padding: 2rem;">No strategies in this phase</div>';
+                return;
+            }
+            
+            container.innerHTML = strategies.map(strategy => `
+                <div class="strategy-card">
+                    <div class="strategy-id">${strategy.strategy_id}</div>
+                    <div class="strategy-details">
+                        <div class="strategy-metric">
+                            <span>Asset:</span>
+                            <span>${strategy.asset_pair}</span>
+                        </div>
+                        <div class="strategy-metric">
+                            <span>Type:</span>
+                            <span>${strategy.strategy_type.replace('_', ' ')}</span>
+                        </div>
+                        ${phase === 'ml_backtest' ? `
+                            <div class="strategy-metric">
+                                <span>ML Score:</span>
+                                <span style="color: ${strategy.backtest_score >= 78 ? '#4CAF50' : '#FFC107'}">${Math.round(strategy.backtest_score)}%</span>
+                            </div>
+                            <div class="strategy-metric">
+                                <span>Sharpe:</span>
+                                <span>${strategy.sharpe_ratio.toFixed(2)}</span>
+                            </div>
+                            <div class="strategy-metric">
+                                <span>Return:</span>
+                                <span style="color: ${strategy.return_pct >= 0 ? '#4CAF50' : '#F44336'}">${strategy.return_pct.toFixed(1)}%</span>
+                            </div>
+                        ` : ''}
+                        ${phase === 'paper' ? `
+                            <div class="strategy-metric">
+                                <span>Paper P&L:</span>
+                                <span style="color: ${strategy.paper_pnl >= 0 ? '#4CAF50' : '#F44336'}">$${Math.round(strategy.paper_pnl)}</span>
+                            </div>
+                            <div class="strategy-metric">
+                                <span>Trades:</span>
+                                <span>${strategy.paper_trades}</span>
+                            </div>
+                            <div class="strategy-metric">
+                                <span>Duration:</span>
+                                <span>${Math.round(strategy.paper_duration_hours)}h</span>
+                            </div>
+                        ` : ''}
+                        ${phase === 'live' ? `
+                            <div class="strategy-metric">
+                                <span>Live P&L:</span>
+                                <span style="color: ${strategy.live_pnl >= 0 ? '#4CAF50' : '#F44336'}">$${Math.round(strategy.live_pnl)}</span>
+                            </div>
+                            <div class="strategy-metric">
+                                <span>Live Trades:</span>
+                                <span>${strategy.live_trades}</span>
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem;">
+                            Created: ${new Date(strategy.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function emergencyStop() {
+            try {
+                const response = await fetch('/api/pipeline/emergency_stop', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.status);
+            } catch (error) {
+                alert('Emergency stop failed: ' + error.message);
+            }
+        }
+        
+        async function startPipeline() {
+            try {
+                const response = await fetch('/api/pipeline/start', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.status);
+            } catch (error) {
+                alert('Pipeline start failed: ' + error.message);
+            }
+        }
+        
+        // Initial load and auto-refresh
+        updatePipeline();
+        setInterval(updatePipeline, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html>

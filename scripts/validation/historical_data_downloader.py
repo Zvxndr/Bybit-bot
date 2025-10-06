@@ -4,7 +4,7 @@
 Deployment-ready data download for wealth management system
 
 This system automatically downloads historical market data during deployment
-to support professional backtesting and AI strategy discovery.
+to support ML algorithm discovery through historical backtesting.
 
 Based on System Architecture Reference v3.0 specifications.
 """

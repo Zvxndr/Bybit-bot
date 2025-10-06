@@ -31,12 +31,17 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p logs backups data
 
-# Expose port
-EXPOSE 8080
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+USER app
+
+# Expose port (DigitalOcean will set PORT env var)
+EXPOSE $PORT
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run the main application as originally designed
-CMD ["python", "src/main.py"]
+# Run the production AI pipeline system
+CMD ["python", "production_ai_pipeline.py"]

@@ -17,6 +17,73 @@
       body {
         font-feature-settings: "cv03", "cv04", "cv11";
       }
+      
+      .system-status-banner {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      
+      .system-status-banner.status-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      }
+      
+      .system-status-banner.status-warning {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+      }
+      
+      .system-status-banner.status-loading {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      }
+      
+      .status-indicator {
+        font-size: 1.5rem;
+        animation: pulse 2s infinite;
+      }
+      
+      .status-content {
+        flex: 1;
+      }
+      
+      .status-title {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      
+      .status-subtitle {
+        opacity: 0.8;
+        font-size: 0.9rem;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      
+      .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      
+      .status-dot-animated {
+        animation: pulse 2s infinite;
+      }
+      
+      #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
     </style>
 </head>
 
@@ -93,6 +160,12 @@
                         </div>
                         <div class="col-auto ms-auto d-print-none">
                             <div class="btn-list">
+                                <span class="text-muted me-3">
+                                    Environment: <span class="badge bg-warning" id="environment-badge">Loading...</span>
+                                </span>
+                                <span class="text-muted me-3">
+                                    Risk Tier: <span class="badge bg-secondary" id="risk-tier-badge">Loading...</span>
+                                </span>
                                 <span class="d-none d-sm-inline">
                                     <a href="#" class="btn" id="emergency-stop">
                                         🛑 Emergency Stop
@@ -112,12 +185,17 @@
             <div class="page-body">
                 <div class="container-xl">
                     <!-- System Status Banner -->
-                    <div class="system-status-banner mb-4" id="system-status-banner">
-                        <div class="status-indicator">🛑</div>
+                    <div class="system-status-banner mb-4 status-loading" id="system-status-banner">
+                        <div class="status-indicator">�</div>
                         <div class="status-content">
-                            <div class="status-title">DEBUG MODE - LIVE TRADING DISABLED</div>
-                            <div class="status-subtitle">Phase 1: Testing Historical Data & Safety Systems</div>
+                            <div class="status-title">LOADING SYSTEM STATUS...</div>
+                            <div class="status-subtitle">Connecting to Bybit API and initializing dynamic risk management</div>
                         </div>
+                    </div>
+                    
+                    <!-- Risk Warnings Container -->
+                    <div id="risk-warnings" class="mb-4">
+                        <!-- Dynamic risk warnings will be populated here -->
                     </div>
 
                     <!-- Quick Stats Row -->
@@ -168,7 +246,7 @@
                                             <span class="badge bg-blue">1</span> Live Trading
                                         </div>
                                     </div>
-                                    <div class="text-muted">Strategy graduation rate: 68%</div>
+                                    <div class="text-muted">Max positions: <span id="max-positions">Loading...</span></div>
                                 </div>
                             </div>
                         </div>
@@ -188,7 +266,7 @@
                                         </div>
                                         <div class="text-success ms-3">+0.6%</div>
                                     </div>
-                                    <div class="text-muted">Profitable strategies: 2/3</div>
+                                    <div class="text-muted">Portfolio utilization: <span id="portfolio-utilization">Loading...</span></div>
                                 </div>
                             </div>
                         </div>
@@ -201,9 +279,12 @@
                                             <span class="status-dot status-dot-animated bg-green"></span>
                                         </div>
                                     </div>
-                                    <div class="h1 mb-3" id="system-health">100%</div>
+                                    <div class="h1 mb-3" id="system-health">
+                                        <span class="status-dot bg-secondary"></span>
+                                        Loading...
+                                    </div>
                                     <div class="d-flex mb-2">
-                                        <div class="text-success">All systems operational</div>
+                                        <div class="text-muted">Balance trend: <span id="balance-trend">Loading...</span></div>
                                     </div>
                                     <div class="text-muted">API: Connected • DB: Healthy</div>
                                 </div>
@@ -337,6 +418,9 @@
     <!-- Tabler Core -->
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="dashboard.js"></script>
+    
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 </body>
 </html>
