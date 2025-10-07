@@ -502,6 +502,11 @@ async def get_dashboard():
     """Serve the AI Pipeline dashboard"""
     return FileResponse("ai_pipeline_dashboard.html")
 
+@app.get("/pipeline.html")
+async def get_dashboard_alt():
+    """Alternative route for dashboard (for compatibility)"""
+    return FileResponse("ai_pipeline_dashboard.html")
+
 @app.get("/health")
 async def health_check():
     """Health check for DigitalOcean"""
@@ -509,6 +514,27 @@ async def health_check():
         "status": "healthy",
         "pipeline_running": pipeline.is_running,
         "bybit_integration": pipeline.bybit.has_credentials,
+        "environment": ENV,
+        "port": PORT
+    }
+
+@app.get("/status")
+async def status_page():
+    """Status page showing available endpoints"""
+    return {
+        "message": "Production AI Pipeline is running!",
+        "available_endpoints": [
+            "GET / - Main dashboard",
+            "GET /pipeline.html - Dashboard (alternative route)",
+            "GET /health - Health check",
+            "GET /debug - Debug information", 
+            "GET /api/pipeline/strategies - Strategy data",
+            "GET /api/pipeline/metrics - Pipeline metrics",
+            "POST /api/pipeline/emergency_stop - Emergency stop",
+            "POST /api/pipeline/start - Start pipeline"
+        ],
+        "dashboard_file": "ai_pipeline_dashboard.html",
+        "server_time": datetime.now().isoformat(),
         "environment": ENV,
         "port": PORT
     }
