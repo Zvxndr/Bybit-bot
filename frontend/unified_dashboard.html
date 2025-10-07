@@ -753,9 +753,37 @@
             </div>
         </div>
         
-        <!-- Testnet/Paper Trading Balance -->
+        <!-- Historical Backtest Balance -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
+                <div class="card border border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">📊 Phase 1: Historical Backtest</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid-small">
+                            <div class="stat-item">
+                                <div class="stat-value">$10,000.00</div>
+                                <div class="stat-label">Starting Capital</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="backtestPnl">--</div>
+                                <div class="stat-label">Strategy PnL</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="backtestReturn">--</div>
+                                <div class="stat-label">Total Return %</div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Historical strategy testing</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testnet/Paper Trading Balance -->
+            <div class="col-md-4">
                 <div class="card border border-warning">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">🧪 Phase 2: Paper Trading / Testnet</h5>
@@ -787,7 +815,7 @@
             </div>
             
             <!-- Live Trading Balance -->
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border border-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">🚀 Phase 3: Live Trading</h5>

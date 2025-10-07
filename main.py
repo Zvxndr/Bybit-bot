@@ -20,13 +20,21 @@ if __name__ == "__main__":
     print("🎯 Loading production_ai_pipeline.py...")
     
     try:
-        # Import the production pipeline
-        from production_ai_pipeline import app, PORT
+        # Import the unified dashboard with separated balances  
+        sys.path.insert(0, 'src')
+        from main import app
         
-        print(f"✅ Successfully imported production pipeline app")
+        # Use port from environment (Docker uses 8080, local can use 8000)
+        PORT = int(os.getenv('PORT', 8080))
+        
+        print(f"✅ Successfully imported unified dashboard with separated balances")
         print(f"🌐 Starting server on port {PORT}")
+        print(f"💰 Serving 3-Phase Balance System:")
+        print(f"   📊 Phase 1: Historical Backtest ($10,000 starting capital)")
+        print(f"   🧪 Phase 2: Paper/Testnet Balance (simulation)")  
+        print(f"   🚀 Phase 3: Live Trading Balance (API required)")
         
-        # Run the FastAPI app directly
+        # Run the unified dashboard FastAPI app
         uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")
         
     except Exception as e:
