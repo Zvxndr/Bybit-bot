@@ -542,8 +542,8 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
-    """Serve the comprehensive dashboard"""
-    return FileResponse("frontend/comprehensive_dashboard.html")
+    """Serve the unified single-page dashboard"""
+    return FileResponse("frontend/unified_dashboard.html")
 
 @app.get("/api/portfolio")
 async def get_portfolio():
