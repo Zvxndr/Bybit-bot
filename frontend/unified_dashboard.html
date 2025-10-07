@@ -1548,48 +1548,33 @@
                             </div>
                             <div class="console-content" id="consoleContent">
                                 <div class="console-line console-info">
-                                    <span class="console-time">[00:00:00]</span>
-                                    <span class="console-level">INFO</span>
-                                    <span class="console-message">Bot initialized - Paper trading mode active</span>
-                                </div>
-                                <div class="console-line console-success">
-                                    <span class="console-time">[00:00:05]</span>
-                                    <span class="console-level">SUCCESS</span>
-                                    <span class="console-message">Connected to Bybit API (Testnet)</span>
-                                </div>
-                                <div class="console-line console-info">
-                                    <span class="console-time">[00:00:10]</span>
-                                    <span class="console-level">STRATEGY</span>
-                                    <span class="console-message">Loading active strategies: 3 paper, 0 live</span>
+                                    <span class="console-time">[${new Date().toLocaleTimeString()}]</span>
+                                    <span class="console-level">SYSTEM</span>
+                                    <span class="console-message">Dashboard loaded - Awaiting bot connection...</span>
                                 </div>
                                 <div class="console-line console-warning">
-                                    <span class="console-time">[00:00:15]</span>
-                                    <span class="console-level">MONITOR</span>
-                                    <span class="console-message">Risk monitoring enabled - Portfolio risk: LOW</span>
-                                </div>
-                                <div class="console-line console-trade">
-                                    <span class="console-time">[00:01:23]</span>
-                                    <span class="console-level">TRADE</span>
-                                    <span class="console-message">BTC_EMA_A7K2M: Signal detected - BUY at $43,250.50</span>
+                                    <span class="console-time">[${new Date().toLocaleTimeString()}]</span>
+                                    <span class="console-level">STATUS</span>
+                                    <span class="console-message">No active bot processes detected</span>
                                 </div>
                                 <div class="console-line console-info">
-                                    <span class="console-time">[00:01:24]</span>
-                                    <span class="console-level">ORDER</span>
-                                    <span class="console-message">Paper order placed: BUY 0.023 BTC @ $43,250.50</span>
+                                    <span class="console-time">[${new Date().toLocaleTimeString()}]</span>
+                                    <span class="console-level">INFO</span>
+                                    <span class="console-message">API endpoints disconnected - Start backend to see live activity</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="console-controls p-2">
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <div class="d-flex gap-2">
-                                        <select class="form-select form-select-sm" id="logLevel" style="width: auto;">
+                        <div class="console-controls p-3">
+                            <div class="row align-items-center g-2">
+                                <div class="col-lg-7 col-md-6">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <select class="form-select form-select-sm" id="logLevel" style="min-width: 120px;">
                                             <option value="all" selected>All Levels</option>
                                             <option value="info">Info Only</option>
                                             <option value="trade">Trades Only</option>
                                             <option value="error">Errors Only</option>
                                         </select>
-                                        <select class="form-select form-select-sm" id="logFilter" style="width: auto;">
+                                        <select class="form-select form-select-sm" id="logFilter" style="min-width: 140px;">
                                             <option value="all" selected>All Activities</option>
                                             <option value="strategy">Strategy Events</option>
                                             <option value="trading">Trading Events</option>
@@ -1597,10 +1582,10 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6 text-end">
+                                <div class="col-lg-5 col-md-6 text-md-end text-start mt-2 mt-md-0">
                                     <small class="text-muted">
                                         <i class="bi bi-activity"></i> Real-time monitoring
-                                        <span id="logCount" class="badge bg-secondary ms-2">6 events</span>
+                                        <span id="logCount" class="badge bg-secondary ms-2">0 events</span>
                                     </small>
                                 </div>
                             </div>
@@ -1939,37 +1924,47 @@
                 
                 // Update Paper/Testnet Balance (Phase 2)
                 const paper = portfolio.paper_testnet || {};
+                const paperBalance = paper.total_balance || 0;
+                const paperAvailable = paper.available_balance || 0;
+                const paperUsed = paper.used_balance || 0;
+                
                 document.getElementById('paperBalance').textContent = 
-                    `$${(paper.total_balance || 0).toLocaleString()}`;
+                    paperBalance > 0 ? `$${paperBalance.toLocaleString()}` : 'No Data';
                 document.getElementById('paperAvailable').textContent = 
-                    `$${(paper.available_balance || 0).toLocaleString()}`;
+                    paperAvailable > 0 ? `$${paperAvailable.toLocaleString()}` : 'No Data';
                 document.getElementById('paperUsed').textContent = 
-                    `$${(paper.used_balance || 0).toLocaleString()}`;
+                    paperUsed > 0 ? `$${paperUsed.toLocaleString()}` : 'No Data';
                 
                 const paperPnl = paper.unrealized_pnl || 0;
-                document.getElementById('paperPnl').textContent = 
-                    `${paperPnl >= 0 ? '+' : ''}$${Math.abs(paperPnl).toLocaleString()}`;
-                document.getElementById('paperPnl').className = 
-                    `stat-value ${paperPnl >= 0 ? 'text-success' : 'text-danger'}`;
+                const hasPaperData = paperBalance > 0 || paperPnl !== 0;
+                document.getElementById('paperPnl').textContent = hasPaperData ?
+                    `${paperPnl >= 0 ? '+' : ''}$${Math.abs(paperPnl).toLocaleString()}` : 'No Data';
+                document.getElementById('paperPnl').className = hasPaperData ?
+                    `stat-value ${paperPnl >= 0 ? 'text-success' : 'text-danger'}` : 'stat-value text-muted';
                 document.getElementById('paperMessage').textContent = 
-                    paper.message || 'Paper trading simulation active';
+                    paper.message || (hasPaperData ? 'Paper trading simulation active' : 'API connection required');
                 
                 // Update Live Balance (Phase 3)
                 const live = portfolio.live || {};
+                const liveBalance = live.total_balance || 0;
+                const liveAvailable = live.available_balance || 0;
+                const liveUsed = live.used_balance || 0;
+                
                 document.getElementById('liveBalance').textContent = 
-                    `$${(live.total_balance || 0).toLocaleString()}`;
+                    liveBalance > 0 ? `$${liveBalance.toLocaleString()}` : 'No Data';
                 document.getElementById('liveAvailable').textContent = 
-                    `$${(live.available_balance || 0).toLocaleString()}`;
+                    liveAvailable > 0 ? `$${liveAvailable.toLocaleString()}` : 'No Data';
                 document.getElementById('liveUsed').textContent = 
-                    `$${(live.used_balance || 0).toLocaleString()}`;
+                    liveUsed > 0 ? `$${liveUsed.toLocaleString()}` : 'No Data';
                 
                 const livePnl = live.unrealized_pnl || 0;
-                document.getElementById('livePnl').textContent = 
-                    `${livePnl >= 0 ? '+' : ''}$${Math.abs(livePnl).toLocaleString()}`;
-                document.getElementById('livePnl').className = 
-                    `stat-value ${livePnl >= 0 ? 'text-success' : 'text-danger'}`;
+                const hasLiveData = liveBalance > 0 || livePnl !== 0;
+                document.getElementById('livePnl').textContent = hasLiveData ?
+                    `${livePnl >= 0 ? '+' : ''}$${Math.abs(livePnl).toLocaleString()}` : 'No Data';
+                document.getElementById('livePnl').className = hasLiveData ?
+                    `stat-value ${livePnl >= 0 ? 'text-success' : 'text-danger'}` : 'stat-value text-muted';
                 document.getElementById('liveMessage').textContent = 
-                    live.message || 'Live trading ready';
+                    live.message || (hasLiveData ? 'Live trading ready' : 'API connection required');
                 
                 // Update strategy stats (from paper trading data)
                 document.getElementById('winRate').textContent = 
@@ -2398,25 +2393,32 @@
                 const live = portfolio?.live || {};
                 const paper = portfolio?.paper_testnet || {};
                 
-                // Use live data if available, otherwise show paper data
-                const activeBalance = live.total_balance || paper.total_balance || 0;
-                const dailyPnL = live.daily_pnl || paper.unrealized_pnl || 0;
-                const totalStrategies = (live.active_strategies || 0) + (paper.active_strategies || 0);
+                // Use live data if available, otherwise show paper data - with proper null checks
+                const activeBalance = Number(live.total_balance || paper.total_balance || 0);
+                const dailyPnL = Number(live.daily_pnl || paper.unrealized_pnl || 0);
+                const totalStrategies = Number(live.active_strategies || 0) + Number(paper.active_strategies || 0);
                 
-                // Update balance display
-                document.getElementById('totalBalance').textContent = 
-                    `$${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                // Update balance display with safe formatting
+                const balanceElement = document.getElementById('totalBalance');
+                if (balanceElement) {
+                    balanceElement.textContent = 
+                        `$${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                }
                 
-                // Update daily P&L
+                // Update daily P&L with safe formatting
                 const pnlElement = document.getElementById('dailyPnL');
                 const pnlChangeElement = document.getElementById('dailyPnLChange');
                 
-                pnlElement.textContent = 
-                    `${dailyPnL >= 0 ? '+' : ''}$${Math.abs(dailyPnL).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                if (pnlElement) {
+                    pnlElement.textContent = 
+                        `${dailyPnL >= 0 ? '+' : ''}$${Math.abs(dailyPnL).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                }
                 
-                const pnlPercent = activeBalance > 0 ? (dailyPnL / activeBalance * 100) : 0;
-                pnlChangeElement.innerHTML = 
-                    `<i class="bi bi-${dailyPnL >= 0 ? 'arrow-up text-success' : 'arrow-down text-danger'}"></i> ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`;
+                if (pnlChangeElement) {
+                    const pnlPercent = activeBalance > 0 ? (dailyPnL / activeBalance * 100) : 0;
+                    pnlChangeElement.innerHTML = 
+                        `<i class="bi bi-${dailyPnL >= 0 ? 'arrow-up text-success' : 'arrow-down text-danger'}"></i> ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`;
+                }
                 
                 // Update active strategies
                 document.getElementById('activeStrategies').textContent = totalStrategies;
@@ -3612,6 +3614,119 @@
             }
         }
 
+        // Console Management Functions
+        let consoleData = [];
+        let consolePaused = false;
+        let autoScroll = true;
+
+        function initializeConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = '';
+                addConsoleLog('INFO', 'Dashboard initialized - Bot Activity Console ready');
+                addConsoleLog('INFO', 'Waiting for bot activity...');
+            }
+        }
+
+        function addConsoleLog(level, message, timestamp) {
+            if (consolePaused) return;
+            
+            const time = timestamp || new Date();
+            const logEntry = {
+                timestamp: time,
+                level: level.toUpperCase(),
+                message: message
+            };
+            
+            consoleData.unshift(logEntry);
+            if (consoleData.length > 1000) {
+                consoleData = consoleData.slice(0, 1000);
+            }
+            
+            updateConsoleDisplay();
+        }
+
+        function updateConsoleDisplay() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (!consoleOutput) return;
+            
+            const levelFilter = document.getElementById('levelFilter').value;
+            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+            
+            let filteredData = consoleData;
+            
+            if (levelFilter !== 'all') {
+                filteredData = filteredData.filter(entry => entry.level.toLowerCase() === levelFilter);
+            }
+            
+            if (searchTerm) {
+                filteredData = filteredData.filter(entry => 
+                    entry.message.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            consoleOutput.innerHTML = filteredData.map(entry => {
+                const levelClass = {
+                    'INFO': 'text-success',
+                    'WARNING': 'text-warning', 
+                    'ERROR': 'text-danger',
+                    'DEBUG': 'text-muted',
+                    'TRADE': 'text-primary'
+                }[entry.level] || 'text-light';
+                
+                return `<div class="console-line">
+                    <span class="text-muted">[${entry.timestamp.toLocaleTimeString()}]</span>
+                    <span class="badge badge-sm ${levelClass.replace('text-', 'bg-')}">${entry.level}</span>
+                    <span class="${levelClass}">${escapeHtml(entry.message)}</span>
+                </div>`;
+            }).join('');
+            
+            if (autoScroll && !consolePaused) {
+                consoleOutput.scrollTop = 0;
+            }
+        }
+
+        function clearConsole() {
+            consoleData = [];
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = '<div class="console-line text-muted">Console cleared</div>';
+            }
+        }
+
+        function pauseConsole() {
+            consolePaused = !consolePaused;
+            const btn = document.querySelector('[onclick="pauseConsole()"]');
+            if (btn) {
+                btn.innerHTML = consolePaused ? 
+                    '<i class="fas fa-play"></i> Resume' : 
+                    '<i class="fas fa-pause"></i> Pause';
+                btn.className = consolePaused ? 
+                    'btn btn-success btn-sm' : 
+                    'btn btn-warning btn-sm';
+            }
+        }
+
+        function exportLogs() {
+            const data = consoleData.map(entry => 
+                `${entry.timestamp.toISOString()}\t${entry.level}\t${entry.message}`
+            ).join('\n');
+            
+            const blob = new Blob([data], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bot-logs-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Emergency stop function
         function emergencyStop() {
             if (confirm('⚠️ This will immediately stop ALL trading activities. Continue?')) {
@@ -3630,6 +3745,19 @@
         // Initialize dashboard when page loads
         document.addEventListener('DOMContentLoaded', () => {
             dashboard = new UnifiedDashboard();
+            initializeConsole();
+            
+            // Set up filter event listeners
+            const levelFilter = document.getElementById('levelFilter');
+            const searchFilter = document.getElementById('searchFilter');
+            
+            if (levelFilter) {
+                levelFilter.addEventListener('change', updateConsoleDisplay);
+            }
+            
+            if (searchFilter) {
+                searchFilter.addEventListener('input', updateConsoleDisplay);
+            }
         });
     </script>
 </body>
