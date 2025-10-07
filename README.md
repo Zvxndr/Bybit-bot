@@ -13,16 +13,16 @@
 
 ### **⚡ Single Application Deployment**
 ```yaml
-Entry Point: src/main.py (TradingBotApplication)
-Port: 8080 (DigitalOcean standard)  
-Architecture: Integrated frontend + backend
-Deployment: python src/main.py (DO NOT CHANGE)
+Entry Point: main.py (Production AI Pipeline)
+Port: 8000 (DigitalOcean standard)  
+Architecture: FastAPI backend with AI pipeline
+Deployment: python main.py (DO NOT CHANGE)
 ```
 
 ### **🚫 DO NOT CREATE SEPARATE SERVERS**
-- The system uses ONE application (`src/main.py`)
-- Frontend and backend are INTEGRATED 
-- If imports fail, fix them in `src/main.py` - don't create new servers
+- The system uses ONE application (`main.py`)
+- FastAPI backend with production AI pipeline
+- If imports fail, fix them in `main.py` - don't create new servers
 
 ## 🚀 Overview
 
@@ -30,7 +30,7 @@ This is a sophisticated cryptocurrency trading bot designed for **DigitalOcean d
 
 ### ✅ System Status: 100% Complete & Deployment Ready
 
-- **Application**: Single TradingBotApplication (src/main.py) 
+- **Application**: Single Production AI Pipeline (main.py) 
 - **Frontend**: Tabler dashboard (integrated into main app)
 - **Database**: SQLite with PostgreSQL upgrade path
 - **Security**: Enterprise HSM integration, MFA, advanced key management
@@ -83,7 +83,7 @@ cp config/secrets.yaml.template config/secrets.yaml
 # Edit config/secrets.yaml with your API keys
 
 # Run application
-python -m src.main
+python main.py
 ```
 
 ### Option 3: Docker Deployment

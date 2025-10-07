@@ -1,1 +1,1 @@
-web: python production_ai_pipeline.py
+web: python main.py

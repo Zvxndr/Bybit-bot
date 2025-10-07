@@ -6,8 +6,7 @@ services:
     repo: Zvxndr/Bybit-bot
     branch: main
     deploy_on_push: true
-  run_command: python main.py
-  environment_slug: python
+  dockerfile_path: Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   http_port: 8000
