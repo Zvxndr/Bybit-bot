@@ -443,10 +443,34 @@ def create_integrated_fastapi_app():
             "environment": "testnet" if api_client.testnet else "mainnet"
         }
     
+    # Authentication endpoints (for frontend compatibility)
+    @app.get("/api/auth/verify")
+    async def verify_auth():
+        """Verify authentication - simplified for trading bot"""
+        return {
+            "authenticated": True,
+            "user": "trader",
+            "session": "active",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    @app.post("/api/auth/login")
+    async def login(credentials: dict):
+        """Login endpoint - simplified for trading bot"""
+        return {
+            "success": True,
+            "token": "trading-session-active",
+            "user": "trader",
+            "timestamp": datetime.now().isoformat()
+        }
+    
     # Serve frontend
     frontend_dir = Path(__file__).parent.parent / "frontend"
     if frontend_dir.exists():
-        app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+        # Mount frontend directory directly (not under /static)
+        app.mount("/css", StaticFiles(directory=frontend_dir / "css"), name="css")
+        app.mount("/js", StaticFiles(directory=frontend_dir / "js"), name="js")
+        app.mount("/assets", StaticFiles(directory=frontend_dir / "assets"), name="assets")
         
         @app.get("/")
         async def serve_frontend():
