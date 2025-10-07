@@ -153,7 +153,7 @@ class TradingBotApp {
      */
     setupWebSocket() {
         const token = localStorage.getItem('jwt_token');
-        const wsUrl = `ws://localhost:8000/ws?token=${encodeURIComponent(token)}`;
+        const wsUrl = `ws://${window.location.host}/ws?token=${encodeURIComponent(token)}`;
         
         console.log('🔌 Connecting to WebSocket:', wsUrl);
         
