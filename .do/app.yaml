@@ -6,13 +6,15 @@ services:
     repo: Zvxndr/Bybit-bot
     branch: main
     deploy_on_push: true
-  run_command: python start.py
+  run_command: python main.py
   environment_slug: python
   instance_count: 1
   instance_size_slug: basic-xxs
   http_port: 8000
   health_check:
     http_path: /health
+    failure_threshold: 5
+    success_threshold: 1
   envs:
   - key: ENVIRONMENT
     value: production
