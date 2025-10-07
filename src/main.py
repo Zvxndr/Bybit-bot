@@ -32,6 +32,14 @@ logger = logging.getLogger(__name__)
 # Create logs directory
 Path('logs').mkdir(exist_ok=True)
 
+# Import historical data downloader
+try:
+    from historical_data_downloader import historical_downloader
+    logger.info("✅ Historical data downloader imported")
+except ImportError:
+    logger.warning("⚠️ Historical data downloader not found")
+    historical_downloader = None
+
 class TradingAPI:
     """Production Trading API with Real Integrations"""
     
@@ -1022,6 +1030,92 @@ async def broadcast_update(data: Dict[str, Any]):
                 await connection.send_text(message)
             except Exception:
                 websocket_connections.discard(connection)
+
+# Historical Data API Endpoints
+@app.post("/api/historical-data/download")
+async def download_historical_data(request: Request):
+    """Download historical market data"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        data = await request.json()
+        pair = data.get('pair', 'BTCUSDT')
+        timeframe = data.get('timeframe', '1d') 
+        days = data.get('days', 90)
+        
+        logger.info(f"📡 Downloading historical data: {pair} {timeframe} for {days} days")
+        
+        # Download data
+        result = historical_downloader.download_klines(pair, timeframe, days)
+        
+        if result['success']:
+            logger.info(f"✅ Historical data download completed: {result['data_points']} points")
+        else:
+            logger.error(f"❌ Historical data download failed: {result['message']}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Historical data download error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/historical-data/performance")
+async def get_historical_performance():
+    """Get historical performance data for chart"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available", "data": []}
+    
+    try:
+        # Get the most recent dataset (latest symbol/timeframe combination)
+        summary = historical_downloader.get_data_summary()
+        
+        if not summary['success'] or not summary['summary']:
+            return {"success": False, "message": "No historical data available", "data": []}
+        
+        # Use the first available dataset
+        latest_dataset = summary['summary'][0]
+        symbol = latest_dataset['symbol']
+        timeframe = latest_dataset['timeframe']
+        
+        # Get performance data
+        result = historical_downloader.get_historical_performance(symbol, timeframe, limit=90)
+        
+        logger.info(f"📊 Retrieved historical performance: {len(result.get('data', []))} data points")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Historical performance retrieval error: {e}")
+        return {"success": False, "message": str(e), "data": []}
+
+@app.post("/api/historical-data/clear")
+async def clear_historical_data():
+    """Clear all historical data"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        result = historical_downloader.clear_historical_data()
+        logger.info(f"🗑️ Historical data cleared: {result['message']}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Historical data clear error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/historical-data/summary")
+async def get_historical_data_summary():
+    """Get summary of available historical data"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available", "summary": []}
+    
+    try:
+        result = historical_downloader.get_data_summary()
+        return result
+        
+    except Exception as e:
+        logger.error(f"Historical data summary error: {e}")
+        return {"success": False, "message": str(e), "summary": []}
 
 # Lifespan events are now handled in the @asynccontextmanager above
 

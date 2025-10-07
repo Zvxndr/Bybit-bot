@@ -238,7 +238,47 @@ class SimplifiedDashboardAPI:
         async def get_performance():
             """Get performance data"""
             try:
-                # Generate performance data based on actual strategy performance
+                # First check if historical data is available
+                try:
+                    from historical_data_downloader import historical_downloader
+                    
+                    # Get historical performance if available
+                    summary = historical_downloader.get_data_summary()
+                    if summary['success'] and summary['summary']:
+                        # Use the first available dataset
+                        latest_dataset = summary['summary'][0]
+                        symbol = latest_dataset['symbol']
+                        timeframe = latest_dataset['timeframe']
+                        
+                        # Get historical performance data
+                        hist_result = historical_downloader.get_historical_performance(symbol, timeframe, limit=30)
+                        
+                        if hist_result['success'] and hist_result['data']:
+                            # Calculate returns from historical prices
+                            prices = [item['close'] for item in hist_result['data']]
+                            daily_returns = []
+                            
+                            for i in range(1, len(prices)):
+                                daily_return = ((prices[i] - prices[i-1]) / prices[i-1]) * 100
+                                daily_returns.append(round(daily_return, 2))
+                            
+                            logger.info(f"📊 Using real historical data: {len(daily_returns)} returns from {symbol} {timeframe}")
+                            
+                            return JSONResponse({
+                                "success": True,
+                                "daily_returns": daily_returns,
+                                "data_source": "historical",
+                                "symbol": symbol,
+                                "timeframe": timeframe,
+                                "data": hist_result['data']
+                            })
+                
+                except ImportError:
+                    pass  # Historical downloader not available, use simulated data
+                except Exception as e:
+                    logger.warning(f"Historical data error, falling back to simulated: {e}")
+                
+                # Generate simulated performance data based on actual strategy performance
                 performance_data = []
                 
                 # Get starting balance from strategy PnL instead of hardcoded value
@@ -274,9 +314,12 @@ class SimplifiedDashboardAPI:
                 # Format for frontend chart expectation
                 daily_returns = [item["returns"] for item in performance_data]
                 
+                logger.info(f"📊 Using simulated data: {len(daily_returns)} returns")
+                
                 return JSONResponse({
                     "success": True,
                     "daily_returns": daily_returns,
+                    "data_source": "simulated",
                     "data": performance_data
                 })
                 

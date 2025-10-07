@@ -1008,12 +1008,82 @@
         <div class="row mb-4">
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">📈 Portfolio Performance</h3>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">📈 Portfolio Performance</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <small class="text-muted me-2">Historical Data:</small>
+                            <button class="btn btn-sm btn-outline-primary" onclick="dashboard.showHistoricalDataControls()" id="historicalControlsBtn">
+                                <i class="bi bi-download"></i> Configure
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
+                        <!-- Historical Data Controls (Initially Hidden) -->
+                        <div id="historicalDataControls" class="alert alert-info mb-3" style="display: none;">
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small">Trading Pair</label>
+                                    <select class="form-select form-select-sm" id="histDataPair">
+                                        <option value="BTCUSDT" selected>BTC/USDT</option>
+                                        <option value="ETHUSDT">ETH/USDT</option>
+                                        <option value="BNBUSDT">BNB/USDT</option>
+                                        <option value="ADAUSDT">ADA/USDT</option>
+                                        <option value="SOLUSDT">SOL/USDT</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small">Timeframe</label>
+                                    <select class="form-select form-select-sm" id="histDataTimeframe">
+                                        <option value="1h">1 Hour</option>
+                                        <option value="4h">4 Hours</option>
+                                        <option value="1d" selected>1 Day</option>
+                                        <option value="1w">1 Week</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small">Period</label>
+                                    <select class="form-select form-select-sm" id="histDataPeriod">
+                                        <option value="30">Last 30 Days</option>
+                                        <option value="90" selected>Last 90 Days</option>
+                                        <option value="180">Last 180 Days</option>
+                                        <option value="365">Last 1 Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-sm btn-primary w-100" onclick="dashboard.downloadHistoricalData()" id="downloadDataBtn">
+                                        <i class="bi bi-cloud-download"></i> Download & Apply
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.hideHistoricalDataControls()">
+                                            <i class="bi bi-x"></i> Cancel
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="dashboard.clearHistoricalData()">
+                                            <i class="bi bi-trash"></i> Clear Data
+                                        </button>
+                                        <div class="flex-fill">
+                                            <div id="downloadProgress" class="progress" style="height: 20px; display: none;">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">
+                                                    <span class="progress-text">Downloading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Chart Container -->
                         <div class="chart-container">
                             <canvas id="performanceChart"></canvas>
+                        </div>
+                        <!-- Chart Data Status -->
+                        <div class="mt-2">
+                            <small id="chartDataStatus" class="text-muted">
+                                <i class="bi bi-info-circle"></i> Using simulated data - Configure historical data above
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -2709,6 +2779,148 @@
                         <small>No backtest results yet<br>Run a backtest below to see results</small>
                     </div>
                 `;
+            }
+
+            // Historical Data Management Functions
+            showHistoricalDataControls() {
+                document.getElementById('historicalDataControls').style.display = 'block';
+                document.getElementById('historicalControlsBtn').innerHTML = '<i class="bi bi-chevron-up"></i> Hide';
+                document.getElementById('historicalControlsBtn').onclick = () => this.hideHistoricalDataControls();
+            }
+
+            hideHistoricalDataControls() {
+                document.getElementById('historicalDataControls').style.display = 'none';
+                document.getElementById('historicalControlsBtn').innerHTML = '<i class="bi bi-download"></i> Configure';
+                document.getElementById('historicalControlsBtn').onclick = () => this.showHistoricalDataControls();
+            }
+
+            async downloadHistoricalData() {
+                try {
+                    const pair = document.getElementById('histDataPair').value;
+                    const timeframe = document.getElementById('histDataTimeframe').value;
+                    const period = parseInt(document.getElementById('histDataPeriod').value);
+                    
+                    // Show loading state
+                    const downloadBtn = document.getElementById('downloadDataBtn');
+                    const progressBar = document.getElementById('downloadProgress');
+                    const originalText = downloadBtn.innerHTML;
+                    
+                    downloadBtn.disabled = true;
+                    downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Downloading...';
+                    progressBar.style.display = 'block';
+                    
+                    this.showToastNotification(`🌐 Downloading ${period} days of ${pair} historical data...`, 'info');
+                    
+                    // Simulate progress updates
+                    this.updateDownloadProgress(25, 'Fetching market data...');
+                    
+                    const response = await fetch('/api/historical-data/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pair: pair,
+                            timeframe: timeframe,
+                            days: period
+                        })
+                    });
+                    
+                    this.updateDownloadProgress(75, 'Processing data...');
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.updateDownloadProgress(100, 'Complete!');
+                        
+                        // Update chart with new data
+                        await this.loadHistoricalPerformanceData();
+                        
+                        // Update status
+                        document.getElementById('chartDataStatus').innerHTML = 
+                            `<i class="bi bi-check-circle text-success"></i> Real data: ${pair} ${timeframe} (${period} days) - Last updated: ${new Date().toLocaleString()}`;
+                        
+                        this.showToastNotification(`✅ Successfully loaded ${result.data_points} data points for ${pair}`, 'success');
+                        this.hideHistoricalDataControls();
+                    } else {
+                        throw new Error(result.message || 'Failed to download data');
+                    }
+                    
+                } catch (error) {
+                    console.error('Historical data download error:', error);
+                    this.showToastNotification(`❌ Failed to download historical data: ${error.message}`, 'danger');
+                } finally {
+                    // Restore button state
+                    const downloadBtn = document.getElementById('downloadDataBtn');
+                    const progressBar = document.getElementById('downloadProgress');
+                    
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = '<i class="bi bi-cloud-download"></i> Download & Apply';
+                    
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                    }, 2000);
+                }
+            }
+
+            updateDownloadProgress(percent, message) {
+                const progressBar = document.querySelector('#downloadProgress .progress-bar');
+                const progressText = document.querySelector('#downloadProgress .progress-text');
+                
+                if (progressBar && progressText) {
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = message;
+                }
+            }
+
+            async clearHistoricalData() {
+                try {
+                    const response = await fetch('/api/historical-data/clear', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Reload with simulated data
+                        const performance = await fetch('/api/performance').then(r => r.json());
+                        this.updatePerformanceChart(performance);
+                        
+                        document.getElementById('chartDataStatus').innerHTML = 
+                            '<i class="bi bi-info-circle"></i> Using simulated data - Configure historical data above';
+                        
+                        this.showToastNotification('📊 Cleared historical data, using simulated data', 'info');
+                        this.hideHistoricalDataControls();
+                    }
+                } catch (error) {
+                    console.error('Clear historical data error:', error);
+                    this.showToastNotification('❌ Failed to clear historical data', 'danger');
+                }
+            }
+
+            async loadHistoricalPerformanceData() {
+                try {
+                    const response = await fetch('/api/historical-data/performance');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        // Update chart with real historical data
+                        const labels = result.data.map(item => new Date(item.timestamp).toLocaleDateString());
+                        const prices = result.data.map(item => item.close);
+                        
+                        // Calculate portfolio performance based on price changes
+                        const returns = [];
+                        for (let i = 1; i < prices.length; i++) {
+                            const dailyReturn = ((prices[i] - prices[i-1]) / prices[i-1]) * 100;
+                            returns.push(dailyReturn);
+                        }
+                        
+                        // Update the chart
+                        this.charts.performance.data.labels = labels.slice(1); // Skip first label since we calculate returns
+                        this.charts.performance.data.datasets[0].data = returns;
+                        this.charts.performance.update();
+                        
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('Load historical performance error:', error);
+                    return false;
+                }
             }
 
             handleWebSocketData(data) {
