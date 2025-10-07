@@ -80,9 +80,10 @@ class SimplifiedDashboardAPI:
                 )
             ''')
             
-            # Insert sample data if tables are empty
-            cursor.execute("SELECT COUNT(*) FROM strategy_pipeline")
-            if cursor.fetchone()[0] == 0:
+            # DISABLED: Skip demo data initialization - use clean database for authentic balances
+            # cursor.execute("SELECT COUNT(*) FROM strategy_pipeline")
+            # if cursor.fetchone()[0] == 0:
+            if False:  # NEVER insert fake demo data
                 # Enhanced realistic strategies with comprehensive backtest scores
                 # Backtest scores include: Historical Performance (40%), Risk Management (30%), Market Regime Analysis (20%), Walk-Forward Validation (10%)
                 sample_strategies = [
@@ -107,23 +108,14 @@ class SimplifiedDashboardAPI:
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', strategy)
                 
-                # Insert sample trades
-                sample_trades = [
-                    ('BTCUSDT', 'buy', 0.1, 43250.50, 'BTC_MR_A4F2D', 125.30),
-                    ('ETHUSDT', 'sell', 2.5, 2640.75, 'ETH_BB_C7E9A', -45.20),
-                    ('ADAUSDT', 'buy', 1000, 0.385, 'ADA_RSI_F1L9P', 89.45),
-                ]
-                
-                for trade in sample_trades:
-                    cursor.execute('''
-                        INSERT INTO trades (symbol, side, amount, price, strategy_id, realized_pnl)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ''', trade)
+                # DISABLED: Insert sample trades 
+                # sample_trades = [...]
+                pass  # No fake data insertion
             
             conn.commit()
             conn.close()
             
-            logger.info("✅ Demo database initialized")
+            logger.info("✅ Clean database initialized (no demo data)")
             
         except Exception as e:
             logger.error(f"❌ Database initialization error: {e}")
