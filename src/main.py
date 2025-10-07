@@ -806,7 +806,6 @@ async def run_historical_backtest(request: Request):
         pair = data.get('pair', 'BTCUSDT')
         timeframe = data.get('timeframe', '15m') 
         starting_balance = data.get('starting_balance', 10000)
-        min_financial_score = data.get('min_financial_score', 75)
         period = data.get('period', '2y')
         
         # Mock backtest calculation for demo (replace with actual backtest logic)
@@ -815,7 +814,8 @@ async def run_historical_backtest(request: Request):
         
         # Simulate backtest results based on parameters
         base_return = random.uniform(-20, 50)  # -20% to +50% return
-        score_modifier = (min_financial_score - 50) / 100  # Higher score = better results
+        # Use standard quality threshold (equivalent to 75% score)
+        score_modifier = 0.25  # Fixed quality threshold
         pair_modifier = 1.0 if pair == 'BTCUSDT' else random.uniform(0.8, 1.2)
         
         total_return_pct = base_return * score_modifier * pair_modifier
@@ -826,6 +826,32 @@ async def run_historical_backtest(request: Request):
         trades_count = random.randint(50, 200)
         win_rate = random.uniform(45, 75)
         max_drawdown = random.uniform(5, 25)
+        
+        # Store backtest result in database
+        try:
+            import sqlite3
+            conn = sqlite3.connect('data/trading_bot.db')
+            cursor = conn.cursor()
+            
+            sharpe_ratio = round(random.uniform(0.5, 2.5), 2)
+            duration_days = 365 if period == '1y' else (730 if period == '2y' else 1095)
+            status = "✅ Passed" if total_return_pct > 0 else "❌ Failed"
+            
+            cursor.execute('''
+                INSERT INTO backtest_results 
+                (pair, timeframe, starting_balance, final_balance, total_pnl, total_return_pct, 
+                 sharpe_ratio, max_drawdown, win_rate, trades_count, min_score_threshold, 
+                 historical_period, status, duration_days)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (pair, timeframe, starting_balance, round(final_balance, 2), round(total_pnl, 2), 
+                  round(total_return_pct, 2), sharpe_ratio, round(max_drawdown, 1), 
+                  round(win_rate, 1), trades_count, 75, period, status, duration_days))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            logger.warning(f"Failed to store backtest result: {e}")
         
         result = {
             "success": True,
@@ -839,9 +865,10 @@ async def run_historical_backtest(request: Request):
                 "trades_count": trades_count,
                 "win_rate": round(win_rate, 1),
                 "max_drawdown": round(max_drawdown, 1),
-                "sharpe_ratio": random.uniform(0.5, 2.5),
-                "duration_days": 365 if period == '1y' else 730,
-                "min_score_used": min_financial_score
+                "sharpe_ratio": sharpe_ratio,
+                "duration_days": duration_days,
+                "min_score_used": 75,  # Standard quality threshold
+                "status": status
             },
             "message": f"Historical backtest completed for {pair} on {timeframe} timeframe"
         }
@@ -855,6 +882,53 @@ async def run_historical_backtest(request: Request):
             "success": False,
             "error": str(e),
             "message": "Historical backtest failed"
+        }
+
+@app.get("/api/backtest/history")
+async def get_backtest_history():
+    """Get historical backtest results"""
+    try:
+        import sqlite3
+        conn = sqlite3.connect('data/trading_bot.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT pair, timeframe, starting_balance, total_return_pct, sharpe_ratio, 
+                   status, timestamp, trades_count, max_drawdown, win_rate
+            FROM backtest_results 
+            ORDER BY timestamp DESC 
+            LIMIT 10
+        ''')
+        
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                "pair": row[0],
+                "timeframe": row[1], 
+                "starting_balance": row[2],
+                "total_return": row[3],
+                "sharpe_ratio": row[4],
+                "status": row[5],
+                "timestamp": row[6],
+                "trades_count": row[7],
+                "max_drawdown": row[8],
+                "win_rate": row[9]
+            })
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "data": results,
+            "message": f"Found {len(results)} recent backtest results"
+        }
+        
+    except Exception as e:
+        logger.error(f"Backtest history fetch error: {e}")
+        return {
+            "success": False,
+            "data": [],
+            "error": str(e)
         }
 
 @app.post("/api/positions/{symbol}/close")

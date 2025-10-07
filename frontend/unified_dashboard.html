@@ -761,22 +761,21 @@
                         <h5 class="mb-0">📊 Phase 1: Historical Backtest</h5>
                     </div>
                     <div class="card-body">
-                        <div class="stats-grid-small">
-                            <div class="stat-item">
-                                <div class="stat-value">$10,000.00</div>
-                                <div class="stat-label">Starting Capital</div>
+                        <div class="backtest-results-header mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Recent Backtest Results</small>
+                                <button class="btn btn-xs btn-outline-info" onclick="dashboard.refreshBacktestHistory()">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="backtestPnl">--</div>
-                                <div class="stat-label">Strategy PnL</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="backtestReturn">--</div>
-                                <div class="stat-label">Total Return %</div>
+                        </div>
+                        <div class="backtest-results-list" id="backtestResultsList">
+                            <div class="text-center text-muted py-2">
+                                <small>No backtest results yet<br>Run a backtest below to see results</small>
                             </div>
                         </div>
                         <div class="mt-2">
-                            <small class="text-muted">Historical strategy testing</small>
+                            <small class="text-success">✓ Run controls below to add results</small>
                         </div>
                     </div>
                 </div>
@@ -941,16 +940,7 @@
                                 <option value="50000">$50,000</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small">Min Financial Score</label>
-                            <select class="form-select form-select-sm" id="backtestMinScore">
-                                <option value="60">60% (Very Relaxed)</option>
-                                <option value="70">70% (Relaxed)</option>
-                                <option value="75" selected>75% (Standard)</option>
-                                <option value="80">80% (Strict)</option>
-                                <option value="85">85% (Very Strict)</option>
-                            </select>
-                        </div>
+                        <!-- Min Financial Score removed - quality filtering is handled by Pipeline Configuration's Graduation Criteria -->
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Historical Period</label>
                             <select class="form-select form-select-sm" id="backtestPeriod">
@@ -1274,6 +1264,7 @@
                 this.initKeyboardShortcuts();
                 this.initBrowserNotifications();
                 this.loadDashboardData();
+                this.refreshBacktestHistory();
                 
                 // Start real-time updates (adaptive interval for mobile)
                 const isMobile = window.innerWidth <= 768;
@@ -2602,8 +2593,8 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        // Update Phase 1 balance card with results
-                        this.updateBacktestResults(result.data);
+                        // Refresh backtest history list
+                        this.refreshBacktestHistory();
                         this.showToastNotification(
                             `✅ Historical backtest completed! ROI: ${result.data.total_return}%`, 
                             'success'
@@ -2629,7 +2620,6 @@
                     pair: document.getElementById('backtestPair')?.value || 'BTCUSDT',
                     timeframe: document.getElementById('backtestTimeframe')?.value || '15m',
                     starting_balance: parseInt(document.getElementById('backtestStartingBalance')?.value || 10000),
-                    min_financial_score: parseInt(document.getElementById('backtestMinScore')?.value || 75),
                     period: document.getElementById('backtestPeriod')?.value || '2y',
                     include_slippage: true,
                     commission_rate: 0.001
@@ -2659,16 +2649,66 @@
                 document.getElementById('backtestPair').value = 'BTCUSDT';
                 document.getElementById('backtestTimeframe').value = '15m';
                 document.getElementById('backtestStartingBalance').value = '10000';
-                document.getElementById('backtestMinScore').value = '75';
                 document.getElementById('backtestPeriod').value = '2y';
                 
-                // Reset Phase 1 display to defaults
-                document.getElementById('backtestPnl').textContent = '--';
-                document.getElementById('backtestPnl').className = 'stat-value';
-                document.getElementById('backtestReturn').textContent = '--';
-                document.getElementById('backtestReturn').className = 'stat-value';
-                
                 this.showToastNotification('🔄 Backtest settings reset to defaults', 'info');
+            }
+
+            async refreshBacktestHistory() {
+                try {
+                    const response = await fetch('/api/backtest/history');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        this.displayBacktestResults(result.data);
+                    } else {
+                        this.displayEmptyBacktestResults();
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch backtest history:', error);
+                    this.displayEmptyBacktestResults();
+                }
+            }
+
+            displayBacktestResults(results) {
+                const container = document.getElementById('backtestResultsList');
+                if (!container) return;
+
+                let html = '';
+                results.slice(0, 5).forEach(result => {
+                    const statusIcon = result.status.includes('✅') ? '✅' : '❌';
+                    const returnClass = result.total_return >= 0 ? 'text-success' : 'text-danger';
+                    const returnSign = result.total_return >= 0 ? '+' : '';
+                    
+                    html += `
+                        <div class="backtest-result-item d-flex justify-content-between align-items-center py-1 border-bottom">
+                            <div class="result-info">
+                                <span class="result-status">${statusIcon}</span>
+                                <strong class="result-pair">${result.pair}</strong>
+                                <small class="text-muted">(${result.timeframe})</small>
+                            </div>
+                            <div class="result-metrics text-end">
+                                <div class="result-return ${returnClass}">
+                                    <strong>${returnSign}${result.total_return.toFixed(1)}%</strong>
+                                </div>
+                                <small class="text-muted">Sharpe: ${result.sharpe_ratio.toFixed(1)}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+
+            displayEmptyBacktestResults() {
+                const container = document.getElementById('backtestResultsList');
+                if (!container) return;
+                
+                container.innerHTML = `
+                    <div class="text-center text-muted py-2">
+                        <small>No backtest results yet<br>Run a backtest below to see results</small>
+                    </div>
+                `;
             }
 
             handleWebSocketData(data) {

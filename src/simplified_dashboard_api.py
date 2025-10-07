@@ -80,6 +80,27 @@ class SimplifiedDashboardAPI:
                 )
             ''')
             
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS backtest_results (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    pair TEXT,
+                    timeframe TEXT,
+                    starting_balance REAL,
+                    final_balance REAL,
+                    total_pnl REAL,
+                    total_return_pct REAL,
+                    sharpe_ratio REAL,
+                    max_drawdown REAL,
+                    win_rate REAL,
+                    trades_count INTEGER,
+                    min_score_threshold REAL,
+                    historical_period TEXT,
+                    status TEXT,
+                    duration_days INTEGER
+                )
+            ''')
+            
             # DISABLED: Skip demo data initialization - use clean database for authentic balances
             # cursor.execute("SELECT COUNT(*) FROM strategy_pipeline")
             # if cursor.fetchone()[0] == 0:
