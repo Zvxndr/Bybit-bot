@@ -1,5 +1,5 @@
-# Deployment requirements for dashboard 
-# Includes dependencies needed by the application modules
+# Production AI Pipeline Requirements
+# All dependencies needed for DigitalOcean deployment
 
 # Core Web Framework
 fastapi>=0.104.0
@@ -20,3 +20,18 @@ python-dateutil>=2.8.0
 
 # Configuration handling
 pyyaml>=6.0
+
+# Trading and API dependencies
+requests>=2.31.0
+websocket-client>=1.6.0
+ccxt>=4.1.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ML and scientific computing (minimal for deployment)
+scikit-learn>=1.3.0
+ta>=0.10.0
+
+# Database (sqlite3 is built into Python)
