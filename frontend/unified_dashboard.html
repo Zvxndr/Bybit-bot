@@ -2285,10 +2285,15 @@
                 // Update portfolio status with live data
                 const latestValue = values[values.length - 1];
                 const firstValue = values[0];
-                const change = ((latestValue - firstValue) / firstValue * 100).toFixed(2);
                 
-                document.getElementById('portfolioStatus').innerHTML = 
-                    `<i class="bi bi-activity"></i> Portfolio: $${latestValue.toLocaleString()} (${change >= 0 ? '+' : ''}${change}% ${this.getTimeframeLabel()})`;
+                if (latestValue && firstValue && firstValue !== 0) {
+                    const change = ((latestValue - firstValue) / firstValue * 100).toFixed(2);
+                    document.getElementById('portfolioStatus').innerHTML = 
+                        `<i class="bi bi-activity"></i> Portfolio: $${latestValue.toLocaleString()} (${change >= 0 ? '+' : ''}${change}% ${this.getTimeframeLabel()})`;
+                } else {
+                    document.getElementById('portfolioStatus').innerHTML = 
+                        `<i class="bi bi-activity"></i> Portfolio: No Data Available`;
+                }
             }
 
             showNoDataState() {
@@ -2478,7 +2483,7 @@
                         ]);
                     };
 
-                    const [strategies, pipelineMetrics, performance, activity, riskMetrics, systemStatus] = await Promise.all([
+                    const results = await Promise.allSettled([
                         fetchWithTimeout('/api/strategies'),
                         fetchWithTimeout('/api/pipeline-metrics'), 
                         fetchWithTimeout('/api/performance'),
@@ -2486,13 +2491,17 @@
                         fetchWithTimeout('/api/risk-metrics'),
                         fetchWithTimeout('/api/system-status')
                     ]);
+                    
+                    const [strategies, pipelineMetrics, performance, activity, riskMetrics, systemStatus] = results.map(result => 
+                        result.status === 'fulfilled' ? result.value : null
+                    );
 
-                    this.updatePipelineMetrics(pipelineMetrics);
-                    this.updateStrategiesDisplay(strategies);
-                    this.updatePerformanceChart(performance);
-                    this.updateActivityFeed(activity);
-                    this.updateRiskMetrics(riskMetrics);
-                    this.updateSystemStatus(systemStatus);
+                    if (pipelineMetrics) this.updatePipelineMetrics(pipelineMetrics);
+                    if (strategies) this.updateStrategiesDisplay(strategies);
+                    if (performance) this.updatePerformanceChart(performance);
+                    if (activity) this.updateActivityFeed(activity);
+                    if (riskMetrics) this.updateRiskMetrics(riskMetrics);
+                    if (systemStatus) this.updateSystemStatus(systemStatus);
 
                     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
                     this.hideLoadingState();
