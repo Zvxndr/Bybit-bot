@@ -648,7 +648,10 @@ trading_api._start_time = datetime.now()
 trading_api._api_calls_today = 0
 
 # Import and initialize simplified dashboard API
-from simplified_dashboard_api import SimplifiedDashboardAPI
+try:
+    from .simplified_dashboard_api import SimplifiedDashboardAPI
+except ImportError:
+    from simplified_dashboard_api import SimplifiedDashboardAPI
 
 # WebSocket connections
 websocket_connections = set()
