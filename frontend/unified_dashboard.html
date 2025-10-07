@@ -757,6 +757,137 @@
             margin-bottom: 0;
         }
 
+        /* Portfolio Metrics Grid */
+        .portfolio-metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .portfolio-metric {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #e5e7eb;
+        }
+
+        .metric-label {
+            font-size: 0.75em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-change {
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .metric-status {
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .metric-bar {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .metric-bar-fill[data-risk="low"] { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .metric-bar-fill[data-risk="medium"] { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .metric-bar-fill[data-risk="high"] { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        /* System Status */
+        .system-status {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .status-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+
+        .status-item i {
+            width: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Portfolio Status Badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .status-badge.status-live {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-badge.status-paper {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge.status-idle {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+            border: 1px solid rgba(156, 163, 175, 0.3);
+        }
+
+        .status-badge.status-passing {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
         /* Pipeline Status Indicators */
         .pipeline-status-item {
             display: flex;
@@ -1250,62 +1381,67 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">⚖️ Risk Management</h3>
+                        <h3 class="card-title">📊 Live Portfolio Status</h3>
                         <div class="risk-status-indicator">
-                            <span class="status-badge status-passing" id="riskStatusBadge">✅ OPTIMAL</span>
+                            <span class="status-badge status-passing" id="portfolioStatusBadge">📈 ACTIVE</span>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Risk Metrics Grid -->
-                        <div class="risk-metrics-grid mb-3">
-                            <div class="risk-metric">
-                                <div class="risk-value" id="maxDrawdown">8.4%</div>
-                                <div class="risk-label">Max Drawdown</div>
-                                <div class="risk-bar">
-                                    <div class="risk-bar-fill" style="width: 34%" data-risk="low"></div>
+                        <!-- Real-time Portfolio Metrics -->
+                        <div class="portfolio-metrics-grid mb-3">
+                            <div class="portfolio-metric">
+                                <div class="metric-value" id="totalBalance">$0.00</div>
+                                <div class="metric-label">Total Balance</div>
+                                <div class="metric-change" id="balanceChange">
+                                    <i class="bi bi-arrow-up text-success"></i> +0.00%
                                 </div>
                             </div>
-                            <div class="risk-metric">
-                                <div class="risk-value" id="sharpeRatio">1.89</div>
-                                <div class="risk-label">Portfolio Sharpe</div>
-                                <div class="risk-bar">
-                                    <div class="risk-bar-fill" style="width: 76%" data-risk="good"></div>
+                            <div class="portfolio-metric">
+                                <div class="metric-value" id="dailyPnL">$0.00</div>
+                                <div class="metric-label">Daily P&L</div>
+                                <div class="metric-change" id="dailyPnLChange">
+                                    <i class="bi bi-dash text-muted"></i> 0.00%
                                 </div>
                             </div>
-                            <div class="risk-metric">
-                                <div class="risk-value" id="correlationRisk">23%</div>
-                                <div class="risk-label">Strategy Correlation</div>
-                                <div class="risk-bar">
-                                    <div class="risk-bar-fill" style="width: 23%" data-risk="low"></div>
+                            <div class="portfolio-metric">
+                                <div class="metric-value" id="activeStrategies">0</div>
+                                <div class="metric-label">Active Strategies</div>
+                                <div class="metric-status" id="strategiesStatus">
+                                    <i class="bi bi-pause text-warning"></i> Paper Mode
                                 </div>
                             </div>
-                            <div class="risk-metric">
-                                <div class="risk-value" id="varRisk">2.1%</div>
-                                <div class="risk-label">Daily VaR (95%)</div>
-                                <div class="risk-bar">
-                                    <div class="risk-bar-fill" style="width: 42%" data-risk="medium"></div>
+                            <div class="portfolio-metric">
+                                <div class="metric-value" id="currentRisk">0.0%</div>
+                                <div class="metric-label">Current Risk</div>
+                                <div class="metric-bar">
+                                    <div class="metric-bar-fill" style="width: 0%" data-risk="low" id="riskBar"></div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- AI Risk Assessment -->
-                        <div class="ai-risk-assessment">
-                            <div class="risk-assessment-header">
-                                <i class="bi bi-robot"></i>
-                                <span>AI Risk Assessment</span>
+                        <!-- Live System Status -->
+                        <div class="system-status">
+                            <div class="status-header">
+                                <i class="bi bi-activity"></i>
+                                <span>System Status</span>
+                                <small class="text-muted ms-auto" id="lastUpdate">Last updated: Never</small>
                             </div>
-                            <div class="risk-assessment-content">
-                                <div class="risk-insight">
-                                    <i class="bi bi-check-circle text-success"></i>
-                                    <span>Portfolio diversification is optimal with low strategy correlation</span>
+                            <div class="status-content">
+                                <div class="status-item">
+                                    <i class="bi bi-wifi text-success"></i>
+                                    <span>API Connection: <strong class="text-success">Connected</strong></span>
                                 </div>
-                                <div class="risk-insight">
-                                    <i class="bi bi-info-circle text-info"></i>
-                                    <span>3 strategies ready for graduation, risk exposure within limits</span>
+                                <div class="status-item">
+                                    <i class="bi bi-graph-up text-info"></i>
+                                    <span>Trading Mode: <strong class="text-info" id="tradingMode">Paper</strong></span>
                                 </div>
-                                <div class="risk-insight">
-                                    <i class="bi bi-exclamation-triangle text-warning"></i>
-                                    <span>Monitor SOL_MA_F6P8R - showing increased volatility</span>
+                                <div class="status-item">
+                                    <i class="bi bi-shield-check text-warning"></i>
+                                    <span>Risk Monitor: <strong class="text-warning" id="riskMonitorStatus">Active</strong></span>
+                                </div>
+                                <div class="status-item">
+                                    <i class="bi bi-robot text-primary"></i>
+                                    <span>Discovery Engine: <strong class="text-primary" id="discoveryStatus">Running</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -1417,62 +1553,102 @@
                         <h3 class="card-title">⚙️ Pipeline Configuration</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Discovery Mode</label>
-                                <select class="form-select">
-                                    <option value="aggressive">Aggressive (24/7)</option>
-                                    <option value="balanced" selected>Balanced (12h/day)</option>
-                                    <option value="conservative">Conservative (6h/day)</option>
-                                </select>
-                                <small class="text-muted">AI strategy discovery intensity</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Graduation Criteria</label>
-                                <select class="form-select">
-                                    <option value="strict">Strict (Sharpe > 1.5)</option>
-                                    <option value="standard" selected>Standard (Sharpe > 1.2)</option>
-                                    <option value="relaxed">Relaxed (Sharpe > 1.0)</option>
-                                </select>
-                                <small class="text-muted">Auto-promotion thresholds</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Paper Duration</label>
-                                <select class="form-select">
-                                    <option value="7">7 days (Fast)</option>
-                                    <option value="14" selected>14 days (Standard)</option>
-                                    <option value="21">21 days (Conservative)</option>
-                                </select>
-                                <small class="text-muted">Minimum testing period</small>
+                        <!-- Strategy Graduation Controls -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-trophy"></i> Strategy Graduation & Retirement
+                            </h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Graduation Criteria</label>
+                                    <select class="form-select">
+                                        <option value="strict">Strict (Sharpe > 1.5)</option>
+                                        <option value="standard" selected>Standard (Sharpe > 1.2)</option>
+                                        <option value="relaxed">Relaxed (Sharpe > 1.0)</option>
+                                    </select>
+                                    <small class="text-muted">Auto-promotion to live trading</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Paper Duration</label>
+                                    <select class="form-select">
+                                        <option value="7">7 days (Fast)</option>
+                                        <option value="14" selected>14 days (Standard)</option>
+                                        <option value="21">21 days (Conservative)</option>
+                                    </select>
+                                    <small class="text-muted">Minimum testing period</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Auto-Graduate</label>
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" checked id="autoGraduate">
+                                        <label class="form-check-label" for="autoGraduate">Enable</label>
+                                    </div>
+                                    <small class="text-muted">Automatic promotions</small>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="form-label">Max Risk per Trade</label>
-                                <input type="number" class="form-control" value="2" min="1" max="10">
-                                <small class="text-muted">Percentage of portfolio</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Max Live Strategies</label>
-                                <input type="number" class="form-control" value="5" min="1" max="20">
-                                <small class="text-muted">Concurrent live trades</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Auto-Graduate</label>
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input" type="checkbox" checked id="autoGraduate">
-                                    <label class="form-check-label" for="autoGraduate">Enable</label>
+
+                        <!-- Risk & Portfolio Controls -->
+                        <div class="mb-4">
+                            <h6 class="text-warning mb-3">
+                                <i class="bi bi-shield-check"></i> Risk & Portfolio Management
+                            </h6>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Max Risk per Trade</label>
+                                    <input type="number" class="form-control" value="2" min="1" max="10" id="maxRiskPerTrade">
+                                    <small class="text-muted">Percentage of portfolio</small>
                                 </div>
-                                <small class="text-muted">Automatic promotions</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Safety Mode</label>
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input" type="checkbox" checked id="safetyMode">
-                                    <label class="form-check-label" for="safetyMode">Enable</label>
+                                <div class="col-md-3">
+                                    <label class="form-label">Max Live Strategies</label>
+                                    <input type="number" class="form-control" value="5" min="1" max="20" id="maxLiveStrategies">
+                                    <small class="text-muted">Concurrent live trades</small>
                                 </div>
-                                <small class="text-muted">Enhanced monitoring</small>
+                                <div class="col-md-3">
+                                    <label class="form-label">Portfolio Drawdown Limit</label>
+                                    <input type="number" class="form-control" value="15" min="5" max="50" id="maxDrawdown">
+                                    <small class="text-muted">Max portfolio drawdown %</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Emergency Stop</label>
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" checked id="emergencyStop">
+                                        <label class="form-check-label" for="emergencyStop">Enable</label>
+                                    </div>
+                                    <small class="text-muted">Auto-pause on high risk</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Retirement Controls -->
+                        <div class="mb-3">
+                            <h6 class="text-danger mb-3">
+                                <i class="bi bi-x-octagon"></i> Strategy Retirement Criteria
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Performance Threshold</label>
+                                    <select class="form-select" id="retirementPerformance">
+                                        <option value="strict">Strict (Sharpe < 0.8)</option>
+                                        <option value="standard" selected>Standard (Sharpe < 0.5)</option>
+                                        <option value="relaxed">Relaxed (Sharpe < 0.2)</option>
+                                    </select>
+                                    <small class="text-muted">Auto-retirement threshold</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Drawdown Trigger</label>
+                                    <input type="number" class="form-control" value="20" min="10" max="50" id="retirementDrawdown">
+                                    <small class="text-muted">Individual strategy max DD %</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Monitoring Period</label>
+                                    <select class="form-select" id="retirementPeriod">
+                                        <option value="7">7 days</option>
+                                        <option value="14" selected>14 days</option>
+                                        <option value="30">30 days</option>
+                                    </select>
+                                    <small class="text-muted">Performance evaluation window</small>
+                                </div>
                             </div>
                         </div>
                         
@@ -1651,6 +1827,7 @@
                     // Load portfolio data
                     const portfolio = await fetch('/api/portfolio').then(r => r.json());
                     this.updatePortfolioStats(portfolio);
+                    this.updateLivePortfolioStatus(portfolio);
 
                     // Load strategies
                     const strategies = await fetch('/api/strategies').then(r => r.json());
@@ -1955,6 +2132,12 @@
                     message: "API connection required"
                 });
 
+                // Show disconnected state for live portfolio
+                this.updateLivePortfolioStatus({
+                    live: { total_balance: 0, daily_pnl: 0, active_strategies: 0 },
+                    paper_testnet: { total_balance: 0, unrealized_pnl: 0, active_strategies: 0 }
+                });
+
                 this.updateStrategiesDisplay([]);
                 
                 this.updatePipelineMetrics({
@@ -1981,16 +2164,34 @@
             updatePerformanceChart(performance) {
                 if (!this.charts.performance) return;
                 
-                // Handle empty performance data in production
+                // Check for live trading performance data
                 if (!performance || !performance.daily_returns || performance.daily_returns.length === 0) {
-                    // Clear chart for empty state
-                    this.charts.performance.data.labels = [];
-                    this.charts.performance.data.datasets[0].data = [];
+                    // Show "No Live Data" state - system is in paper mode
+                    const emptyLabels = Array.from({length: 30}, (_, i) => {
+                        const date = new Date();
+                        date.setDate(date.getDate() - (29 - i));
+                        return date.toLocaleDateString();
+                    });
+                    
+                    this.charts.performance.data.labels = emptyLabels;
+                    this.charts.performance.data.datasets[0].data = new Array(30).fill(0);
+                    this.charts.performance.data.datasets[0].borderColor = '#6b7280';
+                    this.charts.performance.data.datasets[0].backgroundColor = 'rgba(107, 114, 128, 0.1)';
+                    this.charts.performance.options.plugins.title = {
+                        display: true,
+                        text: 'No Live Portfolio Data - System in Paper Mode',
+                        color: '#9ca3af',
+                        font: { size: 12 }
+                    };
                     this.charts.performance.update();
+                    
+                    // Update portfolio status
+                    document.getElementById('portfolioStatus').innerHTML = 
+                        '<i class="bi bi-info-circle"></i> No live trading data available - Portfolio in paper mode';
                     return;
                 }
                 
-                // Update with real performance data
+                // Update with real live performance data
                 const labels = performance.daily_returns.map((_, index) => {
                     const date = new Date();
                     date.setDate(date.getDate() - (performance.daily_returns.length - 1 - index));
@@ -1999,7 +2200,82 @@
                 
                 this.charts.performance.data.labels = labels;
                 this.charts.performance.data.datasets[0].data = performance.daily_returns;
+                this.charts.performance.data.datasets[0].borderColor = '#2fb344';
+                this.charts.performance.data.datasets[0].backgroundColor = 'rgba(47, 179, 68, 0.1)';
+                this.charts.performance.options.plugins.title = { display: false };
                 this.charts.performance.update();
+                
+                // Update portfolio status with live data
+                document.getElementById('portfolioStatus').innerHTML = 
+                    '<i class="bi bi-activity"></i> Live portfolio performance based on active strategies';
+            }
+
+            updateLivePortfolioStatus(portfolio) {
+                // Update live portfolio metrics with real data
+                const live = portfolio?.live || {};
+                const paper = portfolio?.paper_testnet || {};
+                
+                // Use live data if available, otherwise show paper data
+                const activeBalance = live.total_balance || paper.total_balance || 0;
+                const dailyPnL = live.daily_pnl || paper.unrealized_pnl || 0;
+                const totalStrategies = (live.active_strategies || 0) + (paper.active_strategies || 0);
+                
+                // Update balance display
+                document.getElementById('totalBalance').textContent = 
+                    `$${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                // Update daily P&L
+                const pnlElement = document.getElementById('dailyPnL');
+                const pnlChangeElement = document.getElementById('dailyPnLChange');
+                
+                pnlElement.textContent = 
+                    `${dailyPnL >= 0 ? '+' : ''}$${Math.abs(dailyPnL).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                const pnlPercent = activeBalance > 0 ? (dailyPnL / activeBalance * 100) : 0;
+                pnlChangeElement.innerHTML = 
+                    `<i class="bi bi-${dailyPnL >= 0 ? 'arrow-up text-success' : 'arrow-down text-danger'}"></i> ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`;
+                
+                // Update active strategies
+                document.getElementById('activeStrategies').textContent = totalStrategies;
+                
+                // Update strategies status
+                const statusElement = document.getElementById('strategiesStatus');
+                if (live.active_strategies > 0) {
+                    statusElement.innerHTML = '<i class="bi bi-play-fill text-success"></i> Live Trading';
+                } else if (paper.active_strategies > 0) {
+                    statusElement.innerHTML = '<i class="bi bi-pause text-warning"></i> Paper Mode';
+                } else {
+                    statusElement.innerHTML = '<i class="bi bi-stop text-muted"></i> No Active Strategies';
+                }
+                
+                // Calculate current risk (simplified)
+                const maxRisk = parseFloat(document.getElementById('maxRiskPerTrade')?.value || 2);
+                const currentRisk = Math.min((totalStrategies * maxRisk), 100);
+                
+                document.getElementById('currentRisk').textContent = `${currentRisk.toFixed(1)}%`;
+                
+                const riskBar = document.getElementById('riskBar');
+                riskBar.style.width = `${currentRisk}%`;
+                riskBar.setAttribute('data-risk', 
+                    currentRisk < 30 ? 'low' : 
+                    currentRisk < 70 ? 'medium' : 'high'
+                );
+                
+                // Update portfolio status badge
+                const badge = document.getElementById('portfolioStatusBadge');
+                if (live.active_strategies > 0) {
+                    badge.textContent = '🚀 LIVE';
+                    badge.className = 'status-badge status-live';
+                } else if (paper.active_strategies > 0) {
+                    badge.textContent = '📝 PAPER';
+                    badge.className = 'status-badge status-paper';
+                } else {
+                    badge.textContent = '⏸️ IDLE';
+                    badge.className = 'status-badge status-idle';
+                }
+                
+                // Update last update timestamp
+                document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
             }
 
             async updateData() {
