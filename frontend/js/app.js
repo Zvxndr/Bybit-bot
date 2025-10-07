@@ -228,12 +228,20 @@ class TradingBotApp {
         console.log('📡 Real-time update received:', data.type);
         
         switch(data.type) {
+            case 'dashboard_update':
+                this.updateDashboardData(data);
+                break;
+                
             case 'system_status':
                 this.updateSystemStatus(data.payload);
                 break;
                 
             case 'trading_update':
                 this.updateTradingData(data.payload);
+                break;
+                
+            case 'portfolio_update':
+                this.updatePortfolioData(data.portfolio);
                 break;
                 
             case 'pipeline_update':
@@ -255,6 +263,45 @@ class TradingBotApp {
             default:
                 console.log('❓ Unknown update type:', data.type);
         }
+    }
+
+    /**
+     * Update dashboard with real-time data
+     */
+    updateDashboardData(data) {
+        console.log('📊 Updating dashboard with real-time data');
+        
+        // Update portfolio data if available
+        if (data.portfolio && window.Dashboard) {
+            window.Dashboard.updatePortfolio(data.portfolio);
+        }
+        
+        // Update risk metrics if available
+        if (data.risk_metrics && window.Dashboard) {
+            window.Dashboard.updateRiskMetrics(data.risk_metrics);
+        }
+        
+        // Update timestamp
+        this.updateLastUpdated(data.timestamp);
+    }
+
+    /**
+     * Update portfolio data display
+     */
+    updatePortfolioData(portfolio) {
+        if (window.Dashboard) {
+            window.Dashboard.updatePortfolio(portfolio);
+        }
+    }
+
+    /**
+     * Update last updated timestamp
+     */
+    updateLastUpdated(timestamp) {
+        const timestampElements = document.querySelectorAll('.last-updated');
+        timestampElements.forEach(element => {
+            element.textContent = new Date(timestamp).toLocaleTimeString();
+        });
     }
 
     /**

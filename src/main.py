@@ -30,13 +30,16 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Setup production logging
+# Setup comprehensive logging with debug info
+log_level = logging.DEBUG if os.getenv('DEBUG', 'false').lower() == 'true' else logging.INFO
+
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/app.log', encoding='utf-8')
+        logging.FileHandler('logs/app.log', encoding='utf-8'),
+        logging.FileHandler('logs/debug.log', encoding='utf-8') if log_level == logging.DEBUG else logging.NullHandler()
     ]
 )
 
@@ -61,9 +64,17 @@ class IntegratedBybitAPI:
     async def initialize(self):
         """Initialize the Bybit API client"""
         try:
+            logger.debug("🔧 Initializing Bybit API client...")
+            logger.debug(f"🔧 Testnet mode: {self.testnet}")
+            
             if not self.api_key or not self.api_secret:
                 logger.warning("⚠️ No Bybit API credentials found - using paper trading mode")
+                logger.debug("🔧 API key present: False")
+                logger.debug("🔧 API secret present: False")
                 return False
+            
+            logger.debug(f"🔧 API key present: {bool(self.api_key)}")
+            logger.debug(f"🔧 API secret present: {bool(self.api_secret)}")
                 
             from src.bybit_api import BybitAPIClient
             self.client = BybitAPIClient(
@@ -73,10 +84,14 @@ class IntegratedBybitAPI:
             )
             await self.client.__aenter__()
             logger.info("✅ Bybit API client initialized successfully")
+            logger.debug("🔧 API client connection established")
             return True
             
         except Exception as e:
             logger.error(f"❌ Failed to initialize Bybit API: {e}")
+            logger.debug(f"🔧 API initialization error details: {str(e)}")
+            import traceback
+            logger.debug(f"🔧 Full traceback: {traceback.format_exc()}")
             return False
     
     async def get_real_portfolio_data(self) -> Dict[str, Any]:
@@ -440,22 +455,68 @@ def create_integrated_fastapi_app():
             "api_connected": api_client.client is not None,
             "speed_demon_enabled": True,
             "paper_trading": api_client.client is None,
+            "live_trading_enabled": False,  # Default to off for safety
             "environment": "testnet" if api_client.testnet else "mainnet"
+        }
+    
+    # Settings endpoints
+    @app.get("/api/settings")
+    async def get_settings():
+        """Get trading settings"""
+        return {
+            "live_trading_enabled": False,  # Always start in safe mode
+            "auto_trading": False,
+            "risk_level": "conservative",
+            "max_daily_loss": 5.0,  # 5% max daily loss
+            "position_sizing": "dynamic",
+            "notifications_enabled": True,
+            "last_updated": datetime.now().isoformat()
+        }
+    
+    @app.post("/api/settings")
+    async def update_settings(settings: dict):
+        """Update trading settings"""
+        # In a real implementation, save to database
+        logger.info(f"Settings updated: {settings}")
+        
+        # Validate critical settings
+        if settings.get("live_trading_enabled", False):
+            if not api_client.client:
+                raise HTTPException(status_code=400, detail="Cannot enable live trading without API connection")
+            logger.warning("⚠️ Live trading enabled by user")
+        
+        return {
+            "success": True,
+            "message": "Settings updated successfully",
+            "settings": settings,
+            "timestamp": datetime.now().isoformat()
         }
     
     # Status endpoint (expected by frontend)
     @app.get("/api/status")
     async def get_status():
         """Get system status"""
-        portfolio_data = await api_client.get_real_portfolio_data()
-        return {
-            "status": "running",
-            "environment": "testnet" if api_client.testnet else "mainnet",
-            "api_connected": api_client.client is not None,
-            "balance": portfolio_data.get("total_balance", 0),
-            "positions": portfolio_data.get("positions_count", 0),
-            "last_updated": datetime.now().isoformat()
-        }
+        logger.debug("🔧 Status endpoint called")
+        try:
+            portfolio_data = await api_client.get_real_portfolio_data()
+            logger.debug(f"🔧 Portfolio data retrieved: {portfolio_data.get('total_balance', 0)} balance")
+            
+            status_data = {
+                "status": "running",
+                "environment": "testnet" if api_client.testnet else "mainnet",
+                "api_connected": api_client.client is not None,
+                "balance": portfolio_data.get("total_balance", 0),
+                "positions": portfolio_data.get("positions_count", 0),
+                "last_updated": datetime.now().isoformat()
+            }
+            
+            logger.debug(f"🔧 Status response: {status_data}")
+            return status_data
+            
+        except Exception as e:
+            logger.error(f"❌ Error in status endpoint: {e}")
+            logger.debug(f"🔧 Status error details: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
     
     # Activity endpoint (expected by frontend)
     @app.get("/api/activity/recent")
@@ -586,6 +647,34 @@ def create_integrated_fastapi_app():
         @app.get("/")
         async def serve_frontend():
             return FileResponse(frontend_dir / "index.html")
+        
+        # Serve all HTML pages from frontend directory
+        @app.get("/{page}.html")
+        async def serve_page(page: str):
+            """Serve frontend HTML pages"""
+            page_file = frontend_dir / f"{page}.html"
+            if page_file.exists():
+                return FileResponse(page_file)
+            else:
+                # Return index.html for non-existent pages (SPA behavior)
+                return FileResponse(frontend_dir / "index.html")
+        
+        @app.get("/portfolio")
+        async def serve_portfolio():
+            return FileResponse(frontend_dir / "index.html")
+            
+        @app.get("/pipeline") 
+        async def serve_pipeline():
+            return FileResponse(frontend_dir / "index.html")
+            
+        @app.get("/strategies")
+        async def serve_strategies():
+            return FileResponse(frontend_dir / "index.html")
+            
+        @app.get("/settings")
+        async def serve_settings():
+            return FileResponse(frontend_dir / "index.html")
+            
     else:
         @app.get("/")
         async def root():
