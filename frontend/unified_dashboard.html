@@ -464,6 +464,159 @@
         .category-risk .activity-icon { background: linear-gradient(135deg, #ef4444, #dc2626) !important; }
         .category-safety .activity-icon { background: linear-gradient(135deg, #10b981, #059669) !important; }
 
+        /* Terminal Console */
+        .terminal-console {
+            background: #0d1117;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .console-header {
+            background: #161b22;
+            padding: 8px 16px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .console-title {
+            color: #f0f6fc;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .console-timestamp {
+            color: #7d8590;
+            font-size: 11px;
+            margin-left: auto;
+        }
+
+        .console-content {
+            height: 300px;
+            overflow-y: auto;
+            padding: 12px 0;
+            background: #0d1117;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .console-line {
+            padding: 2px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 20px;
+            border-left: 3px solid transparent;
+        }
+
+        .console-line:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .console-time {
+            color: #7d8590;
+            font-size: 11px;
+            min-width: 70px;
+        }
+
+        .console-level {
+            color: #f0f6fc;
+            font-weight: 600;
+            font-size: 11px;
+            min-width: 80px;
+            text-align: center;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .console-message {
+            color: #e6edf3;
+            flex: 1;
+        }
+
+        /* Console line type styles */
+        .console-info {
+            border-left-color: #1f6feb;
+        }
+        .console-info .console-level {
+            background: rgba(31, 111, 235, 0.2);
+            color: #58a6ff;
+        }
+
+        .console-success {
+            border-left-color: #238636;
+        }
+        .console-success .console-level {
+            background: rgba(35, 134, 54, 0.2);
+            color: #56d364;
+        }
+
+        .console-warning {
+            border-left-color: #9e6a03;
+        }
+        .console-warning .console-level {
+            background: rgba(158, 106, 3, 0.2);
+            color: #f2cc60;
+        }
+
+        .console-error {
+            border-left-color: #da3633;
+        }
+        .console-error .console-level {
+            background: rgba(218, 54, 51, 0.2);
+            color: #f85149;
+        }
+
+        .console-trade {
+            border-left-color: #a5a5a5;
+        }
+        .console-trade .console-level {
+            background: rgba(165, 165, 165, 0.2);
+            color: #c9d1d9;
+        }
+
+        .console-controls {
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.status-running {
+            background: #56d364;
+            box-shadow: 0 0 6px rgba(86, 211, 100, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.status-stopped {
+            background: #f85149;
+        }
+
+        .status-dot.status-paused {
+            background: #f2cc60;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 6px rgba(86, 211, 100, 0.6); }
+            50% { box-shadow: 0 0 12px rgba(86, 211, 100, 0.8); }
+            100% { box-shadow: 0 0 6px rgba(86, 211, 100, 0.6); }
+        }
+
         /* Toast Notification System */
         .toast-notification {
             position: fixed;
@@ -906,12 +1059,15 @@
                     <span class="count-badge" id="discoveryCount">0</span>
                 </div>
                 
-                <!-- Backtesting Controls -->
-                <div class="backtest-controls mb-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                <!-- Historical Data Controls -->
+                <div class="historical-data-controls mb-3 p-3" style="background: rgba(32,156,238,0.1); border: 1px solid rgba(32,156,238,0.2); border-radius: 8px;">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-database"></i> Market Data Configuration
+                    </h6>
                     <div class="row g-2">
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Trading Pair</label>
-                            <select class="form-select form-select-sm" id="backtestPair">
+                            <select class="form-select form-select-sm" id="historicalPair">
                                 <option value="BTCUSDT" selected>BTC/USDT</option>
                                 <option value="ETHUSDT">ETH/USDT</option>
                                 <option value="SOLUSDT">SOL/USDT</option>
@@ -921,7 +1077,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Timeframe</label>
-                            <select class="form-select form-select-sm" id="backtestTimeframe">
+                            <select class="form-select form-select-sm" id="historicalTimeframe">
                                 <option value="1m">1 Minute</option>
                                 <option value="5m">5 Minutes</option>
                                 <option value="15m" selected>15 Minutes</option>
@@ -930,6 +1086,25 @@
                                 <option value="1d">1 Day</option>
                             </select>
                         </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary flex-fill" onclick="dashboard.downloadHistoricalData()">
+                                    <i class="bi bi-download"></i> Download Data
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary flex-fill" onclick="dashboard.refreshHistoricalChart()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh Chart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy Backtesting Controls -->
+                <div class="backtest-controls mb-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <h6 class="text-light mb-2">
+                        <i class="bi bi-graph-up-arrow"></i> Strategy Backtesting
+                    </h6>
+                    <div class="row g-2">
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Starting Balance</label>
                             <select class="form-select form-select-sm" id="backtestStartingBalance">
@@ -940,7 +1115,6 @@
                                 <option value="50000">$50,000</option>
                             </select>
                         </div>
-                        <!-- Min Financial Score removed - quality filtering is handled by Pipeline Configuration's Graduation Criteria -->
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Historical Period</label>
                             <select class="form-select form-select-sm" id="backtestPeriod">
@@ -951,7 +1125,7 @@
                         </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <button class="btn btn-sm btn-primary w-100" onclick="dashboard.runHistoricalBacktest()" id="backtestRunBtn">
-                                <i class="bi bi-play-fill"></i> Run Historical Backtest
+                                <i class="bi bi-play-fill"></i> Run Strategy Backtest
                             </button>
                         </div>
                         <div class="col-12">
@@ -1009,80 +1183,28 @@
             <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h3 class="card-title mb-0">📈 Portfolio Performance</h3>
+                        <h3 class="card-title mb-0">📈 Live Portfolio Performance</h3>
                         <div class="d-flex gap-2 align-items-center">
-                            <small class="text-muted me-2">Historical Data:</small>
-                            <button class="btn btn-sm btn-outline-primary" onclick="dashboard.showHistoricalDataControls()" id="historicalControlsBtn">
-                                <i class="bi bi-download"></i> Configure
-                            </button>
+                            <small class="text-muted me-2">Live Trading Results</small>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="dashboard.refreshPortfolioPerformance()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.togglePerformanceTimeframe()">
+                                    <i class="bi bi-calendar"></i> 24h
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Historical Data Controls (Initially Hidden) -->
-                        <div id="historicalDataControls" class="alert alert-info mb-3" style="display: none;">
-                            <div class="row g-2">
-                                <div class="col-md-3">
-                                    <label class="form-label text-muted small">Trading Pair</label>
-                                    <select class="form-select form-select-sm" id="histDataPair">
-                                        <option value="BTCUSDT" selected>BTC/USDT</option>
-                                        <option value="ETHUSDT">ETH/USDT</option>
-                                        <option value="BNBUSDT">BNB/USDT</option>
-                                        <option value="ADAUSDT">ADA/USDT</option>
-                                        <option value="SOLUSDT">SOL/USDT</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label text-muted small">Timeframe</label>
-                                    <select class="form-select form-select-sm" id="histDataTimeframe">
-                                        <option value="1h">1 Hour</option>
-                                        <option value="4h">4 Hours</option>
-                                        <option value="1d" selected>1 Day</option>
-                                        <option value="1w">1 Week</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label text-muted small">Period</label>
-                                    <select class="form-select form-select-sm" id="histDataPeriod">
-                                        <option value="30">Last 30 Days</option>
-                                        <option value="90" selected>Last 90 Days</option>
-                                        <option value="180">Last 180 Days</option>
-                                        <option value="365">Last 1 Year</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button class="btn btn-sm btn-primary w-100" onclick="dashboard.downloadHistoricalData()" id="downloadDataBtn">
-                                        <i class="bi bi-cloud-download"></i> Download & Apply
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.hideHistoricalDataControls()">
-                                            <i class="bi bi-x"></i> Cancel
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="dashboard.clearHistoricalData()">
-                                            <i class="bi bi-trash"></i> Clear Data
-                                        </button>
-                                        <div class="flex-fill">
-                                            <div id="downloadProgress" class="progress" style="height: 20px; display: none;">
-                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">
-                                                    <span class="progress-text">Downloading...</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <!-- Chart Container -->
                         <div class="chart-container">
                             <canvas id="performanceChart"></canvas>
                         </div>
-                        <!-- Chart Data Status -->
+                        <!-- Portfolio Performance Status -->
                         <div class="mt-2">
-                            <small id="chartDataStatus" class="text-muted">
-                                <i class="bi bi-info-circle"></i> Using simulated data - Configure historical data above
+                            <small id="portfolioStatus" class="text-muted">
+                                <i class="bi bi-activity"></i> Live portfolio performance based on active strategies
                             </small>
                         </div>
                     </div>
@@ -1184,6 +1306,101 @@
                                 <div class="risk-insight">
                                     <i class="bi bi-exclamation-triangle text-warning"></i>
                                     <span>Monitor SOL_MA_F6P8R - showing increased volatility</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot Activity Console -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">🖥️ Bot Activity Console</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="status-indicator" id="botStatus">
+                                <span class="status-dot status-running"></span>
+                                <small class="text-success">Bot Running</small>
+                            </div>
+                            <div class="btn-group" role="group" size="sm">
+                                <button class="btn btn-sm btn-outline-primary" onclick="dashboard.clearConsole()">
+                                    <i class="bi bi-trash"></i> Clear
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.pauseConsole()" id="pauseBtn">
+                                    <i class="bi bi-pause"></i> Pause
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="dashboard.exportLogs()">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Terminal Console -->
+                        <div class="terminal-console" id="botConsole">
+                            <div class="console-header">
+                                <span class="console-title">Trading Bot Activity Log</span>
+                                <span class="console-timestamp" id="consoleTimestamp">Live</span>
+                            </div>
+                            <div class="console-content" id="consoleContent">
+                                <div class="console-line console-info">
+                                    <span class="console-time">[00:00:00]</span>
+                                    <span class="console-level">INFO</span>
+                                    <span class="console-message">Bot initialized - Paper trading mode active</span>
+                                </div>
+                                <div class="console-line console-success">
+                                    <span class="console-time">[00:00:05]</span>
+                                    <span class="console-level">SUCCESS</span>
+                                    <span class="console-message">Connected to Bybit API (Testnet)</span>
+                                </div>
+                                <div class="console-line console-info">
+                                    <span class="console-time">[00:00:10]</span>
+                                    <span class="console-level">STRATEGY</span>
+                                    <span class="console-message">Loading active strategies: 3 paper, 0 live</span>
+                                </div>
+                                <div class="console-line console-warning">
+                                    <span class="console-time">[00:00:15]</span>
+                                    <span class="console-level">MONITOR</span>
+                                    <span class="console-message">Risk monitoring enabled - Portfolio risk: LOW</span>
+                                </div>
+                                <div class="console-line console-trade">
+                                    <span class="console-time">[00:01:23]</span>
+                                    <span class="console-level">TRADE</span>
+                                    <span class="console-message">BTC_EMA_A7K2M: Signal detected - BUY at $43,250.50</span>
+                                </div>
+                                <div class="console-line console-info">
+                                    <span class="console-time">[00:01:24]</span>
+                                    <span class="console-level">ORDER</span>
+                                    <span class="console-message">Paper order placed: BUY 0.023 BTC @ $43,250.50</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="console-controls p-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm" id="logLevel" style="width: auto;">
+                                            <option value="all" selected>All Levels</option>
+                                            <option value="info">Info Only</option>
+                                            <option value="trade">Trades Only</option>
+                                            <option value="error">Errors Only</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="logFilter" style="width: auto;">
+                                            <option value="all" selected>All Activities</option>
+                                            <option value="strategy">Strategy Events</option>
+                                            <option value="trading">Trading Events</option>
+                                            <option value="risk">Risk Events</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <small class="text-muted">
+                                        <i class="bi bi-activity"></i> Real-time monitoring
+                                        <span id="logCount" class="badge bg-secondary ms-2">6 events</span>
+                                    </small>
                                 </div>
                             </div>
                         </div>
