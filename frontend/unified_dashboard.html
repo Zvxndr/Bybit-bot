@@ -327,6 +327,55 @@
             margin: 16px 0;
         }
 
+        /* Chart No Data Overlay */
+        .chart-no-data-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 17, 23, 0.95);
+            border: 2px dashed rgba(156, 163, 175, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+            z-index: 10;
+        }
+
+        .chart-no-data-overlay.hidden {
+            display: none;
+        }
+
+        .no-data-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-data-content i {
+            opacity: 0.3;
+        }
+
+        .no-data-content h5 {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .no-data-content p {
+            font-size: 0.9em;
+            line-height: 1.5;
+            max-width: 300px;
+            margin: 0 auto 16px auto;
+        }
+
+        /* Timeframe Controls */
+        #timeframeControls .btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
         /* Emergency Controls */
         .emergency-controls {
             position: fixed;
@@ -1317,25 +1366,41 @@
                         <h3 class="card-title mb-0">📈 Live Portfolio Performance</h3>
                         <div class="d-flex gap-2 align-items-center">
                             <small class="text-muted me-2">Live Trading Results</small>
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="dashboard.refreshPortfolioPerformance()">
-                                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.togglePerformanceTimeframe()">
-                                    <i class="bi bi-calendar"></i> 24h
-                                </button>
+                            <div class="btn-group" role="group" id="timeframeControls">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('1h')" id="tf-1h">1H</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('4h')" id="tf-4h">4H</button>
+                                <button class="btn btn-sm btn-outline-secondary active" onclick="dashboard.setPerformanceTimeframe('1d')" id="tf-1d">1D</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('1w')" id="tf-1w">1W</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('1m')" id="tf-1m">1M</button>
                             </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="dashboard.refreshPortfolioPerformance()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <!-- Chart Container -->
-                        <div class="chart-container">
+                        <div class="chart-container position-relative">
                             <canvas id="performanceChart"></canvas>
+                            <!-- No Data Overlay -->
+                            <div class="chart-no-data-overlay" id="chartNoDataOverlay">
+                                <div class="no-data-content">
+                                    <i class="bi bi-graph-up display-1 text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Live Trading Data Available</h5>
+                                    <p class="text-muted mb-3">
+                                        Portfolio performance will appear here once you have active live trading strategies.
+                                    </p>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <span class="badge bg-secondary">📊 Currently in Paper Mode</span>
+                                        <span class="badge bg-info">🔄 API Disconnected</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <!-- Portfolio Performance Status -->
                         <div class="mt-2">
                             <small id="portfolioStatus" class="text-muted">
-                                <i class="bi bi-activity"></i> Live portfolio performance based on active strategies
+                                <i class="bi bi-info-circle"></i> No live portfolio data available - System in paper mode
                             </small>
                         </div>
                     </div>
@@ -1764,39 +1829,53 @@
             }
 
             initCharts() {
-                // Portfolio Performance Chart
+                // Portfolio Performance Chart - Initialize with clear no-data state
                 const performanceCtx = document.getElementById('performanceChart').getContext('2d');
                 this.charts.performance = new Chart(performanceCtx, {
                     type: 'line',
                     data: {
                         labels: [],
                         datasets: [{
-                            label: 'Portfolio Value',
+                            label: 'Portfolio Value ($)',
                             data: [],
-                            borderColor: '#2fb344',
-                            backgroundColor: 'rgba(47, 179, 68, 0.1)',
-                            tension: 0.4
+                            borderColor: '#6b7280',
+                            backgroundColor: 'rgba(107, 114, 128, 0.05)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: {
+                            enabled: false
+                        },
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: { enabled: false }
                         },
                         scales: {
                             y: { 
-                                beginAtZero: false,
-                                grid: { color: 'rgba(255,255,255,0.1)' },
-                                ticks: { color: '#9ca3af' }
+                                display: false,
+                                grid: { display: false }
                             },
                             x: { 
-                                grid: { color: 'rgba(255,255,255,0.1)' },
-                                ticks: { color: '#9ca3af' }
+                                display: false,
+                                grid: { display: false }
+                            }
+                        },
+                        elements: {
+                            line: {
+                                borderWidth: 1
                             }
                         }
                     }
                 });
+
+                // Initialize with empty state and show overlay
+                this.currentTimeframe = '1d';
+                this.showNoDataState();
 
                 // Strategy Distribution Chart
                 const distributionCtx = document.getElementById('distributionChart').getContext('2d');
@@ -2165,49 +2244,153 @@
                 if (!this.charts.performance) return;
                 
                 // Check for live trading performance data
-                if (!performance || !performance.daily_returns || performance.daily_returns.length === 0) {
-                    // Show "No Live Data" state - system is in paper mode
-                    const emptyLabels = Array.from({length: 30}, (_, i) => {
-                        const date = new Date();
-                        date.setDate(date.getDate() - (29 - i));
-                        return date.toLocaleDateString();
-                    });
-                    
-                    this.charts.performance.data.labels = emptyLabels;
-                    this.charts.performance.data.datasets[0].data = new Array(30).fill(0);
-                    this.charts.performance.data.datasets[0].borderColor = '#6b7280';
-                    this.charts.performance.data.datasets[0].backgroundColor = 'rgba(107, 114, 128, 0.1)';
-                    this.charts.performance.options.plugins.title = {
-                        display: true,
-                        text: 'No Live Portfolio Data - System in Paper Mode',
-                        color: '#9ca3af',
-                        font: { size: 12 }
-                    };
-                    this.charts.performance.update();
-                    
-                    // Update portfolio status
-                    document.getElementById('portfolioStatus').innerHTML = 
-                        '<i class="bi bi-info-circle"></i> No live trading data available - Portfolio in paper mode';
+                if (!performance || !performance.data || performance.data.length === 0) {
+                    this.showNoDataState();
                     return;
                 }
                 
+                // Filter data by current timeframe
+                const filteredData = this.filterPerformanceDataByTimeframe(performance.data, this.currentTimeframe);
+                
+                if (filteredData.length === 0) {
+                    this.showNoDataState();
+                    return;
+                }
+                
+                // Hide no-data overlay and show real data
+                this.hideNoDataState();
+                
                 // Update with real live performance data
-                const labels = performance.daily_returns.map((_, index) => {
-                    const date = new Date();
-                    date.setDate(date.getDate() - (performance.daily_returns.length - 1 - index));
-                    return date.toLocaleDateString();
+                const labels = filteredData.map(point => {
+                    const date = new Date(point.timestamp);
+                    return this.formatDateLabel(date, this.currentTimeframe);
                 });
                 
+                const values = filteredData.map(point => point.portfolio_value);
+                
+                // Update chart appearance for live data
                 this.charts.performance.data.labels = labels;
-                this.charts.performance.data.datasets[0].data = performance.daily_returns;
+                this.charts.performance.data.datasets[0].data = values;
                 this.charts.performance.data.datasets[0].borderColor = '#2fb344';
                 this.charts.performance.data.datasets[0].backgroundColor = 'rgba(47, 179, 68, 0.1)';
-                this.charts.performance.options.plugins.title = { display: false };
+                this.charts.performance.data.datasets[0].pointRadius = 2;
+                this.charts.performance.data.datasets[0].pointHoverRadius = 6;
+                
+                // Enable interactions for live data
+                this.charts.performance.options.interaction.enabled = true;
+                this.charts.performance.options.plugins.tooltip.enabled = true;
+                this.charts.performance.options.scales.x.display = true;
+                this.charts.performance.options.scales.y.display = true;
+                this.charts.performance.options.scales.x.grid.display = true;
+                this.charts.performance.options.scales.y.grid.display = true;
+                this.charts.performance.options.elements.line.borderWidth = 2;
+                
                 this.charts.performance.update();
                 
                 // Update portfolio status with live data
+                const latestValue = values[values.length - 1];
+                const firstValue = values[0];
+                const change = ((latestValue - firstValue) / firstValue * 100).toFixed(2);
+                
                 document.getElementById('portfolioStatus').innerHTML = 
-                    '<i class="bi bi-activity"></i> Live portfolio performance based on active strategies';
+                    `<i class="bi bi-activity"></i> Portfolio: $${latestValue.toLocaleString()} (${change >= 0 ? '+' : ''}${change}% ${this.getTimeframeLabel()})`;
+            }
+
+            showNoDataState() {
+                // Show the no-data overlay
+                const overlay = document.getElementById('chartNoDataOverlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                }
+                
+                // Update portfolio status
+                document.getElementById('portfolioStatus').innerHTML = 
+                    '<i class="bi bi-info-circle"></i> No live portfolio data available - System in paper mode';
+            }
+
+            hideNoDataState() {
+                // Hide the no-data overlay
+                const overlay = document.getElementById('chartNoDataOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            filterPerformanceDataByTimeframe(data, timeframe) {
+                if (!data || data.length === 0) return [];
+                
+                const now = new Date();
+                let cutoffTime;
+                
+                switch (timeframe) {
+                    case '1h':
+                        cutoffTime = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+                        break;
+                    case '4h':
+                        cutoffTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
+                        break;
+                    case '1d':
+                        cutoffTime = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+                        break;
+                    case '1w':
+                        cutoffTime = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                        break;
+                    case '1m':
+                        cutoffTime = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+                        break;
+                    default:
+                        cutoffTime = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+                }
+                
+                return data.filter(point => new Date(point.timestamp) >= cutoffTime);
+            }
+
+            formatDateLabel(date, timeframe) {
+                switch (timeframe) {
+                    case '1h':
+                    case '4h':
+                        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    case '1d':
+                        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    case '1w':
+                    case '1m':
+                        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    default:
+                        return date.toLocaleDateString();
+                }
+            }
+
+            getTimeframeLabel() {
+                const labels = {
+                    '1h': 'last hour',
+                    '4h': 'last 4 hours', 
+                    '1d': 'today',
+                    '1w': 'this week',
+                    '1m': 'this month'
+                };
+                return labels[this.currentTimeframe] || 'today';
+            }
+
+            setPerformanceTimeframe(timeframe) {
+                // Update active button
+                document.querySelectorAll('#timeframeControls .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`tf-${timeframe}`).classList.add('active');
+                
+                // Update current timeframe and refresh chart
+                this.currentTimeframe = timeframe;
+                this.refreshPortfolioPerformance();
+            }
+
+            async refreshPortfolioPerformance() {
+                try {
+                    const performance = await fetch('/api/performance').then(r => r.json());
+                    this.updatePerformanceChart(performance);
+                } catch (error) {
+                    console.log('No live performance data available');
+                    this.showNoDataState();
+                }
             }
 
             updateLivePortfolioStatus(portfolio) {
