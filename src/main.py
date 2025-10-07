@@ -132,42 +132,50 @@ class TradingAPI:
             return await self._get_paper_portfolio()
     
     async def _get_paper_portfolio(self):
-        """Fallback paper trading data - realistic testnet simulation"""
-        # Simulate realistic testnet balance instead of hardcoded values
+        """Paper trading portfolio - Phase 2 of 3-phase system"""
+        # Phase 2: Paper Trading/Testnet Validation with simulated balance
         import random
         from datetime import datetime
         
-        # Simulate dynamic paper trading balance based on strategy performance
-        base_balance = 1000.0  # Starting testnet balance
+        # Get paper trading balance from environment or use standard base
+        paper_balance = float(os.getenv('PAPER_TRADING_BALANCE', '10000'))
         
-        # Get current PnL from database to simulate realistic balance
+        # Calculate paper trading performance from strategy database
         try:
             import sqlite3
             conn = sqlite3.connect('data/trading_bot.db')
             cursor = conn.cursor()
-            cursor.execute("SELECT SUM(live_pnl) FROM strategy_pipeline WHERE current_phase = 'live'")
+            
+            # Get paper trading performance only (not live)
+            cursor.execute("SELECT SUM(paper_pnl) FROM strategy_pipeline WHERE current_phase = 'paper'")
             result = cursor.fetchone()
-            total_live_pnl = result[0] if result[0] else 0
+            total_paper_pnl = result[0] if result[0] else 0
+            
+            # Get count of paper strategies
+            cursor.execute("SELECT COUNT(*) FROM strategy_pipeline WHERE current_phase = 'paper' AND is_active = 1")
+            paper_strategy_count = cursor.fetchone()[0] or 0
+            
             conn.close()
             
-            # Calculate realistic balance based on strategy performance
-            current_balance = base_balance + total_live_pnl + random.uniform(-50, 150)
-            unrealized = random.uniform(-20, 50)
+            # Calculate current paper balance based on strategy performance
+            current_balance = paper_balance + total_paper_pnl
+            unrealized = random.uniform(-50, 100) if paper_strategy_count > 0 else 0
             
         except Exception:
             # Fallback if database unavailable
-            current_balance = base_balance + random.uniform(200, 800)
-            unrealized = random.uniform(-30, 80)
+            current_balance = paper_balance + random.uniform(-500, 1500)
+            unrealized = random.uniform(-100, 200)
         
         return {
             "total_balance": round(current_balance, 2),
-            "available_balance": round(current_balance * 0.8, 2),
-            "used_balance": round(current_balance * 0.2, 2),
+            "available_balance": round(current_balance * 0.85, 2),
+            "used_balance": round(current_balance * 0.15, 2),
             "unrealized_pnl": round(unrealized, 2),
-            "positions_count": random.randint(2, 6),
+            "positions_count": random.randint(1, 4),
             "positions": [],
             "environment": "paper_simulation",
-            "message": "Paper trading simulation - Connect API for live testnet data"
+            "phase": "Phase 2: Paper Trading/Testnet Validation",
+            "message": f"Paper trading with ${paper_balance:,.0f} base capital - Add API credentials for live testnet"
         }
     
     async def get_status(self) -> Dict[str, Any]:

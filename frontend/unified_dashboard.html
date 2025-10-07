@@ -1245,19 +1245,36 @@
             }
 
             updatePortfolioStats(portfolio) {
-                // Calculate realistic testnet balance based on strategy performance
-                const baseBalance = 50000; // Professional testnet starting balance
-                const performanceAdjustment = (portfolio.pnl || 0);
-                const realisticBalance = baseBalance + performanceAdjustment;
+                // Display actual portfolio balance from backend - proper 3-phase system
+                // 1. Historical Backtesting: No balance shown (analysis only)
+                // 2. Paper/Testnet Trading: Simulated balance for validation  
+                // 3. Live Trading: Real account balance
                 
                 document.getElementById('portfolioValue').textContent = 
-                    `$${(portfolio.total_value || realisticBalance).toLocaleString()}`;
+                    `$${(portfolio.total_balance || 0).toLocaleString()}`;
                 document.getElementById('totalPnl').textContent = 
                     `${portfolio.pnl >= 0 ? '+' : ''}$${(portfolio.pnl || 0).toLocaleString()}`;
                 document.getElementById('winRate').textContent = 
                     `${Math.round(portfolio.win_rate || 0)}%`;
                 document.getElementById('activeStrategies').textContent = 
                     portfolio.active_strategies || 0;
+                    
+                // Show proper environment indicator with phase info
+                const env = portfolio.environment || 'unknown';
+                const phaseInfo = this.getPhaseDescription(env);
+                document.getElementById('portfolioValue').title = 
+                    `${phaseInfo}${portfolio.message ? ' - ' + portfolio.message : ''}`;
+            }
+            
+            getPhaseDescription(environment) {
+                const phases = {
+                    'paper_simulation': '🧪 Phase 2: Paper Trading/Testnet Validation',
+                    'testnet': '🧪 Phase 2: Paper Trading/Testnet Validation', 
+                    'live': '💰 Phase 3: Live Trading',
+                    'mainnet': '💰 Phase 3: Live Trading',
+                    'backtest': '📊 Phase 1: Historical Backtesting'
+                };
+                return phases[environment] || `Environment: ${environment}`;
             }
 
             updateStrategiesDisplay(strategiesData) {

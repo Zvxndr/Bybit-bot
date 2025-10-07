@@ -213,7 +213,7 @@ Minimum Requirements:
       "score_threshold": 75
     },
     "validation_method": "walk_forward",
-    "initial_capital": 50000,
+    "initial_capital": 10000,
     "include_slippage": true,
     "stress_test": false
   }

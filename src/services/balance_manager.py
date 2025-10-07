@@ -28,10 +28,11 @@ class MultiEnvironmentBalanceManager:
                 'active': False  # Start with testnet only for safety
             },
             'paper': {
-                'initial_balance': float(os.getenv('PAPER_TRADING_BALANCE', '100000')),
-                'current_balance': float(os.getenv('PAPER_TRADING_BALANCE', '100000')),
+                'initial_balance': float(os.getenv('PAPER_TRADING_BALANCE', '10000')),  # Use config base_balance
+                'current_balance': float(os.getenv('PAPER_TRADING_BALANCE', '10000')),
                 'trades': [],
-                'active': True
+                'active': True,
+                'phase': 'Phase 2: Paper Trading/Testnet Validation'
             }
         }
         
