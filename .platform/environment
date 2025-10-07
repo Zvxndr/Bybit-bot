@@ -1,0 +1,5 @@
+# Force DigitalOcean to use Docker container only
+# Disable Python auto-detection and module execution
+export DISABLE_COLLECTSTATIC=1
+export PYTHONPATH=/app
+export PYTHONUNBUFFERED=1
