@@ -221,7 +221,8 @@ class TradingAPI:
             
             # Calculate current paper balance based on strategy performance
             current_balance = paper_balance + total_paper_pnl
-            unrealized = random.uniform(-50, 100) if paper_strategy_count > 0 else 0
+            # Use actual paper PnL as unrealized PnL, not random values
+            unrealized = total_paper_pnl
             
         except Exception:
             # Fallback if database unavailable

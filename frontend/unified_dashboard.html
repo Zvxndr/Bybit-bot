@@ -2203,7 +2203,7 @@
                             score_threshold: parseFloat(document.getElementById('thresholdRange')?.value || 75)
                         },
                         validation_method: document.getElementById('validationMethod')?.value || 'walk_forward',
-                        initial_capital: parseInt(document.getElementById('initialCapital')?.value || 50000),
+                        initial_capital: parseInt(document.getElementById('initialCapital')?.value || 10000),
                         include_slippage: document.getElementById('includeSlippage')?.checked || true,
                         stress_test: document.getElementById('stressTest')?.checked || false
                     };
@@ -2444,8 +2444,8 @@
                                         <div class="col-md-6">
                                             <label class="form-label">Initial Capital (USDT)</label>
                                             <select class="form-select" id="initialCapital">
-                                                <option value="10000">$10,000</option>
-                                                <option value="50000" selected>$50,000</option>
+                                                <option value="10000" selected>$10,000 (Standard)</option>
+                                                <option value="50000">$50,000</option>
                                                 <option value="100000">$100,000</option>
                                                 <option value="custom">Custom Amount</option>
                                             </select>
