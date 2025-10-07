@@ -287,49 +287,40 @@ class TradingAPI:
     async def get_strategies(self) -> Dict[str, Any]:
         """Get all strategies across pipeline phases"""
         try:
-            # This would integrate with your strategy management system
+            # Production-ready strategy management
+            if not self.api_connected:
+                # Return empty data in paper mode - no fake data
+                return {
+                    "discovery": [],
+                    "paper": [], 
+                    "live": [],
+                    "message": "Connect API credentials to view live strategies"
+                }
+            
+            # TODO: Integrate with your actual strategy database
+            # This would query your strategy management system
+            strategies = await self._fetch_strategies_from_database()
+            
             return {
-                "discovery": [
-                    {
-                        "id": "STRAT_001",
-                        "phase": "discovery",
-                        "symbol": "BTCUSDT",
-                        "sharpe": 2.1,
-                        "win_rate": 68,
-                        "max_drawdown": 8.5,
-                        "days_in_phase": 3,
-                        "progress": 21
-                    }
-                ],
-                "paper": [
-                    {
-                        "id": "STRAT_002", 
-                        "phase": "paper",
-                        "symbol": "ETHUSDT",
-                        "sharpe": 1.8,
-                        "win_rate": 72,
-                        "max_drawdown": 12.1,
-                        "days_in_phase": 8,
-                        "progress": 57,
-                        "paper_pnl": 4.2
-                    }
-                ],
-                "live": [
-                    {
-                        "id": "STRAT_003",
-                        "phase": "live", 
-                        "symbol": "ADAUSDT",
-                        "sharpe": 2.3,
-                        "win_rate": 75,
-                        "max_drawdown": 6.8,
-                        "allocation": 15,
-                        "live_pnl": 8.7
-                    }
-                ]
+                "discovery": strategies.get("discovery", []),
+                "paper": strategies.get("paper", []),
+                "live": strategies.get("live", []),
+                "total_count": len(strategies.get("discovery", [])) + len(strategies.get("paper", [])) + len(strategies.get("live", []))
             }
         except Exception as e:
             logger.error(f"Strategies fetch error: {e}")
-            return {"discovery": [], "paper": [], "live": []}
+            return {"discovery": [], "paper": [], "live": [], "error": str(e)}
+    
+    async def _fetch_strategies_from_database(self):
+        """Fetch strategies from database - placeholder for production implementation"""
+        # TODO: Replace with actual database queries
+        # Example structure for production:
+        # async with db.get_session() as session:
+        #     strategies = await session.execute(select(Strategy).where(Strategy.active == True))
+        #     return self._format_strategies_by_phase(strategies.scalars().all())
+        
+        logger.info("Strategy database integration pending - returning empty data")
+        return {"discovery": [], "paper": [], "live": []}
     
     async def get_performance_data(self) -> Dict[str, Any]:
         """Get comprehensive performance analytics"""
@@ -361,31 +352,40 @@ class TradingAPI:
     async def get_activity_feed(self) -> Dict[str, Any]:
         """Get recent activity feed"""
         try:
-            # This would come from your activity logging system
-            activities = [
-                {
-                    "timestamp": "10:30",
-                    "type": "trade",
-                    "message": "Opened BTC/USDT position",
-                    "severity": "info"
-                },
-                {
-                    "timestamp": "09:45",
-                    "type": "strategy",
-                    "message": "STRAT_001 promoted to paper trading",
-                    "severity": "success"
-                },
-                {
-                    "timestamp": "09:12",
-                    "type": "risk",
-                    "message": "Risk level adjusted to moderate",
-                    "severity": "warning"
+            if not self.api_connected:
+                # Return system initialization message only
+                return {
+                    "activities": [
+                        {
+                            "timestamp": datetime.now().strftime("%H:%M"),
+                            "type": "system",
+                            "message": "System initialized in paper mode - connect API for live activities",
+                            "severity": "info",
+                            "category": "system"
+                        }
+                    ]
                 }
-            ]
+            
+            # TODO: Integrate with your actual activity logging system
+            activities = await self._fetch_recent_activities()
             return {"activities": activities}
+            
         except Exception as e:
             logger.error(f"Activity feed error: {e}")
             return {"activities": []}
+    
+    async def _fetch_recent_activities(self):
+        """Fetch activities from logging system - placeholder for production"""
+        # TODO: Replace with actual activity log queries
+        # Example structure for production:
+        # async with db.get_session() as session:
+        #     activities = await session.execute(
+        #         select(ActivityLog).order_by(ActivityLog.created_at.desc()).limit(20)
+        #     )
+        #     return [self._format_activity(a) for a in activities.scalars()]
+        
+        logger.info("Activity logging system integration pending")
+        return []
     
     async def start_backtest(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Start a new backtest"""
@@ -506,6 +506,45 @@ class TradingAPI:
         except Exception as e:
             logger.error(f"Toggle trading error: {e}")
             return {"success": False, "error": str(e)}
+    
+    async def get_pipeline_metrics(self) -> Dict[str, Any]:
+        """Get AI pipeline performance metrics"""
+        try:
+            if not self.api_connected:
+                return {
+                    "strategies_tested_today": 0,
+                    "candidates_found": 0,
+                    "success_rate": 0.0,
+                    "graduation_rate": 0.0,
+                    "pipeline_status": "offline",
+                    "message": "Pipeline metrics available with API connection"
+                }
+            
+            # TODO: Integrate with actual pipeline metrics system
+            metrics = await self._calculate_pipeline_metrics()
+            return metrics
+            
+        except Exception as e:
+            logger.error(f"Pipeline metrics error: {e}")
+            return {
+                "strategies_tested_today": 0,
+                "candidates_found": 0, 
+                "success_rate": 0.0,
+                "graduation_rate": 0.0,
+                "pipeline_status": "error"
+            }
+    
+    async def _calculate_pipeline_metrics(self):
+        """Calculate real pipeline metrics - production placeholder"""
+        # TODO: Replace with actual metrics calculation from database
+        logger.info("Pipeline metrics calculation pending - database integration required")
+        return {
+            "strategies_tested_today": 0,
+            "candidates_found": 0,
+            "success_rate": 0.0, 
+            "graduation_rate": 0.0,
+            "pipeline_status": "ready"
+        }
 
 # Initialize trading API
 trading_api = TradingAPI()
@@ -650,6 +689,11 @@ async def get_settings():
         "stop_loss": getattr(trading_api, 'stop_loss', 5.0),
         "take_profit": getattr(trading_api, 'take_profit', 15.0)
     }
+
+@app.get("/api/pipeline-metrics")
+async def get_pipeline_metrics():
+    """Get AI pipeline performance metrics"""
+    return await trading_api.get_pipeline_metrics()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

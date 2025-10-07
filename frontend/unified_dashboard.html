@@ -1125,17 +1125,21 @@
                     const strategies = await fetch('/api/strategies').then(r => r.json());
                     this.updateStrategiesDisplay(strategies);
 
+                    // Load pipeline metrics
+                    const pipelineMetrics = await fetch('/api/pipeline-metrics').then(r => r.json());
+                    this.updatePipelineMetrics(pipelineMetrics);
+
                     // Load performance
                     const performance = await fetch('/api/performance').then(r => r.json());
                     this.updatePerformanceChart(performance);
 
                     // Load activity
                     const activity = await fetch('/api/activity').then(r => r.json());
-                    this.updateActivityFeed(activity);
+                    this.updateActivityFeed(activity.activities);
 
                 } catch (error) {
                     console.error('Error loading dashboard data:', error);
-                    this.showPaperModeData();
+                    this.showConnectionError();
                 }
             }
 
@@ -1150,10 +1154,11 @@
                     portfolio.active_strategies || 0;
             }
 
-            updateStrategiesDisplay(strategies) {
-                const discovery = strategies.filter(s => s.phase === 'discovery');
-                const paper = strategies.filter(s => s.phase === 'paper');
-                const live = strategies.filter(s => s.phase === 'live');
+            updateStrategiesDisplay(strategiesData) {
+                // Handle both array format (legacy) and object format (new API)
+                const discovery = strategiesData.discovery || strategiesData.filter?.(s => s.phase === 'discovery') || [];
+                const paper = strategiesData.paper || strategiesData.filter?.(s => s.phase === 'paper') || [];
+                const live = strategiesData.live || strategiesData.filter?.(s => s.phase === 'live') || [];
 
                 // Update counts
                 document.getElementById('discoveryCount').textContent = discovery.length;
@@ -1185,11 +1190,11 @@
                 }
 
                 container.innerHTML = strategies.map(strategy => {
-                    const strategyId = strategy.id || this.generateStrategyId(strategy);
-                    const asset = strategyId.split('_')[0] || 'BTC';
-                    const daysInPhase = strategy.days_in_phase || Math.floor(Math.random() * 15 + 1);
-                    const consistency = strategy.consistency || (Math.random() * 20 + 80).toFixed(1);
-                    const graduationCountdown = strategy.graduation_countdown || Math.floor(Math.random() * 10 + 1);
+                    const strategyId = strategy.id || 'UNKNOWN';
+                    const asset = strategyId.split('_')[0] || 'UNKNOWN';
+                    const daysInPhase = strategy.days_in_phase || 0;
+                    const consistency = strategy.consistency || 0;
+                    const graduationCountdown = strategy.graduation_countdown || null;
                     
                     return `
                         <div class="strategy-card">
@@ -1208,19 +1213,19 @@
                             <div class="strategy-performance-grid">
                                 <div class="performance-metric">
                                     <span class="metric-label">Sharpe</span>
-                                    <strong class="metric-value">${(strategy.sharpe || Math.random() * 2 + 1).toFixed(2)}</strong>
+                                    <strong class="metric-value">${(strategy.sharpe || 0).toFixed(2)}</strong>
                                 </div>
                                 <div class="performance-metric">
                                     <span class="metric-label">Win Rate</span>
-                                    <strong class="metric-value">${Math.round(strategy.win_rate || Math.random() * 30 + 60)}%</strong>
+                                    <strong class="metric-value">${Math.round(strategy.win_rate || 0)}%</strong>
                                 </div>
                                 <div class="performance-metric">
                                     <span class="metric-label">Max DD</span>
-                                    <strong class="metric-value">${(strategy.max_drawdown || Math.random() * 10 + 5).toFixed(1)}%</strong>
+                                    <strong class="metric-value">${(strategy.max_drawdown || 0).toFixed(1)}%</strong>
                                 </div>
                                 <div class="performance-metric">
                                     <span class="metric-label">P&L</span>
-                                    <strong class="metric-value">$${(strategy.pnl || Math.random() * 1000).toFixed(0)}</strong>
+                                    <strong class="metric-value">$${(strategy.pnl || 0).toFixed(0)}</strong>
                                 </div>
                             </div>
 
@@ -1228,27 +1233,33 @@
                             <div class="phase-info">
                                 <div class="phase-detail">
                                     <i class="bi bi-calendar"></i>
-                                    <span>Days in ${this.getPhaseDisplayName(containerId)}: ${daysInPhase}</span>
+                                    <span>Days in ${this.getPhaseDisplayName(containerId)}: ${daysInPhase || 0}</span>
                                 </div>
                                 <div class="phase-detail">
                                     <i class="bi bi-graph-up"></i>
-                                    <span>Consistency: ${consistency}%</span>
+                                    <span>Consistency: ${consistency || 0}%</span>
                                 </div>
                             </div>
 
-                            <!-- Graduation Countdown (for non-live strategies) -->
+                            <!-- Graduation Status -->
                             ${containerId !== 'liveStrategies' ? `
-                                <div class="graduation-countdown">
-                                    <div class="countdown-progress">
-                                        <div class="progress-bar" style="width: ${(15 - graduationCountdown) * 6.67}%"></div>
+                                ${graduationCountdown ? `
+                                    <div class="graduation-countdown">
+                                        <div class="countdown-progress">
+                                            <div class="progress-bar" style="width: ${Math.max(0, (15 - graduationCountdown) * 6.67)}%"></div>
+                                        </div>
+                                        <span class="countdown-text">
+                                            ${graduationCountdown < 2 ? 
+                                                `🎯 Graduation in ${graduationCountdown} day${graduationCountdown > 1 ? 's' : ''}` :
+                                                `📊 ${graduationCountdown} days until review`
+                                            }
+                                        </span>
                                     </div>
-                                    <span class="countdown-text">
-                                        ${graduationCountdown < 2 ? 
-                                            `🎯 Graduation in ${graduationCountdown} day${graduationCountdown > 1 ? 's' : ''}` :
-                                            `📊 ${graduationCountdown} days until review`
-                                        }
-                                    </span>
-                                </div>
+                                ` : `
+                                    <div class="graduation-countdown">
+                                        <span class="countdown-text">📊 Performance monitoring active</span>
+                                    </div>
+                                `}
                             ` : `
                                 <div class="live-status">
                                     <i class="bi bi-lightning-fill text-success"></i>
@@ -1261,12 +1272,9 @@
             }
 
             generateStrategyId(strategy) {
-                const assets = ['BTC', 'ETH', 'ADA', 'SOL', 'DOT'];
-                const types = ['MR', 'TR', 'SC', 'BR', 'MA'];
-                const asset = assets[Math.floor(Math.random() * assets.length)];
-                const type = types[Math.floor(Math.random() * types.length)];
-                const id = Math.random().toString(36).substr(2, 5).toUpperCase();
-                return `${asset}_${type}_${id}`;
+                // Production strategy naming engine placeholder
+                // TODO: Implement actual strategy naming algorithm
+                return 'STRATEGY_UNKNOWN';
             }
 
             getStatusIcon(status) {
@@ -1291,31 +1299,33 @@
             updateActivityFeed(activities) {
                 const feed = document.getElementById('activityFeed');
                 
-                if (!activities.length) {
-                    // AI-powered automated decision logging
-                    activities = [
-                        { type: 'info', message: 'System initialized in paper mode', time: 'Just now', category: 'system' },
-                        { type: 'success', message: '🤖 Auto-graduated BTC_MR_A4F2D to paper trading (Sharpe: 1.89)', time: '2 min ago', category: 'graduation' },
-                        { type: 'info', message: '🔍 AI discovered new candidate: ADA_BR_X9L2K (73.4% win rate)', time: '3 min ago', category: 'discovery' },
-                        { type: 'warning', message: '⚠️ Strategy SOL_MA_F6P8R flagged for review (consistency dropped to 67.8%)', time: '5 min ago', category: 'monitoring' },
-                        { type: 'success', message: '📈 Pipeline processed 15 backtests, 3 candidates found', time: '7 min ago', category: 'batch' },
-                        { type: 'info', message: '🎯 Auto-named new strategy: ETH_TR_B8K3L', time: '9 min ago', category: 'naming' },
-                        { type: 'warning', message: '📊 Market volatility spike detected, adjusting risk parameters', time: '12 min ago', category: 'risk' },
-                        { type: 'success', message: '🚀 Strategy BTC_SC_C1M9P promoted to live trading', time: '15 min ago', category: 'graduation' },
-                        { type: 'info', message: '🔄 Pipeline auto-refresh: 47 strategies tested today', time: '18 min ago', category: 'system' },
-                        { type: 'success', message: '✅ All live strategies passed safety checks', time: '20 min ago', category: 'safety' }
-                    ];
+                if (!activities || !activities.length) {
+                    // Show empty state for production
+                    feed.innerHTML = `
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-message">No recent activity</div>
+                                <div class="activity-meta">
+                                    <span class="activity-time">Connect API for live updates</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return;
                 }
 
                 feed.innerHTML = activities.slice(0, 10).map(activity => `
                     <div class="activity-item ${activity.category ? 'category-' + activity.category : ''}">
-                        <div class="activity-icon bg-${activity.type}">
-                            <i class="bi bi-${this.getActivityIcon(activity.type)}"></i>
+                        <div class="activity-icon bg-${activity.type || 'info'}">
+                            <i class="bi bi-${this.getActivityIcon(activity.type || 'info')}"></i>
                         </div>
                         <div class="activity-content">
                             <div class="activity-message">${activity.message}</div>
                             <div class="activity-meta">
-                                <span class="activity-time">${activity.time}</span>
+                                <span class="activity-time">${activity.time || activity.timestamp}</span>
                                 ${activity.category ? `<span class="activity-category">${this.getCategoryDisplayName(activity.category)}</span>` : ''}
                             </div>
                         </div>
@@ -1347,97 +1357,61 @@
                 return icons[type] || 'info-circle';
             }
 
-            showPaperModeData() {
-                // Show sample data in paper mode
-                const sampleStrategies = [
-                    { 
-                        id: 'BTC_MR_A4F2D', 
-                        phase: 'discovery', 
-                        status: 'passing', 
-                        win_rate: 73.2, 
-                        sharpe: 1.89, 
-                        pnl: 456, 
-                        trades: 23,
-                        days_in_phase: 12,
-                        consistency: 94.1,
-                        graduation_countdown: 2,
-                        max_drawdown: 8.4
-                    },
-                    { 
-                        id: 'ETH_TR_B8K3L', 
-                        phase: 'paper', 
-                        status: 'watching', 
-                        win_rate: 68.1, 
-                        sharpe: 1.65, 
-                        pnl: 234, 
-                        trades: 31,
-                        days_in_phase: 8,
-                        consistency: 87.3,
-                        graduation_countdown: 7,
-                        max_drawdown: 12.1
-                    },
-                    { 
-                        id: 'BTC_SC_C1M9P', 
-                        phase: 'live', 
-                        status: 'passing', 
-                        win_rate: 71.8, 
-                        sharpe: 2.14, 
-                        pnl: 789, 
-                        trades: 18,
-                        days_in_phase: 45,
-                        consistency: 91.7,
-                        max_drawdown: 6.8
-                    },
-                    { 
-                        id: 'ADA_BR_X9L2K', 
-                        phase: 'discovery', 
-                        status: 'passing', 
-                        win_rate: 69.4, 
-                        sharpe: 1.72, 
-                        pnl: 312, 
-                        trades: 19,
-                        days_in_phase: 5,
-                        consistency: 89.2,
-                        graduation_countdown: 10,
-                        max_drawdown: 9.7
-                    },
-                    { 
-                        id: 'SOL_MA_F6P8R', 
-                        phase: 'paper', 
-                        status: 'failing', 
-                        win_rate: 52.3, 
-                        sharpe: 0.84, 
-                        pnl: -156, 
-                        trades: 27,
-                        days_in_phase: 14,
-                        consistency: 67.8,
-                        graduation_countdown: null,
-                        max_drawdown: 18.9
-                    }
-                ];
-
-                this.updateStrategiesDisplay(sampleStrategies);
+            showConnectionError() {
+                // Show connection error state - no fake data
                 this.updatePortfolioStats({
-                    total_value: 10000,
-                    pnl: 1479,
-                    win_rate: 71.0,
-                    active_strategies: 3
+                    total_value: 0,
+                    pnl: 0,
+                    win_rate: 0,
+                    active_strategies: 0,
+                    message: "API connection required"
                 });
 
-                // Update pipeline metrics
+                this.updateStrategiesDisplay([]);
+                
                 this.updatePipelineMetrics({
-                    strategies_tested_today: 47,
-                    candidates_found: 12,
-                    success_rate: 2.3,
-                    graduation_rate: 68
+                    strategies_tested_today: 0,
+                    candidates_found: 0,
+                    success_rate: 0,
+                    graduation_rate: 0,
+                    message: "Connect API for pipeline data"
                 });
             }
 
             updatePipelineMetrics(metrics) {
                 document.getElementById('strategiesTestedToday').textContent = metrics.strategies_tested_today || 0;
                 document.getElementById('candidatesFound').textContent = metrics.candidates_found || 0;
-                document.getElementById('successRate').textContent = `${metrics.success_rate || 0}%`;
-                document.getElementById('graduationRate').textContent = `${metrics.graduation_rate || 0}%`;
+                document.getElementById('successRate').textContent = `${(metrics.success_rate || 0).toFixed(1)}%`;
+                document.getElementById('graduationRate').textContent = `${(metrics.graduation_rate || 0).toFixed(0)}%`;
+                
+                // Show message if API not connected
+                if (metrics.message) {
+                    console.info('Pipeline metrics:', metrics.message);
+                }
+            }
+
+            updatePerformanceChart(performance) {
+                if (!this.charts.performance) return;
+                
+                // Handle empty performance data in production
+                if (!performance || !performance.daily_returns || performance.daily_returns.length === 0) {
+                    // Clear chart for empty state
+                    this.charts.performance.data.labels = [];
+                    this.charts.performance.data.datasets[0].data = [];
+                    this.charts.performance.update();
+                    return;
+                }
+                
+                // Update with real performance data
+                const labels = performance.daily_returns.map((_, index) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (performance.daily_returns.length - 1 - index));
+                    return date.toLocaleDateString();
+                });
+                
+                this.charts.performance.data.labels = labels;
+                this.charts.performance.data.datasets[0].data = performance.daily_returns;
+                this.charts.performance.update();
             }
 
             async updateData() {
@@ -1452,23 +1426,16 @@
             }
 
             simulateStrategyProgression() {
-                // Random chance to show a strategy progression animation
-                if (Math.random() < 0.1) { // 10% chance every 5 seconds
-                    this.showProgressionNotification();
-                }
+                // Production: Real strategy progression events would come via WebSocket
+                // No fake notifications in production mode
+                return;
             }
 
-            showProgressionNotification() {
-                const notifications = [
-                    '🎯 BTC_MR_A4F2D graduated to Paper Trading!',
-                    '🚀 ETH_TR_B8K3L promoted to Live Trading!',
-                    '🔍 New strategy discovered: SOL_BR_X7M9N',
-                    '⚠️ ADA_SC_P2L8K moved to monitoring phase',
-                    '✅ DOT_MA_K4R6T passed graduation criteria'
-                ];
-                
-                const message = notifications[Math.floor(Math.random() * notifications.length)];
-                this.showToastNotification(message, 'success');
+            showProgressionNotification(message, type = 'info') {
+                // Only show real notifications from WebSocket events
+                if (message) {
+                    this.showToastNotification(message, type);
+                }
             }
 
             showToastNotification(message, type = 'info') {
