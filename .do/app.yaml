@@ -8,6 +8,7 @@ services:
     deploy_on_push: true
   dockerfile_path: Dockerfile
   buildpack_stack: container
+  run_command: "python main.py"
   instance_count: 1
   instance_size_slug: basic-xxs
   http_port: 8000
