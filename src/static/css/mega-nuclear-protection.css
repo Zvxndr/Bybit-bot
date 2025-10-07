@@ -1,0 +1,199 @@
+/*
+🚨🚨🚨 MEGA-NUCLEAR NAVIGATION PROTECTION SYSTEM 🚨🚨🚨
+ULTIMATE CSS OVERRIDE - MAXIMUM FORCE PROTECTION
+Generated: 2025-01-04 - EMERGENCY TEMPLATE SYNCHRONIZATION
+*/
+
+/* 
+MEGA-NUCLEAR MISSION: ELIMINATE ALL TEMPLATE CONFLICTS
+- Disable conflicting Fire Dashboard navigation
+- Disable conflicting Professional Dashboard navigation  
+- Protect AdminLTE navigation system with maximum force
+- Synchronize all template navigation systems
+*/
+
+/* 🚨 MEGA-NUCLEAR LEVEL 1: DISABLE ALL FIRE DASHBOARD CONFLICTS 🚨 */
+.fire-dashboard,
+.dashboard-redesign,
+.fire-dashboard *,
+.dashboard-redesign *,
+.fire-nav-button,
+.fire-content-screen,
+.admin-panel-compact,
+.backtest-panel-compact,
+.ultra-card,
+.immediate-content,
+.compact-header {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    z-index: -999 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* 🚨 MEGA-NUCLEAR LEVEL 2: DISABLE ALL PROFESSIONAL DASHBOARD CONFLICTS 🚨 */
+.professional-dashboard,
+.glass-box-dashboard,
+.professional-dashboard *,
+.glass-box-dashboard *,
+.professional-nav-link,
+.professional-content-screen,
+.sidebar-brand,
+.nav-button[data-screen],
+.content-screen {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    z-index: -999 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* 🚨 MEGA-NUCLEAR LEVEL 3: PROTECT ADMINLTE NAVIGATION WITH MAXIMUM FORCE 🚨 */
+
+/* Force hide ALL content sections by default with ULTIMATE specificity */
+html body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section,
+html body.hold-transition.sidebar-mini .wrapper .content-wrapper .content-section,
+html body.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section,
+html body.sidebar-mini .wrapper .content-wrapper .content-section,
+html body .wrapper .content-wrapper .content-section,
+html body .content-wrapper .content-section,
+html .wrapper .content-wrapper .content-section,
+html .content-wrapper .content-section,
+html .content-section,
+body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section,
+body.hold-transition.sidebar-mini .wrapper .content-wrapper .content-section,
+body.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section,
+body.sidebar-mini .wrapper .content-wrapper .content-section,
+body .wrapper .content-wrapper .content-section,
+body .content-wrapper .content-section,
+.wrapper .content-wrapper .content-section,
+.content-wrapper .content-section,
+.content-section {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    z-index: -999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    transform: translateX(-100vw) !important;
+    clip: rect(0,0,0,0) !important;
+}
+
+/* Force show ONLY active AdminLTE sections with ULTIMATE specificity */
+html body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section.active,
+html body.hold-transition.sidebar-mini .wrapper .content-wrapper .content-section.active,
+html body.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section.active,
+html body.sidebar-mini .wrapper .content-wrapper .content-section.active,
+html body .wrapper .content-wrapper .content-section.active,
+html body .content-wrapper .content-section.active,
+html .wrapper .content-wrapper .content-section.active,
+html .content-wrapper .content-section.active,
+html .content-section.active,
+body.hold-transition.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section.active,
+body.hold-transition.sidebar-mini .wrapper .content-wrapper .content-section.active,
+body.sidebar-mini.layout-fixed .wrapper .content-wrapper .content-section.active,
+body.sidebar-mini .wrapper .content-wrapper .content-section.active,
+body .wrapper .content-wrapper .content-section.active,
+body .content-wrapper .content-section.active,
+.wrapper .content-wrapper .content-section.active,
+.content-wrapper .content-section.active,
+.content-section.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: 10 !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    background: transparent !important;
+    transform: none !important;
+    clip: auto !important;
+}
+
+/* 🚨 MEGA-NUCLEAR LEVEL 4: DISABLE ALL CONFLICTING JAVASCRIPT FUNCTIONS 🚨 */
+
+/* Prevent any other navigation systems from working */
+[onclick*="switchSection"]:not([onclick*="window.switchToSection"]),
+[onclick*="switchToScreen"],
+[onclick*="showSection"],
+[onclick*="displaySection"],
+[data-screen]:not([data-section]),
+[data-toggle]:not(.nav-link),
+.nav-button:not(.nav-link) {
+    pointer-events: none !important;
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+/* 🚨 MEGA-NUCLEAR LEVEL 5: EMERGENCY CSS RESET 🚨 */
+
+/* Reset any interfering animations or transitions */
+.content-section,
+.content-section *,
+.nav-link,
+.nav-button {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Force AdminLTE nav links to work properly */
+.nav-sidebar .nav-link[data-section] {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+/* Ensure no hidden elements can interfere */
+[hidden],
+[aria-hidden="true"]:not(.content-section:not(.active)) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 🚨 MEGA-NUCLEAR SUCCESS INDICATOR 🚨 */
+body::before {
+    content: "🚨 MEGA-NUCLEAR PROTECTION ACTIVE 🚨";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(90deg, #ff0000, #ff6b35, #00ffaa);
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 2px;
+    z-index: 99999;
+    animation: mega-nuclear-pulse 2s infinite;
+}
+
+@keyframes mega-nuclear-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
