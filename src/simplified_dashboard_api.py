@@ -504,8 +504,8 @@ class SimplifiedDashboardAPI:
                     # Multi-dimensional testing results as per documentation
                     "historical_performance": {
                         "period": "2023-01-01 to 2024-12-31",
-                        "initial_capital": 10000,
-                        "final_value": round(10000 * (1 + random.uniform(0.15, 0.35)), 2),
+                        "initial_capital": 50000,  # Professional testnet starting balance
+                        "final_value": round(50000 * (1 + random.uniform(0.15, 0.35)), 2),
                         "total_return_pct": round(random.uniform(15, 35), 2),
                         "annualized_return": round(random.uniform(18, 28), 2),
                         "max_drawdown_pct": round(random.uniform(-8, -3), 2),

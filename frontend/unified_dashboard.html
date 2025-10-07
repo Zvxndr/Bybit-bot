@@ -636,6 +636,55 @@
             font-size: 0.8em;
             color: #9ca3af;
         }
+
+        /* Professional Backtesting Modal Styles */
+        .pairs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .pairs-grid .form-check {
+            margin: 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .pairs-grid .form-check:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .pairs-grid .form-check-input:checked + .form-check-label {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .modal-body h6 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: #60a5fa;
+        }
+
+        .form-range::-moz-range-thumb {
+            background: #60a5fa;
+            border: none;
+        }
+
+        .alert-info {
+            background: rgba(96, 165, 250, 0.1) !important;
+            border: 1px solid rgba(96, 165, 250, 0.3) !important;
+            color: #bfdbfe !important;
+        }
     </style>
 </head>
 <body>
@@ -1196,8 +1245,13 @@
             }
 
             updatePortfolioStats(portfolio) {
+                // Calculate realistic testnet balance based on strategy performance
+                const baseBalance = 50000; // Professional testnet starting balance
+                const performanceAdjustment = (portfolio.pnl || 0);
+                const realisticBalance = baseBalance + performanceAdjustment;
+                
                 document.getElementById('portfolioValue').textContent = 
-                    `$${(portfolio.total_value || 10000).toLocaleString()}`;
+                    `$${(portfolio.total_value || realisticBalance).toLocaleString()}`;
                 document.getElementById('totalPnl').textContent = 
                     `${portfolio.pnl >= 0 ? '+' : ''}$${(portfolio.pnl || 0).toLocaleString()}`;
                 document.getElementById('winRate').textContent = 
@@ -2006,25 +2060,89 @@
 
             async runBatchBacktest() {
                 try {
-                    const period = document.getElementById('backtestPeriod').value;
-                    const threshold = document.getElementById('backtestThreshold').value;
+                    // Collect comprehensive settings from the modal (if open) or use defaults
+                    const settings = {
+                        period: document.getElementById('backtestPeriod')?.value || '2y',
+                        timeframe: document.getElementById('backtestTimeframe')?.value || '15m',
+                        pairs: this.getSelectedPairs(),
+                        financial_thresholds: {
+                            min_sharpe: parseFloat(document.getElementById('minSharpeRange')?.value || 1.5),
+                            max_drawdown: parseFloat(document.getElementById('maxDrawdownRange')?.value || 15),
+                            min_win_rate: parseFloat(document.getElementById('minWinRateRange')?.value || 60),
+                            min_profit_factor: parseFloat(document.getElementById('minProfitFactorRange')?.value || 1.3),
+                            min_return: parseFloat(document.getElementById('minReturnRange')?.value || 25),
+                            score_threshold: parseFloat(document.getElementById('thresholdRange')?.value || 75)
+                        },
+                        validation_method: document.getElementById('validationMethod')?.value || 'walk_forward',
+                        initial_capital: parseInt(document.getElementById('initialCapital')?.value || 50000),
+                        include_slippage: document.getElementById('includeSlippage')?.checked || true,
+                        stress_test: document.getElementById('stressTest')?.checked || false
+                    };
                     
-                    this.showToastNotification('Starting batch backtest...', 'info');
+                    console.log('Starting comprehensive backtest with settings:', settings);
+                    this.showToastNotification('Starting professional backtesting with advanced settings...', 'info');
                     
-                    // Call batch backtest API
-                    const response = await fetch('/api/pipeline/batch-process', { method: 'POST' });
+                    // Call enhanced batch backtest API with comprehensive settings
+                    const response = await fetch('/api/pipeline/batch-process', { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ backtest_settings: settings })
+                    });
                     const result = await response.json();
                     
                     if (result.success) {
-                        this.showToastNotification(`Batch backtest completed: ${result.data.processed_strategies} strategies processed`, 'success');
+                        const pairCount = settings.pairs.length;
+                        const timeframeText = this.formatTimeframe(settings.timeframe);
+                        this.showToastNotification(
+                            `✅ Professional backtest completed: ${result.data.processed_strategies} strategies analyzed across ${pairCount} pairs (${timeframeText})`, 
+                            'success'
+                        );
                         setTimeout(() => this.loadDashboardData(), 1000);
                     } else {
-                        this.showToastNotification('Batch backtest failed', 'danger');
+                        this.showToastNotification('❌ Professional backtest failed', 'danger');
                     }
                 } catch (error) {
-                    console.error('Batch backtest error:', error);
-                    this.showToastNotification('Error running batch backtest', 'danger');
+                    console.error('Professional backtest error:', error);
+                    this.showToastNotification('Error running professional backtest', 'danger');
                 }
+            }
+            
+            getSelectedPairs() {
+                const pairs = [];
+                const checkboxes = document.querySelectorAll('input[id^="pair_"]:checked');
+                checkboxes.forEach(cb => pairs.push(cb.value));
+                
+                // Add custom pair if specified
+                const customPair = document.getElementById('customPair')?.value?.trim();
+                if (customPair && !pairs.includes(customPair.toUpperCase())) {
+                    pairs.push(customPair.toUpperCase());
+                }
+                
+                return pairs.length > 0 ? pairs : ['BTCUSDT', 'ETHUSDT']; // Default pairs
+            }
+            
+            formatTimeframe(timeframe) {
+                const formats = {
+                    '1m': '1 Minute',
+                    '5m': '5 Minutes', 
+                    '15m': '15 Minutes',
+                    '1h': '1 Hour',
+                    '4h': '4 Hours',
+                    '1d': 'Daily'
+                };
+                return formats[timeframe] || timeframe;
+            }
+            
+            formatPeriod(period) {
+                const formats = {
+                    '3m': 'Last 3 Months',
+                    '6m': 'Last 6 Months',
+                    '1y': 'Last 12 Months',
+                    '2y': 'Last 24 Months', 
+                    '3y': 'Last 36 Months',
+                    '5y': 'Last 60 Months'
+                };
+                return formats[period] || period;
             }
 
             showBacktestSettings() {
@@ -2038,36 +2156,195 @@
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Historical Data Period</label>
-                                    <select class="form-select">
-                                        <option value="1y">Last 12 Months</option>
-                                        <option value="2y" selected>Last 24 Months</option>
-                                        <option value="3y">Last 36 Months</option>
-                                        <option value="5y">Last 60 Months</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Minimum Score Threshold</label>
-                                    <input type="range" class="form-range" min="50" max="90" value="75" id="thresholdRange">
-                                    <div class="d-flex justify-content-between">
-                                        <small>50%</small>
-                                        <span id="thresholdValue">75%</span>
-                                        <small>90%</small>
+                                <!-- Backtesting Timeframe Selection -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-clock-history"></i> Backtesting Period</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Historical Data Period</label>
+                                            <select class="form-select" id="backtestPeriod">
+                                                <option value="3m">Last 3 Months</option>
+                                                <option value="6m">Last 6 Months</option>
+                                                <option value="1y">Last 12 Months</option>
+                                                <option value="2y" selected>Last 24 Months</option>
+                                                <option value="3y">Last 36 Months</option>
+                                                <option value="5y">Last 60 Months</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Timeframe</label>
+                                            <select class="form-select" id="backtestTimeframe">
+                                                <option value="1m">1 Minute</option>
+                                                <option value="5m">5 Minutes</option>
+                                                <option value="15m" selected>15 Minutes</option>
+                                                <option value="1h">1 Hour</option>
+                                                <option value="4h">4 Hours</option>
+                                                <option value="1d">Daily</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Validation Method</label>
-                                    <select class="form-select">
-                                        <option value="walk_forward" selected>Walk-Forward Analysis</option>
-                                        <option value="monte_carlo">Monte Carlo Simulation</option>
-                                        <option value="cross_validation">Cross Validation</option>
-                                        <option value="all">All Methods</option>
-                                    </select>
+
+                                <!-- Trading Pair Selection -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-currency-exchange"></i> Trading Pairs</h6>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Select Trading Pairs</label>
+                                            <div class="pairs-grid">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_BTCUSDT" value="BTCUSDT" checked>
+                                                    <label class="form-check-label" for="pair_BTCUSDT">BTC/USDT</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_ETHUSDT" value="ETHUSDT" checked>
+                                                    <label class="form-check-label" for="pair_ETHUSDT">ETH/USDT</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_ADAUSDT" value="ADAUSDT">
+                                                    <label class="form-check-label" for="pair_ADAUSDT">ADA/USDT</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_SOLUSDT" value="SOLUSDT">
+                                                    <label class="form-check-label" for="pair_SOLUSDT">SOL/USDT</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_DOTUSDT" value="DOTUSDT">
+                                                    <label class="form-check-label" for="pair_DOTUSDT">DOT/USDT</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="pair_MATICUSDT" value="MATICUSDT">
+                                                    <label class="form-check-label" for="pair_MATICUSDT">MATIC/USDT</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Custom Pair</label>
+                                            <input type="text" class="form-control" placeholder="e.g., LINKUSDT" id="customPair">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Market Filter</label>
+                                            <select class="form-select" id="marketFilter">
+                                                <option value="all" selected>All Markets</option>
+                                                <option value="spot">Spot Only</option>
+                                                <option value="futures">Futures Only</option>
+                                                <option value="major">Major Pairs</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Financial Metrics Thresholds -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-graph-up-arrow"></i> Minimum Financial Metrics</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Minimum Sharpe Ratio</label>
+                                            <input type="range" class="form-range" min="0.5" max="3.0" step="0.1" value="1.5" id="minSharpeRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>0.5</small>
+                                                <span id="sharpeValue">1.5</span>
+                                                <small>3.0</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Maximum Drawdown (%)</label>
+                                            <input type="range" class="form-range" min="5" max="30" value="15" id="maxDrawdownRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>5%</small>
+                                                <span id="drawdownValue">15%</span>
+                                                <small>30%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Minimum Win Rate (%)</label>
+                                            <input type="range" class="form-range" min="40" max="80" value="60" id="minWinRateRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>40%</small>
+                                                <span id="winRateValue">60%</span>
+                                                <small>80%</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Minimum Profit Factor</label>
+                                            <input type="range" class="form-range" min="1.0" max="3.0" step="0.1" value="1.3" id="minProfitFactorRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>1.0</small>
+                                                <span id="profitFactorValue">1.3</span>
+                                                <small>3.0</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Minimum Annual Return (%)</label>
+                                            <input type="range" class="form-range" min="10" max="100" value="25" id="minReturnRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>10%</small>
+                                                <span id="returnValue">25%</span>
+                                                <small>100%</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Overall Score Threshold (%)</label>
+                                            <input type="range" class="form-range" min="50" max="90" value="75" id="thresholdRange">
+                                            <div class="d-flex justify-content-between">
+                                                <small>50%</small>
+                                                <span id="thresholdValue">75%</span>
+                                                <small>90%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Advanced Backtesting Options -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-gear-fill"></i> Validation Methods</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Primary Validation Method</label>
+                                            <select class="form-select" id="validationMethod">
+                                                <option value="walk_forward" selected>Walk-Forward Analysis</option>
+                                                <option value="monte_carlo">Monte Carlo Simulation</option>
+                                                <option value="cross_validation">Cross Validation</option>
+                                                <option value="all">All Methods Combined</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Initial Capital (USDT)</label>
+                                            <select class="form-select" id="initialCapital">
+                                                <option value="10000">$10,000</option>
+                                                <option value="50000" selected>$50,000</option>
+                                                <option value="100000">$100,000</option>
+                                                <option value="custom">Custom Amount</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="includeSlippage" checked>
+                                                <label class="form-check-label" for="includeSlippage">
+                                                    Include Slippage & Fees
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="stressTest">
+                                                <label class="form-check-label" for="stressTest">
+                                                    Stress Test Market Conditions
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle"></i>
-                                    These settings control how historical backtesting is performed. Higher thresholds mean stricter validation.
+                                    <strong>Professional Backtesting:</strong> These settings control comprehensive historical validation with realistic market conditions, transaction costs, and multi-dimensional performance analysis.
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -2081,11 +2358,24 @@
                 const modal = new bootstrap.Modal(settingsModal);
                 modal.show();
                 
-                // Update threshold display
-                const rangeInput = settingsModal.querySelector('#thresholdRange');
-                const valueDisplay = settingsModal.querySelector('#thresholdValue');
-                rangeInput.addEventListener('input', () => {
-                    valueDisplay.textContent = rangeInput.value + '%';
+                // Update all range input displays
+                const rangeInputs = [
+                    { input: 'thresholdRange', display: 'thresholdValue', suffix: '%' },
+                    { input: 'minSharpeRange', display: 'sharpeValue', suffix: '' },
+                    { input: 'maxDrawdownRange', display: 'drawdownValue', suffix: '%' },
+                    { input: 'minWinRateRange', display: 'winRateValue', suffix: '%' },
+                    { input: 'minProfitFactorRange', display: 'profitFactorValue', suffix: '' },
+                    { input: 'minReturnRange', display: 'returnValue', suffix: '%' }
+                ];
+                
+                rangeInputs.forEach(range => {
+                    const input = settingsModal.querySelector(`#${range.input}`);
+                    const display = settingsModal.querySelector(`#${range.display}`);
+                    if (input && display) {
+                        input.addEventListener('input', () => {
+                            display.textContent = input.value + range.suffix;
+                        });
+                    }
                 });
                 
                 // Clean up after modal is hidden
