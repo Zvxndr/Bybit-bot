@@ -271,6 +271,34 @@
             margin-bottom: 24px;
         }
 
+        .stats-grid-small {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.8em;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .stat-card {
             text-align: center;
             padding: 20px;
@@ -717,24 +745,82 @@
             </div>
         </div>
 
-        <!-- Quick Stats Overview -->
+        <!-- Separated Portfolio Balances (Testnet/Paper vs Live) -->
         <div class="row mb-4">
             <div class="col-12">
-                <h2>📊 Portfolio Overview</h2>
+                <h2>� 3-Phase Balance System</h2>
+                <p class="text-muted mb-3">Separate testnet/paper and live trading balances</p>
             </div>
         </div>
         
+        <!-- Testnet/Paper Trading Balance -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">🧪 Phase 2: Paper Trading / Testnet</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid-small">
+                            <div class="stat-item">
+                                <div class="stat-value" id="paperBalance">$0.00</div>
+                                <div class="stat-label">Total Balance</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="paperAvailable">$0.00</div>
+                                <div class="stat-label">Available</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="paperUsed">$0.00</div>
+                                <div class="stat-label">Used</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="paperPnl">$0.00</div>
+                                <div class="stat-label">Unrealized PnL</div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted" id="paperMessage">Paper trading simulation</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Trading Balance -->
+            <div class="col-md-6">
+                <div class="card border border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">🚀 Phase 3: Live Trading</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid-small">
+                            <div class="stat-item">
+                                <div class="stat-value" id="liveBalance">$0.00</div>
+                                <div class="stat-label">Total Balance</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="liveAvailable">$0.00</div>
+                                <div class="stat-label">Available</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="liveUsed">$0.00</div>
+                                <div class="stat-label">Used</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="livePnl">$0.00</div>
+                                <div class="stat-label">Unrealized PnL</div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted" id="liveMessage">No API credentials configured</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Strategy Stats Overview -->
         <div class="stats-grid">
-            <div class="card stat-card">
-                <div class="stat-icon text-success">💰</div>
-                <div class="stat-value" id="portfolioValue">$0.00</div>
-                <div class="stat-label">Portfolio Value</div>
-            </div>
-            <div class="card stat-card">
-                <div class="stat-icon text-info">📈</div>
-                <div class="stat-value" id="totalPnl">+$0.00</div>
-                <div class="stat-label">Total P&L</div>
-            </div>
             <div class="card stat-card">
                 <div class="stat-icon text-warning">🎯</div>
                 <div class="stat-value" id="winRate">0%</div>
@@ -1245,25 +1331,51 @@
             }
 
             updatePortfolioStats(portfolio) {
-                // Display actual portfolio balance from backend - proper 3-phase system
-                // 1. Historical Backtesting: No balance shown (analysis only)
-                // 2. Paper/Testnet Trading: Simulated balance for validation  
-                // 3. Live Trading: Real account balance
+                // Handle new separated balance structure
+                // portfolio.paper_testnet = Phase 2 balance
+                // portfolio.live = Phase 3 balance
                 
-                document.getElementById('portfolioValue').textContent = 
-                    `$${(portfolio.total_balance || 0).toLocaleString()}`;
-                document.getElementById('totalPnl').textContent = 
-                    `${portfolio.pnl >= 0 ? '+' : ''}$${(portfolio.pnl || 0).toLocaleString()}`;
+                console.log('Portfolio data:', portfolio);
+                
+                // Update Paper/Testnet Balance (Phase 2)
+                const paper = portfolio.paper_testnet || {};
+                document.getElementById('paperBalance').textContent = 
+                    `$${(paper.total_balance || 0).toLocaleString()}`;
+                document.getElementById('paperAvailable').textContent = 
+                    `$${(paper.available_balance || 0).toLocaleString()}`;
+                document.getElementById('paperUsed').textContent = 
+                    `$${(paper.used_balance || 0).toLocaleString()}`;
+                
+                const paperPnl = paper.unrealized_pnl || 0;
+                document.getElementById('paperPnl').textContent = 
+                    `${paperPnl >= 0 ? '+' : ''}$${Math.abs(paperPnl).toLocaleString()}`;
+                document.getElementById('paperPnl').className = 
+                    `stat-value ${paperPnl >= 0 ? 'text-success' : 'text-danger'}`;
+                document.getElementById('paperMessage').textContent = 
+                    paper.message || 'Paper trading simulation active';
+                
+                // Update Live Balance (Phase 3)
+                const live = portfolio.live || {};
+                document.getElementById('liveBalance').textContent = 
+                    `$${(live.total_balance || 0).toLocaleString()}`;
+                document.getElementById('liveAvailable').textContent = 
+                    `$${(live.available_balance || 0).toLocaleString()}`;
+                document.getElementById('liveUsed').textContent = 
+                    `$${(live.used_balance || 0).toLocaleString()}`;
+                
+                const livePnl = live.unrealized_pnl || 0;
+                document.getElementById('livePnl').textContent = 
+                    `${livePnl >= 0 ? '+' : ''}$${Math.abs(livePnl).toLocaleString()}`;
+                document.getElementById('livePnl').className = 
+                    `stat-value ${livePnl >= 0 ? 'text-success' : 'text-danger'}`;
+                document.getElementById('liveMessage').textContent = 
+                    live.message || 'Live trading ready';
+                
+                // Update strategy stats (from paper trading data)
                 document.getElementById('winRate').textContent = 
-                    `${Math.round(portfolio.win_rate || 0)}%`;
+                    `${Math.round(paper.win_rate || 0)}%`;
                 document.getElementById('activeStrategies').textContent = 
-                    portfolio.active_strategies || 0;
-                    
-                // Show proper environment indicator with phase info
-                const env = portfolio.environment || 'unknown';
-                const phaseInfo = this.getPhaseDescription(env);
-                document.getElementById('portfolioValue').title = 
-                    `${phaseInfo}${portfolio.message ? ' - ' + portfolio.message : ''}`;
+                    (paper.positions_count || 0) + (live.positions_count || 0);
             }
             
             getPhaseDescription(environment) {

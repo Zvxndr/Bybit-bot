@@ -74,16 +74,69 @@ class TradingAPI:
             logger.error(f"❌ Component initialization error: {e}")
         
     async def get_portfolio(self) -> Dict[str, Any]:
-        """Get real portfolio data from Bybit API"""
+        """Get portfolio data from all environments - 3-Phase System"""
+        try:
+            # Always get paper/testnet balance (Phase 2)
+            paper_portfolio = await self._get_paper_portfolio()
+            
+            # Try to get live balance if API configured (Phase 3)
+            live_portfolio = await self._get_live_portfolio()
+            
+            # Return separated balances as user requested
+            return {
+                "paper_testnet": paper_portfolio,
+                "live": live_portfolio,
+                "system_message": "3-Phase System: Backtesting → Paper/Testnet → Live Trading"
+            }
+            
+        except Exception as e:
+            logger.error(f"Portfolio fetch error: {e}")
+            # Fallback to just paper if live fails
+            paper_portfolio = await self._get_paper_portfolio()
+            return {
+                "paper_testnet": paper_portfolio,
+                "live": {
+                    "total_balance": 0,
+                    "available_balance": 0,
+                    "used_balance": 0,
+                    "unrealized_pnl": 0,
+                    "positions_count": 0,
+                    "positions": [],
+                    "environment": "no_api_keys",
+                    "message": "No API credentials - Live trading disabled"
+                },
+                "system_message": "3-Phase System: Backtesting → Paper/Testnet → Live Trading"
+            }
+    
+    async def _get_live_portfolio(self) -> Dict[str, Any]:
+        """Get live/mainnet portfolio data (Phase 3)"""
         try:
             if not self.bybit_client:
-                return await self._get_paper_portfolio()
+                return {
+                    "total_balance": 0,
+                    "available_balance": 0,
+                    "used_balance": 0,
+                    "unrealized_pnl": 0,
+                    "positions_count": 0,
+                    "positions": [],
+                    "environment": "no_api_keys",
+                    "message": "No API credentials - Live trading disabled"
+                }
             
             # Get real account balance
             balance_result = await self.bybit_client.get_account_balance()
             if not balance_result.get("success"):
-                logger.warning(f"Balance fetch failed: {balance_result.get('message')}")
-                return await self._get_paper_portfolio()
+                logger.warning(f"Live balance fetch failed: {balance_result.get('message')}")
+                return {
+                    "total_balance": 0,
+                    "available_balance": 0,
+                    "used_balance": 0,
+                    "unrealized_pnl": 0,
+                    "positions_count": 0,
+                    "positions": [],
+                    "environment": "api_error",
+                    "message": f"API Error: {balance_result.get('message', 'Unknown error')}"
+                }
             
             balance_data = balance_result.get("data", {})
             
@@ -128,8 +181,17 @@ class TradingAPI:
             }
             
         except Exception as e:
-            logger.error(f"Portfolio fetch error: {e}")
-            return await self._get_paper_portfolio()
+            logger.error(f"Live portfolio fetch error: {e}")
+            return {
+                "total_balance": 0,
+                "available_balance": 0,
+                "used_balance": 0,
+                "unrealized_pnl": 0,
+                "positions_count": 0,
+                "positions": [],
+                "environment": "error",
+                "message": f"Error fetching live balance: {str(e)}"
+            }
     
     async def _get_paper_portfolio(self):
         """Paper trading portfolio - Phase 2 of 3-phase system"""
@@ -586,7 +648,7 @@ trading_api._start_time = datetime.now()
 trading_api._api_calls_today = 0
 
 # Import and initialize simplified dashboard API
-from .simplified_dashboard_api import SimplifiedDashboardAPI
+from simplified_dashboard_api import SimplifiedDashboardAPI
 
 # WebSocket connections
 websocket_connections = set()
