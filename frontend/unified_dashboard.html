@@ -1216,7 +1216,7 @@
                     const graduationCountdown = strategy.graduation_countdown || null;
                     
                     return `
-                        <div class="strategy-card">
+                        <div class="strategy-card" onclick="dashboard.showStrategyDetails('${strategyId}', '${containerId}')">
                             <!-- Strategy Header -->
                             <div class="strategy-header">
                                 <div class="strategy-title">
@@ -1467,7 +1467,7 @@
                     ]);
 
                     this.updatePipelineMetrics(pipelineMetrics);
-                    this.updateStrategies(strategies);
+                    this.updateStrategiesDisplay(strategies);
                     this.updatePerformanceChart(performance);
                     this.updateActivityFeed(activity);
                     this.updateRiskMetrics(riskMetrics);
@@ -1809,6 +1809,165 @@
                 // Clean up after modal is hidden
                 helpModal.addEventListener('hidden.bs.modal', () => {
                     document.body.removeChild(helpModal);
+                });
+            }
+
+            async showStrategyDetails(strategyId, containerId) {
+                try {
+                    // For backtest strategies, show detailed backtesting report
+                    if (containerId === 'backtestStrategies') {
+                        const response = await fetch(`/api/backtest-details/${strategyId}`);
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            this.displayBacktestDetails(result.data);
+                        } else {
+                            this.showToastNotification('Error loading backtest details', 'danger');
+                        }
+                    } else {
+                        // For other phases, show basic strategy info
+                        this.showToastNotification(`Strategy details for ${strategyId}`, 'info');
+                    }
+                } catch (error) {
+                    console.error('Error loading strategy details:', error);
+                    this.showToastNotification('Failed to load strategy details', 'danger');
+                }
+            }
+
+            displayBacktestDetails(backtestData) {
+                const detailsModal = document.createElement('div');
+                detailsModal.className = 'modal fade';
+                detailsModal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content" style="background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="modal-header">
+                                <h5 class="modal-title">📊 Comprehensive Backtesting Report</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="alert alert-${backtestData.validation.ready_for_paper ? 'success' : 'warning'}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">${backtestData.strategy_name}</h6>
+                                                    <small>${backtestData.asset_pair} | Overall Score: ${backtestData.overall_score}/100</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge ${backtestData.validation.ready_for_paper ? 'bg-success' : 'bg-warning'}">
+                                                        ${backtestData.validation.ready_for_paper ? '✅ Ready for Paper Trading' : '⏳ Needs Improvement'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Historical Performance -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6>📈 Historical Performance Analysis</h6>
+                                        <div class="card bg-dark bg-opacity-50">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>Period:</strong> ${backtestData.historical_performance.period}</p>
+                                                        <p><strong>Total Return:</strong> ${backtestData.historical_performance.total_return_pct}%</p>
+                                                        <p><strong>Annualized Return:</strong> ${backtestData.historical_performance.annualized_return}%</p>
+                                                        <p><strong>Sharpe Ratio:</strong> ${backtestData.historical_performance.sharpe_ratio}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>Max Drawdown:</strong> ${backtestData.historical_performance.max_drawdown_pct}%</p>
+                                                        <p><strong>Win Rate:</strong> ${backtestData.historical_performance.win_rate}%</p>
+                                                        <p><strong>Profit Factor:</strong> ${backtestData.historical_performance.profit_factor}</p>
+                                                        <p><strong>Total Trades:</strong> ${backtestData.historical_performance.total_trades}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Market Regime Analysis -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6>🌊 Market Regime Analysis</h6>
+                                        <div class="row">
+                                            ${Object.entries(backtestData.market_regimes).map(([regime, data]) => `
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="card bg-dark bg-opacity-25">
+                                                        <div class="card-body p-2">
+                                                            <small><strong>${data.period}</strong></small><br>
+                                                            <small>Return: ${data.return}% | Max DD: ${data.max_dd}%</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Risk Metrics -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6>🎯 Monte Carlo Simulation</h6>
+                                        <div class="card bg-dark bg-opacity-50">
+                                            <div class="card-body">
+                                                <small><strong>Simulations:</strong> ${backtestData.monte_carlo.simulations}</small><br>
+                                                <small><strong>Expected Return:</strong> ${backtestData.monte_carlo.expected_return}%</small><br>
+                                                <small><strong>95% Confidence:</strong> ${backtestData.monte_carlo.confidence_95_return}%</small><br>
+                                                <small><strong>VaR (95%):</strong> ${backtestData.monte_carlo.var_95}%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>⚡ Walk-Forward Analysis</h6>
+                                        <div class="card bg-dark bg-opacity-50">
+                                            <div class="card-body">
+                                                <small><strong>Profitable Periods:</strong> ${backtestData.walk_forward.profitable_periods}/${backtestData.walk_forward.total_periods}</small><br>
+                                                <small><strong>Avg Period Return:</strong> ${backtestData.walk_forward.avg_period_return}%</small><br>
+                                                <small><strong>Consistency Score:</strong> ${backtestData.walk_forward.consistency_score}%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Validation Checklist -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6>✅ Validation Checklist</h6>
+                                        <div class="card bg-dark bg-opacity-50">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><small><span class="${backtestData.validation.passed_min_score ? 'text-success' : 'text-danger'}">
+                                                            ${backtestData.validation.passed_min_score ? '✅' : '❌'}</span> Score ≥ 75%</small></p>
+                                                        <p><small><span class="${backtestData.validation.passed_sharpe ? 'text-success' : 'text-danger'}">
+                                                            ${backtestData.validation.passed_sharpe ? '✅' : '❌'}</span> Sharpe ≥ 1.5</small></p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><small><span class="${backtestData.validation.passed_return ? 'text-success' : 'text-danger'}">
+                                                            ${backtestData.validation.passed_return ? '✅' : '❌'}</span> Return ≥ 10%</small></p>
+                                                        <p><small><strong>Status:</strong> <span class="${backtestData.validation.ready_for_paper ? 'text-success' : 'text-warning'}">
+                                                            ${backtestData.validation.ready_for_paper ? 'READY FOR PAPER' : 'NEEDS IMPROVEMENT'}</span></small></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(detailsModal);
+                const modal = new bootstrap.Modal(detailsModal);
+                modal.show();
+                
+                // Clean up after modal is hidden
+                detailsModal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(detailsModal);
                 });
             }
 
