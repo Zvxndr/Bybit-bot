@@ -17,7 +17,7 @@ if __name__ == "__main__":
     print("🚀 DIGITALOCEAN MAIN ENTRY POINT")
     print("📁 Working Directory:", current_dir)
     print("🐍 Python Path:", sys.path[0])
-    print("🎯 Loading production_ai_pipeline.py...")
+    print("🎯 Loading unified dashboard from src/main.py...")
     
     try:
         # Import the unified dashboard with separated balances  
