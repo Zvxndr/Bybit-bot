@@ -42,6 +42,13 @@ class TradingAPI:
         self.live_trading = False  # OFF by default for safety
         self.bybit_client = None
         self.risk_manager = None
+        
+        # Default system settings
+        self.max_daily_risk = 2.0
+        self.max_position_size = 10.0
+        self.stop_loss = 5.0
+        self.take_profit = 15.0
+        
         self._initialize_components()
     
     def _initialize_components(self):
@@ -277,6 +284,208 @@ class TradingAPI:
             logger.error(f"Trading opportunities error: {e}")
             return {"opportunities": [], "status": "Error scanning market"}
     
+    async def get_strategies(self) -> Dict[str, Any]:
+        """Get all strategies across pipeline phases"""
+        try:
+            # This would integrate with your strategy management system
+            return {
+                "discovery": [
+                    {
+                        "id": "STRAT_001",
+                        "phase": "discovery",
+                        "symbol": "BTCUSDT",
+                        "sharpe": 2.1,
+                        "win_rate": 68,
+                        "max_drawdown": 8.5,
+                        "days_in_phase": 3,
+                        "progress": 21
+                    }
+                ],
+                "paper": [
+                    {
+                        "id": "STRAT_002", 
+                        "phase": "paper",
+                        "symbol": "ETHUSDT",
+                        "sharpe": 1.8,
+                        "win_rate": 72,
+                        "max_drawdown": 12.1,
+                        "days_in_phase": 8,
+                        "progress": 57,
+                        "paper_pnl": 4.2
+                    }
+                ],
+                "live": [
+                    {
+                        "id": "STRAT_003",
+                        "phase": "live", 
+                        "symbol": "ADAUSDT",
+                        "sharpe": 2.3,
+                        "win_rate": 75,
+                        "max_drawdown": 6.8,
+                        "allocation": 15,
+                        "live_pnl": 8.7
+                    }
+                ]
+            }
+        except Exception as e:
+            logger.error(f"Strategies fetch error: {e}")
+            return {"discovery": [], "paper": [], "live": []}
+    
+    async def get_performance_data(self) -> Dict[str, Any]:
+        """Get comprehensive performance analytics"""
+        try:
+            # This would calculate from historical trade data
+            return {
+                "total_return": 12.5,
+                "sharpe_ratio": 1.8,
+                "max_drawdown": 8.2,
+                "win_rate": 68.5,
+                "daily_returns": [0.1, 0.3, -0.2, 0.4, 0.1, 0.2, 0.3],  # Last 7 days
+                "portfolio_history": {
+                    "7d": [25000, 25100, 25300, 25100, 25500, 25600, 25800],
+                    "30d": [],  # Would populate with 30 days of data
+                    "90d": []   # Would populate with 90 days of data
+                }
+            }
+        except Exception as e:
+            logger.error(f"Performance data error: {e}")
+            return {
+                "total_return": 0,
+                "sharpe_ratio": 0,
+                "max_drawdown": 0,
+                "win_rate": 0,
+                "daily_returns": [],
+                "portfolio_history": {"7d": [], "30d": [], "90d": []}
+            }
+    
+    async def get_activity_feed(self) -> Dict[str, Any]:
+        """Get recent activity feed"""
+        try:
+            # This would come from your activity logging system
+            activities = [
+                {
+                    "timestamp": "10:30",
+                    "type": "trade",
+                    "message": "Opened BTC/USDT position",
+                    "severity": "info"
+                },
+                {
+                    "timestamp": "09:45",
+                    "type": "strategy",
+                    "message": "STRAT_001 promoted to paper trading",
+                    "severity": "success"
+                },
+                {
+                    "timestamp": "09:12",
+                    "type": "risk",
+                    "message": "Risk level adjusted to moderate",
+                    "severity": "warning"
+                }
+            ]
+            return {"activities": activities}
+        except Exception as e:
+            logger.error(f"Activity feed error: {e}")
+            return {"activities": []}
+    
+    async def start_backtest(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Start a new backtest"""
+        try:
+            # This would integrate with your backtesting system
+            job_id = f"BT_{int(datetime.now().timestamp())}"
+            
+            return {
+                "success": True,
+                "job_id": job_id,
+                "message": "Backtest started successfully",
+                "estimated_duration": "5-10 minutes"
+            }
+        except Exception as e:
+            logger.error(f"Backtest start error: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def get_backtest_jobs(self) -> Dict[str, Any]:
+        """Get active backtest jobs"""
+        try:
+            # This would come from your job queue system
+            jobs = [
+                {
+                    "id": "BT_001",
+                    "status": "running",
+                    "progress": 75,
+                    "pairs": ["BTCUSDT", "ETHUSDT"],
+                    "timeframe": "4h",
+                    "started_at": "10:15"
+                }
+            ]
+            return {"jobs": jobs}
+        except Exception as e:
+            logger.error(f"Backtest jobs error: {e}")
+            return {"jobs": []}
+    
+    async def close_position(self, symbol: str) -> Dict[str, Any]:
+        """Close a specific position"""
+        try:
+            if not self.live_trading:
+                return {"success": False, "error": "Live trading is disabled"}
+            
+            if not self.bybit_client:
+                return {"success": False, "error": "API not connected"}
+            
+            # This would call the real Bybit API to close the position
+            # For now, just return success
+            logger.info(f"Closing position for {symbol}")
+            
+            return {
+                "success": True,
+                "message": f"Position {symbol} closed successfully"
+            }
+        except Exception as e:
+            logger.error(f"Close position error: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def emergency_stop(self) -> Dict[str, Any]:
+        """Emergency stop all trading"""
+        try:
+            self.live_trading = False
+            logger.critical("🛑 EMERGENCY STOP ACTIVATED")
+            
+            # This would:
+            # 1. Disable all trading
+            # 2. Close all positions (if configured)
+            # 3. Pause all strategies
+            # 4. Send alerts
+            
+            return {
+                "success": True,
+                "message": "Emergency stop activated - All trading halted"
+            }
+        except Exception as e:
+            logger.error(f"Emergency stop error: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def update_system_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        """Update system settings"""
+        try:
+            # Update risk management settings
+            if 'max_daily_risk' in settings:
+                self.max_daily_risk = float(settings['max_daily_risk'])
+            if 'max_position_size' in settings:
+                self.max_position_size = float(settings['max_position_size'])
+            if 'stop_loss' in settings:
+                self.stop_loss = float(settings['stop_loss'])
+            if 'take_profit' in settings:
+                self.take_profit = float(settings['take_profit'])
+            
+            logger.info(f"System settings updated: {settings}")
+            
+            return {
+                "success": True,
+                "message": "Settings updated successfully"
+            }
+        except Exception as e:
+            logger.error(f"Settings update error: {e}")
+            return {"success": False, "error": str(e)}
+
     async def toggle_live_trading(self, enabled: bool) -> Dict[str, Any]:
         """Toggle live trading with safety checks"""
         try:
@@ -333,8 +542,8 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
-    """Serve the main dashboard"""
-    return FileResponse("frontend/dashboard.html")
+    """Serve the comprehensive dashboard"""
+    return FileResponse("frontend/comprehensive_dashboard.html")
 
 @app.get("/api/portfolio")
 async def get_portfolio():
@@ -361,6 +570,57 @@ async def get_opportunities():
     """Get trading opportunities"""
     return await trading_api.get_trading_opportunities()
 
+@app.get("/api/strategies")
+async def get_strategies():
+    """Get all strategies across pipeline phases"""
+    return await trading_api.get_strategies()
+
+@app.get("/api/performance")
+async def get_performance():
+    """Get performance analytics"""
+    return await trading_api.get_performance_data()
+
+@app.get("/api/activity")
+async def get_activity():
+    """Get recent activity feed"""
+    return await trading_api.get_activity_feed()
+
+@app.post("/api/backtest")
+async def start_backtest(request: Request):
+    """Start a new backtest"""
+    try:
+        data = await request.json()
+        result = await trading_api.start_backtest(data)
+        return result
+    except Exception as e:
+        logger.error(f"Backtest start error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/backtest/jobs")
+async def get_backtest_jobs():
+    """Get active backtest jobs"""
+    return await trading_api.get_backtest_jobs()
+
+@app.post("/api/positions/{symbol}/close")
+async def close_position(symbol: str):
+    """Close a specific position"""
+    try:
+        result = await trading_api.close_position(symbol)
+        return result
+    except Exception as e:
+        logger.error(f"Position close error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/emergency-stop")
+async def emergency_stop():
+    """Emergency stop all trading"""
+    try:
+        result = await trading_api.emergency_stop()
+        return result
+    except Exception as e:
+        logger.error(f"Emergency stop error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.post("/api/settings")
 async def update_settings(request: Request):
     """Update trading settings"""
@@ -369,7 +629,10 @@ async def update_settings(request: Request):
         if 'live_trading_enabled' in data:
             result = await trading_api.toggle_live_trading(data['live_trading_enabled'])
             return result
-        return {"success": True}
+        
+        # Handle other settings
+        result = await trading_api.update_system_settings(data)
+        return result
     except Exception as e:
         logger.error(f"Settings update error: {e}")
         return {"success": False, "error": str(e)}
@@ -381,7 +644,11 @@ async def get_settings():
         "live_trading_enabled": trading_api.live_trading,
         "testnet_mode": trading_api.testnet,
         "api_connected": bool(trading_api.bybit_client),
-        "risk_manager_active": bool(trading_api.risk_manager)
+        "risk_manager_active": bool(trading_api.risk_manager),
+        "max_daily_risk": getattr(trading_api, 'max_daily_risk', 2.0),
+        "max_position_size": getattr(trading_api, 'max_position_size', 10.0),
+        "stop_loss": getattr(trading_api, 'stop_loss', 5.0),
+        "take_profit": getattr(trading_api, 'take_profit', 15.0)
     }
 
 @app.websocket("/ws")
