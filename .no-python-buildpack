@@ -1,0 +1,2 @@
+# This file forces DigitalOcean to ignore Python auto-detection
+# and use the Dockerfile exclusively
