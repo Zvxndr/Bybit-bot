@@ -40,7 +40,8 @@ class TradingAPI:
         self.api_secret = os.getenv('BYBIT_API_SECRET')
         self.testnet = False  # Use mainnet for production
         self.live_trading = False  # OFF by default for safety
-        self.bybit_client = None
+        self.bybit_client = None  # Mainnet client for live trading
+        self.testnet_client = None  # Testnet client for paper trading
         self.risk_manager = None
         
         # Default system settings
@@ -55,14 +56,24 @@ class TradingAPI:
         """Initialize trading components"""
         try:
             if self.api_key and self.api_secret:
-                # Import and initialize Bybit client
+                # Import Bybit client
                 from src.bybit_api import BybitAPIClient
+                
+                # Initialize mainnet client for live trading (Phase 3)
                 self.bybit_client = BybitAPIClient(
                     api_key=self.api_key,
                     api_secret=self.api_secret,
-                    testnet=self.testnet
+                    testnet=False  # Mainnet for live trading
                 )
-                logger.info("✅ Bybit API client initialized")
+                logger.info("✅ Bybit mainnet API client initialized")
+                
+                # Initialize testnet client for paper trading (Phase 2)
+                self.testnet_client = BybitAPIClient(
+                    api_key=self.api_key,
+                    api_secret=self.api_secret,
+                    testnet=True  # Testnet for paper trading
+                )
+                logger.info("✅ Bybit testnet API client initialized")
                 
                 # Import and initialize risk manager
                 from src.bot.risk.core.unified_risk_manager import UnifiedRiskManager
@@ -194,54 +205,91 @@ class TradingAPI:
             }
     
     async def _get_paper_portfolio(self):
-        """Paper trading portfolio - Phase 2 of 3-phase system"""
-        # Phase 2: Paper Trading/Testnet Validation with simulated balance
-        import random
-        from datetime import datetime
-        
-        # Get paper trading balance from environment or use standard base
-        paper_balance = float(os.getenv('PAPER_TRADING_BALANCE', '10000'))
-        
-        # Calculate paper trading performance from strategy database
+        """Paper trading portfolio - Phase 2 of 3-phase system - Uses REAL testnet API"""
         try:
-            import sqlite3
-            conn = sqlite3.connect('data/trading_bot.db')
-            cursor = conn.cursor()
+            if not self.testnet_client:
+                return {
+                    "total_balance": 10000,  # Default paper trading balance
+                    "available_balance": 10000,
+                    "used_balance": 0,
+                    "unrealized_pnl": 0,
+                    "positions_count": 0,
+                    "positions": [],
+                    "environment": "no_testnet_api",
+                    "message": "No testnet API credentials - Add Bybit testnet API keys for paper trading"
+                }
             
-            # Get paper trading performance only (not live)
-            cursor.execute("SELECT SUM(paper_pnl) FROM strategy_pipeline WHERE current_phase = 'paper'")
-            result = cursor.fetchone()
-            total_paper_pnl = result[0] if result[0] else 0
+            # Get real testnet account balance using dedicated testnet client
+            balance_result = await self.testnet_client.get_account_balance()
+            if not balance_result.get("success"):
+                logger.warning(f"Paper/Testnet balance fetch failed: {balance_result.get('message')}")
+                return {
+                    "total_balance": 10000,  # Fallback to standard paper balance
+                    "available_balance": 10000,
+                    "used_balance": 0,
+                    "unrealized_pnl": 0,
+                    "positions_count": 0,
+                    "positions": [],
+                    "environment": "api_error",
+                    "message": f"Testnet API Error: {balance_result.get('message', 'Connection error: Connector is closed.')}"
+                }
             
-            # Get count of paper strategies
-            cursor.execute("SELECT COUNT(*) FROM strategy_pipeline WHERE current_phase = 'paper' AND is_active = 1")
-            paper_strategy_count = cursor.fetchone()[0] or 0
+            balance_data = balance_result.get("data", {})
             
-            conn.close()
+            # Extract real testnet balance information
+            total_balance = float(balance_data.get("total_wallet_balance", "10000"))
+            available_balance = float(balance_data.get("total_available_balance", "10000"))
+            used_balance = float(balance_data.get("total_used_margin", "0"))
             
-            # Calculate current paper balance based on strategy performance
-            current_balance = paper_balance + total_paper_pnl
-            # Use actual paper PnL as unrealized PnL, not random values
-            unrealized = total_paper_pnl
+            # Get real testnet positions
+            positions_result = await self.testnet_client.get_positions()
+            positions = []
+            total_pnl = 0.0
+            
+            if positions_result.get("success"):
+                position_data = positions_result.get("data", {})
+                if isinstance(position_data, list):
+                    positions_list = position_data
+                else:
+                    positions_list = position_data.get("list", [])
+                
+                for pos in positions_list:
+                    if float(pos.get("size", "0")) > 0:  # Only active positions
+                        pnl = float(pos.get("unrealisedPnl", "0"))
+                        total_pnl += pnl
+                        positions.append({
+                            "symbol": pos.get("symbol"),
+                            "side": pos.get("side"),
+                            "size": pos.get("size"),
+                            "unrealized_pnl": pnl,
+                            "percentage": pos.get("liqPrice", "0"),
+                            "entry_price": pos.get("avgPrice", "0")
+                        })
+            
+            return {
+                "total_balance": total_balance,
+                "available_balance": available_balance,
+                "used_balance": used_balance,
+                "unrealized_pnl": total_pnl,
+                "positions_count": len(positions),
+                "positions": positions,
+                "environment": "testnet_paper_trading",
+                "phase": "Phase 2: Paper Trading/Testnet Validation",
+                "message": f"Real testnet balance - {len(positions)} active positions"
+            }
             
         except Exception as e:
-            # Fallback if database unavailable - use clean values instead of random
-            logging.warning(f"Paper portfolio database unavailable: {e}")
-            current_balance = paper_balance  # Start with base balance
-            unrealized = 0  # No fake PnL
-            paper_strategy_count = 0
-        
-        return {
-            "total_balance": round(current_balance, 2),
-            "available_balance": round(current_balance * 0.85, 2),
-            "used_balance": round(current_balance * 0.15, 2),
-            "unrealized_pnl": round(unrealized, 2),
-            "positions_count": paper_strategy_count,  # Use actual strategy count, not random
-            "positions": [],
-            "environment": "paper_simulation",
-            "phase": "Phase 2: Paper Trading/Testnet Validation",
-            "message": f"Paper trading with ${paper_balance:,.0f} base capital - Add API credentials for live testnet"
-        }
+            logger.error(f"Paper/Testnet portfolio fetch error: {e}")
+            return {
+                "total_balance": 10000,  # Fallback standard balance
+                "available_balance": 10000,
+                "used_balance": 0,
+                "unrealized_pnl": 0,
+                "positions_count": 0,
+                "positions": [],
+                "environment": "error",
+                "message": f"Testnet connection error: {str(e)}"
+            }
     
     async def get_status(self) -> Dict[str, Any]:
         """Get comprehensive system status"""
@@ -851,7 +899,7 @@ async def get_settings():
     return {
         "live_trading_enabled": trading_api.live_trading,
         "testnet_mode": trading_api.testnet,
-        "api_connected": bool(trading_api.bybit_client),
+        "api_connected": bool(trading_api.bybit_client or trading_api.testnet_client),
         "risk_manager_active": bool(trading_api.risk_manager),
         "max_daily_risk": getattr(trading_api, 'max_daily_risk', 2.0),
         "max_position_size": getattr(trading_api, 'max_position_size', 10.0),
