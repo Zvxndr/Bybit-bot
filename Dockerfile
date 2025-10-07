@@ -7,7 +7,7 @@ WORKDIR /app
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+ENV PORT=8000
 
 # Install system dependencies in one layer
 RUN apt-get update && apt-get install -y \
@@ -43,5 +43,5 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run the production AI pipeline system
-CMD ["python", "production_ai_pipeline.py"]
+# Run the main entry point (which loads production_ai_pipeline.py)
+CMD ["python", "main.py"]
