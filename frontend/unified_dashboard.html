@@ -964,6 +964,21 @@
                                 <small class="text-muted">Enhanced monitoring</small>
                             </div>
                         </div>
+                        
+                        <!-- Pipeline Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" onclick="dashboard.batchProcessPipeline()">
+                                        <i class="bi bi-gear"></i> Batch Process Pipeline
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="dashboard.updateData()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                                    </button>
+                                </div>
+                                <small class="text-muted">Manual pipeline operations and data refresh</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1022,10 +1037,14 @@
             async init() {
                 await this.initWebSocket();
                 this.initCharts();
+                this.initKeyboardShortcuts();
+                this.initBrowserNotifications();
                 this.loadDashboardData();
                 
-                // Start real-time updates
-                setInterval(() => this.updateData(), 5000);
+                // Start real-time updates (adaptive interval for mobile)
+                const isMobile = window.innerWidth <= 768;
+                const updateInterval = isMobile ? 10000 : 5000; // 10s on mobile, 5s on desktop
+                setInterval(() => this.updateData(), updateInterval);
             }
 
             async initWebSocket() {
@@ -1260,6 +1279,15 @@
                                         <span class="countdown-text">📊 Performance monitoring active</span>
                                     </div>
                                 `}
+                                
+                                <!-- Manual Promotion Button -->
+                                <div class="strategy-actions mt-2">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="dashboard.promoteStrategy('${strategyId}')"
+                                            title="Manually promote to next phase">
+                                        <i class="bi bi-arrow-right"></i> Promote
+                                    </button>
+                                </div>
                             ` : `
                                 <div class="live-status">
                                     <i class="bi bi-lightning-fill text-success"></i>
@@ -1415,14 +1443,55 @@
             }
 
             async updateData() {
-                document.getElementById('lastUpdate').textContent = 
-                    new Date().toLocaleTimeString();
-                
-                // Simulate strategy progression animation
-                this.simulateStrategyProgression();
-                
-                // Refresh data
-                await this.loadDashboardData();
+                try {
+                    // Show loading state
+                    this.showLoadingState();
+                    
+                    // Fetch all data in parallel with timeout
+                    const fetchWithTimeout = (url, timeout = 5000) => {
+                        return Promise.race([
+                            fetch(url).then(r => r.json()),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Timeout')), timeout)
+                            )
+                        ]);
+                    };
+
+                    const [strategies, pipelineMetrics, performance, activity, riskMetrics, systemStatus] = await Promise.all([
+                        fetchWithTimeout('/api/strategies'),
+                        fetchWithTimeout('/api/pipeline-metrics'), 
+                        fetchWithTimeout('/api/performance'),
+                        fetchWithTimeout('/api/activity'),
+                        fetchWithTimeout('/api/risk-metrics'),
+                        fetchWithTimeout('/api/system-status')
+                    ]);
+
+                    this.updatePipelineMetrics(pipelineMetrics);
+                    this.updateStrategies(strategies);
+                    this.updatePerformanceChart(performance);
+                    this.updateActivityFeed(activity);
+                    this.updateRiskMetrics(riskMetrics);
+                    this.updateSystemStatus(systemStatus);
+
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                    this.hideLoadingState();
+                    
+                    // Update connection status
+                    document.getElementById('connectionStatus').textContent = 'Live';
+                    document.getElementById('connectionStatus').className = 'badge bg-success me-2';
+                    
+                    // Simulate strategy progression animation
+                    this.simulateStrategyProgression();
+                    
+                } catch (error) {
+                    console.error('Update failed:', error);
+                    this.hideLoadingState();
+                    this.showToastNotification('Update failed: ' + error.message, 'danger');
+                    
+                    // Update connection status
+                    document.getElementById('connectionStatus').textContent = 'Error';
+                    document.getElementById('connectionStatus').className = 'badge bg-danger me-2';
+                }
             }
 
             simulateStrategyProgression() {
@@ -1472,6 +1541,277 @@
                 return icons[type] || 'info-circle-fill';
             }
 
+            showLoadingState() {
+                // Add loading overlay to main dashboard
+                const overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.className = 'loading-overlay';
+                overlay.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="loading-text mt-2">Updating dashboard...</div>
+                    </div>
+                `;
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;
+                    z-index: 2000;
+                    backdrop-filter: blur(5px);
+                `;
+                document.body.appendChild(overlay);
+            }
+
+            hideLoadingState() {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+
+            updateRiskMetrics(response) {
+                if (!response?.data) return;
+                
+                const data = response.data;
+                
+                // Update risk status badge
+                const statusBadge = document.getElementById('riskStatusBadge');
+                if (statusBadge) {
+                    statusBadge.textContent = `✅ ${data.risk_status}`;
+                    statusBadge.className = `status-badge status-${data.risk_class}`;
+                }
+                
+                // Update risk metrics
+                this.updateRiskMetric('maxDrawdown', `${data.max_drawdown}%`, data.max_drawdown / 20 * 100, 'low');
+                this.updateRiskMetric('sharpeRatio', data.sharpe_ratio, Math.min(data.sharpe_ratio / 3 * 100, 100), 'good');
+                this.updateRiskMetric('correlationRisk', `${data.correlation_risk}%`, data.correlation_risk, 'low');
+                this.updateRiskMetric('varRisk', `${data.var_risk}%`, data.var_risk / 5 * 100, 'medium');
+                
+                // Update AI risk insights
+                this.updateRiskInsights(data.insights);
+            }
+
+            updateRiskMetric(elementId, value, percentage, riskLevel) {
+                const valueEl = document.getElementById(elementId);
+                if (valueEl) {
+                    valueEl.textContent = value;
+                }
+                
+                // Update risk bar
+                const riskBar = valueEl?.parentElement?.querySelector('.risk-bar-fill');
+                if (riskBar) {
+                    riskBar.style.width = `${Math.min(percentage, 100)}%`;
+                    riskBar.setAttribute('data-risk', riskLevel);
+                }
+            }
+
+            updateRiskInsights(insights) {
+                const container = document.querySelector('.risk-assessment-content');
+                if (!container || !insights) return;
+                
+                container.innerHTML = insights.map(insight => `
+                    <div class="risk-insight">
+                        <i class="bi bi-${insight.icon} text-${insight.type}"></i>
+                        <span>${insight.message}</span>
+                    </div>
+                `).join('');
+            }
+
+            updateSystemStatus(response) {
+                if (!response?.data) return;
+                
+                const data = response.data;
+                const statusItems = document.querySelectorAll('.pipeline-status-item');
+                
+                // Update AI Discovery Engine
+                if (statusItems[0]) {
+                    const statusDot = statusItems[0].querySelector('.status-dot');
+                    const subtitle = statusItems[0].querySelector('.status-subtitle');
+                    statusDot.className = `status-dot bg-${data.ai_discovery.status === 'active' ? 'success' : 'warning'}`;
+                    subtitle.textContent = data.ai_discovery.message;
+                }
+                
+                // Update Auto-Graduation System
+                if (statusItems[1]) {
+                    const statusDot = statusItems[1].querySelector('.status-dot');
+                    const subtitle = statusItems[1].querySelector('.status-subtitle');
+                    statusDot.className = `status-dot bg-${data.graduation_system.status === 'online' ? 'success' : 'warning'}`;
+                    subtitle.textContent = data.graduation_system.message;
+                }
+                
+                // Update Risk Monitor
+                if (statusItems[2]) {
+                    const statusDot = statusItems[2].querySelector('.status-dot');
+                    const subtitle = statusItems[2].querySelector('.status-subtitle');
+                    statusDot.className = `status-dot bg-${data.risk_monitor.flags_count === 0 ? 'success' : 'warning'}`;
+                    subtitle.textContent = data.risk_monitor.message;
+                }
+                
+                // Update Strategy Naming Engine
+                if (statusItems[3]) {
+                    const statusDot = statusItems[3].querySelector('.status-dot');
+                    const subtitle = statusItems[3].querySelector('.status-subtitle');
+                    statusDot.className = `status-dot bg-${data.naming_engine.status === 'ready' ? 'success' : 'warning'}`;
+                    subtitle.textContent = data.naming_engine.message;
+                }
+            }
+
+            async promoteStrategy(strategyId) {
+                try {
+                    this.showLoadingState();
+                    const response = await fetch(`/api/strategy/${strategyId}/promote`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showToastNotification(result.message, 'success');
+                        this.showBrowserNotification('Strategy Promoted', result.message, 'success');
+                        await this.updateData(); // Refresh data
+                    } else {
+                        this.showToastNotification('Promotion failed', 'danger');
+                        this.showBrowserNotification('Promotion Failed', 'Strategy promotion unsuccessful', 'danger');
+                    }
+                } catch (error) {
+                    this.showToastNotification('Promotion error: ' + error.message, 'danger');
+                    this.showBrowserNotification('Error', 'Strategy promotion error', 'danger');
+                } finally {
+                    this.hideLoadingState();
+                }
+            }
+
+            async batchProcessPipeline() {
+                try {
+                    this.showLoadingState();
+                    const response = await fetch('/api/pipeline/batch-process', {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const data = result.data;
+                        const message = `Batch completed: ${data.promoted_count} promoted, ${data.graduated_count} graduated`;
+                        this.showToastNotification(message, 'success');
+                        this.showBrowserNotification('Pipeline Batch Complete', message, 'success');
+                        await this.updateData(); // Refresh data
+                    }
+                } catch (error) {
+                    this.showToastNotification('Batch processing error: ' + error.message, 'danger');
+                    this.showBrowserNotification('Batch Processing Error', 'Pipeline batch processing failed', 'danger');
+                } finally {
+                    this.hideLoadingState();
+                }
+            }
+
+            initKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey) {
+                        switch(e.key) {
+                            case 'r':
+                                e.preventDefault();
+                                this.updateData();
+                                this.showToastNotification('Data refreshed', 'info');
+                                break;
+                            case 'b':
+                                e.preventDefault();
+                                this.batchProcessPipeline();
+                                break;
+                            case 'x':
+                                if (e.shiftKey) {
+                                    e.preventDefault();
+                                    if (confirm('Are you sure you want to trigger emergency stop?')) {
+                                        emergencyStop();
+                                    }
+                                }
+                                break;
+                            case 'h':
+                                e.preventDefault();
+                                this.showKeyboardShortcutsHelp();
+                                break;
+                        }
+                    }
+                });
+            }
+
+            initBrowserNotifications() {
+                // Request permission for browser notifications
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            this.showToastNotification('Browser notifications enabled', 'success');
+                        }
+                    });
+                }
+            }
+
+            showBrowserNotification(title, message, type = 'info') {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const notification = new Notification(title, {
+                        body: message,
+                        icon: type === 'danger' ? '/static/error-icon.png' : '/static/info-icon.png',
+                        tag: 'trading-bot-' + Date.now()
+                    });
+                    
+                    // Auto-close after 5 seconds
+                    setTimeout(() => notification.close(), 5000);
+                }
+            }
+
+            showKeyboardShortcutsHelp() {
+                const helpModal = document.createElement('div');
+                helpModal.className = 'modal fade';
+                helpModal.innerHTML = `
+                    <div class="modal-dialog">
+                        <div class="modal-content" style="background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="modal-header">
+                                <h5 class="modal-title">⌨️ Keyboard Shortcuts</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <h6>Dashboard Controls</h6>
+                                        <ul class="list-unstyled">
+                                            <li><kbd>Ctrl+R</kbd> Refresh Data</li>
+                                            <li><kbd>Ctrl+B</kbd> Batch Process</li>
+                                            <li><kbd>Ctrl+H</kbd> Show Help</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <h6>Safety Controls</h6>
+                                        <ul class="list-unstyled">
+                                            <li><kbd>Ctrl+Shift+X</kbd> Emergency Stop</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    Pro tip: Use keyboard shortcuts for faster trading operations!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(helpModal);
+                const modal = new bootstrap.Modal(helpModal);
+                modal.show();
+                
+                // Clean up after modal is hidden
+                helpModal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(helpModal);
+                });
+            }
+
             handleWebSocketData(data) {
                 if (data.type === 'portfolio_update') {
                     this.updatePortfolioStats(data.data);
@@ -1479,6 +1819,8 @@
                     this.loadDashboardData(); // Refresh all strategies
                 } else if (data.type === 'activity') {
                     this.updateActivityFeed([data.data, ...this.currentActivities.slice(0, 9)]);
+                } else if (data.type === 'pipeline_update') {
+                    this.updatePipelineMetrics({ data: data.data });
                 }
             }
         }
@@ -1495,9 +1837,12 @@
             }
         }
 
+        // Global dashboard instance
+        let dashboard;
+
         // Initialize dashboard when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new UnifiedDashboard();
+            dashboard = new UnifiedDashboard();
         });
     </script>
 </body>

@@ -551,6 +551,9 @@ trading_api = TradingAPI()
 trading_api._start_time = datetime.now()
 trading_api._api_calls_today = 0
 
+# Import and initialize simplified dashboard API
+from .simplified_dashboard_api import SimplifiedDashboardAPI
+
 # WebSocket connections
 websocket_connections = set()
 
@@ -575,6 +578,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize simplified dashboard API (adds /api/strategies, /api/pipeline-metrics, etc.)
+dashboard_api = SimplifiedDashboardAPI(app)
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
