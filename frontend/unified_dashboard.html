@@ -740,13 +740,46 @@
             <!-- Discovery/Backtesting Column -->
             <div class="pipeline-column">
                 <div class="pipeline-header">
-                    <h4>🔍 Discovery Phase</h4>
+                    <h4>� Historical Backtest</h4>
                     <span class="count-badge" id="discoveryCount">0</span>
                 </div>
-                <div id="discoveryStrategies">
+                
+                <!-- Backtesting Controls -->
+                <div class="backtest-controls mb-3 p-2" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Historical Period</label>
+                            <select class="form-select form-select-sm" id="backtestPeriod">
+                                <option value="1y">Last 12 Months</option>
+                                <option value="2y" selected>Last 24 Months</option>
+                                <option value="3y">Last 36 Months</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Min Score Threshold</label>
+                            <select class="form-select form-select-sm" id="backtestThreshold">
+                                <option value="70">70% (Relaxed)</option>
+                                <option value="75" selected>75% (Standard)</option>
+                                <option value="80">80% (Strict)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2 mt-2">
+                                <button class="btn btn-sm btn-outline-primary flex-fill" onclick="dashboard.runBatchBacktest()">
+                                    <i class="bi bi-play-fill"></i> Run Batch Backtest
+                                </button>
+                                <button class="btn btn-sm btn-outline-info flex-fill" onclick="dashboard.showBacktestSettings()">
+                                    <i class="bi bi-gear"></i> Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="backtestStrategies">
                     <div class="text-center text-muted p-4">
-                        <i class="bi bi-search"></i><br>
-                        Discovering strategies...
+                        <i class="bi bi-graph-up-arrow"></i><br>
+                        Click strategy cards for detailed backtesting results
                     </div>
                 </div>
             </div>
@@ -1175,23 +1208,23 @@
 
             updateStrategiesDisplay(strategiesData) {
                 // Handle both array format (legacy) and object format (new API)
-                const discovery = strategiesData.discovery || strategiesData.filter?.(s => s.phase === 'discovery') || [];
+                const backtest = strategiesData.backtest || strategiesData.filter?.(s => s.phase === 'backtest') || [];
                 const paper = strategiesData.paper || strategiesData.filter?.(s => s.phase === 'paper') || [];
                 const live = strategiesData.live || strategiesData.filter?.(s => s.phase === 'live') || [];
 
                 // Update counts
-                document.getElementById('discoveryCount').textContent = discovery.length;
+                document.getElementById('discoveryCount').textContent = backtest.length;
                 document.getElementById('paperCount').textContent = paper.length;
                 document.getElementById('liveCount').textContent = live.length;
 
                 // Update strategy cards
-                this.renderStrategyCards('discoveryStrategies', discovery);
+                this.renderStrategyCards('backtestStrategies', backtest);
                 this.renderStrategyCards('paperStrategies', paper);
                 this.renderStrategyCards('liveStrategies', live);
 
                 // Update distribution chart
                 this.charts.distribution.data.datasets[0].data = [
-                    discovery.length, paper.length, live.length
+                    backtest.length, paper.length, live.length
                 ];
                 this.charts.distribution.update();
             }
@@ -1968,6 +2001,96 @@
                 // Clean up after modal is hidden
                 detailsModal.addEventListener('hidden.bs.modal', () => {
                     document.body.removeChild(detailsModal);
+                });
+            }
+
+            async runBatchBacktest() {
+                try {
+                    const period = document.getElementById('backtestPeriod').value;
+                    const threshold = document.getElementById('backtestThreshold').value;
+                    
+                    this.showToastNotification('Starting batch backtest...', 'info');
+                    
+                    // Call batch backtest API
+                    const response = await fetch('/api/pipeline/batch-process', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showToastNotification(`Batch backtest completed: ${result.data.processed_strategies} strategies processed`, 'success');
+                        setTimeout(() => this.loadDashboardData(), 1000);
+                    } else {
+                        this.showToastNotification('Batch backtest failed', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Batch backtest error:', error);
+                    this.showToastNotification('Error running batch backtest', 'danger');
+                }
+            }
+
+            showBacktestSettings() {
+                const settingsModal = document.createElement('div');
+                settingsModal.className = 'modal fade';
+                settingsModal.innerHTML = `
+                    <div class="modal-dialog">
+                        <div class="modal-content" style="background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="modal-header">
+                                <h5 class="modal-title">⚙️ Backtesting Settings</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Historical Data Period</label>
+                                    <select class="form-select">
+                                        <option value="1y">Last 12 Months</option>
+                                        <option value="2y" selected>Last 24 Months</option>
+                                        <option value="3y">Last 36 Months</option>
+                                        <option value="5y">Last 60 Months</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Minimum Score Threshold</label>
+                                    <input type="range" class="form-range" min="50" max="90" value="75" id="thresholdRange">
+                                    <div class="d-flex justify-content-between">
+                                        <small>50%</small>
+                                        <span id="thresholdValue">75%</span>
+                                        <small>90%</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Validation Method</label>
+                                    <select class="form-select">
+                                        <option value="walk_forward" selected>Walk-Forward Analysis</option>
+                                        <option value="monte_carlo">Monte Carlo Simulation</option>
+                                        <option value="cross_validation">Cross Validation</option>
+                                        <option value="all">All Methods</option>
+                                    </select>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    These settings control how historical backtesting is performed. Higher thresholds mean stricter validation.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(settingsModal);
+                const modal = new bootstrap.Modal(settingsModal);
+                modal.show();
+                
+                // Update threshold display
+                const rangeInput = settingsModal.querySelector('#thresholdRange');
+                const valueDisplay = settingsModal.querySelector('#thresholdValue');
+                rangeInput.addEventListener('input', () => {
+                    valueDisplay.textContent = rangeInput.value + '%';
+                });
+                
+                // Clean up after modal is hidden
+                settingsModal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(settingsModal);
                 });
             }
 
