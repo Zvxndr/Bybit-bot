@@ -1046,6 +1046,14 @@
             border: 1px solid rgba(96, 165, 250, 0.3) !important;
             color: #bfdbfe !important;
         }
+
+        /* Extra small button size */
+        .btn-xs {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.25;
+            border-radius: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -1455,28 +1463,28 @@
                         <!-- Real-time Portfolio Metrics -->
                         <div class="portfolio-metrics-grid mb-3">
                             <div class="portfolio-metric">
-                                <div class="metric-value" id="totalBalance">$0.00</div>
+                                <div class="metric-value" id="totalBalance">No Data</div>
                                 <div class="metric-label">Total Balance</div>
                                 <div class="metric-change" id="balanceChange">
-                                    <i class="bi bi-arrow-up text-success"></i> +0.00%
+                                    <i class="bi bi-dash text-muted"></i> API Required
                                 </div>
                             </div>
                             <div class="portfolio-metric">
-                                <div class="metric-value" id="dailyPnL">$0.00</div>
+                                <div class="metric-value" id="dailyPnL">No Data</div>
                                 <div class="metric-label">Daily P&L</div>
                                 <div class="metric-change" id="dailyPnLChange">
-                                    <i class="bi bi-dash text-muted"></i> 0.00%
+                                    <i class="bi bi-dash text-muted"></i> API Required
                                 </div>
                             </div>
                             <div class="portfolio-metric">
                                 <div class="metric-value" id="activeStrategies">0</div>
                                 <div class="metric-label">Active Strategies</div>
                                 <div class="metric-status" id="strategiesStatus">
-                                    <i class="bi bi-pause text-warning"></i> Paper Mode
+                                    <i class="bi bi-pause text-warning"></i> Disconnected
                                 </div>
                             </div>
                             <div class="portfolio-metric">
-                                <div class="metric-value" id="currentRisk">0.0%</div>
+                                <div class="metric-value" id="currentRisk">No Data</div>
                                 <div class="metric-label">Current Risk</div>
                                 <div class="metric-bar">
                                     <div class="metric-bar-fill" style="width: 0%" data-risk="low" id="riskBar"></div>
@@ -1519,29 +1527,25 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h3 class="card-title mb-0">🖥️ Bot Activity Console</h3>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex justify-content-md-end justify-content-start gap-3 align-items-center flex-wrap">
-                                    <div class="status-indicator" id="botStatus">
-                                        <span class="status-dot status-running me-1"></span>
-                                        <small class="text-success">Bot Running</small>
-                                    </div>
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="clearConsole()">
-                                            <i class="bi bi-trash"></i> Clear
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="pauseConsole()" id="pauseBtn">
-                                            <i class="bi bi-pause"></i> Pause
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="exportLogs()">
-                                            <i class="bi bi-download"></i> Export
-                                        </button>
-                                    </div>
+                    <div class="card-header py-2">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <h5 class="card-title mb-0">🖥️ Bot Activity Console</h5>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="status-dot status-running"></span>
+                                    <small class="text-success">Bot Running</small>
                                 </div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-xs btn-outline-primary" onclick="clearConsole()" title="Clear Console">
+                                    <i class="bi bi-trash"></i> Clear
+                                </button>
+                                <button class="btn btn-xs btn-outline-secondary" onclick="pauseConsole()" id="pauseBtn" title="Pause/Resume">
+                                    <i class="bi bi-pause"></i> Pause
+                                </button>
+                                <button class="btn btn-xs btn-outline-info" onclick="exportLogs()" title="Export Logs">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2001,6 +2005,14 @@
                 document.getElementById('paperCount').textContent = paper.length;
                 document.getElementById('liveCount').textContent = live.length;
 
+                // Log strategy updates to console
+                const totalStrategies = backtest.length + paper.length + live.length;
+                if (totalStrategies > 0) {
+                    addConsoleLog('INFO', `Strategy Update: ${backtest.length} discovery, ${paper.length} paper, ${live.length} live (${totalStrategies} total)`);
+                } else {
+                    addConsoleLog('STATUS', 'No active strategies - Start backend to see live data');
+                }
+
                 // Update strategy cards
                 this.renderStrategyCards('backtestStrategies', backtest);
                 this.renderStrategyCards('paperStrategies', paper);
@@ -2235,9 +2247,15 @@
                 document.getElementById('successRate').textContent = `${(metrics.success_rate || 0).toFixed(1)}%`;
                 document.getElementById('graduationRate').textContent = `${(metrics.graduation_rate || 0).toFixed(0)}%`;
                 
+                // Log pipeline updates to console
+                if (metrics.strategies_tested_today > 0 || metrics.candidates_found > 0) {
+                    addConsoleLog('INFO', `Pipeline Update: ${metrics.strategies_tested_today || 0} strategies tested, ${metrics.candidates_found || 0} candidates found (${(metrics.success_rate || 0).toFixed(1)}% success rate)`);
+                }
+                
                 // Show message if API not connected
                 if (metrics.message) {
                     console.info('Pipeline metrics:', metrics.message);
+                    addConsoleLog('STATUS', metrics.message);
                 }
             }
 
@@ -2470,6 +2488,13 @@
                     badge.className = 'status-badge status-idle';
                 }
                 
+                // Log portfolio updates to console
+                if (activeBalance > 0 || dailyPnL !== 0 || totalStrategies > 0) {
+                    addConsoleLog('INFO', `Portfolio Update: Balance $${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2})} | P&L ${dailyPnL >= 0 ? '+' : ''}$${Math.abs(dailyPnL).toFixed(2)} | ${totalStrategies} active strategies`);
+                } else {
+                    addConsoleLog('STATUS', 'Portfolio: No live data - Connect API for real-time updates');
+                }
+                
                 // Update last update timestamp
                 document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
             }
@@ -2578,33 +2603,12 @@
             }
 
             showLoadingState() {
-                // Add loading overlay to main dashboard
-                const overlay = document.createElement('div');
-                overlay.id = 'loadingOverlay';
-                overlay.className = 'loading-overlay';
-                overlay.innerHTML = `
-                    <div class="loading-spinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <div class="loading-text mt-2">Updating dashboard...</div>
-                    </div>
-                `;
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    flex-direction: column;
-                    z-index: 2000;
-                    backdrop-filter: blur(5px);
-                `;
-                document.body.appendChild(overlay);
+                // Disabled annoying loading overlay - just update connection status
+                const connectionStatus = document.getElementById('connectionStatus');
+                if (connectionStatus) {
+                    connectionStatus.textContent = 'Updating...';
+                    connectionStatus.className = 'badge bg-warning me-2';
+                }
             }
 
             hideLoadingState() {
