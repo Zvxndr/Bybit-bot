@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y \
     make \
     libffi-dev \
     libssl-dev \
+    libssl3 \
+    openssl \
+    ca-certificates \
     curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
