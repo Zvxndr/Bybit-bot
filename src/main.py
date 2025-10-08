@@ -58,12 +58,33 @@ try:
         if dashboard_password == 'secure_trading_2025':
             security_issues.append("⚠️ Using default dashboard password! Set DASHBOARD_PASSWORD environment variable")
         
-        # Check for API key presence
-        api_key = os.getenv('BYBIT_API_KEY')
-        if not api_key:
-            security_issues.append("⚠️ No BYBIT_API_KEY set - running in paper mode")
-        elif len(api_key) < 20:
-            security_issues.append("⚠️ BYBIT_API_KEY appears to be invalid (too short)")
+        # Check for environment-specific API keys
+        environment = os.getenv('ENVIRONMENT', 'development')
+        trading_mode = os.getenv('TRADING_MODE', 'paper')
+        
+        # Validate API key setup based on environment
+        if environment == 'production' and trading_mode == 'live':
+            live_key = os.getenv('BYBIT_LIVE_API_KEY')
+            live_secret = os.getenv('BYBIT_LIVE_API_SECRET')
+            
+            if not live_key or not live_secret:
+                security_issues.append("🔴 PRODUCTION LIVE: Missing BYBIT_LIVE_API_KEY/SECRET")
+            elif len(live_key) < 20 or len(live_secret) < 20:
+                security_issues.append("🔴 PRODUCTION LIVE: API credentials appear invalid (too short)")
+                
+        else:
+            testnet_key = os.getenv('BYBIT_TESTNET_API_KEY')
+            testnet_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
+            
+            if not testnet_key or not testnet_secret:
+                # Check for legacy keys as fallback
+                legacy_key = os.getenv('BYBIT_API_KEY')
+                if not legacy_key:
+                    security_issues.append("⚠️ No testnet API keys found - set BYBIT_TESTNET_API_KEY/SECRET")
+                else:
+                    security_issues.append("⚠️ Using legacy BYBIT_API_KEY - consider upgrading to BYBIT_TESTNET_API_KEY")
+            elif len(testnet_key) < 20 or len(testnet_secret) < 20:
+                security_issues.append("⚠️ Testnet API credentials appear invalid (too short)")
         
         # Check for production environment settings
         if os.getenv('ENVIRONMENT') == 'production':
@@ -125,16 +146,115 @@ except ImportError as e:
     infrastructure_monitor = None
 
 class TradingAPI:
-    """Production Trading API with Real Integrations"""
+    """Dual Environment Trading API - Simultaneous Testnet + Live Trading"""
     
     def __init__(self):
-        # Load API credentials from environment
-        self.api_key = os.getenv('BYBIT_API_KEY')
-        self.api_secret = os.getenv('BYBIT_API_SECRET')
+        # Load environment settings
+        self.environment = os.getenv('ENVIRONMENT', 'development')
         
-        # Load configuration-based settings
-        self.testnet = False  # Use mainnet for production
-        self.live_trading = False  # OFF by default for safety
+        # Dual API client setup - BOTH environments available simultaneously
+        self.testnet_credentials = self._load_testnet_credentials()
+        self.live_credentials = self._load_live_credentials()
+        
+        # Strategy pipeline control
+        self.enable_testnet = True  # Always enable testnet for strategy development
+        self.enable_live = self._should_enable_live_trading()  # Conditional live trading
+        
+        # Legacy compatibility (for existing code that expects these)
+        self.api_key = self.testnet_credentials['api_key'] if self.testnet_credentials['valid'] else None
+        self.api_secret = self.testnet_credentials['api_secret'] if self.testnet_credentials['valid'] else None
+        self.testnet = True  # Default to testnet for safety
+    
+    def _load_testnet_credentials(self):
+        """Load testnet API credentials for paper trading and strategy development"""
+        api_key = os.getenv('BYBIT_TESTNET_API_KEY')
+        api_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
+        
+        valid = bool(api_key and api_secret and len(api_key) > 20)
+        
+        if valid:
+            print(f"✅ Testnet credentials loaded: {api_key[:8]}...")
+        else:
+            print(f"⚠️ No valid testnet credentials - limited paper trading")
+            
+        return {
+            'api_key': api_key,
+            'api_secret': api_secret,
+            'valid': valid,
+            'environment': 'testnet'
+        }
+    
+    def _load_live_credentials(self):
+        """Load live API credentials for graduated strategy trading"""
+        api_key = os.getenv('BYBIT_LIVE_API_KEY')
+        api_secret = os.getenv('BYBIT_LIVE_API_SECRET')
+        
+        valid = bool(api_key and api_secret and len(api_key) > 20)
+        
+        if valid:
+            print(f"🔴 Live credentials loaded: {api_key[:8]}... (USE WITH CAUTION)")
+        else:
+            print(f"📋 No live credentials - testnet only mode")
+            
+        return {
+            'api_key': api_key,
+            'api_secret': api_secret,
+            'valid': valid,
+            'environment': 'live'
+        }
+    
+    def _should_enable_live_trading(self):
+        """Determine if live trading should be enabled based on environment and safety"""
+        live_mode_requested = os.getenv('TRADING_MODE', 'paper') == 'live'
+        production_env = self.environment == 'production'
+        has_live_credentials = self.live_credentials['valid']
+        
+        enable_live = live_mode_requested and production_env and has_live_credentials
+        
+        if enable_live:
+            print(f"🔴 LIVE TRADING ENABLED - Real money mode active")
+        else:
+            reasons = []
+            if not live_mode_requested: reasons.append("TRADING_MODE not set to 'live'")
+            if not production_env: reasons.append("not production environment")  
+            if not has_live_credentials: reasons.append("no live API credentials")
+            print(f"🟡 Live trading disabled: {', '.join(reasons)}")
+            
+        return enable_live
+
+    def _load_environment_credentials(self):
+        """Load API credentials based on environment and trading mode with fallbacks"""
+        environment = os.getenv('ENVIRONMENT', 'development')
+        trading_mode = os.getenv('TRADING_MODE', 'paper')
+        
+        # Environment-specific credential loading
+        if environment == 'production' and trading_mode == 'live':
+            # Production live trading - use live API keys
+            api_key = os.getenv('BYBIT_LIVE_API_KEY')
+            api_secret = os.getenv('BYBIT_LIVE_API_SECRET')
+            testnet = False
+            print(f"🔴 LIVE TRADING MODE: Using production API keys")
+            
+        elif environment in ['development', 'staging'] or trading_mode == 'paper':
+            # Development/staging or paper trading - use testnet keys
+            api_key = os.getenv('BYBIT_TESTNET_API_KEY')
+            api_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
+            testnet = True
+            print(f"🟡 PAPER/TEST MODE: Using testnet API keys")
+            
+        else:
+            # Fallback to legacy single API key (backward compatibility)
+            api_key = os.getenv('BYBIT_API_KEY')
+            api_secret = os.getenv('BYBIT_API_SECRET')
+            testnet = (trading_mode != 'live')  # Default to testnet unless explicitly live
+            print(f"⚠️ LEGACY MODE: Using single API key (testnet: {testnet})")
+        
+        # Validation
+        if not api_key or not api_secret:
+            print(f"❌ Missing API credentials for {environment}/{trading_mode}")
+            print(f"   Expected: BYBIT_{'LIVE' if not testnet else 'TESTNET'}_API_KEY/SECRET")
+            
+        return api_key, api_secret, testnet
         
         # Initialize core components
         self.bybit_client = None  # Mainnet client for live trading

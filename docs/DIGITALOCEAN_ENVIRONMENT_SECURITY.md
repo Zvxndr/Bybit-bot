@@ -18,12 +18,27 @@ Our current security implementation **perfectly aligns** with DigitalOcean's enc
 #### **Environment-Driven Security Configuration**
 ```python
 # From our src/main.py implementation - DIGITALOCEAN COMPATIBLE
-DASHBOARD_USERNAME = os.getenv("DASHBOARD_USERNAME", "admin")
-DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "secure_trading_2025_CHANGE_ME")
+# Environment-Aware API Configuration (UPDATED OCTOBER 8, 2025)
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")  # development/staging/production
+TRADING_MODE = os.getenv("TRADING_MODE", "paper")      # paper/live
+
+# Testnet API Keys (for development/staging/paper trading)
+BYBIT_TESTNET_API_KEY = os.getenv("BYBIT_TESTNET_API_KEY", "")
+BYBIT_TESTNET_API_SECRET = os.getenv("BYBIT_TESTNET_API_SECRET", "")
+
+# Live API Keys (for production live trading only)
+BYBIT_LIVE_API_KEY = os.getenv("BYBIT_LIVE_API_KEY", "")
+BYBIT_LIVE_API_SECRET = os.getenv("BYBIT_LIVE_API_SECRET", "")
+
+# Legacy backward compatibility
 BYBIT_API_KEY = os.getenv("BYBIT_API_KEY", "")
 BYBIT_API_SECRET = os.getenv("BYBIT_API_SECRET", "")
+
+# Dashboard Security
+DASHBOARD_USERNAME = os.getenv("DASHBOARD_USERNAME", "admin")
+DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "secure_trading_2025_CHANGE_ME")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 ```
 
 **✅ This pattern works PERFECTLY with DigitalOcean's encrypted environment variables!**
