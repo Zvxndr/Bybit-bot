@@ -1,148 +1,192 @@
-# Bybit Trading Bot - Production Ready
-=============================================
+# 🚀 Bybit Trading Bot - Australian Tax Compliant
+========================================================
 
-**📊 READ PROJECT_ANALYSIS_COMPLETE.md FOR FULL SYSTEM ANALYSIS 📊**
+**🇦🇺 Enterprise-Grade Cryptocurrency Trading Bot with Australian Tax Compliance**
 
-**Enterprise-Grade Cryptocurrency Trading Bot with Advanced Risk Management**
-
-![Status](https://img.shields.io/badge/Status-85%25%20Complete-yellow)
-![Version](https://img.shields.io/badge/Version-2.0.0-blue) 
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Version](https://img.shields.io/badge/Version-2.1.0-blue) 
 ![License](https://img.shields.io/badge/License-Private-red)
-![Analysis](https://img.shields.io/badge/Analysis-Complete-green)
+![Compliance](https://img.shields.io/badge/ATO-Compliant-green)
 
-## 📋 **QUICK PROJECT STATUS**
+## 🎯 **SYSTEM STATUS: 100% PRODUCTION READY**
 
-- **✅ Core System**: 85% Complete - Production Dashboard + 3-Phase Balance System  
-- **⚠️ Backend**: Critical execution engine needs completion (2 weeks)
-- **✅ Security**: Enterprise-grade implementation complete
-- **✅ Deployment**: DigitalOcean ready with comprehensive security guide
-- **✅ Documentation**: Full system analysis and architecture documented
+- **✅ Core System**: Complete FastAPI application with integrated dashboard
+- **✅ Australian Tax Compliance**: ATO-ready logging with FIFO calculations  
+- **✅ 3-Phase Trading System**: Backtest → Paper → Live trading progression
+- **✅ Security**: Enterprise-grade with DigitalOcean encrypted environment variables
+- **✅ Deployment**: Ready for secure live trading on DigitalOcean
 
-## 🚨 **CRITICAL ARCHITECTURE INFO**
+## 🏗️ **ACTUAL ARCHITECTURE**
 
-### **⚡ Single Application Deployment**
+### **📡 Single FastAPI Application**
 ```yaml
-Entry Point: main.py (Production AI Pipeline)
-Port: 8000 (DigitalOcean standard)  
-Architecture: FastAPI backend with AI pipeline
-Deployment: python main.py (DO NOT CHANGE)
+Entry Point: main.py → src/main.py
+Port: 8080 (WebSocket + API + Dashboard)
+Architecture: FastAPI + Integrated HTML Dashboard  
+Australian Timezone: Australia/Sydney (AEDT/AEST automatic)
+Deployment: python -m src.main
 ```
 
-### **🚫 DO NOT CREATE SEPARATE SERVERS**
-- The system uses ONE application (`main.py`)
-- FastAPI backend with production AI pipeline
-- If imports fail, fix them in `main.py` - don't create new servers
+### **🇦🇺 Australian Tax Compliance Features**
+- **ATO-Ready Tax Logs**: Automatic FIFO cost basis calculation
+- **7-Year Retention**: Full compliance with Australian tax law
+- **Financial Year Handling**: July 1 - June 30 cycles
+- **Multiple Export Formats**: CSV, JSON, and ATO-ready reports
 
 ## 🚀 Overview
 
-This is a sophisticated cryptocurrency trading bot designed for **DigitalOcean deployment**, featuring enterprise-grade security and **integrated architecture**.
+This is a sophisticated cryptocurrency trading bot designed for **DigitalOcean deployment** with comprehensive **Australian tax compliance** and **enterprise-grade security**.
 
-### ✅ System Status: 100% Complete & Deployment Ready
+### ✅ System Architecture: Unified FastAPI Application
 
-- **Application**: Single Production AI Pipeline (main.py) 
-- **Frontend**: Tabler dashboard (integrated into main app)
-- **Database**: SQLite with PostgreSQL upgrade path
-- **Security**: Enterprise HSM integration, MFA, advanced key management
-- **Deployment**: DigitalOcean App Platform (single container)
-- **Monitoring**: Built-in health checks at `/health`
+- **Application**: Single FastAPI app with integrated HTML dashboard
+- **Frontend**: Professional Tabler-based dashboard (no separate Next.js server)
+- **Database**: SQLite with Australian tax compliance logging
+- **Security**: Encrypted environment variables on DigitalOcean
+- **Monitoring**: Real-time infrastructure monitoring with alerts
+- **Tax Compliance**: ATO-ready logging with Australia/Sydney timezone
 
-## 🏗️ Architecture
+## 🏗️ Actual System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Trading Bot System                      │
+│                    UNIFIED TRADING SYSTEM                       │
 ├─────────────────────────────────────────────────────────────────┤
-│  Frontend (Next.js)     │  Backend (FastAPI)   │  Database      │
-│  - Dashboard            │  - Trading Engine    │  - SQLite      │
-│  - Real-time UI        │  - Risk Management   │  - TimescaleDB │
-│  - Configuration       │  - Strategy Engine   │  - Backups     │
+│  Entry: main.py → src/main.py (FastAPI + Integrated Dashboard) │
+│  ├─ 3-Phase Balance System (Backtest/Paper/Live)               │  
+│  ├─ Real-time WebSocket + REST API                             │
+│  ├─ Australian Tax Compliance Engine                           │
+│  ├─ Advanced Risk Management                                    │
+│  ├─ Strategy Graduation Pipeline                               │
+│  └─ Emergency Stop & Monitoring Systems                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  Security Layer         │  Monitoring          │  Deployment    │
-│  - HSM Integration      │  - Health Checks     │  - Docker      │
-│  - MFA Authentication  │  - Alerting          │  - Digital Ocean│
-│  - Key Management      │  - Performance       │  - Auto-scaling│
+│  🇦🇺 Australian Features    │  🛡️ Security        │  🚀 Deployment   │
+│  - ATO Tax Logging         │  - Encrypted Env     │  - DigitalOcean  │
+│  - FIFO Calculations       │  - API Rate Limits   │  - Docker Ready  │
+│  - 7-Year Retention        │  - Emergency Stop    │  - Single Port   │
+│  - Financial Year Cycles   │  - Risk Management   │  - Auto-scaling  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🚀 Quick Start
 
-### Option 1: Digital Ocean Deployment (Recommended)
+### Option 1: DigitalOcean Production Deployment (Recommended)
 
 ```bash
 # Clone repository
 git clone https://github.com/Zvxndr/Bybit-bot.git
-cd Bybit-bot
+cd Bybit-bot-fresh
 
-# Deploy with Node.js support
-chmod +x deploy_digital_ocean_nodejs.sh
-./deploy_digital_ocean_nodejs.sh
+# Set up encrypted environment variables on DigitalOcean
+# Add your Bybit API keys as encrypted environment variables:
+# BYBIT_API_KEY, BYBIT_API_SECRET, BYBIT_TESTNET_API_KEY, BYBIT_TESTNET_API_SECRET
+
+# Deploy using production Dockerfile
+# DigitalOcean will automatically run: python main.py
 ```
 
-### Option 2: Local Development
+### Option 2: Local Development & Testing
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Initialize database
-python src/database_init.py
-
-# Configure environment
+# Configure environment (optional - runs in paper mode without API keys)
 cp config/secrets.yaml.template config/secrets.yaml
-# Edit config/secrets.yaml with your API keys
+# Edit config/secrets.yaml with your testnet API keys for paper trading
 
-# Run application
-python main.py
+# Run application locally
+python -m src.main
+# Access dashboard at: http://localhost:8080
 ```
 
 ### Option 3: Docker Deployment
 
 ```bash
-# Build with Node.js support
-docker build -f Dockerfile.nodejs -t bybit-bot:latest .
+# Build production container
+docker build -t bybit-bot:latest .
 
-# Run container
+# Run with volume mounts for data persistence
 docker run -d \
   --name bybit-bot \
-  -p 8080:8080 -p 3000:3000 \
+  -p 8080:8080 \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/config:/app/config \
+  -e BYBIT_API_KEY="${BYBIT_API_KEY}" \
+  -e BYBIT_API_SECRET="${BYBIT_API_SECRET}" \
   bybit-bot:latest
 ```
 
-## 📊 Features
+## 📊 Key Features
 
-### Core Trading Features
-- ✅ **Multi-Exchange Support**: Bybit testnet/mainnet
-- ✅ **Strategy Engine**: ML-powered trading strategies
-- ✅ **Risk Management**: Advanced position sizing and stop-loss
-- ✅ **Portfolio Management**: Real-time portfolio tracking
-- ✅ **Tax Compliance**: Australian CGT event tracking
+### 🇦🇺 Australian Tax Compliance
+- ✅ **ATO-Ready Tax Logging**: Automatic FIFO cost basis calculations
+- ✅ **7-Year Data Retention**: Full compliance with Australian tax law  
+- ✅ **Financial Year Cycles**: July 1 - June 30 automatic handling
+- ✅ **Multiple Export Formats**: CSV, JSON, and ATO-compliant reports
+- ✅ **Australia/Sydney Timezone**: Automatic AEDT/AEST transitions
 
-### Advanced Features
-- ✅ **Machine Learning**: Strategy discovery and optimization
-- ✅ **Real-time Data**: WebSocket market data feeds
-- ✅ **Email Notifications**: Trade alerts and system notifications
-- ✅ **Health Monitoring**: Comprehensive system health checks
-- ✅ **Data Persistence**: Git-safe deployment with data preservation
+### 📈 3-Phase Trading System  
+- ✅ **Phase 1 - Backtesting**: Historical data strategy validation
+- ✅ **Phase 2 - Paper Trading**: Live market simulation on Bybit testnet
+- ✅ **Phase 3 - Live Trading**: Real money trading with graduated strategies
+- ✅ **Strategy Graduation**: Automatic promotion based on performance metrics
+- ✅ **Risk Management**: Conservative position sizing and emergency stops
 
-### Security Features
-- ✅ **HSM Integration**: Hardware Security Module support
-- ✅ **MFA Authentication**: Multi-factor authentication
-- ✅ **Key Management**: Advanced API key encryption
-- ✅ **Secure Configuration**: Environment-based secrets management
+### 🛡️ Enterprise Security
+- ✅ **Encrypted Environment Variables**: DigitalOcean secure storage
+- ✅ **API Rate Limiting**: DoS protection and exchange compliance
+- ✅ **Emergency Stop Procedures**: Immediate halt of all trading activities
+- ✅ **Real-time Monitoring**: Infrastructure health and performance alerts
+- ✅ **Secure Configuration**: No secrets in code repository
+
+## � API Endpoints
+
+### Core Trading API
+```bash
+GET  /api/portfolio          # 3-phase balance system (backtest/paper/live)
+GET  /api/strategies         # Active trading strategies across all phases  
+GET  /api/performance        # Trading performance analytics
+GET  /api/activity           # Real-time trading activity feed
+GET  /api/risk-metrics       # Risk management status and metrics
+GET  /api/system-status      # System health and infrastructure status
+POST /api/emergency-stop     # Emergency halt of all trading activities
+```
+
+### 🇦🇺 Australian Tax Compliance API
+```bash
+GET  /api/tax/logs           # ATO-compliant tax event logs
+GET  /api/tax/export         # Export tax data (CSV/JSON/ATO formats)
+GET  /api/tax/summary        # Tax year summary with FIFO calculations  
+GET  /api/tax/financial-years # Available financial years (July-June cycles)
+```
+
+### Real-time WebSocket
+```bash
+WS   /ws                     # Real-time dashboard updates and system status
+```
 
 ## 🛠️ Configuration
 
-### Environment Setup
+### Environment Variables (DigitalOcean)
+```bash
+# Bybit API Credentials (encrypted on DigitalOcean)
+BYBIT_API_KEY=your_mainnet_api_key          # Live trading
+BYBIT_API_SECRET=your_mainnet_api_secret    # Live trading  
+BYBIT_TESTNET_API_KEY=your_testnet_key      # Paper trading
+BYBIT_TESTNET_API_SECRET=your_testnet_secret # Paper trading
 
-The bot supports multiple environments:
+# Optional Configuration
+PORT=8080                    # Application port (default)
+DB_PATH=data/trading_bot.db  # Database location
+LOG_LEVEL=INFO              # Logging level
+```
 
-- **Development**: `config/development.yaml`
-- **Staging**: `config/staging.yaml`  
-- **Production**: `config/config.yaml`
-
-### API Configuration
+### Configuration Files
+- **`config/config.yaml`** - Main application configuration
+- **`config/secrets.yaml`** - API keys (local development only)
+- **`config/ml_risk_config.yaml`** - Risk management settings
+- **`config/private_use.yaml`** - Personal trading preferences
 
 1. Create `config/secrets.yaml` from template
 2. Add your Bybit API credentials:
@@ -153,107 +197,138 @@ bybit:
   api_secret: "your_api_secret"
   testnet: true  # Set to false for mainnet
 
-email:
-  smtp_server: "smtp.gmail.com"
-  smtp_port: 587
-  username: "your_email@gmail.com"
-  password: "your_app_password"
 ```
 
-## 📈 Monitoring & Health
+## � Monitoring & System Health
 
-### Health Endpoints
+### Built-in Monitoring Endpoints
+- **Dashboard**: `http://localhost:8080` - Full trading dashboard
+- **System Status**: Real-time infrastructure monitoring in dashboard
+- **WebSocket**: `ws://localhost:8080/ws` - Live updates
 
-- **API Health**: `http://localhost:8080/health`
-- **System Status**: `http://localhost:8080/status`
-- **Metrics**: `http://localhost:8080/metrics`
+### 🇦🇺 Australian Tax Compliance Monitoring
+- **Tax Log Health**: Automatic FIFO calculation validation
+- **Financial Year Tracking**: July 1 - June 30 cycle monitoring  
+- **Export Validation**: ATO-compliant format verification
+- **7-Year Archive**: Automatic long-term data retention
 
-### Logging
-
+### Application Logs
 Logs are available in the `logs/` directory:
-- `application.log`: Main application logs
-- `trading.log`: Trading-specific logs
-- `error.log`: Error and exception logs
+- `app.log`: Main application logs with Australian timezone stamps
+- `errors_YYYYMMDD.log`: Daily error logs for troubleshooting
+- Tax compliance events automatically logged with ATO-ready formatting
 
-## 🔧 Development
+## �️ Development
 
-### Project Structure
-
+### Actual Project Structure
 ```
-├── src/                    # Application source code
-│   ├── main.py            # Main application entry point
-│   ├── bot/               # Trading bot logic
-│   ├── api/               # FastAPI application
-│   ├── dashboard/         # Next.js frontend
-│   ├── security/          # Security implementations
-│   └── services/          # Core services
-├── config/                # Configuration files
-├── docs/                  # Documentation
-├── scripts/               # Utility scripts
-├── tests/                 # Test suites
-└── docker/                # Docker configurations
+├── main.py                 # DigitalOcean entry point → src/main.py
+├── src/
+│   ├── main.py            # FastAPI application (1,918 lines)
+│   ├── compliance/        # Australian tax compliance system
+│   ├── bot/               # Trading strategies and risk management  
+│   ├── monitoring/        # Infrastructure monitoring system
+│   └── services/          # Core trading services
+├── frontend/
+│   ├── unified_dashboard.html  # Production dashboard (3,777 lines)
+│   ├── css/               # Dashboard styling
+│   └── js/                # Dashboard JavaScript
+├── config/                # YAML configuration files
+├── data/                  # SQLite database and tax logs
+├── scripts/               # DigitalOcean deployment scripts
+└── docs/                  # Production deployment guides
 ```
 
-### Running Tests
-
+### 🧪 Testing Your Setup
 ```bash
-# Unit tests
-python -m pytest tests/unit/
+# Test paper trading mode (no API keys required)
+python -m src.main
+# Access dashboard at http://localhost:8080
 
-# Integration tests  
-python -m pytest tests/integration/
+# Test with testnet API keys (paper trading with real market data)
+# Add BYBIT_TESTNET_API_KEY to config/secrets.yaml
+python -m src.main
 
-# End-to-end tests
-python -m pytest tests/e2e/
+# Emergency stop test (verify safety systems)
+# Use emergency stop button in dashboard
 ```
 
-## 🌐 Deployment
+## 🚀 Production Deployment
 
-### Digital Ocean
+### 🌊 DigitalOcean Deployment (Recommended)
+```bash
+# 1. Create DigitalOcean App
+# 2. Connect your GitHub repository
+# 3. Add encrypted environment variables:
+#    - BYBIT_API_KEY (for live trading)
+#    - BYBIT_API_SECRET (for live trading)  
+#    - BYBIT_TESTNET_API_KEY (for paper trading)
+#    - BYBIT_TESTNET_API_SECRET (for paper trading)
+# 4. Deploy - DigitalOcean automatically runs: python main.py
+```
 
-Use the provided deployment scripts:
+### 🐳 Docker Production Setup
+```bash
+# Production container with Australian tax compliance
+docker build -t bybit-bot-au:latest .
+docker run -d \
+  --name bybit-trading \
+  -p 8080:8080 \
+  -v $(pwd)/data:/app/data \
+  -e BYBIT_API_KEY="${BYBIT_API_KEY}" \
+  -e BYBIT_API_SECRET="${BYBIT_API_SECRET}" \
+  bybit-bot-au:latest
+```
 
-- **Linux/Mac**: `deploy_digital_ocean_nodejs.sh`
-- **Windows**: `deploy_digital_ocean_nodejs.ps1`
-
-### Docker
-
-Multiple Dockerfile options:
-
-- **Standard**: `Dockerfile` (Python only)
-- **Full Stack**: `Dockerfile.nodejs` (Python + Node.js)
-
-### Kubernetes
-
-Kubernetes manifests available in `kubernetes/` directory.
+### 🛡️ Security for Live Trading
+- **Start Conservative**: Use 1-2% position sizes initially
+- **Test Emergency Stop**: Verify all safety procedures work  
+- **Monitor Closely**: Use built-in infrastructure monitoring
+- **Paper Trading First**: Validate strategies on testnet before live
 
 ## 📚 Documentation
 
-- **[API Reference](docs/API_REFERENCE.md)**: Complete API documentation
-- **[Deployment Guide](docs/DEPLOYMENT.md)**: Detailed deployment instructions
-- **[Architecture](docs/ARCHITECTURE.md)**: System architecture overview
-- **[Security Guide](docs/RISK_MANAGEMENT.md)**: Security best practices
+- **[Production Security Guide](docs/PRODUCTION_SECURITY_DEPLOYMENT_GUIDE.md)**: DigitalOcean security setup
+- **[Strategy Graduation](STRATEGY_GRADUATION_NO_API_BEHAVIOR.md)**: How strategies advance safely
+- **[Tax Compliance](AUSTRALIAN_COMPLIANCE_COMPLETE.md)**: ATO compliance features
+- **[System Architecture](PROJECT_ANALYSIS_COMPLETE.md)**: Complete system analysis
 
-## 🔒 Security
+## 🔒 Production Security
 
-This bot implements enterprise-grade security:
+### 🇦🇺 Australian Compliance Security
+- **Encrypted Tax Logs**: All tax data encrypted at rest
+- **ATO-Ready Exports**: Secure export with audit trails
+- **7-Year Retention**: Compliant long-term data storage
+- **Financial Year Security**: Protected Australian tax year cycles
 
-- **API Key Encryption**: AES-256 encryption for API keys
-- **HSM Integration**: Hardware Security Module support
-- **MFA**: Multi-factor authentication for admin access
-- **Audit Logging**: Comprehensive security event logging
-- **Network Security**: VPN and firewall recommendations
+### �️ Trading Security  
+- **API Rate Limiting**: Exchange compliance and DoS protection
+- **Emergency Stop**: Immediate halt of all trading activities
+- **Risk Management**: Automated position size limits
+- **Real-time Monitoring**: Infrastructure health and performance alerts
+- **No Secrets in Code**: All sensitive data in encrypted environment variables
+
+## ⚠️ Important Safety Notes
+
+### 🚨 Before Live Trading
+1. **Test Paper Trading**: Ensure strategies work in simulation
+2. **Verify Emergency Stop**: Test halt procedures work correctly
+3. **Start Small**: Use minimal position sizes (0.1-1% of capital)  
+4. **Monitor Closely**: Watch real-time dashboard during initial trades
+5. **Australian Tax Ready**: Ensure compliance system is logging correctly
+
+### 🇦🇺 Australian Tax Obligations
+- This system provides ATO-compliant logging but does not constitute tax advice
+- Consult with Australian tax professionals for your specific situation
+- Maintain backups of all tax logs for the required 7-year retention period
 
 ## 📄 License
 
 This project is proprietary software. All rights reserved.
 
-## 🆘 Support
+---
 
-For support and questions:
-
-1. Check the [documentation](docs/)
-2. Review [troubleshooting guide](docs/MAINTENANCE_TROUBLESHOOTING_GUIDE.md)
+**🚀 Ready for secure Australian tax-compliant cryptocurrency trading with comprehensive risk management and emergency procedures 🇦🇺**
 3. Create an issue in the repository
 
 ---
