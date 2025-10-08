@@ -430,25 +430,33 @@ class TradingAPI:
             }
     
     def _calculate_risk_level(self, balance: float) -> str:
-        """Calculate risk level based on account balance"""
-        if balance < 1000:
-            return "conservative"
-        elif balance < 10000:
-            return "moderate"
+        """Calculate risk level using Speed Demon algorithm (aggressive growth for small accounts)"""
+        if balance < 10000:
+            return "aggressive_growth"  # Small accounts need aggressive growth
         elif balance < 100000:
-            return "aggressive"
+            return "transitional"       # Exponential decay zone
         else:
-            return "institutional"
+            return "capital_preservation"  # Large accounts preserve capital
     
     def _calculate_risk_percentage(self, balance: float, risk_level: str) -> float:
-        """Calculate risk percentage based on balance and level"""
-        base_risk = {
-            "conservative": 1.0,
-            "moderate": 2.0,
-            "aggressive": 3.0,
-            "institutional": 1.5
-        }
-        return base_risk.get(risk_level, 1.0)
+        """Calculate risk percentage using Speed Demon algorithm"""
+        # Speed Demon parameters - aggressive for small accounts
+        small_account_risk = 2.0    # 2% for accounts < $10K (aggressive growth)
+        large_account_risk = 0.5    # 0.5% for accounts > $100K (capital preservation)
+        transition_start = 10000    # $10K
+        transition_end = 100000     # $100K
+        
+        if balance <= transition_start:
+            return small_account_risk
+        elif balance >= transition_end:
+            return large_account_risk
+        else:
+            # Exponential decay in transition zone
+            import math
+            range_ratio = (balance - transition_start) / (transition_end - transition_start)
+            decay_multiplier = math.exp(-0.5 * range_ratio * 5)  # Speed Demon decay
+            risk_range = small_account_risk - large_account_risk
+            return large_account_risk + (risk_range * decay_multiplier)
     
     async def get_trading_opportunities(self) -> Dict[str, Any]:
         """Get current trading opportunities and signals"""

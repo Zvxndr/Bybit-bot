@@ -15,6 +15,17 @@ Based on your DigitalOcean environment variables screenshot, here's how to confi
 
 **Status**: ✅ Ready for paper trading, needs additional keys for full functionality
 
+## 📧 **GMAIL EMAIL REPORTS ARE 100% FREE**
+
+**✅ Completely Free Gmail Features:**
+- **Gmail App Passwords**: FREE (no charges ever)
+- **SMTP Email Sending**: FREE (up to 500 emails/day - perfect for trading reports)
+- **Australian Tax Compliance Reports**: FREE automated delivery
+- **Trading Alerts & Notifications**: FREE real-time alerts
+- **No Monthly Fees**: No API charges, no subscription costs
+
+**Perfect for your trading bot - zero additional costs for professional email reporting! 🇦🇺**
+
 ---
 
 ## 📋 **COMPLETE ENVIRONMENT VARIABLES LIST**
@@ -66,16 +77,25 @@ Based on your DigitalOcean environment variables screenshot, here's how to confi
 | `FINANCIAL_YEAR` | `2025-26` | ❌ No | Current Australian FY |
 | `ATO_REPORTING_ENABLED` | `true` | ❌ No | Enable ATO reporting |
 
-### **🚨 RISK MANAGEMENT & LIMITS**
+### **🚨 SPEED DEMON DYNAMIC RISK MANAGEMENT**
 
-**Conservative settings for live trading:**
+**Your system uses the Speed Demon algorithm for aggressive growth:**
 
 | Key | Value | Encrypt? | Description |
 |-----|-------|----------|-------------|
-| `MAX_DAILY_LOSS_AUD` | `100.00` | ❌ No | Daily loss limit (start small!) |
-| `MAX_POSITION_SIZE_PERCENT` | `0.5` | ❌ No | 0.5% position sizes |
-| `EMERGENCY_STOP_THRESHOLD` | `2.0` | ❌ No | 2% loss triggers emergency stop |
-| `RISK_MANAGEMENT_MODE` | `ultra_conservative` | ❌ No | Conservative risk mode |
+| `RISK_MANAGEMENT_MODE` | `speed_demon` | ❌ No | **Uses Speed Demon algorithm** |
+| `SPEED_DEMON_ENABLED` | `true` | ❌ No | Enable Speed Demon dynamic risk |
+| `SMALL_ACCOUNT_RISK` | `2.0` | ❌ No | **2% for <$10K balance (AGGRESSIVE GROWTH)** |
+| `LARGE_ACCOUNT_RISK` | `0.5` | ❌ No | **0.5% for >$100K balance (CAPITAL PRESERVATION)** |
+| `TRANSITION_START` | `10000` | ❌ No | $10K - start of transition zone |
+| `TRANSITION_END` | `100000` | ❌ No | $100K - end of transition zone |
+| `DECAY_FACTOR` | `0.5` | ❌ No | Exponential decay rate in transition |
+| `EMERGENCY_STOP_THRESHOLD` | `5.0` | ❌ No | 5% portfolio loss triggers emergency stop |
+
+**🎯 How Speed Demon Works (CORRECT BEHAVIOR):**
+- **Balance <$10,000**: **2.0% position sizes** (Aggressive growth for small accounts)
+- **Balance $10K-$100K**: **Exponential decay from 2.0% down to 0.5%**
+- **Balance >$100,000**: **0.5% position sizes** (Capital preservation)
 
 ---
 
@@ -167,29 +187,47 @@ Value: true
 Encrypt: No
 ```
 
-### **Step 5: Add Risk Management**
+### **Step 5: Add Speed Demon Risk Management**
 
 ```
-Key: MAX_DAILY_LOSS_AUD
-Value: 100.00
+Key: RISK_MANAGEMENT_MODE
+Value: speed_demon
 Encrypt: No
 ```
 
 ```
-Key: MAX_POSITION_SIZE_PERCENT
-Value: 0.5
+Key: SPEED_DEMON_ENABLED
+Value: true
 Encrypt: No
 ```
 
 ```
-Key: EMERGENCY_STOP_THRESHOLD
+Key: SMALL_ACCOUNT_RISK
 Value: 2.0
 Encrypt: No
 ```
 
 ```
-Key: RISK_MANAGEMENT_MODE
-Value: ultra_conservative
+Key: LARGE_ACCOUNT_RISK
+Value: 0.5
+Encrypt: No
+```
+
+```
+Key: TRANSITION_START
+Value: 10000
+Encrypt: No
+```
+
+```
+Key: TRANSITION_END
+Value: 100000
+Encrypt: No
+```
+
+```
+Key: EMERGENCY_STOP_THRESHOLD
+Value: 5.0
 Encrypt: No
 ```
 
@@ -285,11 +323,15 @@ TAX_COMPLIANCE_MODE=production
 FINANCIAL_YEAR=2025-26
 ATO_REPORTING_ENABLED=true
 
-# Risk Management (Add these)
-MAX_DAILY_LOSS_AUD=100.00
-MAX_POSITION_SIZE_PERCENT=0.5
-EMERGENCY_STOP_THRESHOLD=2.0
-RISK_MANAGEMENT_MODE=ultra_conservative
+# Speed Demon Risk Management (Add these)
+RISK_MANAGEMENT_MODE=speed_demon
+SPEED_DEMON_ENABLED=true
+SMALL_ACCOUNT_RISK=2.0
+LARGE_ACCOUNT_RISK=0.5
+TRANSITION_START=10000
+TRANSITION_END=100000
+DECAY_FACTOR=0.5
+EMERGENCY_STOP_THRESHOLD=5.0
 ```
 
 **🚀 Once configured, your trading bot will have:**
