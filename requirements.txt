@@ -39,3 +39,6 @@ ta>=0.10.0
 
 # Database
 sqlalchemy>=2.0.0
+
+# Logging
+loguru>=0.7.0

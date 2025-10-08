@@ -1669,6 +1669,97 @@
             </div>
         </div>
 
+        <!-- Paper Trading Performance Chart -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">📊 Paper Trading Performance</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <small class="text-muted me-2">Testnet Results</small>
+                            <div class="btn-group" role="group" id="paperTimeframeControls">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1h')" id="paper-tf-1h">1H</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('4h')" id="paper-tf-4h">4H</button>
+                                <button class="btn btn-sm btn-outline-secondary active" onclick="dashboard.setPaperPerformanceTimeframe('1d')" id="paper-tf-1d">1D</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1w')" id="paper-tf-1w">1W</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1m')" id="paper-tf-1m">1M</button>
+                            </div>
+                            <button class="btn btn-sm btn-outline-success" onclick="dashboard.refreshPaperPerformance()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Chart Container -->
+                        <div class="chart-container position-relative">
+                            <canvas id="paperPerformanceChart"></canvas>
+                            <!-- No Data Overlay -->
+                            <div class="chart-no-data-overlay" id="paperChartNoDataOverlay">
+                                <div class="no-data-content">
+                                    <i class="bi bi-graph-up display-1 text-success mb-3"></i>
+                                    <h5 class="text-muted">No Paper Trading Data Available</h5>
+                                    <p class="text-muted mb-3">
+                                        Paper trading performance will appear here once you have active testnet strategies.
+                                    </p>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <span class="badge bg-success">📊 Paper Mode Active</span>
+                                        <span class="badge bg-secondary">🔧 Testnet Ready</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Paper Performance Status -->
+                        <div class="mt-2">
+                            <small id="paperPortfolioStatus" class="text-muted">
+                                <i class="bi bi-info-circle"></i> Paper trading portfolio ready - Safe testing environment
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🧪 Paper Trading Stats</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Virtual Balance:</span>
+                                    <span id="paperBalance" class="fw-bold text-success">$10,000.00</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Paper P&L:</span>
+                                    <span id="paperPnl" class="fw-bold text-muted">$0.00</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Success Rate:</span>
+                                    <span id="paperSuccessRate" class="fw-bold text-info">0%</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Total Trades:</span>
+                                    <span id="paperTotalTrades" class="fw-bold">0</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <hr class="my-2">
+                                <div class="text-center">
+                                    <span class="badge bg-success">🛡️ Risk-Free Testing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Activity Feed & Risk Metrics -->
         <div class="row mb-4">
             <div class="col-lg-6">
@@ -2370,6 +2461,68 @@
                 this.currentTimeframe = '1d';
                 this.showNoDataState();
 
+                // Paper Trading Performance Chart
+                const paperPerformanceCtx = document.getElementById('paperPerformanceChart').getContext('2d');
+                this.charts.paperPerformance = new Chart(paperPerformanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Paper Portfolio Value ($)',
+                            data: [],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 4,
+                            pointBackgroundColor: '#22c55e',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: { color: '#ffffff' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: $${context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#ffffff',
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        },
+                        elements: {
+                            line: {
+                                borderWidth: 2
+                            }
+                        }
+                    }
+                });
+
+                // Initialize paper trading with empty state
+                this.currentPaperTimeframe = '1d';
+                this.showPaperNoDataState();
+
                 // Strategy Distribution Chart
                 const distributionCtx = document.getElementById('distributionChart').getContext('2d');
                 this.charts.distribution = new Chart(distributionCtx, {
@@ -2412,6 +2565,11 @@
                     // Load performance
                     const performance = await fetch('/api/performance').then(r => r.json());
                     this.updatePerformanceChart(performance);
+
+                    // Load paper performance
+                    const paperPerformance = await fetch('/api/paper-performance').then(r => r.json());
+                    this.updatePaperPerformanceChart(paperPerformance);
+                    this.updatePaperTradingStats(paperPerformance.stats);
 
                     // Load activity
                     const activity = await fetch('/api/activity').then(r => r.json());
@@ -2997,6 +3155,112 @@
                 document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
             }
 
+            // Paper Trading Performance Chart Functions
+            updatePaperPerformanceChart(paperPerformance) {
+                if (!this.charts.paperPerformance) return;
+                
+                // Check for paper trading performance data
+                if (!paperPerformance || !paperPerformance.data || paperPerformance.data.length === 0) {
+                    this.showPaperNoDataState();
+                    return;
+                }
+                
+                // Filter data by current timeframe
+                const filteredData = this.filterPerformanceDataByTimeframe(paperPerformance.data, this.currentPaperTimeframe);
+                
+                if (filteredData.length === 0) {
+                    this.showPaperNoDataState();
+                    return;
+                }
+                
+                // Hide no-data overlay and show real data
+                this.hidePaperNoDataState();
+                
+                // Update with real paper performance data
+                const labels = filteredData.map(point => {
+                    const date = new Date(point.timestamp);
+                    return this.formatDateLabel(date, this.currentPaperTimeframe);
+                });
+                
+                const values = filteredData.map(point => point.portfolio_value);
+                
+                // Update chart with paper trading data
+                this.charts.paperPerformance.data.labels = labels;
+                this.charts.paperPerformance.data.datasets[0].data = values;
+                
+                this.charts.paperPerformance.update();
+                
+                // Update paper portfolio status
+                const latestValue = values[values.length - 1];
+                const firstValue = values[0];
+                
+                if (latestValue && firstValue && firstValue !== 0) {
+                    const change = ((latestValue - firstValue) / firstValue * 100).toFixed(2);
+                    document.getElementById('paperPortfolioStatus').innerHTML = 
+                        `<i class="bi bi-graph-up text-success"></i> Paper Portfolio: $${latestValue.toLocaleString()} (${change >= 0 ? '+' : ''}${change}% ${this.getTimeframeLabel()})`;
+                } else {
+                    document.getElementById('paperPortfolioStatus').innerHTML = 
+                        `<i class="bi bi-info-circle"></i> Paper trading portfolio ready - Safe testing environment`;
+                }
+            }
+
+            showPaperNoDataState() {
+                // Show the no-data overlay for paper chart
+                const overlay = document.getElementById('paperChartNoDataOverlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                }
+            }
+
+            hidePaperNoDataState() {
+                // Hide the no-data overlay for paper chart
+                const overlay = document.getElementById('paperChartNoDataOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            setPaperPerformanceTimeframe(timeframe) {
+                // Update active button
+                document.querySelectorAll('#paperTimeframeControls .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`paper-tf-${timeframe}`).classList.add('active');
+                
+                // Update current timeframe and refresh chart
+                this.currentPaperTimeframe = timeframe;
+                this.refreshPaperPerformance();
+            }
+
+            async refreshPaperPerformance() {
+                try {
+                    const paperPerformance = await fetch('/api/paper-performance').then(r => r.json());
+                    this.updatePaperPerformanceChart(paperPerformance);
+                } catch (error) {
+                    console.log('No paper performance data available');
+                    this.showPaperNoDataState();
+                }
+            }
+
+            updatePaperTradingStats(paperData) {
+                // Update paper trading statistics
+                if (!paperData) return;
+
+                const paperBalance = document.getElementById('paperBalance');
+                const paperPnl = document.getElementById('paperPnl');
+                const paperSuccessRate = document.getElementById('paperSuccessRate');
+                const paperTotalTrades = document.getElementById('paperTotalTrades');
+
+                if (paperBalance) paperBalance.textContent = `$${(paperData.balance || 10000).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                if (paperPnl) {
+                    const pnl = paperData.unrealized_pnl || 0;
+                    paperPnl.textContent = `${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    paperPnl.className = `fw-bold ${pnl >= 0 ? 'text-success' : 'text-danger'}`;
+                }
+                if (paperSuccessRate) paperSuccessRate.textContent = `${(paperData.success_rate || 0).toFixed(1)}%`;
+                if (paperTotalTrades) paperTotalTrades.textContent = paperData.total_trades || 0;
+            }
+
             async updateData() {
                 try {
                     // Show loading state
@@ -3016,18 +3280,23 @@
                         fetchWithTimeout('/api/strategies'),
                         fetchWithTimeout('/api/pipeline-metrics'), 
                         fetchWithTimeout('/api/performance'),
+                        fetchWithTimeout('/api/paper-performance'),
                         fetchWithTimeout('/api/activity'),
                         fetchWithTimeout('/api/risk-metrics'),
                         fetchWithTimeout('/api/system-status')
                     ]);
                     
-                    const [strategies, pipelineMetrics, performance, activity, riskMetrics, systemStatus] = results.map(result => 
+                    const [strategies, pipelineMetrics, performance, paperPerformance, activity, riskMetrics, systemStatus] = results.map(result => 
                         result.status === 'fulfilled' ? result.value : null
                     );
 
                     if (pipelineMetrics) this.updatePipelineMetrics(pipelineMetrics);
                     if (strategies) this.updateStrategiesDisplay(strategies);
                     if (performance) this.updatePerformanceChart(performance);
+                    if (paperPerformance) {
+                        this.updatePaperPerformanceChart(paperPerformance);
+                        this.updatePaperTradingStats(paperPerformance.stats);
+                    }
                     if (activity) this.updateActivityFeed(activity);
                     if (riskMetrics) this.updateRiskMetrics(riskMetrics);
                     if (systemStatus) this.updateSystemStatus(systemStatus);
