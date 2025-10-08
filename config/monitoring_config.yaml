@@ -1,0 +1,221 @@
+# Infrastructure Monitoring Configuration
+# =====================================
+# Configure system monitoring, alerting, and email notifications
+
+# Email Configuration for Notifications
+email:
+  # SMTP server settings (Gmail example)
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  
+  # Authentication (use environment variables for security)
+  username: "${SMTP_USERNAME}"  # Set SMTP_USERNAME environment variable
+  password: "${SMTP_PASSWORD}"  # Set SMTP_PASSWORD environment variable
+  
+  # Email addresses
+  from_email: "${FROM_EMAIL:bot@trading.local}"  # Default if not set
+  to_emails:
+    - "${ALERT_EMAIL:admin@trading.local}"  # Primary alert recipient
+    # - "backup@trading.local"  # Additional recipients
+    # - "team@trading.local"
+
+# Alert Thresholds
+# Values that trigger alerts when exceeded
+thresholds:
+  # System resource thresholds (percentage)
+  cpu_percent: 80.0          # CPU usage above 80%
+  memory_percent: 85.0       # Memory usage above 85% 
+  disk_percent: 90.0         # Disk usage above 90%
+  
+  # API performance thresholds
+  api_response_time_ms: 1000.0  # Response time above 1 second
+  error_rate_percent: 5.0       # Error rate above 5%
+  
+  # Trading system thresholds
+  max_daily_loss: 1000.0        # Daily loss above $1000
+  reconciliation_discrepancies: 5  # More than 5 data discrepancies
+  
+  # Database thresholds
+  db_connection_failures: 3      # Connection failures in 5 minutes
+  query_timeout_ms: 5000.0      # Query timeout above 5 seconds
+
+# Monitoring Intervals (seconds)
+intervals:
+  # System metrics collection
+  system_metrics: 60          # Every 1 minute
+  api_metrics: 300           # Every 5 minutes  
+  trading_metrics: 300       # Every 5 minutes
+  database_metrics: 180      # Every 3 minutes
+  
+  # Reporting schedules
+  daily_report: 86400        # Daily at 9 AM (handled by scheduler)
+  weekly_report: 604800      # Weekly reports
+  
+  # Alert checking
+  alert_evaluation: 60       # Check alerts every minute
+  
+# Alert Configuration
+alerts:
+  # Alert levels and their email behavior
+  levels:
+    info:
+      send_email: false          # Don't email info alerts
+      log_only: true
+    
+    warning:
+      send_email: false          # Don't email warnings immediately
+      batch_in_daily_report: true
+    
+    critical:
+      send_email: true           # Immediate email for critical
+      escalation_minutes: 30     # Escalate if not resolved in 30min
+    
+    emergency:
+      send_email: true           # Immediate email
+      escalation_minutes: 5      # Escalate quickly
+      send_sms: true            # Also send SMS (if configured)
+  
+  # Alert suppression to prevent spam
+  suppression:
+    duplicate_alert_minutes: 15  # Don't resend same alert for 15min
+    max_alerts_per_hour: 10      # Max 10 alerts per hour
+    
+# Daily Report Configuration
+daily_report:
+  # When to send daily reports (Australian timezone)
+  send_time: "08:00"          # 8:00 AM AEST/AEDT (early morning review)
+  timezone: "Australia/Sydney"  # Australian Eastern timezone (handles DST)
+  
+  # Report content sections
+  include_sections:
+    - system_performance       # CPU, memory, disk usage
+    - alert_summary           # All alerts from past 24h
+    - trading_performance     # Order stats, P&L, reconciliation
+    - api_performance         # Response times, error rates
+    - database_performance    # Query performance, connections
+    - recommendations         # System optimization suggestions
+  
+  # Report format
+  format: "html"              # html or text
+  include_charts: false       # Include performance charts (future feature)
+  
+# System Health Checks
+health_checks:
+  # Services to monitor
+  services:
+    - name: "FastAPI"
+      endpoint: "http://localhost:8000/health"
+      timeout_seconds: 5
+      expected_status: 200
+    
+    - name: "Database"
+      type: "sqlite"
+      path: "data/trading_bot.db"
+      max_size_mb: 1000
+    
+    - name: "Bybit API"
+      endpoint: "https://api.bybit.com/v5/market/time"
+      timeout_seconds: 10
+      expected_status: 200
+      
+  # Health check frequency
+  check_interval_seconds: 300   # Every 5 minutes
+  
+# Data Retention
+retention:
+  # How long to keep monitoring data
+  system_metrics_days: 30      # Keep system metrics for 30 days
+  api_metrics_days: 14         # Keep API metrics for 14 days
+  trading_metrics_days: 90     # Keep trading metrics for 90 days
+  alerts_days: 60              # Keep alerts for 60 days
+  email_logs_days: 30          # Keep email logs for 30 days
+  
+  # Cleanup schedule
+  cleanup_hour: 2              # Run cleanup at 2 AM daily
+  
+# Performance Monitoring
+performance:
+  # Metrics to track
+  track_api_endpoints: true    # Monitor all API endpoint performance
+  track_database_queries: true # Monitor database query performance  
+  track_memory_leaks: true     # Monitor for memory leaks
+  track_cpu_spikes: true       # Monitor CPU usage spikes
+  
+  # Performance baselines (for anomaly detection)
+  baselines:
+    api_response_time_ms: 200    # Normal API response time
+    db_query_time_ms: 50         # Normal database query time
+    cpu_normal_percent: 20       # Normal CPU usage
+    memory_normal_percent: 60    # Normal memory usage
+
+# Integration Settings
+integrations:
+  # Webhook notifications (optional)
+  webhooks:
+    enabled: false
+    # slack_webhook_url: "https://hooks.slack.com/services/..."
+    # discord_webhook_url: "https://discord.com/api/webhooks/..."
+    
+  # External monitoring services (optional)
+  external_monitoring:
+    enabled: false
+    # datadog_api_key: "${DATADOG_API_KEY}"
+    # new_relic_license_key: "${NEW_RELIC_LICENSE_KEY}"
+    
+# Security Settings
+security:
+  # Sensitive data handling
+  mask_sensitive_data: true     # Mask API keys, passwords in logs
+  encrypt_email_content: false # Encrypt email content (future feature)
+  
+  # Access controls
+  require_authentication: false # Require auth for metrics API (future)
+  allowed_ip_ranges: []        # IP ranges allowed to access metrics
+  
+# Logging Configuration
+logging:
+  # Log levels for different components
+  level: "INFO"                # Overall log level
+  
+  # Component-specific log levels
+  components:
+    monitoring: "INFO"
+    alerts: "WARNING"
+    email: "INFO"
+    performance: "DEBUG"
+  
+  # Log file settings
+  file_rotation_mb: 10         # Rotate log files at 10MB
+  keep_log_files: 5            # Keep 5 old log files
+  
+  # Console output
+  console_output: true         # Also output to console
+  colorize_console: true       # Use colors in console output
+
+# Australian Tax Compliance
+tax_compliance:
+  # ATO (Australian Tax Office) requirements for trading records
+  enable_tax_logging: true           # Enable comprehensive tax record logging
+  ato_compliant_records: true        # Maintain ATO-compliant trade records
+  capital_gains_tracking: true       # Track CGT events and holding periods
+  gst_applicable: false              # GST not applicable for personal trading
+  
+  # Record keeping requirements (ATO mandates 5 years minimum)
+  tax_record_retention_years: 7      # Keep records for 7 years (recommended)
+  detailed_transaction_logs: true    # Detailed logs for each transaction
+  cost_basis_tracking: true          # Track cost basis for CGT calculations
+  
+  # Australian financial year (July 1 - June 30)
+  financial_year_start: "07-01"     # July 1st start of AU financial year
+  auto_generate_tax_reports: true    # Generate reports at end of financial year
+
+# Development & Testing
+development:
+  # Development mode settings  
+  mock_email_sending: false    # Mock email sending for testing
+  reduced_intervals: false     # Use shorter intervals for testing
+  verbose_logging: false       # Extra verbose logging
+  
+  # Test mode
+  test_mode: false            # Enable test mode
+  test_email_recipient: "test@trading.local"  # Test email recipient

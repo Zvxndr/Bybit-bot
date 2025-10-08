@@ -3,7 +3,7 @@ Simplified Bybit Trading Dashboard
 =================================
 
 Clean single-page application with real data only.
-No debug mode, no mock data, production-ready.
+No debug mode, no mock data, production-ready with monitoring.
 """
 
 import os
@@ -39,6 +39,15 @@ try:
 except ImportError:
     logger.warning("⚠️ Historical data downloader not found")
     historical_downloader = None
+
+# Import monitoring system
+try:
+    from src.monitoring.infrastructure_monitor import create_infrastructure_monitor
+    infrastructure_monitor = create_infrastructure_monitor()
+    logger.info("✅ Infrastructure monitoring initialized")
+except ImportError as e:
+    logger.warning(f"⚠️ Monitoring system not available: {e}")
+    infrastructure_monitor = None
 
 class TradingAPI:
     """Production Trading API with Real Integrations"""
@@ -749,9 +758,27 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Bybit Trading Dashboard")
     logger.info(f"Environment: {'Testnet' if trading_api.testnet else 'Mainnet'}")
     logger.info(f"API Connected: {bool(trading_api.api_key and trading_api.api_secret)}")
+    
+    # Start monitoring system
+    if infrastructure_monitor:
+        try:
+            await infrastructure_monitor.start_monitoring()
+            logger.info("✅ Infrastructure monitoring started")
+        except Exception as e:
+            logger.error(f"❌ Failed to start monitoring: {e}")
+    
     yield
+    
     # Shutdown
     logger.info("🛑 Shutting down Bybit Trading Dashboard")
+    
+    # Stop monitoring system
+    if infrastructure_monitor and infrastructure_monitor.is_monitoring:
+        try:
+            await infrastructure_monitor.stop_monitoring()
+            logger.info("✅ Infrastructure monitoring stopped")
+        except Exception as e:
+            logger.error(f"❌ Error stopping monitoring: {e}")
 
 # FastAPI app
 app = FastAPI(title="Bybit Trading Bot", version="1.0", lifespan=lifespan)
@@ -767,6 +794,62 @@ app.add_middleware(
 
 # Initialize simplified dashboard API (adds /api/strategies, /api/pipeline-metrics, etc.)
 dashboard_api = SimplifiedDashboardAPI(app)
+
+# Monitoring system endpoints
+@app.get("/api/monitoring/metrics")
+async def get_current_metrics():
+    """Get current system metrics"""
+    if infrastructure_monitor:
+        return infrastructure_monitor.get_current_metrics()
+    return {"status": "monitoring_disabled"}
+
+@app.get("/api/monitoring/alerts")
+async def get_alert_summary():
+    """Get alert summary"""
+    if infrastructure_monitor:
+        return infrastructure_monitor.get_alert_summary()
+    return {"status": "monitoring_disabled"}
+
+@app.post("/api/monitoring/start")
+async def start_monitoring():
+    """Start the monitoring system"""
+    if infrastructure_monitor and not infrastructure_monitor.is_monitoring:
+        await infrastructure_monitor.start_monitoring()
+        return {"status": "started", "message": "Monitoring system started successfully"}
+    return {"status": "already_running" if infrastructure_monitor else "unavailable"}
+
+@app.post("/api/monitoring/stop")
+async def stop_monitoring():
+    """Stop the monitoring system"""
+    if infrastructure_monitor and infrastructure_monitor.is_monitoring:
+        await infrastructure_monitor.stop_monitoring()
+        return {"status": "stopped", "message": "Monitoring system stopped"}
+    return {"status": "not_running" if infrastructure_monitor else "unavailable"}
+
+@app.post("/api/monitoring/send-test-email")
+async def send_test_email():
+    """Send a test email to verify email configuration"""
+    if infrastructure_monitor:
+        try:
+            await infrastructure_monitor._send_email(
+                subject="🧪 Test Email - Trading Bot Monitoring",
+                body="This is a test email from your trading bot monitoring system. If you received this, email notifications are working correctly!",
+                email_type="test"
+            )
+            return {"status": "success", "message": "Test email sent successfully"}
+        except Exception as e:
+            return {"status": "error", "message": f"Email test failed: {str(e)}"}
+    return {"status": "monitoring_unavailable"}
+
+@app.get("/health")
+async def health_check():
+    """System health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "monitoring_active": infrastructure_monitor.is_monitoring if infrastructure_monitor else False,
+        "api_connected": bool(trading_api.api_key and trading_api.api_secret)
+    }
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -1626,6 +1709,200 @@ async def get_reconciliation_summary():
     except Exception as e:
         logger.error(f"❌ Reconciliation summary error: {e}")
         return {"success": False, "message": str(e)}
+
+# Australian Tax Compliance API Endpoints
+@app.get("/api/tax/logs")
+async def get_tax_logs(request: Request):
+    """Get tax logs with optional filtering"""
+    try:
+        # Import Australian compliance manager
+        if AUSTRALIAN_COMPLIANCE_ENABLED:
+            from src.compliance.australian_timezone_tax import australian_tz_manager
+            
+            # Get query parameters
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+            financial_year = request.query_params.get('financial_year')
+            event_type = request.query_params.get('event_type')
+            limit = request.query_params.get('limit')
+            
+            # Convert limit to int if provided
+            limit_int = None
+            if limit:
+                try:
+                    limit_int = int(limit)
+                except ValueError:
+                    limit_int = None
+            
+            # Get tax logs from compliance manager
+            logs = australian_tz_manager.get_tax_logs(
+                start_date=start_date,
+                end_date=end_date,
+                financial_year=financial_year,
+                event_type=event_type,
+                limit=limit_int
+            )
+            
+            return {
+                "success": True,
+                "logs": logs,
+                "total_count": len(logs),
+                "financial_year": australian_tz_manager.current_financial_year,
+                "timezone": "Australia/Sydney"
+            }
+        else:
+            return {"success": False, "error": "Australian compliance module not available"}
+            
+    except Exception as e:
+        logger.error(f"❌ Tax logs fetch error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/tax/export")
+async def export_tax_logs(request: Request):
+    """Export tax logs in various formats"""
+    try:
+        # Import Australian compliance manager
+        if AUSTRALIAN_COMPLIANCE_ENABLED:
+            from src.compliance.australian_timezone_tax import australian_tz_manager
+            from fastapi.responses import StreamingResponse
+            import csv
+            import json
+            from io import StringIO, BytesIO
+            
+            # Get query parameters
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date') 
+            financial_year = request.query_params.get('financial_year')
+            format_type = request.query_params.get('format', 'csv').lower()
+            
+            # Get tax logs
+            logs = australian_tz_manager.get_tax_logs(
+                start_date=start_date,
+                end_date=end_date, 
+                financial_year=financial_year
+            )
+            
+            current_time = australian_tz_manager.get_current_time().strftime('%Y%m%d_%H%M%S')
+            fy = financial_year or australian_tz_manager.current_financial_year
+            
+            if format_type == 'csv':
+                # CSV Export
+                output = StringIO()
+                if logs:
+                    fieldnames = list(logs[0].keys())
+                    writer = csv.DictWriter(output, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(logs)
+                
+                response = StreamingResponse(
+                    iter([output.getvalue()]),
+                    media_type="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=tax_logs_fy{fy}_{current_time}.csv"}
+                )
+                return response
+                
+            elif format_type == 'json':
+                # JSON Export  
+                export_data = {
+                    "export_info": {
+                        "generated_at": current_time,
+                        "financial_year": fy,
+                        "timezone": "Australia/Sydney",
+                        "total_records": len(logs),
+                        "compliance_version": "ATO_2025"
+                    },
+                    "tax_logs": logs
+                }
+                
+                json_str = json.dumps(export_data, indent=2, default=str)
+                response = StreamingResponse(
+                    iter([json_str]),
+                    media_type="application/json",
+                    headers={"Content-Disposition": f"attachment; filename=tax_logs_fy{fy}_{current_time}.json"}
+                )
+                return response
+                
+            elif format_type == 'ato':
+                # ATO-ready format export
+                ato_data = australian_tz_manager.export_for_ato(
+                    start_date=start_date,
+                    end_date=end_date,
+                    financial_year=financial_year
+                )
+                
+                json_str = json.dumps(ato_data, indent=2, default=str)
+                response = StreamingResponse(
+                    iter([json_str]),
+                    media_type="application/json", 
+                    headers={"Content-Disposition": f"attachment; filename=ato_submission_fy{fy}_{current_time}.json"}
+                )
+                return response
+                
+            else:
+                return {"success": False, "error": f"Unsupported format: {format_type}"}
+                
+        else:
+            return {"success": False, "error": "Australian compliance module not available"}
+            
+    except Exception as e:
+        logger.error(f"❌ Tax export error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/tax/summary")
+async def get_tax_summary(request: Request):
+    """Get tax summary for specified period"""
+    try:
+        if AUSTRALIAN_COMPLIANCE_ENABLED:
+            from src.compliance.australian_timezone_tax import australian_tz_manager
+            
+            financial_year = request.query_params.get('financial_year')
+            
+            summary = australian_tz_manager.get_financial_year_summary(
+                financial_year=financial_year
+            )
+            
+            return {
+                "success": True,
+                "summary": summary,
+                "financial_year": financial_year or australian_tz_manager.current_financial_year
+            }
+        else:
+            return {"success": False, "error": "Australian compliance module not available"}
+            
+    except Exception as e:
+        logger.error(f"❌ Tax summary error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/tax/financial-years")
+async def get_available_financial_years():
+    """Get list of available financial years"""
+    try:
+        if AUSTRALIAN_COMPLIANCE_ENABLED:
+            from src.compliance.australian_timezone_tax import australian_tz_manager
+            
+            years = australian_tz_manager.get_available_financial_years()
+            current = australian_tz_manager.current_financial_year
+            
+            return {
+                "success": True,
+                "financial_years": years,
+                "current_financial_year": current
+            }
+        else:
+            return {"success": False, "error": "Australian compliance module not available"}
+            
+    except Exception as e:
+        logger.error(f"❌ Financial years fetch error: {e}")
+        return {"success": False, "error": str(e)}
+
+# Check if Australian compliance is enabled
+try:
+    from src.compliance.australian_timezone_tax import AUSTRALIAN_TZ
+    AUSTRALIAN_COMPLIANCE_ENABLED = True
+    logger.info("🇦🇺 Australian compliance API endpoints enabled")
+except ImportError:
+    AUSTRALIAN_COMPLIANCE_ENABLED = False
+    logger.warning("⚠️ Australian compliance module not available")
 
 # Lifespan events are now handled in the @asynccontextmanager above
 

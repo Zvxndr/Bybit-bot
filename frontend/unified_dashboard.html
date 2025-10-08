@@ -904,6 +904,43 @@
             width: 16px;
             flex-shrink: 0;
         }
+        
+        /* Performance Metrics Display */
+        .metric-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .metric-display i {
+            font-size: 1.2em;
+        }
+        
+        .metric-value {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+        
+        .metric-label {
+            font-size: 0.7em;
+            color: #9ca3af;
+        }
+        
+        /* Alert Animations */
+        .alert-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
         /* Portfolio Status Badges */
         .status-badge {
@@ -1053,6 +1090,134 @@
             font-size: 0.75rem;
             line-height: 1.25;
             border-radius: 0.25rem;
+        }
+
+        /* Australian Tax Compliance Styles */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .compliance-status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .compliance-status-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .compliance-status-item .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .compliance-status-item .status-content {
+            flex: 1;
+        }
+
+        .compliance-status-item .status-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 2px;
+        }
+
+        .compliance-status-item .status-subtitle {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .recent-events-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .tax-event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+        }
+
+        .tax-event-item:last-child {
+            border-bottom: none;
+        }
+
+        .tax-event-type {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .tax-event-time {
+            color: #9ca3af;
+        }
+
+        /* Export button styling */
+        #downloadTaxBtn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+
+        #downloadTaxBtn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Custom date range toggle */
+        #customDateRange {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        /* Tax compliance alert styling */
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            color: #bfdbfe !important;
+        }
+
+        .alert-info .bi-info-circle {
+            color: #60a5fa;
         }
     </style>
 </head>
@@ -1516,6 +1681,75 @@
                                     <i class="bi bi-robot text-primary"></i>
                                     <span>Discovery Engine: <strong class="text-primary" id="discoveryStatus">Running</strong></span>
                                 </div>
+                                <div class="status-item">
+                                    <i class="bi bi-eye text-success" id="monitoringIcon"></i>
+                                    <span>Monitoring: <strong class="text-success" id="monitoringStatus">Active</strong></span>
+                                </div>
+                                <div class="status-item">
+                                    <i class="bi bi-exclamation-triangle text-warning" id="alertIcon"></i>
+                                    <span>Active Alerts: <strong class="text-warning" id="activeAlerts">0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Performance Metrics -->
+                        <div class="system-status mt-3">
+                            <div class="status-header">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Performance</span>
+                                <button class="btn btn-sm btn-outline-primary ms-auto" onclick="refreshMetrics()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                            <div class="status-content">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <div class="metric-display">
+                                            <i class="bi bi-cpu text-primary"></i>
+                                            <div>
+                                                <div class="metric-value" id="cpuUsage">0%</div>
+                                                <div class="metric-label">CPU</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="metric-display">
+                                            <i class="bi bi-memory text-info"></i>
+                                            <div>
+                                                <div class="metric-value" id="memoryUsage">0%</div>
+                                                <div class="metric-label">Memory</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="metric-display">
+                                            <i class="bi bi-hdd text-warning"></i>
+                                            <div>
+                                                <div class="metric-value" id="diskUsage">0%</div>
+                                                <div class="metric-label">Disk</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Notification Test -->
+                        <div class="system-status mt-3">
+                            <div class="status-header">
+                                <i class="bi bi-envelope"></i>
+                                <span>Notifications</span>
+                            </div>
+                            <div class="status-content">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-success flex-fill" onclick="sendTestEmail()">
+                                        <i class="bi bi-envelope-check"></i> Test Email
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info flex-fill" onclick="toggleMonitoring()">
+                                        <i class="bi bi-play-circle"></i> Toggle Monitor
+                                    </button>
+                                </div>
+                                <div id="emailTestResult" class="mt-2"></div>
                             </div>
                         </div>
                     </div>
@@ -1769,6 +2003,191 @@
             </div>
         </div>
 
+        <!-- Australian Tax Compliance Section -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🇦🇺 Australian Tax Compliance</h3>
+                        <small class="text-muted">ATO compliant tax logging and export system</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tax Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <div class="stat-value" id="currentFinancialYear">Loading...</div>
+                                    <div class="stat-label">Financial Year</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <div class="stat-value" id="totalTaxEvents">-</div>
+                                    <div class="stat-label">Tax Events</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <div class="stat-value" id="complianceStatus">✅</div>
+                                    <div class="stat-label">Compliance</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <div class="stat-value" id="lastExportDate">Never</div>
+                                    <div class="stat-label">Last Export</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tax Log Export Controls -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-download"></i> Export Tax Logs
+                                </h6>
+                                
+                                <!-- Export Options -->
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Financial Year</label>
+                                        <select class="form-select" id="taxExportFinancialYear">
+                                            <option value="">All Years</option>
+                                            <!-- Populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Export Format</label>
+                                        <select class="form-select" id="taxExportFormat">
+                                            <option value="csv">CSV (Spreadsheet)</option>
+                                            <option value="json">JSON (Technical)</option>
+                                            <option value="ato">ATO Submission Ready</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date Range</label>
+                                        <select class="form-select" id="taxExportRange">
+                                            <option value="">Full Financial Year</option>
+                                            <option value="current_quarter">Current Quarter</option>
+                                            <option value="last_quarter">Last Quarter</option>
+                                            <option value="custom">Custom Range</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary w-100" onclick="dashboard.downloadTaxLogs()" id="downloadTaxBtn">
+                                            <i class="bi bi-download"></i> Download Tax Logs
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Date Range (Hidden by default) -->
+                                <div class="row mb-3" id="customDateRange" style="display: none;">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" id="taxExportStartDate">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="taxExportEndDate">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-outline-secondary w-100" onclick="dashboard.resetDateRange()">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Export Buttons -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-outline-success btn-sm" onclick="dashboard.quickExportCurrentFY()">
+                                                <i class="bi bi-calendar3"></i> Current FY (CSV)
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm" onclick="dashboard.quickExportATOReady()">
+                                                <i class="bi bi-file-earmark-text"></i> ATO Ready Export
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm" onclick="dashboard.viewTaxSummary()">
+                                                <i class="bi bi-eye"></i> View Summary
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="dashboard.refreshTaxData()">
+                                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tax Compliance Info -->
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle me-2 mt-1"></i>
+                                <div>
+                                    <strong>ATO Compliance Information</strong><br>
+                                    <small>
+                                        • All trading activities are automatically logged with Australian timezone<br>
+                                        • FIFO method applied for CGT calculations as required by ATO<br>
+                                        • Records maintained for 7+ years in compliance with ATO requirements<br>
+                                        • Exports include all required information for tax lodgment and audit purposes
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Compliance Status Panel -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title">Compliance Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="compliance-status-list" id="complianceStatusList">
+                            <div class="compliance-status-item">
+                                <div class="status-dot bg-success"></div>
+                                <div class="status-content">
+                                    <div class="status-title">Australian Timezone</div>
+                                    <div class="status-subtitle">AEST/AEDT Active</div>
+                                </div>
+                            </div>
+                            <div class="compliance-status-item">
+                                <div class="status-dot bg-success"></div>
+                                <div class="status-content">
+                                    <div class="status-title">Tax Event Logging</div>
+                                    <div class="status-subtitle">All trades recorded</div>
+                                </div>
+                            </div>
+                            <div class="compliance-status-item">
+                                <div class="status-dot bg-success"></div>
+                                <div class="status-content">
+                                    <div class="status-title">FIFO Method</div>
+                                    <div class="status-subtitle">ATO compliant</div>
+                                </div>
+                            </div>
+                            <div class="compliance-status-item">
+                                <div class="status-dot bg-success"></div>
+                                <div class="status-content">
+                                    <div class="status-title">Record Keeping</div>
+                                    <div class="status-subtitle">7+ year retention</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Tax Events Preview -->
+                        <h6 class="mt-4 mb-3">Recent Tax Events</h6>
+                        <div id="recentTaxEvents" class="recent-events-list">
+                            <div class="text-center text-muted py-2">
+                                <small>Loading recent events...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1788,6 +2207,9 @@
                 this.initBrowserNotifications();
                 this.loadDashboardData();
                 this.refreshBacktestHistory();
+                
+                // Initialize Australian tax compliance
+                await this.initializeTaxCompliance();
                 
                 // Start real-time updates (adaptive interval for mobile)
                 const isMobile = window.innerWidth <= 768;
@@ -3631,6 +4053,319 @@
                     this.updatePipelineMetrics({ data: data.data });
                 }
             }
+
+            // Australian Tax Compliance Methods
+            async initializeTaxCompliance() {
+                try {
+                    // Load financial years
+                    await this.loadFinancialYears();
+                    
+                    // Load tax summary 
+                    await this.loadTaxSummary();
+                    
+                    // Load recent tax events
+                    await this.loadRecentTaxEvents();
+                    
+                    // Set up event listeners
+                    this.setupTaxExportListeners();
+                    
+                } catch (error) {
+                    console.error('Error initializing tax compliance:', error);
+                }
+            }
+
+            async loadFinancialYears() {
+                try {
+                    const response = await fetch('/api/tax/financial-years');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const select = document.getElementById('taxExportFinancialYear');
+                        if (select) {
+                            select.innerHTML = '<option value="">All Years</option>';
+                            data.financial_years.forEach(fy => {
+                                const option = document.createElement('option');
+                                option.value = fy;
+                                option.textContent = `FY ${fy}`;
+                                if (fy === data.current_financial_year) {
+                                    option.selected = true;
+                                }
+                                select.appendChild(option);
+                            });
+                        }
+                        
+                        // Update current financial year display
+                        const fyElement = document.getElementById('currentFinancialYear');
+                        if (fyElement) {
+                            fyElement.textContent = `FY ${data.current_financial_year}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading financial years:', error);
+                }
+            }
+
+            async loadTaxSummary() {
+                try {
+                    const response = await fetch('/api/tax/summary');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Update tax event count
+                        const eventsElement = document.getElementById('totalTaxEvents');
+                        if (eventsElement) {
+                            eventsElement.textContent = data.summary.statistics?.total_events || 0;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading tax summary:', error);
+                }
+            }
+
+            async loadRecentTaxEvents() {
+                try {
+                    const response = await fetch('/api/tax/logs?limit=5');
+                    const data = await response.json();
+                    
+                    if (data.success && data.logs) {
+                        const container = document.getElementById('recentTaxEvents');
+                        if (container) {
+                            if (data.logs.length === 0) {
+                                container.innerHTML = `
+                                    <div class="text-center text-muted py-2">
+                                        <small>No recent tax events</small>
+                                    </div>
+                                `;
+                            } else {
+                                container.innerHTML = data.logs.slice(0, 5).map(log => `
+                                    <div class="tax-event-item">
+                                        <div>
+                                            <span class="tax-event-type">${log.event_type}</span>
+                                            <div style="font-size: 0.7rem; color: #6b7280;">${log.description}</div>
+                                        </div>
+                                        <div class="tax-event-time">
+                                            ${new Date(log.timestamp).toLocaleDateString('en-AU')}
+                                        </div>
+                                    </div>
+                                `).join('');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading recent tax events:', error);
+                }
+            }
+
+            setupTaxExportListeners() {
+                // Date range toggle
+                const rangeSelect = document.getElementById('taxExportRange');
+                if (rangeSelect) {
+                    rangeSelect.addEventListener('change', (e) => {
+                        const customRange = document.getElementById('customDateRange');
+                        if (customRange) {
+                            if (e.target.value === 'custom') {
+                                customRange.style.display = 'block';
+                            } else {
+                                customRange.style.display = 'none';
+                            }
+                        }
+                    });
+                }
+            }
+
+            async downloadTaxLogs() {
+                try {
+                    const button = document.getElementById('downloadTaxBtn');
+                    const originalText = button.innerHTML;
+                    
+                    // Show loading state
+                    button.innerHTML = '<i class="bi bi-download"></i> Generating...';
+                    button.disabled = true;
+                    
+                    // Collect export parameters
+                    const params = new URLSearchParams();
+                    
+                    const financialYear = document.getElementById('taxExportFinancialYear')?.value;
+                    const format = document.getElementById('taxExportFormat')?.value || 'csv';
+                    const range = document.getElementById('taxExportRange')?.value;
+                    
+                    if (financialYear) params.append('financial_year', financialYear);
+                    params.append('format', format);
+                    
+                    // Handle date range
+                    if (range === 'custom') {
+                        const startDate = document.getElementById('taxExportStartDate')?.value;
+                        const endDate = document.getElementById('taxExportEndDate')?.value;
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                    } else if (range) {
+                        const now = new Date();
+                        if (range === 'current_quarter') {
+                            const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                            params.append('start_date', quarterStart.toISOString().split('T')[0]);
+                        } else if (range === 'last_quarter') {
+                            const lastQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3 - 3, 1);
+                            const lastQuarterEnd = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 0);
+                            params.append('start_date', lastQuarter.toISOString().split('T')[0]);
+                            params.append('end_date', lastQuarterEnd.toISOString().split('T')[0]);
+                        }
+                    }
+                    
+                    // Download the file
+                    const response = await fetch(`/api/tax/export?${params.toString()}`);
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        
+                        // Extract filename from response headers
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        const filename = contentDisposition 
+                            ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+                            : `tax_logs_${new Date().toISOString().split('T')[0]}.${format}`;
+                        
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        this.showNotification('✅ Tax logs downloaded successfully', 'success');
+                        
+                        // Update last export date
+                        const exportDateElement = document.getElementById('lastExportDate');
+                        if (exportDateElement) {
+                            exportDateElement.textContent = new Date().toLocaleDateString('en-AU');
+                        }
+                    } else {
+                        throw new Error(`Export failed: ${response.status}`);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error downloading tax logs:', error);
+                    this.showNotification('❌ Failed to download tax logs', 'error');
+                } finally {
+                    // Restore button state
+                    const button = document.getElementById('downloadTaxBtn');
+                    button.innerHTML = '<i class="bi bi-download"></i> Download Tax Logs';
+                    button.disabled = false;
+                }
+            }
+
+            async quickExportCurrentFY() {
+                // Set current FY and CSV format
+                document.getElementById('taxExportFinancialYear').value = '';
+                document.getElementById('taxExportFormat').value = 'csv';
+                document.getElementById('taxExportRange').value = '';
+                await this.downloadTaxLogs();
+            }
+
+            async quickExportATOReady() {
+                // Set ATO format for current FY
+                document.getElementById('taxExportFinancialYear').value = '';
+                document.getElementById('taxExportFormat').value = 'ato';
+                document.getElementById('taxExportRange').value = '';
+                await this.downloadTaxLogs();
+            }
+
+            async viewTaxSummary() {
+                try {
+                    const financialYear = document.getElementById('taxExportFinancialYear')?.value;
+                    const params = financialYear ? `?financial_year=${financialYear}` : '';
+                    
+                    const response = await fetch(`/api/tax/summary${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const summary = data.summary;
+                        const summaryText = `
+📊 Tax Summary for ${summary.financial_year}
+═══════════════════════════════════════════
+
+📈 Statistics:
+• Total Events: ${summary.statistics.total_events}
+• Trade Events: ${summary.statistics.trade_events}
+• System Events: ${summary.statistics.system_events}
+• Total AUD Amount: $${summary.statistics.total_amount_aud.toLocaleString()}
+
+✅ Compliance Status:
+• Records Maintained: ${summary.compliance.records_maintained ? 'Yes' : 'No'}
+• Australian Timezone: ${summary.compliance.australian_timezone ? 'Yes' : 'No'}
+• ATO Compliant: ${summary.compliance.ato_compliant ? 'Yes' : 'No'}
+• Audit Ready: ${summary.compliance.audit_ready ? 'Yes' : 'No'}
+
+Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
+                        `;
+                        
+                        alert(summaryText);
+                    } else {
+                        throw new Error(data.error || 'Failed to load summary');
+                    }
+                } catch (error) {
+                    console.error('Error viewing tax summary:', error);
+                    this.showNotification('❌ Failed to load tax summary', 'error');
+                }
+            }
+
+            async refreshTaxData() {
+                try {
+                    await this.loadFinancialYears();
+                    await this.loadTaxSummary();
+                    await this.loadRecentTaxEvents();
+                    this.showNotification('✅ Tax data refreshed', 'success');
+                } catch (error) {
+                    console.error('Error refreshing tax data:', error);
+                    this.showNotification('❌ Failed to refresh tax data', 'error');
+                }
+            }
+
+            resetDateRange() {
+                document.getElementById('taxExportStartDate').value = '';
+                document.getElementById('taxExportEndDate').value = '';
+                document.getElementById('taxExportRange').value = '';
+                document.getElementById('customDateRange').style.display = 'none';
+            }
+
+            showNotification(message, type) {
+                // Create or update notification
+                let notification = document.getElementById('taxNotification');
+                if (!notification) {
+                    notification = document.createElement('div');
+                    notification.id = 'taxNotification';
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 9999;
+                        padding: 12px 20px;
+                        border-radius: 6px;
+                        color: white;
+                        font-weight: 500;
+                        max-width: 400px;
+                        transition: all 0.3s ease;
+                    `;
+                    document.body.appendChild(notification);
+                }
+                
+                // Set notification style based on type
+                const backgroundColor = type === 'success' ? '#22c55e' : 
+                                     type === 'error' ? '#ef4444' : '#3b82f6';
+                notification.style.backgroundColor = backgroundColor;
+                notification.textContent = message;
+                notification.style.opacity = '1';
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
         }
 
         // Console Management Functions
@@ -3777,6 +4512,169 @@
             if (searchFilter) {
                 searchFilter.addEventListener('input', updateConsoleDisplay);
             }
+        });
+        
+        // Monitoring System Functions
+        async function refreshMetrics() {
+            try {
+                const response = await fetch('/api/monitoring/metrics');
+                const data = await response.json();
+                
+                if (data.status === 'monitoring_disabled') {
+                    updateMonitoringStatus('Disabled', 'danger');
+                    return;
+                }
+                
+                // Update system metrics
+                if (data.system) {
+                    updateSystemMetrics(data.system);
+                }
+                
+                // Update monitoring status
+                updateMonitoringStatus(data.monitoring_active ? 'Active' : 'Inactive', 
+                                     data.monitoring_active ? 'success' : 'warning');
+                
+                // Update alerts
+                await updateAlertStatus();
+                
+                // Update timestamp
+                document.getElementById('lastUpdate').textContent = 
+                    `Last updated: ${new Date().toLocaleTimeString()}`;
+                    
+            } catch (error) {
+                console.error('Error refreshing metrics:', error);
+                updateMonitoringStatus('Error', 'danger');
+            }
+        }
+        
+        function updateSystemMetrics(metrics) {
+            // Update CPU usage
+            const cpuElement = document.getElementById('cpuUsage');
+            if (cpuElement && metrics.cpu_percent !== undefined) {
+                cpuElement.textContent = `${metrics.cpu_percent.toFixed(1)}%`;
+                cpuElement.className = 'metric-value ' + getMetricClass(metrics.cpu_percent, 80, 95);
+            }
+            
+            // Update Memory usage
+            const memoryElement = document.getElementById('memoryUsage');
+            if (memoryElement && metrics.memory_percent !== undefined) {
+                memoryElement.textContent = `${metrics.memory_percent.toFixed(1)}%`;
+                memoryElement.className = 'metric-value ' + getMetricClass(metrics.memory_percent, 85, 95);
+            }
+            
+            // Update Disk usage
+            const diskElement = document.getElementById('diskUsage');
+            if (diskElement && metrics.disk_percent !== undefined) {
+                diskElement.textContent = `${metrics.disk_percent.toFixed(1)}%`;
+                diskElement.className = 'metric-value ' + getMetricClass(metrics.disk_percent, 90, 98);
+            }
+        }
+        
+        function getMetricClass(value, warningThreshold, criticalThreshold) {
+            if (value >= criticalThreshold) return 'text-danger';
+            if (value >= warningThreshold) return 'text-warning';
+            return 'text-success';
+        }
+        
+        async function updateAlertStatus() {
+            try {
+                const response = await fetch('/api/monitoring/alerts');
+                const data = await response.json();
+                
+                if (data.status === 'monitoring_disabled') return;
+                
+                const alertCount = data.recent_alerts || 0;
+                const alertElement = document.getElementById('activeAlerts');
+                const alertIcon = document.getElementById('alertIcon');
+                
+                if (alertElement) {
+                    alertElement.textContent = alertCount;
+                    
+                    if (alertCount > 0) {
+                        alertElement.className = 'text-danger';
+                        alertIcon.className = 'bi bi-exclamation-triangle text-danger alert-pulse';
+                    } else {
+                        alertElement.className = 'text-success';
+                        alertIcon.className = 'bi bi-check-circle text-success';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error updating alert status:', error);
+            }
+        }
+        
+        function updateMonitoringStatus(status, type) {
+            const statusElement = document.getElementById('monitoringStatus');
+            const iconElement = document.getElementById('monitoringIcon');
+            
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = `text-${type}`;
+            }
+            
+            if (iconElement) {
+                const iconClass = type === 'success' ? 'bi-eye' : 
+                                type === 'warning' ? 'bi-eye-slash' : 'bi-exclamation-triangle';
+                iconElement.className = `bi ${iconClass} text-${type}`;
+            }
+        }
+        
+        async function sendTestEmail() {
+            const resultElement = document.getElementById('emailTestResult');
+            resultElement.innerHTML = '<small class="text-info"><i class="bi bi-hourglass-split"></i> Sending test email...</small>';
+            
+            try {
+                const response = await fetch('/api/monitoring/send-test-email', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultElement.innerHTML = '<small class="text-success"><i class="bi bi-check-circle"></i> Test email sent successfully!</small>';
+                } else {
+                    resultElement.innerHTML = `<small class="text-danger"><i class="bi bi-exclamation-circle"></i> ${data.message}</small>`;
+                }
+                
+                // Clear message after 5 seconds
+                setTimeout(() => {
+                    resultElement.innerHTML = '';
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error sending test email:', error);
+                resultElement.innerHTML = '<small class="text-danger"><i class="bi bi-exclamation-circle"></i> Failed to send test email</small>';
+            }
+        }
+        
+        async function toggleMonitoring() {
+            try {
+                const currentStatus = document.getElementById('monitoringStatus').textContent;
+                const isActive = currentStatus === 'Active';
+                
+                const endpoint = isActive ? '/api/monitoring/stop' : '/api/monitoring/start';
+                const response = await fetch(endpoint, { method: 'POST' });
+                const data = await response.json();
+                
+                // Refresh metrics to get updated status
+                await refreshMetrics();
+                
+                // Show status message
+                const action = isActive ? 'stopped' : 'started';
+                showNotification(`Monitoring system ${action}`, 'success');
+                
+            } catch (error) {
+                console.error('Error toggling monitoring:', error);
+                showNotification('Failed to toggle monitoring system', 'error');
+            }
+        }
+        
+        // Auto-refresh monitoring metrics every 30 seconds
+        setInterval(refreshMetrics, 30000);
+        
+        // Initialize monitoring on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshMetrics();
         });
     </script>
 </body>
