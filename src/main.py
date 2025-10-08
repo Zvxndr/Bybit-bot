@@ -338,57 +338,73 @@ class TradingAPI:
     def _initialize_components(self):
         """Initialize trading components"""
         try:
-            if self.api_key and self.api_secret:
-                # Import Bybit client
-                from src.bybit_api import BybitAPIClient
-                
-                # Initialize mainnet client for live trading (Phase 3)
+            # Initialize clients based on available credentials
+            from src.bybit_api import BybitAPIClient
+            
+            # Initialize testnet client if we have testnet credentials
+            if self.testnet_credentials['valid']:
+                self.testnet_client = BybitAPIClient(
+                    api_key=self.testnet_credentials['api_key'],
+                    api_secret=self.testnet_credentials['api_secret'],
+                    testnet=True  # Always testnet for paper trading
+                )
+                logger.info("✅ Bybit testnet API client initialized")
+            
+            # Initialize mainnet client only if we have live credentials AND live trading is enabled
+            if self.live_credentials['valid'] and self.enable_live:
                 self.bybit_client = BybitAPIClient(
-                    api_key=self.api_key,
-                    api_secret=self.api_secret,
+                    api_key=self.live_credentials['api_key'],
+                    api_secret=self.live_credentials['api_secret'],
                     testnet=False  # Mainnet for live trading
                 )
                 logger.info("✅ Bybit mainnet API client initialized")
+            
+            # Ensure we have at least one working client
+            if not self.testnet_client and not self.bybit_client:
+                logger.error("❌ No API clients initialized - check your API keys")
+                return
                 
-                # Initialize testnet client for paper trading (Phase 2)
-                self.testnet_client = BybitAPIClient(
-                    api_key=self.api_key,
-                    api_secret=self.api_secret,
-                    testnet=True  # Testnet for paper trading
-                )
-                logger.info("✅ Bybit testnet API client initialized")
-                
-                # Import and initialize risk manager
+            # Initialize risk manager if we have any client
+            if self.testnet_client or self.bybit_client:
                 from src.bot.risk.core.unified_risk_manager import UnifiedRiskManager
                 self.risk_manager = UnifiedRiskManager()
                 logger.info("✅ Risk management system initialized")
                 
-                # Initialize strategy executor - CRITICAL COMPONENT
-                from src.bot.strategy_executor import create_strategy_executor
-                self.strategy_executor = create_strategy_executor(
-                    bybit_client=self.bybit_client,
-                    testnet_client=self.testnet_client,
-                    risk_manager=self.risk_manager
-                )
-                logger.info("✅ Strategy execution engine initialized")
+                # Initialize strategy executor - works with testnet only
+                try:
+                    from src.bot.strategy_executor import create_strategy_executor
+                    self.strategy_executor = create_strategy_executor(
+                        bybit_client=self.bybit_client,
+                        testnet_client=self.testnet_client,
+                        risk_manager=self.risk_manager
+                    )
+                    logger.info("✅ Strategy execution engine initialized")
+                except Exception as e:
+                    logger.warning(f"⚠️ Strategy executor initialization failed: {e}")
                 
-                # Initialize production order manager - HIGH PRIORITY
-                from src.bot.production_order_manager import create_production_order_manager
-                self.order_manager = create_production_order_manager(
-                    bybit_client=self.bybit_client,
-                    testnet_client=self.testnet_client
-                )
-                logger.info("✅ Production order manager initialized")
+                # Initialize production order manager
+                try:
+                    from src.bot.production_order_manager import create_production_order_manager
+                    self.order_manager = create_production_order_manager(
+                        bybit_client=self.bybit_client,
+                        testnet_client=self.testnet_client
+                    )
+                    logger.info("✅ Production order manager initialized")
+                except Exception as e:
+                    logger.warning(f"⚠️ Order manager initialization failed: {e}")
                 
-                # Initialize trade reconciler - DATA INTEGRITY
-                from src.bot.trade_reconciler import create_trade_reconciler
-                self.trade_reconciler = create_trade_reconciler(
-                    bybit_client=self.bybit_client,
-                    testnet_client=self.testnet_client
-                )
-                logger.info("✅ Trade reconciliation system initialized")
+                # Initialize trade reconciler
+                try:
+                    from src.bot.trade_reconciler import create_trade_reconciler
+                    self.trade_reconciler = create_trade_reconciler(
+                        bybit_client=self.bybit_client,
+                        testnet_client=self.testnet_client
+                    )
+                    logger.info("✅ Trade reconciliation system initialized")
+                except Exception as e:
+                    logger.warning(f"⚠️ Trade reconciler initialization failed: {e}")
             else:
-                logger.warning("⚠️ No API credentials - running in paper mode")
+                logger.warning("⚠️ No valid API credentials found")
         except Exception as e:
             logger.error(f"❌ Component initialization error: {e}")
 

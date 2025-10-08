@@ -8,12 +8,17 @@
 
 ## 📝 **3-STEP PROCESS**
 
-### **Step 1: Get Bybit API Keys (5 min)**
+### **Step 1: Get Bybit TESTNET API Keys (5 min)**
 ```
-1. https://www.bybit.com → API Management
-2. Create API key: Spot + Derivatives + Read-Only (NO Withdrawal!)
-3. Copy API Key + Secret
-4. https://testnet.bybit.com → Create testnet keys too
+🎯 START WITH TESTNET ONLY (No live keys needed yet!)
+
+1. https://testnet.bybit.com → Register/Login 
+2. API Management → Create API Key
+3. Permissions: Spot + Derivatives + Read/Write (NO Withdrawal!)
+4. Copy Testnet API Key + Secret
+5. Get $10,000 free virtual balance for testing
+
+⚠️ LIVE KEYS: Get later from https://www.bybit.com (when ready for real trading)
 ```
 
 ### **Step 2: Create DigitalOcean App (5 min)**
@@ -31,18 +36,86 @@
 Go to App → Settings → Environment Variables
 Add these (click "Add Variable" for each):
 
+# Core Settings
 NODE_ENV=production
 TRADING_ENVIRONMENT=production  
 PORT=8080
-BYBIT_API_KEY=your_live_key_here
-BYBIT_API_SECRET=your_live_secret_here
+
+# REQUIRED: Testnet keys (from testnet.bybit.com) 
 BYBIT_TESTNET_API_KEY=your_testnet_key_here
 BYBIT_TESTNET_API_SECRET=your_testnet_secret_here
+
+# OPTIONAL: Live keys (add later when ready for real trading)
+BYBIT_API_KEY=leave_empty_for_now
+BYBIT_API_SECRET=leave_empty_for_now
+
+# Optional External Exchanges (OFF by default for speed)
 ENABLE_BINANCE_DATA=false
 ENABLE_OKX_DATA=false
-MAX_DAILY_RISK=0.02
-MAX_POSITION_SIZE=0.01
-SECRET_KEY=random_32_character_string_here
+
+# Risk Management (IMPORTANT - Controls your trading limits)
+MAX_DAILY_RISK=0.02          # 2% max daily loss (adjust 0.01-0.05)
+MAX_POSITION_SIZE=0.01       # 1% max per trade (adjust 0.005-0.02)
+
+# Security (Generate random 32+ character string)
+SECRET_KEY=your_random_32_char_key_here_make_it_unique_and_secure
+
+# Dashboard Login (Optional - for web interface security)
+DASHBOARD_USERNAME=admin
+DASHBOARD_PASSWORD=your_secure_dashboard_password_here
+```
+
+---
+
+## 🔐 **IMPORTANT: Understanding Your Settings**
+
+### **Risk Management (Keep You Safe)**
+```
+MAX_DAILY_RISK=0.02    # Stops trading if you lose 2% in one day
+MAX_POSITION_SIZE=0.01 # Each trade max 1% of your balance
+
+Example with $1,000 account:
+- Daily loss limit: $20 (bot stops for the day)
+- Per trade limit: $10 (no single trade bigger than this)
+
+Adjust these based on your risk tolerance!
+```
+
+### **Security Settings**
+```
+SECRET_KEY=your_random_32_char_key_here
+What to put: Any random string 32+ characters long
+Example: k8m2n9p4q7r1s5t3u6v8w0x2y4z9a1b3c5d7e9f2
+Generate at: https://www.random.org/strings/
+
+DASHBOARD_USERNAME=admin
+DASHBOARD_PASSWORD=your_secure_password
+What to put: Your chosen username and a strong password
+This is what you'll use to log into the web dashboard
+IMPORTANT: Change from default for security!
+```
+
+### **Dashboard Login 🔐**
+```
+✅ Your bot runs automatically in the background
+✅ Dashboard requires login for security (HTTP Basic Auth)
+✅ Default: admin / secure_trading_2025 (CHANGE THIS!)
+✅ Set DASHBOARD_USERNAME and DASHBOARD_PASSWORD in environment variables
+
+When you visit your app URL, browser will prompt for:
+Username: admin (or your custom username)  
+Password: your_secure_dashboard_password_here
+```
+
+### **🎯 Perfect for Testing (No Live Keys Needed!) 🎯**
+```
+✅ Bot works perfectly with ONLY testnet keys
+✅ $10,000 virtual balance for testing strategies  
+✅ All features work: trading, dashboard, risk management
+✅ Test your strategies safely before going live
+✅ Add live API keys later when strategies are proven profitable
+
+Your approach is EXACTLY RIGHT - test first, go live later!
 ```
 
 ---
@@ -119,4 +192,7 @@ Bot works perfectly with just Bybit data by default!
 
 **🚀 You're live and trading! Simple as that.**
 
-**Full Guide**: `SIMPLE_DIGITALOCEAN_DEPLOYMENT.md`
+**📚 Additional Resources**:
+- **Detailed Setup**: `SIMPLE_DIGITALOCEAN_DEPLOYMENT.md`
+- **Environment Variables Explained**: `ENVIRONMENT_VARIABLES_EXPLAINED.md`
+- **Risk Management Guide**: See environment variables doc above
