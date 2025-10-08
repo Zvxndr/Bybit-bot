@@ -81,8 +81,13 @@ try:
                     security_issues.append("⚠️ No testnet API keys found - set BYBIT_TESTNET_API_KEY/SECRET")
                 else:
                     security_issues.append("⚠️ Using legacy BYBIT_API_KEY - consider upgrading to BYBIT_TESTNET_API_KEY")
-            elif len(testnet_key) < 20 or len(testnet_secret) < 20:
-                security_issues.append("⚠️ Testnet API credentials appear invalid (too short)")
+            elif (testnet_key and len(testnet_key) < 10) or (testnet_secret and len(testnet_secret) < 10):
+                if 'your_testnet_key' in testnet_key.lower() or 'your_testnet_secret' in testnet_secret.lower():
+                    security_issues.append("⚠️ Testnet API credentials are placeholder values - replace with real keys from testnet.bybit.com")
+                else:
+                    security_issues.append("⚠️ Testnet API credentials appear too short - check your keys")
+            elif testnet_key and testnet_secret and ('your_testnet_key' in testnet_key.lower() or 'testnet_key_here' in testnet_key.lower()):
+                security_issues.append("⚠️ Please replace placeholder testnet API keys with real keys from testnet.bybit.com")
         
         # Check for production environment settings
         if os.getenv('ENVIRONMENT') == 'production':
@@ -145,7 +150,7 @@ except ImportError as e:
 
 # Import Multi-Exchange Data Provider
 try:
-    from src.data.multi_exchange_provider import MultiExchangeDataManager
+    from .data.multi_exchange_provider import MultiExchangeDataManager
     multi_exchange_data = MultiExchangeDataManager()
     
     # Show which exchanges will be enabled
@@ -213,12 +218,22 @@ class TradingAPI:
         api_key = os.getenv('BYBIT_TESTNET_API_KEY')
         api_secret = os.getenv('BYBIT_TESTNET_API_SECRET')
         
-        valid = bool(api_key and api_secret and len(api_key) > 20)
+        # Check if credentials exist and are not placeholder values
+        valid = (api_key and api_secret and 
+                len(api_key) >= 10 and len(api_secret) >= 10 and  # More reasonable length check
+                'your_testnet_key' not in api_key.lower() and 
+                'testnet_key_here' not in api_key.lower() and
+                'leave_empty' not in api_key.lower())
         
         if valid:
             print(f"✅ Testnet credentials loaded: {api_key[:8]}...")
         else:
-            print(f"⚠️ No valid testnet credentials - limited paper trading")
+            if not api_key or not api_secret:
+                print(f"⚠️ No testnet credentials found - set BYBIT_TESTNET_API_KEY/SECRET")
+            elif 'your_testnet_key' in (api_key or '').lower() or 'testnet_key_here' in (api_key or '').lower():
+                print(f"⚠️ Testnet credentials are placeholder values - replace with real keys from testnet.bybit.com")
+            else:
+                print(f"⚠️ Testnet credentials appear invalid - check your keys from testnet.bybit.com")
             
         return {
             'api_key': api_key,
@@ -232,12 +247,20 @@ class TradingAPI:
         api_key = os.getenv('BYBIT_LIVE_API_KEY')
         api_secret = os.getenv('BYBIT_LIVE_API_SECRET')
         
-        valid = bool(api_key and api_secret and len(api_key) > 20)
+        # Check if credentials exist and are not placeholder/empty values
+        valid = (api_key and api_secret and 
+                len(api_key) >= 10 and len(api_secret) >= 10 and  # More reasonable length check
+                'your_live_key' not in api_key.lower() and 
+                'live_key_here' not in api_key.lower() and
+                'leave_empty' not in api_key.lower())
         
         if valid:
             print(f"🔴 Live credentials loaded: {api_key[:8]}... (USE WITH CAUTION)")
         else:
-            print(f"📋 No live credentials - testnet only mode")
+            if not api_key or not api_secret or 'leave_empty' in (api_key or '').lower():
+                print(f"📋 No live credentials - testnet only mode (this is good for testing!)")
+            else:
+                print(f"⚠️ Live credentials appear invalid - check your keys from bybit.com")
             
         return {
             'api_key': api_key,
