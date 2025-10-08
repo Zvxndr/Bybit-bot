@@ -77,14 +77,12 @@ database:
     dialect: duckdb
     path: ./data/trading_bot.db
     
-  # Production (cloud)
+  # Production (DigitalOcean droplet) - Optimized for private use
   production:
-    dialect: postgresql
-    host: ${DB_HOST}
-    port: ${DB_PORT:5432}
-    name: ${DB_NAME}
-    user: ${DB_USER}
-    password: ${DB_PASSWORD}
+    dialect: sqlite
+    path: /app/data/trading_bot.db
+    backup_enabled: true
+    backup_frequency: daily
     
   # Connection settings
   pool_size: 10
