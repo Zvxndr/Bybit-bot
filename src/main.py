@@ -51,6 +51,9 @@ class TradingAPI:
         self.bybit_client = None  # Mainnet client for live trading
         self.testnet_client = None  # Testnet client for paper trading
         self.risk_manager = None
+        self.strategy_executor = None  # Strategy execution engine
+        self.order_manager = None  # Production order manager
+        self.trade_reconciler = None  # Trade reconciliation system
         
         # Default system settings
         self.max_daily_risk = 2.0
@@ -87,6 +90,31 @@ class TradingAPI:
                 from src.bot.risk.core.unified_risk_manager import UnifiedRiskManager
                 self.risk_manager = UnifiedRiskManager()
                 logger.info("✅ Risk management system initialized")
+                
+                # Initialize strategy executor - CRITICAL COMPONENT
+                from src.bot.strategy_executor import create_strategy_executor
+                self.strategy_executor = create_strategy_executor(
+                    bybit_client=self.bybit_client,
+                    testnet_client=self.testnet_client,
+                    risk_manager=self.risk_manager
+                )
+                logger.info("✅ Strategy execution engine initialized")
+                
+                # Initialize production order manager - HIGH PRIORITY
+                from src.bot.production_order_manager import create_production_order_manager
+                self.order_manager = create_production_order_manager(
+                    bybit_client=self.bybit_client,
+                    testnet_client=self.testnet_client
+                )
+                logger.info("✅ Production order manager initialized")
+                
+                # Initialize trade reconciler - DATA INTEGRITY
+                from src.bot.trade_reconciler import create_trade_reconciler
+                self.trade_reconciler = create_trade_reconciler(
+                    bybit_client=self.bybit_client,
+                    testnet_client=self.testnet_client
+                )
+                logger.info("✅ Trade reconciliation system initialized")
             else:
                 logger.warning("⚠️ No API credentials - running in paper mode")
         except Exception as e:
@@ -1116,6 +1144,488 @@ async def get_historical_data_summary():
     except Exception as e:
         logger.error(f"Historical data summary error: {e}")
         return {"success": False, "message": str(e), "summary": []}
+
+# ========================================================================================
+# STRATEGY EXECUTION ENDPOINTS - CRITICAL PRODUCTION COMPONENT
+# ========================================================================================
+
+@app.post("/api/strategy/start")
+async def start_strategy_execution(request: Request):
+    """Start executing a strategy - PRODUCTION READY"""
+    try:
+        body = await request.json()
+        strategy_id = body.get('strategy_id')
+        symbol = body.get('symbol', 'BTCUSDT')
+        mode = body.get('mode', 'paper')  # 'paper', 'live', 'simulation'
+        
+        if not strategy_id:
+            return {"success": False, "message": "strategy_id is required"}
+        
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized"}
+        
+        # Convert string mode to enum
+        from src.bot.strategy_executor import ExecutionMode
+        execution_mode = ExecutionMode.PAPER
+        if mode.lower() == 'live':
+            execution_mode = ExecutionMode.LIVE
+        elif mode.lower() == 'simulation':
+            execution_mode = ExecutionMode.SIMULATION
+        
+        # Start strategy execution
+        success = await trading_api.strategy_executor.start_strategy_execution(
+            strategy_id=strategy_id,
+            symbol=symbol,
+            mode=execution_mode
+        )
+        
+        if success:
+            logger.info(f"✅ Strategy {strategy_id} started in {mode} mode")
+            return {
+                "success": True,
+                "message": f"Strategy {strategy_id} started successfully",
+                "strategy_id": strategy_id,
+                "mode": mode,
+                "symbol": symbol
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to start strategy {strategy_id}"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Strategy start error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/strategy/stop")
+async def stop_strategy_execution(request: Request):
+    """Stop executing a strategy"""
+    try:
+        body = await request.json()
+        strategy_id = body.get('strategy_id')
+        
+        if not strategy_id:
+            return {"success": False, "message": "strategy_id is required"}
+        
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized"}
+        
+        success = await trading_api.strategy_executor.stop_strategy_execution(strategy_id)
+        
+        if success:
+            logger.info(f"✅ Strategy {strategy_id} stopped")
+            return {
+                "success": True,
+                "message": f"Strategy {strategy_id} stopped successfully"
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to stop strategy {strategy_id}"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Strategy stop error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/strategy/emergency-stop")
+async def emergency_stop_all():
+    """Emergency stop all strategies - CRITICAL SAFETY FEATURE"""
+    try:
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized"}
+        
+        await trading_api.strategy_executor.emergency_stop_all()
+        
+        logger.critical("🚨 EMERGENCY STOP executed via API")
+        return {
+            "success": True,
+            "message": "EMERGENCY STOP: All strategies stopped",
+            "warning": "Manual intervention required to restart trading"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Emergency stop error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/strategy/status/{strategy_id}")
+async def get_strategy_status(strategy_id: str):
+    """Get status of a specific strategy"""
+    try:
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized"}
+        
+        status = trading_api.strategy_executor.get_strategy_status(strategy_id)
+        
+        if status:
+            return {
+                "success": True,
+                "status": status
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Strategy {strategy_id} not found"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Strategy status error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/strategy/status")
+async def get_all_strategies_status():
+    """Get status of all active strategies"""
+    try:
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized", "strategies": []}
+        
+        strategies = trading_api.strategy_executor.get_all_strategies_status()
+        
+        return {
+            "success": True,
+            "strategies": strategies,
+            "count": len(strategies)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Strategies status error: {e}")
+        return {"success": False, "message": str(e), "strategies": []}
+
+@app.get("/api/execution/summary")
+async def get_execution_summary():
+    """Get overall execution engine summary - PRODUCTION DASHBOARD"""
+    try:
+        if not trading_api.strategy_executor:
+            return {"success": False, "message": "Strategy executor not initialized"}
+        
+        summary = trading_api.strategy_executor.get_execution_summary()
+        
+        return {
+            "success": True,
+            "execution_summary": summary
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Execution summary error: {e}")
+        return {"success": False, "message": str(e)}
+
+# ========================================================================================
+# ORDER MANAGEMENT ENDPOINTS - PRODUCTION TRADING
+# ========================================================================================
+
+@app.post("/api/order/place")
+async def place_order(request: Request):
+    """Place order through production order manager"""
+    try:
+        body = await request.json()
+        
+        symbol = body.get('symbol', 'BTCUSDT')
+        side = body.get('side', 'buy')  # 'buy' or 'sell'
+        order_type = body.get('order_type', 'market')
+        quantity = float(body.get('quantity', 0))
+        price = body.get('price')
+        strategy_id = body.get('strategy_id', 'manual')
+        use_testnet = body.get('use_testnet', True)
+        
+        if not trading_api.order_manager:
+            return {"success": False, "message": "Order manager not initialized"}
+        
+        if quantity <= 0:
+            return {"success": False, "message": "Quantity must be greater than 0"}
+        
+        # Convert to appropriate types
+        from src.bot.production_order_manager import OrderSide, OrderType
+        from decimal import Decimal
+        
+        order_side = OrderSide.BUY if side.lower() == 'buy' else OrderSide.SELL
+        order_type_enum = OrderType.MARKET if order_type.lower() == 'market' else OrderType.LIMIT
+        quantity_decimal = Decimal(str(quantity))
+        price_decimal = Decimal(str(price)) if price else None
+        
+        # Place order
+        order = await trading_api.order_manager.place_order(
+            symbol=symbol,
+            side=order_side,
+            order_type=order_type_enum,
+            quantity=quantity_decimal,
+            price=price_decimal,
+            strategy_id=strategy_id,
+            use_testnet=use_testnet
+        )
+        
+        if order:
+            return {
+                "success": True,
+                "message": "Order placed successfully",
+                "order": {
+                    "order_id": order.order_id,
+                    "exchange_order_id": order.exchange_order_id,
+                    "symbol": order.symbol,
+                    "side": order.side.value,
+                    "order_type": order.order_type.value,
+                    "quantity": float(order.quantity),
+                    "status": order.status.value,
+                    "created_at": order.created_at.isoformat()
+                }
+            }
+        else:
+            return {"success": False, "message": "Failed to place order"}
+            
+    except Exception as e:
+        logger.error(f"❌ Order placement error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/order/cancel")
+async def cancel_order(request: Request):
+    """Cancel an order"""
+    try:
+        body = await request.json()
+        order_id = body.get('order_id')
+        
+        if not order_id:
+            return {"success": False, "message": "order_id is required"}
+        
+        if not trading_api.order_manager:
+            return {"success": False, "message": "Order manager not initialized"}
+        
+        success = await trading_api.order_manager.cancel_order(order_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"Order {order_id} cancelled successfully"
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to cancel order {order_id}"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Order cancellation error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/order/{order_id}")
+async def get_order(order_id: str):
+    """Get order details"""
+    try:
+        if not trading_api.order_manager:
+            return {"success": False, "message": "Order manager not initialized"}
+        
+        order = trading_api.order_manager.get_order(order_id)
+        
+        if order:
+            return {
+                "success": True,
+                "order": {
+                    "order_id": order.order_id,
+                    "exchange_order_id": order.exchange_order_id,
+                    "strategy_id": order.strategy_id,
+                    "symbol": order.symbol,
+                    "side": order.side.value,
+                    "order_type": order.order_type.value,
+                    "quantity": float(order.quantity),
+                    "price": float(order.price) if order.price else None,
+                    "status": order.status.value,
+                    "filled_quantity": float(order.filled_quantity),
+                    "average_fill_price": float(order.average_fill_price) if order.average_fill_price else None,
+                    "total_fees": float(order.total_fees),
+                    "fill_percentage": order.fill_percentage,
+                    "created_at": order.created_at.isoformat(),
+                    "updated_at": order.updated_at.isoformat()
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Order {order_id} not found"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Order retrieval error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/orders/active")
+async def get_active_orders():
+    """Get all active orders"""
+    try:
+        if not trading_api.order_manager:
+            return {"success": False, "message": "Order manager not initialized", "orders": []}
+        
+        active_orders = trading_api.order_manager.get_active_orders()
+        
+        orders_data = []
+        for order in active_orders:
+            orders_data.append({
+                "order_id": order.order_id,
+                "exchange_order_id": order.exchange_order_id,
+                "strategy_id": order.strategy_id,
+                "symbol": order.symbol,
+                "side": order.side.value,
+                "order_type": order.order_type.value,
+                "quantity": float(order.quantity),
+                "status": order.status.value,
+                "filled_quantity": float(order.filled_quantity),
+                "fill_percentage": order.fill_percentage,
+                "created_at": order.created_at.isoformat()
+            })
+        
+        return {
+            "success": True,
+            "orders": orders_data,
+            "count": len(orders_data)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Active orders error: {e}")
+        return {"success": False, "message": str(e), "orders": []}
+
+@app.get("/api/orders/statistics")
+async def get_order_statistics():
+    """Get order management statistics"""
+    try:
+        if not trading_api.order_manager:
+            return {"success": False, "message": "Order manager not initialized"}
+        
+        stats = trading_api.order_manager.get_order_statistics()
+        
+        return {
+            "success": True,
+            "statistics": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Order statistics error: {e}")
+        return {"success": False, "message": str(e)}
+
+# ========================================================================================
+# TRADE RECONCILIATION ENDPOINTS - DATA INTEGRITY
+# ========================================================================================
+
+@app.post("/api/reconciliation/start")
+async def start_trade_reconciliation():
+    """Start automatic trade reconciliation"""
+    try:
+        if not trading_api.trade_reconciler:
+            return {"success": False, "message": "Trade reconciler not initialized"}
+        
+        await trading_api.trade_reconciler.start_auto_reconciliation()
+        
+        return {
+            "success": True,
+            "message": "Automatic trade reconciliation started"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Reconciliation start error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/reconciliation/stop")
+async def stop_trade_reconciliation():
+    """Stop automatic trade reconciliation"""
+    try:
+        if not trading_api.trade_reconciler:
+            return {"success": False, "message": "Trade reconciler not initialized"}
+        
+        await trading_api.trade_reconciler.stop_auto_reconciliation()
+        
+        return {
+            "success": True,
+            "message": "Automatic trade reconciliation stopped"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Reconciliation stop error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/reconciliation/run")
+async def run_trade_reconciliation(request: Request):
+    """Run manual trade reconciliation"""
+    try:
+        body = await request.json()
+        use_testnet = body.get('use_testnet', True)
+        hours_back = body.get('hours_back', 24)
+        
+        if not trading_api.trade_reconciler:
+            return {"success": False, "message": "Trade reconciler not initialized"}
+        
+        from datetime import datetime, timedelta
+        end_time = datetime.now()
+        start_time = end_time - timedelta(hours=hours_back)
+        
+        results = await trading_api.trade_reconciler.reconcile_trades(
+            start_time=start_time,
+            end_time=end_time,
+            use_testnet=use_testnet
+        )
+        
+        # Summarize results
+        matched = sum(1 for r in results if r.status.value == 'matched')
+        discrepancies = sum(1 for r in results if r.status.value == 'discrepancy')
+        missing_exchange = sum(1 for r in results if r.status.value == 'missing_exchange')
+        missing_local = sum(1 for r in results if r.status.value == 'missing_local')
+        
+        return {
+            "success": True,
+            "message": "Trade reconciliation completed",
+            "summary": {
+                "total_trades": len(results),
+                "matched": matched,
+                "discrepancies": discrepancies,
+                "missing_exchange": missing_exchange,
+                "missing_local": missing_local
+            },
+            "period": {
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "hours_back": hours_back
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Manual reconciliation error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/reconciliation/positions")
+async def reconcile_positions(request: Request):
+    """Reconcile positions between local and exchange"""
+    try:
+        body = await request.json()
+        use_testnet = body.get('use_testnet', True)
+        
+        if not trading_api.trade_reconciler:
+            return {"success": False, "message": "Trade reconciler not initialized"}
+        
+        summary = await trading_api.trade_reconciler.reconcile_positions(use_testnet)
+        
+        return {
+            "success": True,
+            "message": "Position reconciliation completed",
+            "reconciliation_summary": summary
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Position reconciliation error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/reconciliation/summary")
+async def get_reconciliation_summary():
+    """Get reconciliation summary and statistics"""
+    try:
+        if not trading_api.trade_reconciler:
+            return {"success": False, "message": "Trade reconciler not initialized"}
+        
+        summary = trading_api.trade_reconciler.get_reconciliation_summary()
+        
+        return {
+            "success": True,
+            "reconciliation_summary": summary
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Reconciliation summary error: {e}")
+        return {"success": False, "message": str(e)}
 
 # Lifespan events are now handled in the @asynccontextmanager above
 
