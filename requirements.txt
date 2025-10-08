@@ -39,6 +39,3 @@ ta>=0.10.0
 
 # Database
 sqlalchemy>=2.0.0
-
-# Additional utilities for production
-secrets
