@@ -19,11 +19,11 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
     load_dotenv()
-    print("✅ Environment variables loaded from .env file")
+    logging.info("Environment variables loaded from .env file")
 except ImportError:
-    print("⚠️ python-dotenv not installed, using system environment variables only")
+    logging.warning("python-dotenv not installed, using system environment variables only")
 except Exception as e:
-    print(f"⚠️ Error loading environment variables: {e}")
+    logging.warning(f"Error loading environment variables: {e}")
 
 # Load configuration system
 try:
@@ -32,22 +32,19 @@ try:
     def load_config():
         """Load YAML configuration with fallback handling"""
         config_path = Path(__file__).parent.parent / "config" / "config.yaml"
-        print(f"🔍 Looking for config at: {config_path}")
-        print(f"🔍 Config file exists: {config_path.exists()}")
         try:
             with open(config_path, 'r') as f:
                 config_data = yaml.safe_load(f)
-                print(f"✅ Config loaded successfully: {len(config_data)} sections")
+                logging.info(f"Config loaded successfully: {len(config_data)} sections")
                 return config_data
         except FileNotFoundError:
-            print(f"⚠️ Config file not found at {config_path}, using defaults")
+            logging.info(f"Config file not found at {config_path}, using defaults")
             return {}
         except Exception as e:
-            print(f"⚠️ Error loading config: {e}")
+            logging.warning(f"Error loading config: {e}")
             return {}
     
     app_config = load_config()
-    print("✅ YAML configuration loaded successfully")
     
     # Security validation
     def validate_security_config():
@@ -97,7 +94,7 @@ try:
     
     security_warnings = validate_security_config()
     for warning in security_warnings:
-        print(warning)
+        logging.warning(warning)
     
 except ImportError:
     print("⚠️ PyYAML not installed, using default configuration")
@@ -146,6 +143,30 @@ except ImportError as e:
     logger.warning(f"⚠️ Monitoring system not available: {e}")
     infrastructure_monitor = None
 
+# Import Multi-Exchange Data Provider
+try:
+    from src.data.multi_exchange_provider import MultiExchangeDataManager
+    multi_exchange_data = MultiExchangeDataManager()
+    
+    # Show which exchanges will be enabled
+    binance_enabled = os.getenv("ENABLE_BINANCE_DATA", "true").lower() == "true"
+    okx_enabled = os.getenv("ENABLE_OKX_DATA", "true").lower() == "true"
+    
+    enabled_exchanges = []
+    if binance_enabled:
+        enabled_exchanges.append("Binance")
+    if okx_enabled:
+        enabled_exchanges.append("OKX")
+    
+    if enabled_exchanges:
+        logger.info(f"✅ Multi-exchange data provider configured with: {', '.join(enabled_exchanges)}")
+    else:
+        logger.info("✅ Multi-exchange data provider configured (external exchanges disabled)")
+        
+except ImportError as e:
+    logger.warning(f"⚠️ Multi-exchange data provider not available: {e}")
+    multi_exchange_data = None
+
 # Import AI Strategy Pipeline Manager
 try:
     from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
@@ -153,6 +174,16 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
     AutomatedPipelineManager = None
+
+# Import Security Manager
+try:
+    from src.security.security_manager import (
+        security_manager, session_manager, security_audit, trading_monitor
+    )
+    logger.info("✅ Security Manager imported")
+except ImportError as e:
+    logger.warning(f"⚠️ Security Manager not available: {e}")
+    security_manager = None
 
 class TradingAPI:
     """Dual Environment Trading API - Simultaneous Testnet + Live Trading"""
@@ -1236,6 +1267,60 @@ async def rate_limit_middleware(request: Request, call_next):
         )
     
     response = await call_next(request)
+    return response
+
+# Enhanced Security Middleware 🔒
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    """Enhanced security middleware with intrusion detection"""
+    client_ip = request.client.host if request.client else "unknown"
+    start_time = time.time()
+    
+    # Check if IP is blocked due to suspicious activity
+    if security_manager and not security_manager.check_rate_limit(client_ip):
+        if security_audit:
+            security_audit.log_security_event('IP_BLOCKED', {
+                'client_ip': client_ip,
+                'endpoint': request.url.path,
+                'reason': 'rate_limit_exceeded'
+            })
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=429,
+            content={"error": "IP temporarily blocked due to suspicious activity"}
+        )
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Log API access for audit trail
+    if security_audit:
+        security_audit.log_api_access(
+            client_ip=client_ip,
+            endpoint=request.url.path,
+            method=request.method,
+            status_code=response.status_code
+        )
+    
+    # Monitor for slow requests (potential DoS)
+    duration = time.time() - start_time
+    if duration > 5.0 and security_audit:  # 5 second threshold
+        security_audit.log_security_event('SLOW_REQUEST', {
+            'client_ip': client_ip,
+            'endpoint': request.url.path,
+            'duration': duration
+        })
+    
+    # Record failed authentication attempts
+    if response.status_code in [401, 403] and security_manager:
+        security_manager.record_failed_attempt(client_ip)
+    
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
     return response
 
 # Security middleware - TrustedHost first
@@ -2571,6 +2656,124 @@ try:
 except ImportError:
     AUSTRALIAN_COMPLIANCE_ENABLED = False
     logger.warning("⚠️ Australian compliance module not available")
+
+# ========================================================================================
+# MULTI-EXCHANGE DATA API ENDPOINTS - BINANCE & OKX DATA FEEDS
+# ========================================================================================
+
+@app.get("/api/cross-exchange/tickers")
+async def get_cross_exchange_tickers():
+    """Get real-time tickers from multiple exchanges for price comparison"""
+    try:
+        if multi_exchange_data is not None:
+            # Initialize if not already done
+            if not hasattr(multi_exchange_data, 'providers') or not multi_exchange_data.providers:
+                await multi_exchange_data.initialize()
+            
+            symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']  # Format for API calls
+            tickers_result = {}
+            
+            # Get tickers for each symbol
+            for symbol in symbols:
+                tickers = await multi_exchange_data.get_cross_exchange_tickers(symbol)
+                tickers_result[symbol] = tickers
+            
+            return {
+                "success": True,
+                "tickers": tickers_result,
+                "exchanges": ["bybit", "binance", "okx"],
+                "symbols": symbols,
+                "updated_at": datetime.now().isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Multi-exchange data provider not available. Check environment settings."
+            }
+    except Exception as e:
+        logger.error(f"❌ Cross-exchange tickers error: {e}")
+        return {"success": False, "message": str(e), "tickers": {}}
+
+# @app.get("/api/arbitrage/opportunities")
+# TODO: Arbitrage functionality moved to future Trust/PTY LTD version
+# Will implement comprehensive arbitrage detection with proper risk management
+# and regulatory compliance for institutional trading later
+
+@app.get("/api/exchanges/config")
+async def get_exchange_config():
+    """Get current exchange configuration and status"""
+    try:
+        if multi_exchange_data is not None:
+            # Initialize if not already done
+            if not hasattr(multi_exchange_data, 'providers') or not multi_exchange_data.providers:
+                await multi_exchange_data.initialize()
+            
+            return {
+                "success": True,
+                "exchanges": {
+                    "bybit": {
+                        "enabled": True,
+                        "status": "always_enabled",
+                        "description": "Primary trading exchange"
+                    },
+                    "binance": {
+                        "enabled": multi_exchange_data.binance_enabled,
+                        "status": "connected" if multi_exchange_data.is_exchange_enabled("binance") else "disabled",
+                        "description": "Data-only price comparison"
+                    },
+                    "okx": {
+                        "enabled": multi_exchange_data.okx_enabled,
+                        "status": "connected" if multi_exchange_data.is_exchange_enabled("okx") else "disabled", 
+                        "description": "Data-only price comparison"
+                    }
+                },
+                "enabled_count": len(multi_exchange_data.get_enabled_exchanges()) + 1,  # +1 for Bybit
+                "configuration": {
+                    "binance_env_var": "ENABLE_BINANCE_DATA",
+                    "okx_env_var": "ENABLE_OKX_DATA",
+                    "current_binance": os.getenv("ENABLE_BINANCE_DATA", "true"),
+                    "current_okx": os.getenv("ENABLE_OKX_DATA", "true")
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Multi-exchange data provider not available"
+            }
+    except Exception as e:
+        logger.error(f"❌ Exchange config error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/market/overview")
+async def get_market_overview():
+    """Get comprehensive market overview from enabled exchanges only"""
+    try:
+        if multi_exchange_data is not None:
+            # Initialize if not already done
+            if not hasattr(multi_exchange_data, 'providers') or not multi_exchange_data.providers:
+                await multi_exchange_data.initialize()
+            
+            overview = await multi_exchange_data.get_market_overview()
+            
+            # Add exchange configuration info
+            enabled_exchanges = multi_exchange_data.get_enabled_exchanges()
+            
+            return {
+                "success": True,
+                "market_overview": overview,
+                "enabled_exchanges": enabled_exchanges,
+                "total_exchanges": len(enabled_exchanges) + 1,  # +1 for Bybit
+                "updated_at": datetime.now().isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Multi-exchange data provider not available",
+                "market_overview": {}
+            }
+    except Exception as e:
+        logger.error(f"❌ Market overview error: {e}")
+        return {"success": False, "message": str(e), "market_overview": {}}
 
 # Lifespan events are now handled in the @asynccontextmanager above
 

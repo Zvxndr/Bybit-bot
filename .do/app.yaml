@@ -1,31 +1,66 @@
-name: bybit-ai-trading-pipeline
+name: bybit-trading-bot-production
 services:
-- name: ai-pipeline-api
+- name: trading-bot
   source_dir: /
   github:
-    repo: Zvxndr/Bybit-bot
+    repo: Zvxndr/Bybit-bot-fresh
     branch: main
     deploy_on_push: true
-  dockerfile_path: Dockerfile
-  buildpack_stack: container
+  
+  run_command: chmod +x start.sh && ./start.sh
+  
   instance_count: 1
   instance_size_slug: basic-xxs
-  http_port: 8080
+  http_port: 8000
+  
   health_check:
     http_path: /health
-    failure_threshold: 15
+    failure_threshold: 10
     success_threshold: 2
+    
   envs:
-  - key: ENVIRONMENT
+  - key: NODE_ENV
     value: production
-  - key: PORT
-    value: "8080"
+  - key: TRADING_ENVIRONMENT  
+    value: production
+  - key: DEBUG
+    value: "false"
   - key: PYTHONPATH
     value: /app
   - key: PYTHONUNBUFFERED
     value: "1"
-  # Add your Bybit API credentials here for real trading
+  
+  # 🔑 ADD YOUR REAL BYBIT API KEYS HERE (via DigitalOcean dashboard)
+  # Go to: Apps → Settings → Environment Variables
   # - key: BYBIT_API_KEY
-  #   value: your_testnet_api_key
-  # - key: BYBIT_SECRET
-  #   value: your_testnet_secret_key
+  #   value: your_live_bybit_api_key_here
+  # - key: BYBIT_API_SECRET  
+  #   value: your_live_bybit_api_secret_here
+  
+  # Optional testnet keys for strategy validation
+  # - key: BYBIT_TESTNET_API_KEY
+  #   value: your_testnet_key_here
+  # - key: BYBIT_TESTNET_API_SECRET
+  #   value: your_testnet_secret_here
+  
+  # Security & Risk Management
+  - key: SECRET_KEY
+    value: change_this_to_random_32_character_string
+  - key: MAX_DAILY_RISK
+    value: "0.02"
+  - key: MAX_POSITION_SIZE
+    value: "0.01" 
+  - key: EMERGENCY_STOP_LOSS
+    value: "0.05"
+  - key: ENABLE_STOP_LOSS
+    value: "true"
+  - key: DEFAULT_STOP_LOSS
+    value: "0.02"
+  - key: DEFAULT_TAKE_PROFIT
+    value: "0.04"
+  
+  # Database & Logging  
+  - key: DATABASE_URL
+    value: sqlite:///data/trading_bot.db
+  - key: LOG_LEVEL
+    value: INFO

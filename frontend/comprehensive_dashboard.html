@@ -380,6 +380,9 @@
                 <a class="nav-link" href="#performance" data-bs-toggle="tab">📈 Performance</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="#multi-exchange" data-bs-toggle="tab">🌐 Multi-Exchange</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#settings" data-bs-toggle="tab">⚙️ Settings</a>
             </li>
         </ul>
@@ -756,6 +759,89 @@
                 </div>
             </div>
 
+            <!-- Multi-Exchange Tab -->
+            <div class="tab-pane fade" id="multi-exchange">
+                <div class="row">
+                    <!-- Exchange Configuration -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">⚙️ Exchange Configuration</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="exchangeConfigContainer">
+                                    <!-- Exchange config will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cross-Exchange Tickers -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">🌐 Cross-Exchange Price Comparison</h3>
+                                <button class="btn btn-primary btn-sm" onclick="loadCrossExchangeTickers()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="tickersLoading" class="text-center py-3" style="display: none;">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <span class="ms-2">Loading cross-exchange data...</span>
+                                </div>
+                                <div id="tickersContainer">
+                                    <!-- Cross-exchange tickers will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Analysis -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">📊 Price Analysis</h3>
+                                <div class="badge bg-info">Data Only</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Note:</strong> Arbitrage detection will be available in the institutional Trust/PTY LTD version with proper regulatory compliance.
+                                </div>
+                                <div class="text-center py-3">
+                                    <i class="bi bi-graph-up text-muted" style="font-size: 2rem;"></i>
+                                    <div class="text-muted mt-2">Cross-exchange price monitoring active</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Market Overview -->
+                    <div class="col-lg-12 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">📊 Multi-Exchange Market Overview</h3>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-primary">Binance</span>
+                                    <span class="badge bg-success">OKX</span>
+                                    <span class="badge bg-info">Bybit</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="overviewLoading" class="text-center py-3" style="display: none;">
+                                    <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+                                    <span class="ms-2">Loading market overview...</span>
+                                </div>
+                                <div id="overviewContainer">
+                                    <!-- Market overview will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Tab -->
             <div class="tab-pane fade" id="settings">
                 <div class="row">
@@ -872,7 +958,7 @@
             }
             
             async init() {
-                console.log('🚀 Initializing Comprehensive Trading Dashboard...');
+                // Dashboard initialization
                 
                 // Initialize charts
                 this.initializeCharts();
@@ -889,7 +975,7 @@
                 // Start update cycle
                 setInterval(() => this.loadAllData(), this.updateInterval);
                 
-                console.log('✅ Comprehensive Trading Dashboard Ready');
+                // Dashboard ready
             }
             
             async loadAllData() {
@@ -1111,7 +1197,7 @@
                     this.wsConnection = new WebSocket(wsUrl);
                     
                     this.wsConnection.onopen = () => {
-                        console.log('🔌 WebSocket connected');
+                        // WebSocket connected
                         document.getElementById('connectionStatus').textContent = 'Connected';
                         document.getElementById('connectionStatus').className = 'badge bg-success me-2';
                     };
@@ -1124,7 +1210,7 @@
                     };
                     
                     this.wsConnection.onclose = () => {
-                        console.log('🔌 WebSocket disconnected');
+                        // WebSocket disconnected
                         document.getElementById('connectionStatus').textContent = 'Disconnected';
                         document.getElementById('connectionStatus').className = 'badge bg-warning me-2';
                         
@@ -1305,10 +1391,192 @@
                 window.dashboard.showAlert(`Closing position for ${symbol}`, 'warning');
             }
         };
+
+        // Multi-Exchange Functions
+        window.loadExchangeConfig = async function() {
+            try {
+                const response = await fetch('/api/exchanges/config');
+                const data = await response.json();
+                
+                const container = document.getElementById('exchangeConfigContainer');
+                
+                if (data.success) {
+                    const exchanges = data.exchanges;
+                    const enabledCount = data.enabled_count;
+                    
+                    container.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h5 class="mb-0">Active Exchanges: ${enabledCount}/3</h5>
+                                    <div class="badge bg-${enabledCount === 3 ? 'success' : 'warning'} ms-2">
+                                        ${enabledCount === 3 ? 'Full Coverage' : 'Partial Coverage'}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    ${Object.entries(exchanges).map(([name, config]) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card bg-dark border-${config.status === 'always_enabled' || config.status === 'connected' ? 'success' : 'secondary'}">
+                                                <div class="card-body text-center py-2">
+                                                    <h6 class="mb-1">${name.toUpperCase()}</h6>
+                                                    <div class="badge bg-${config.status === 'always_enabled' ? 'primary' : config.status === 'connected' ? 'success' : 'secondary'} mb-1">
+                                                        ${config.status === 'always_enabled' ? 'Primary' : config.status === 'connected' ? 'Connected' : 'Disabled'}
+                                                    </div>
+                                                    <div class="small text-muted">${config.description}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-gear"></i> Configuration</h6>
+                                    <p class="mb-2">To enable/disable external exchanges, set these environment variables:</p>
+                                    <code>ENABLE_BINANCE_DATA=true</code><br>
+                                    <code>ENABLE_OKX_DATA=true</code>
+                                    <p class="mt-2 mb-0"><small>Changes require app restart</small></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="alert alert-warning">⚠️ ${data.message}</div>`;
+                }
+            } catch (error) {
+                const container = document.getElementById('exchangeConfigContainer');
+                container.innerHTML = `<div class="alert alert-danger">❌ Error loading exchange config: ${error.message}</div>`;
+            }
+        };
+
+        window.loadCrossExchangeTickers = async function() {
+            const loading = document.getElementById('tickersLoading');
+            const container = document.getElementById('tickersContainer');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/cross-exchange/tickers');
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayTickers(data.tickers);
+                } else {
+                    container.innerHTML = `<div class="alert alert-warning">⚠️ ${data.message}</div>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                container.innerHTML = `<div class="alert alert-danger">❌ Error loading tickers: ${error.message}</div>`;
+            }
+        };
+
+        function displayTickers(tickers) {
+            const container = document.getElementById('tickersContainer');
+            let html = '';
+            
+            for (const [symbol, exchangeData] of Object.entries(tickers)) {
+                html += `
+                    <div class="mb-3">
+                        <h5>${symbol}</h5>
+                        <div class="row">
+                `;
+                
+                for (const [exchange, ticker] of Object.entries(exchangeData)) {
+                    if (ticker) {
+                        html += `
+                            <div class="col-md-4">
+                                <div class="card bg-dark mb-2">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">${exchange.toUpperCase()}</small>
+                                            <span class="badge ${ticker.change_24h >= 0 ? 'bg-success' : 'bg-danger'}">
+                                                ${ticker.change_24h >= 0 ? '+' : ''}${ticker.change_24h.toFixed(2)}%
+                                            </span>
+                                        </div>
+                                        <div class="fw-bold">\$${ticker.price.toLocaleString()}</div>
+                                        <small class="text-muted">Vol: ${(ticker.volume_24h / 1000000).toFixed(1)}M</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // TODO: Arbitrage functionality moved to Trust/PTY LTD version
+        // Future implementation will include comprehensive arbitrage detection
+        // with proper risk management and regulatory compliance
+
+        window.loadMarketOverview = async function() {
+            const loading = document.getElementById('overviewLoading');
+            const container = document.getElementById('overviewContainer');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/market/overview');
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayMarketOverview(data.market_overview);
+                } else {
+                    container.innerHTML = `<div class="alert alert-warning">⚠️ ${data.message}</div>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                container.innerHTML = `<div class="alert alert-danger">❌ Error loading overview: ${error.message}</div>`;
+            }
+        };
+
+        function displayMarketOverview(overview) {
+            const container = document.getElementById('overviewContainer');
+            container.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4>${overview.total_symbols || 0}</h4>
+                            <small class="text-muted">Tracked Symbols</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4>${overview.total_volume ? (overview.total_volume / 1000000000).toFixed(2) + 'B' : '0'}</h4>
+                            <small class="text-muted">24h Volume</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4>${Object.keys(overview.exchanges || {}).length}</h4>
+                            <small class="text-muted">Data Sources</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         
         // Initialize dashboard when page loads
         document.addEventListener('DOMContentLoaded', () => {
             window.dashboard = new ComprehensiveTradingDashboard();
+            
+            // Auto-load multi-exchange data when tab is activated
+            document.querySelector('a[href="#multi-exchange"]').addEventListener('shown.bs.tab', () => {
+                loadExchangeConfig();
+                loadCrossExchangeTickers();
+                loadMarketOverview();
+                // TODO: loadArbitrageOpportunities will be implemented in Trust/PTY LTD version
+            });
         });
     </script>
 </body>
