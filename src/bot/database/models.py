@@ -432,7 +432,6 @@ class StrategyPipeline(Base):
     
     # Pipeline phase tracking
     current_phase = Column(String(20), nullable=False)  # 'backtest', 'paper', 'live', 'rejected'
-    previous_phase = Column(String(20))
     phase_start_time = Column(DateTime, nullable=False, default=func.now())
     phase_duration = Column(Integer)  # Duration in current phase (seconds)
     

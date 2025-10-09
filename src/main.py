@@ -547,28 +547,34 @@ class TradingAPI:
             from src.bot.database.manager import DatabaseManager
             from src.bot.config import DatabaseConfig
             
-            # Create database config from main config  
+            # Create database config using SQLite for compatibility
             db_config = DatabaseConfig(
                 pool_size=10,
                 max_overflow=20,
-                echo=False
+                echo=False,
+                development={
+                    "dialect": "sqlite",
+                    "path": "./data/trading_bot.db"
+                }
             )
             db_manager = DatabaseManager(db_config)
+            
+            # Initialize database tables
+            db_manager.initialize()
+            logger.info("✅ Database initialized with pipeline tables")
             
             # Initialize ML Strategy Discovery Engine  
             from src.bot.ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine
             ml_engine = MLStrategyDiscoveryEngine()
             
-            # Initialize Pipeline Manager with all components
+            # Initialize Pipeline Manager with correct parameters
             self.pipeline_manager = AutomatedPipelineManager(
-                testnet_client=self.testnet_client,
-                live_client=self.bybit_client,
-                database_manager=db_manager,
+                db_manager=db_manager,
                 ml_engine=ml_engine
             )
             
-            # Start the automated pipeline
-            await self.pipeline_manager.start()
+            # Start the automated pipeline with correct method
+            await self.pipeline_manager.start_pipeline()
             logger.info("🤖 AI Strategy Pipeline Manager started - Automated discovery active")
             
         except Exception as e:
@@ -1446,6 +1452,14 @@ async def lifespan(app: FastAPI):
     try:
         await trading_api._initialize_pipeline_manager()
         logger.info("✅ AI Strategy Pipeline Manager initialized")
+        
+        # Initialize Pipeline API endpoints
+        if hasattr(trading_api, 'pipeline_manager') and trading_api.pipeline_manager:
+            from src.api.pipeline_api import PipelineAPI
+            db_manager = trading_api.pipeline_manager.db_manager
+            pipeline_api = PipelineAPI(app, db_manager)
+            logger.info("✅ Pipeline API endpoints integrated")
+        
     except Exception as e:
         logger.error(f"❌ Failed to initialize Pipeline Manager: {e}")
     

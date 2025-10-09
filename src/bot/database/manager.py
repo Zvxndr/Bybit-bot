@@ -62,7 +62,14 @@ class DatabaseManager:
         if self._environment == 'production':
             return self._create_postgresql_engine()
         else:
-            return self._create_duckdb_engine()
+            # Check if using SQLite or DuckDB
+            config = self.config.development
+            dialect = config.get('dialect', 'duckdb')
+            
+            if dialect == 'sqlite':
+                return self._create_sqlite_engine()
+            else:
+                return self._create_duckdb_engine()
     
     def _create_postgresql_engine(self) -> Engine:
         """Create PostgreSQL engine for production."""
@@ -114,6 +121,30 @@ class DatabaseManager:
         
         return engine
     
+    def _create_sqlite_engine(self) -> Engine:
+        """Create SQLite engine for development."""
+        config = self.config.development
+        db_path = config.get('path', './data/trading_bot.db')
+        
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(str(db_path)), exist_ok=True)
+        
+        # Create SQLite engine
+        url = f"sqlite:///{db_path}"
+        engine = create_engine(
+            url,
+            echo=self.config.echo,
+            poolclass=StaticPool,
+            connect_args={
+                "check_same_thread": False,  # Allow multiple threads
+            }
+        )
+        
+        # Setup SQLite-specific configurations
+        self._setup_sqlite_events(engine)
+        
+        return engine
+    
     def _setup_postgresql_events(self, engine: Engine) -> None:
         """Setup PostgreSQL-specific event listeners."""
         
@@ -145,6 +176,26 @@ class DatabaseManager:
             # Optimize for analytical workloads
             cursor.execute("SET enable_progress_bar=true")
             cursor.execute("SET enable_object_cache=true")
+    
+    def _setup_sqlite_events(self, engine: Engine) -> None:
+        """Setup SQLite-specific event listeners."""
+        
+        @event.listens_for(engine, "connect")
+        def set_sqlite_options(dbapi_connection, connection_record):
+            """Set SQLite connection options."""
+            cursor = dbapi_connection.cursor()
+            
+            # Enable WAL mode for better concurrency
+            cursor.execute("PRAGMA journal_mode=WAL")
+            
+            # Set synchronous mode for better performance
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            
+            # Enable foreign key constraints
+            cursor.execute("PRAGMA foreign_keys=ON")
+            
+            # Set cache size (negative value = KB)
+            cursor.execute("PRAGMA cache_size=-64000")  # 64MB
     
     def _create_tables(self) -> None:
         """Create all database tables."""

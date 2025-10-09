@@ -492,7 +492,6 @@ class AutomatedPipelineManager:
         """Promote strategy from backtest to paper trading."""
         try:
             strategy.current_phase = 'paper'
-            strategy.previous_phase = 'backtest'
             strategy.phase_start_time = datetime.utcnow()
             strategy.paper_start_date = datetime.utcnow()
             strategy.promoted_at = datetime.utcnow()
@@ -523,7 +522,6 @@ class AutomatedPipelineManager:
                 return
             
             strategy.current_phase = 'live'
-            strategy.previous_phase = 'paper'
             strategy.phase_start_time = datetime.utcnow()
             strategy.paper_end_date = datetime.utcnow()
             strategy.live_start_date = datetime.utcnow()
