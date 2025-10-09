@@ -47,4 +47,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
 # Run the unified dashboard with separated balance system
-CMD ["python", "src/main.py"]
+# Use -m flag to ensure proper module resolution from /app directory
+CMD ["python", "-m", "src.main"]
