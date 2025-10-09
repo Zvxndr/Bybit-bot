@@ -152,27 +152,8 @@ except ImportError as e:
 
 # Import Multi-Exchange Data Provider
 try:
-    try:
-        # Docker environment with PYTHONPATH=/app
-        import sys
-        import os
-        if '/app' not in sys.path:
-            sys.path.insert(0, '/app')
-        from data.multi_exchange_provider import MultiExchangeDataManager
-    except ImportError:
-        try:
-            # Production/Docker environment - absolute import
-            from src.data.multi_exchange_provider import MultiExchangeDataManager
-        except ImportError:
-            try:
-                # Relative import for local development
-                from .data.multi_exchange_provider import MultiExchangeDataManager
-            except ImportError:
-                # Last fallback with path adjustment
-                import sys
-                import os
-                sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-                from data.multi_exchange_provider import MultiExchangeDataManager
+    # Docker environment (PYTHONPATH=/app) - import from src
+    from src.data.multi_exchange_provider import MultiExchangeDataManager
     multi_exchange_data = MultiExchangeDataManager()
     
     # Show which exchanges will be enabled
@@ -194,28 +175,10 @@ except ImportError as e:
     logger.warning(f"⚠️ Multi-exchange data provider not available: {e}")
     multi_exchange_data = None
 
-# Import AI Strategy Pipeline Manager
+# Import AI Strategy Pipeline Manager  
 try:
-    try:
-        # Docker environment with PYTHONPATH=/app
-        import sys
-        if '/app' not in sys.path:
-            sys.path.insert(0, '/app')
-        from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
-    except ImportError:
-        try:
-            # Production/Docker environment - absolute import
-            from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
-        except ImportError:
-            try:
-                # Relative import for local development
-                from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
-            except ImportError:
-                # Final fallback with path adjustment
-                import sys
-                import os
-                sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-                from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+    # Docker environment (PYTHONPATH=/app) - import from src
+    from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     logger.info("✅ AI Pipeline Manager imported")
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
