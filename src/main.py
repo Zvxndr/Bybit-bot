@@ -151,18 +151,61 @@ except ImportError as e:
     infrastructure_monitor = None
 
 # Import Multi-Exchange Data Provider
+multi_exchange_data = None
 try:
-    # Add current directory and parent to Python path for Docker compatibility
+    # Docker-safe import with comprehensive fallback strategy
     import sys
     import os
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
-    try:
-        from data.multi_exchange_provider import MultiExchangeDataManager
-    except ImportError:
-        from src.data.multi_exchange_provider import MultiExchangeDataManager
-    multi_exchange_data = MultiExchangeDataManager()
+    # Ensure all possible paths are available
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    # Add paths in order of preference
+    paths_to_add = [current_dir, parent_dir, '/app', '/app/src']
+    for path in paths_to_add:
+        if path and os.path.exists(path) and path not in sys.path:
+            sys.path.insert(0, path)
+    
+    # Try multiple import strategies
+    MultiExchangeDataManager = None
+    
+    # Strategy 1: Direct relative import (when running from src/)
+    if MultiExchangeDataManager is None:
+        try:
+            from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+            MultiExchangeDataManager = MEDM
+            logger.info("✅ Multi-exchange provider: Direct import successful")
+        except ImportError:
+            pass
+    
+    # Strategy 2: Absolute import with src prefix
+    if MultiExchangeDataManager is None:
+        try:
+            from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+            MultiExchangeDataManager = MEDM
+            logger.info("✅ Multi-exchange provider: Absolute import successful")
+        except ImportError:
+            pass
+    
+    # Strategy 3: Import from current directory
+    if MultiExchangeDataManager is None:
+        try:
+            import importlib.util
+            module_path = os.path.join(current_dir, 'data', 'multi_exchange_provider.py')
+            if os.path.exists(module_path):
+                spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                MultiExchangeDataManager = module.MultiExchangeDataManager
+                logger.info("✅ Multi-exchange provider: File import successful")
+        except Exception:
+            pass
+    
+    if MultiExchangeDataManager:
+        multi_exchange_data = MultiExchangeDataManager()
+    else:
+        raise ImportError("All import strategies failed")
     
     # Show which exchanges will be enabled
     binance_enabled = os.getenv("ENABLE_BINANCE_DATA", "true").lower() == "true"
@@ -184,12 +227,46 @@ except ImportError as e:
     multi_exchange_data = None
 
 # Import AI Strategy Pipeline Manager  
+AutomatedPipelineManager = None
 try:
-    try:
-        from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
-    except ImportError:
-        from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
-    logger.info("✅ AI Pipeline Manager imported")
+    # Try multiple import strategies for Docker compatibility
+    
+    # Strategy 1: Direct relative import (when running from src/)
+    if AutomatedPipelineManager is None:
+        try:
+            from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
+            AutomatedPipelineManager = APM
+            logger.info("✅ AI Pipeline Manager: Direct import successful")
+        except ImportError:
+            pass
+    
+    # Strategy 2: Absolute import with src prefix
+    if AutomatedPipelineManager is None:
+        try:
+            from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
+            AutomatedPipelineManager = APM
+            logger.info("✅ AI Pipeline Manager: Absolute import successful")
+        except ImportError:
+            pass
+    
+    # Strategy 3: File-based import
+    if AutomatedPipelineManager is None:
+        try:
+            import importlib.util
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            module_path = os.path.join(current_dir, 'bot', 'pipeline', 'automated_pipeline_manager.py')
+            if os.path.exists(module_path):
+                spec = importlib.util.spec_from_file_location("automated_pipeline_manager", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                AutomatedPipelineManager = module.AutomatedPipelineManager
+                logger.info("✅ AI Pipeline Manager: File import successful")
+        except Exception:
+            pass
+            
+    if not AutomatedPipelineManager:
+        raise ImportError("All import strategies failed")
+        
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
     AutomatedPipelineManager = None
