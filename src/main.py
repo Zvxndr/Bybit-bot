@@ -186,8 +186,12 @@ try:
     try:
         from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     except ImportError:
-        # Fallback for deployment context
-        from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+        try:
+            # Fallback for deployment context
+            from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+        except ImportError:
+            # Third fallback using pipeline package
+            from src.bot.pipeline import AutomatedPipelineManager
     logger.info("✅ AI Pipeline Manager imported")
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
