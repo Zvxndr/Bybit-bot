@@ -1516,13 +1516,17 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label text-muted small">Days</label>
+                            <label class="form-label text-muted small">Period</label>
                             <select class="form-select form-select-sm" id="historicalPeriod">
                                 <option value="7">7 Days</option>
                                 <option value="30" selected>30 Days</option>
-                                <option value="90">90 Days</option>
+                                <option value="90">3 Months</option>
                                 <option value="180">6 Months</option>
                                 <option value="365">1 Year</option>
+                                <option value="730">2 Years</option>
+                                <option value="1095">3 Years</option>
+                                <option value="1825">5 Years</option>
+                                <option value="3650">10 Years</option>
                             </select>
                         </div>
                         <div class="col-12">
@@ -1664,6 +1668,13 @@
                         <!-- Portfolio Performance Status -->
                         <div class="mt-2">
                             <small id="portfolioStatus" class="text-muted">
+                                Loading portfolio status...
+                            </small>
+                            <div class="mt-1">
+                                <small id="chartDataStatus" class="text-muted">
+                                    <i class="bi bi-graph-up-arrow"></i> Using simulated data - Configure historical data above
+                                </small>
+                            </div>
                                 <i class="bi bi-cpu"></i> AI Pipeline Phase 3: Live deployment of graduated strategies
                             </small>
                         </div>
@@ -4454,11 +4465,14 @@
                         // Update chart with new data
                         await this.loadHistoricalPerformanceData();
                         
-                        // Update status
-                        document.getElementById('chartDataStatus').innerHTML = 
-                            `<i class="bi bi-check-circle text-success"></i> Real data: ${pair} ${timeframe} (${period} days) - Last updated: ${new Date().toLocaleString()}`;
+                        // Update status - check if element exists
+                        const statusElement = document.getElementById('chartDataStatus');
+                        if (statusElement) {
+                            statusElement.innerHTML = 
+                                `<i class="bi bi-check-circle text-success"></i> Real data: ${pair} ${timeframe} (${period} days) - Last updated: ${new Date().toLocaleString()}`;
+                        }
                         
-                        this.showToastNotification(`✅ Successfully loaded ${result.data_points} data points for ${pair}`, 'success');
+                        this.showToastNotification(`✅ Successfully loaded ${result.data_points || 'N/A'} data points for ${pair}`, 'success');
                         this.hideHistoricalDataControls();
                     } else {
                         throw new Error(result.message || 'Failed to download data');
@@ -4485,9 +4499,22 @@
                 const progressBar = document.querySelector('#downloadProgress .progress-bar');
                 const progressText = document.querySelector('#downloadProgress .progress-text');
                 
-                if (progressBar && progressText) {
+                // Create progress text element if it doesn't exist
+                if (progressBar) {
                     progressBar.style.width = `${percent}%`;
+                }
+                
+                if (progressText) {
                     progressText.textContent = message;
+                } else {
+                    // Create progress text if missing
+                    const progressContainer = document.getElementById('downloadProgress');
+                    if (progressContainer && !progressContainer.querySelector('.progress-text')) {
+                        const textElement = document.createElement('small');
+                        textElement.className = 'progress-text text-muted ms-2';
+                        textElement.textContent = message;
+                        progressContainer.appendChild(textElement);
+                    }
                 }
             }
 
@@ -4541,6 +4568,24 @@
                 } catch (error) {
                     console.error('Load historical performance error:', error);
                     return false;
+                }
+            }
+
+            async refreshHistoricalChart() {
+                try {
+                    this.showToastNotification('🔄 Refreshing historical chart...', 'info');
+                    
+                    // Reload historical performance data
+                    const success = await this.loadHistoricalPerformanceData();
+                    
+                    if (success) {
+                        this.showToastNotification('✅ Historical chart refreshed successfully', 'success');
+                    } else {
+                        this.showToastNotification('⚠️ No historical data available - using simulated data', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Refresh historical chart error:', error);
+                    this.showToastNotification('❌ Failed to refresh historical chart', 'danger');
                 }
             }
 

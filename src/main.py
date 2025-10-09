@@ -2153,23 +2153,37 @@ async def broadcast_update(data: Dict[str, Any]):
 # Historical Data API Endpoints
 @app.post("/api/historical-data/download")
 async def download_historical_data(request: Request):
-    """Download historical market data"""
+    """Download historical market data with support for up to 10 years"""
     if not historical_downloader:
         return {"success": False, "message": "Historical data downloader not available"}
     
     try:
         data = await request.json()
-        pair = data.get('pair', 'BTCUSDT')
-        timeframe = data.get('timeframe', '1d') 
-        days = data.get('days', 90)
+        symbol = data.get('symbol', 'BTCUSDT')
+        timeframe = data.get('timeframe', '1h') 
+        days = int(data.get('days', 30))
         
-        logger.info(f"📡 Downloading historical data: {pair} {timeframe} for {days} days")
+        # Validate input ranges
+        max_days = 3650  # 10 years maximum
+        if days > max_days:
+            days = max_days
+            
+        logger.info(f"📡 Downloading historical data: {symbol} {timeframe} for {days} days")
         
-        # Download data
-        result = historical_downloader.download_klines(pair, timeframe, days)
+        # Convert symbol format (frontend sends BTCUSDT, downloader expects BTC/USDT)
+        if '/' not in symbol:
+            if symbol.endswith('USDT'):
+                symbol = symbol[:-4] + '/USDT'
+        
+        # Download data using the new comprehensive downloader
+        result = await historical_downloader.download_historical_data(
+            symbol=symbol, 
+            timeframe=timeframe, 
+            days=days
+        )
         
         if result['success']:
-            logger.info(f"✅ Historical data download completed: {result['data_points']} points")
+            logger.info(f"✅ Historical data download completed: {result.get('data_points', 0)} points")
         else:
             logger.error(f"❌ Historical data download failed: {result['message']}")
         
@@ -2197,10 +2211,33 @@ async def get_historical_performance():
         symbol = latest_dataset['symbol']
         timeframe = latest_dataset['timeframe']
         
-        # Get performance data
-        result = historical_downloader.get_historical_performance(symbol, timeframe, limit=90)
+        # Get stored data and convert to performance format
+        df = historical_downloader.get_stored_data(symbol, timeframe, days=90)
         
-        logger.info(f"📊 Retrieved historical performance: {len(result.get('data', []))} data points")
+        if df.empty:
+            return {"success": False, "message": "No stored data available", "data": []}
+        
+        # Convert DataFrame to performance chart format
+        performance_data = []
+        for i, (timestamp, row) in enumerate(df.iterrows()):
+            # Handle timestamp conversion safely
+            ts_str = timestamp.strftime('%Y-%m-%dT%H:%M:%S') if hasattr(timestamp, 'strftime') else str(timestamp)
+            
+            performance_data.append({
+                'timestamp': ts_str,
+                'price': float(row['close']),
+                'return': ((row['close'] / df.iloc[0]['close']) - 1) * 100 if i > 0 else 0,
+                'volume': float(row.get('volume', 0))
+            })
+        
+        result = {
+            "success": True,
+            "data": performance_data,
+            "symbol": symbol,
+            "timeframe": timeframe
+        }
+        
+        logger.info(f"📊 Retrieved historical performance: {len(performance_data)} data points")
         return result
         
     except Exception as e:
@@ -2214,7 +2251,11 @@ async def clear_historical_data():
         return {"success": False, "message": "Historical data downloader not available"}
     
     try:
-        result = historical_downloader.clear_historical_data()
+        success = historical_downloader.clear_data()
+        result = {
+            "success": success,
+            "message": "Historical data cleared successfully" if success else "Failed to clear historical data"
+        }
         logger.info(f"🗑️ Historical data cleared: {result['message']}")
         return result
         
