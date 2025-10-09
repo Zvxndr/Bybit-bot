@@ -337,4 +337,5 @@ This project is proprietary software. All rights reserved.
 
 **⚠️ Risk Disclaimer**: Cryptocurrency trading involves significant risk. This bot is provided for educational and research purposes. Always test thoroughly in a sandbox environment before live trading.
 
-**🏛️ Compliance**: This bot includes Australian tax compliance features. Consult with financial advisors for regulatory compliance in your jurisdiction.
+**🏛️ Compliance**: This bot includes Australian tax compliance features. Consult with financial advisors for regulatory compliance in your jurisdiction.#   D e p l o y m e n t   t r i g g e r   1 0 / 0 9 / 2 0 2 5   2 0 : 0 7 : 1 4  
+ 
