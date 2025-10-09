@@ -299,7 +299,7 @@ class MLStrategyModel:
                 random_state=42
             )
         
-        elif self.config.model_type == ModelType.RIDGE:
+        elif self.config.model_type == ModelType.RIDGE_REGRESSION:
             self.model = Ridge(alpha=1.0)
         
         elif self.config.model_type == ModelType.ELASTIC_NET:
@@ -544,7 +544,7 @@ class MLStrategyDiscoveryEngine:
             
             # Volatility models
             ModelConfiguration(
-                model_type=ModelType.RIDGE,
+                model_type=ModelType.RIDGE_REGRESSION,
                 target_horizon=1,
                 lookback_window=15,
                 retraining_frequency=20,
