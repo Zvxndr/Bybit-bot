@@ -633,8 +633,9 @@ class TradingAPI:
             
             # Extract real testnet balance information
             total_balance = float(balance_data.get("total_wallet_balance", "10000"))
-            available_balance = float(balance_data.get("total_available_balance", "10000"))
             used_balance = float(balance_data.get("total_used_margin", "0"))
+            # Calculate available balance correctly: Total - Used
+            available_balance = total_balance - used_balance
             
             # Get real testnet positions
             positions_result = await self.testnet_client.get_positions()
