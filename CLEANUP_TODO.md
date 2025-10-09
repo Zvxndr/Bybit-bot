@@ -7,11 +7,14 @@
 - [x] Ensure ML Risk Manager can operate without constraints
 - [ ] Test dynamic risk calculation with live ML engine
 
-### 2. Workspace Cleanup (CRITICAL)
-- [ ] Delete bloated documentation files (see cleanup list below)
-- [ ] Remove duplicate Dockerfiles and deployment scripts
-- [ ] Clean up unnecessary configuration files
-- [ ] Remove unused utility scripts
+### 2. Workspace Cleanup (CRITICAL) ✅ COMPLETED
+- [x] Delete bloated documentation files (17+ files removed)
+- [x] Remove duplicate Dockerfiles and deployment scripts  
+- [x] Clean up unnecessary configuration files (env templates, etc.)
+- [x] Remove unused utility scripts and directories
+- [x] Delete kubernetes/, monitoring/, docker/ directories
+- [x] Remove duplicate requirements files
+- **RESULT**: Reduced from 50+ root files to ~20 essential files
 
 ### 3. Core Functionality Verification
 - [ ] Verify 3-phase pipeline works: Historical → Paper → Live

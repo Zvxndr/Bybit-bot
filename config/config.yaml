@@ -18,6 +18,13 @@ trading:
       max_consecutive_losses: 10       # Auto-retire after 10 consecutive losses
       max_drawdown_threshold: 0.20     # Retire if drawdown exceeds 20%
       min_confidence_score: 0.3        # Retire if ML confidence drops below 30%
+    
+    # Circuit breaker thresholds for AI safety
+    circuit_breaker_thresholds:
+      DAILY_LOSS_LIMIT: 0.03          # 3% daily loss triggers circuit breaker
+      VOLATILITY_SPIKE: 3.0           # 3x normal volatility triggers breaker
+      MODEL_PERFORMANCE_DEGRADED: 0.4  # < 40% accuracy triggers breaker
+      EXECUTION_FAILURE_RATE: 0.2     # > 20% execution failures
 
 # Exchange configuration with environment-specific credentials
 exchange:
