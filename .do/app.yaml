@@ -7,11 +7,11 @@ services:
     branch: main
     deploy_on_push: true
   
-  run_command: chmod +x start.sh && ./start.sh
+  dockerfile_path: Dockerfile
   
   instance_count: 1
   instance_size_slug: basic-xxs
-  http_port: 8000
+  http_port: 8080
   
   health_check:
     http_path: /health
