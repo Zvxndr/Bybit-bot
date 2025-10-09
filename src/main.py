@@ -155,11 +155,15 @@ try:
     try:
         from .data.multi_exchange_provider import MultiExchangeDataManager
     except ImportError:
-        # Fallback for deployment context
-        import sys
-        import os
-        sys.path.insert(0, os.path.dirname(__file__))
-        from data.multi_exchange_provider import MultiExchangeDataManager
+        try:
+            # Fallback for deployment context
+            import sys
+            import os
+            sys.path.insert(0, os.path.dirname(__file__))
+            from data.multi_exchange_provider import MultiExchangeDataManager
+        except ImportError:
+            # Third fallback
+            from src.data.multi_exchange_provider import MultiExchangeDataManager
     multi_exchange_data = MultiExchangeDataManager()
     
     # Show which exchanges will be enabled
