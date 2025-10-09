@@ -8,14 +8,41 @@ Real-time strategy graduation based on AI performance analysis.
 Production-ready with comprehensive monitoring and Australian tax compliance.
 """
 
+# EMERGENCY DOCKER IMPORT FIX - MUST BE FIRST
 import os
 import sys
+from pathlib import Path
+
+# Ensure proper Python path for Docker environment
+def _emergency_docker_fix():
+    """Emergency fix for Docker import issues - added Oct 10, 2025"""
+    app_root = Path(__file__).parent.parent.absolute()  # Get /app from /app/src/main.py
+    
+    # Critical paths for Docker import resolution
+    critical_paths = [
+        str(app_root),                    # /app
+        str(app_root / 'src'),            # /app/src
+    ]
+    
+    for path in critical_paths:
+        if path not in sys.path:
+            sys.path.insert(0, path)
+    
+    # Update PYTHONPATH environment
+    current_pythonpath = os.environ.get('PYTHONPATH', '')
+    if str(app_root) not in current_pythonpath:
+        new_pythonpath = f"{app_root}:{app_root}/src:{current_pythonpath}" if current_pythonpath else f"{app_root}:{app_root}/src"
+        os.environ['PYTHONPATH'] = new_pythonpath
+
+# Apply the fix immediately
+_emergency_docker_fix()
+
+# Continue with normal imports
 import json
 import asyncio
 import logging
 import random
 from datetime import datetime, timedelta
-from pathlib import Path
 
 # Load environment variables for production deployment
 try:
@@ -186,32 +213,56 @@ try:
     # Simplified import strategy optimized for Docker with python -m src.main
     MultiExchangeDataManager = None
     
-    try:
-        # Primary strategy: Use proper relative import for module execution
-        from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-        MultiExchangeDataManager = MEDM
-        logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
-    except ImportError as e:
-        logger.info(f"🔍 Relative import failed: {e}")
+        # Docker-optimized import strategy with dynamic path adjustment
+        import sys
+        from pathlib import Path
+        
+        # Ensure the app directory is in Python path
+        app_root = Path(__file__).parent.parent.absolute()
+        if str(app_root) not in sys.path:
+            sys.path.insert(0, str(app_root))
+            logger.info(f"🔧 Added to PYTHONPATH: {app_root}")
         
         try:
-            # Fallback strategy: Absolute import with src prefix
-            from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+            # Strategy 1: Relative import (when run as python -m src.main)
+            from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
             MultiExchangeDataManager = MEDM
-            logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
+            logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
         except ImportError as e:
-            logger.info(f"🔍 Absolute import failed: {e}")
+            logger.info(f"🔍 Relative import failed: {e}")
             
             try:
-                # Final fallback: Direct import (for legacy compatibility)
-                from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+                # Strategy 2: Absolute with src prefix  
+                from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
                 MultiExchangeDataManager = MEDM
-                logger.info("✅ Multi-exchange provider: Direct import successful (data)")
+                logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
             except ImportError as e:
-                logger.info(f"🔍 Direct import failed: {e}")
-                MultiExchangeDataManager = None
-    
-    if MultiExchangeDataManager:
+                logger.info(f"🔍 Absolute import failed: {e}")
+                
+                try:
+                    # Strategy 3: Direct import from current working directory
+                    sys.path.insert(0, '/app/src')  # Docker-specific path
+                    from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+                    MultiExchangeDataManager = MEDM
+                    logger.info("✅ Multi-exchange provider: Docker direct import successful")
+                except ImportError as e:
+                    logger.info(f"🔍 Docker direct import failed: {e}")
+                    
+                    try:
+                        # Strategy 4: Manual module loading
+                        import importlib.util
+                        module_path = app_root / 'src' / 'data' / 'multi_exchange_provider.py'
+                        if module_path.exists():
+                            spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
+                            module = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(module)
+                            MultiExchangeDataManager = module.MultiExchangeDataManager
+                            logger.info("✅ Multi-exchange provider: Manual module loading successful")
+                        else:
+                            MultiExchangeDataManager = None
+                    except Exception as e:
+                        logger.info(f"🔍 Manual loading failed: {e}")
+                        MultiExchangeDataManager = None    if MultiExchangeDataManager:
         multi_exchange_data = MultiExchangeDataManager()
     else:
         raise ImportError("All import strategies failed")
@@ -239,8 +290,9 @@ except ImportError as e:
 AutomatedPipelineManager = None
 try:
     # Simplified import strategy optimized for Docker with python -m src.main
+    # Use the same robust import strategy established above
     try:
-        # Primary strategy: Use proper relative import for module execution
+        # Strategy 1: Relative import (when run as python -m src.main)
         from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
         AutomatedPipelineManager = APM
         logger.info("✅ AI Pipeline Manager: Relative import successful (.bot.pipeline)")
@@ -248,7 +300,7 @@ try:
         logger.info(f"🔍 Relative import failed: {e}")
         
         try:
-            # Fallback strategy: Absolute import with src prefix
+            # Strategy 2: Absolute with src prefix
             from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
             AutomatedPipelineManager = APM
             logger.info("✅ AI Pipeline Manager: Absolute import successful (src.bot.pipeline)")
@@ -256,13 +308,29 @@ try:
             logger.info(f"🔍 Absolute import failed: {e}")
             
             try:
-                # Final fallback: Direct import (for legacy compatibility)
+                # Strategy 3: Docker direct path
                 from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
                 AutomatedPipelineManager = APM
-                logger.info("✅ AI Pipeline Manager: Direct import successful (bot.pipeline)")
+                logger.info("✅ AI Pipeline Manager: Docker direct import successful")
             except ImportError as e:
-                logger.info(f"🔍 Direct import failed: {e}")
-                AutomatedPipelineManager = None
+                logger.info(f"🔍 Docker direct import failed: {e}")
+                
+                try:
+                    # Strategy 4: Manual module loading with full path
+                    import importlib.util
+                    module_path = app_root / 'src' / 'bot' / 'pipeline' / 'automated_pipeline_manager.py'
+                    if module_path.exists():
+                        spec = importlib.util.spec_from_file_location("automated_pipeline_manager", module_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        AutomatedPipelineManager = module.AutomatedPipelineManager
+                        logger.info("✅ AI Pipeline Manager: Manual module loading successful")
+                    else:
+                        logger.info(f"🔍 Module path does not exist: {module_path}")
+                        AutomatedPipelineManager = None
+                except Exception as e:
+                    logger.info(f"🔍 Manual loading failed: {e}")
+                    AutomatedPipelineManager = None
         
     if not AutomatedPipelineManager:
         raise ImportError("All import strategies failed")
