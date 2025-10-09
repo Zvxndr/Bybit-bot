@@ -3075,7 +3075,7 @@ if __name__ == "__main__":
     logger.info(f"🌐 Starting AI Pipeline Dashboard Server on port {port}")
     
     uvicorn.run(
-        "src.main:app",
+        app,
         host="0.0.0.0",
         port=port,
         log_level="info"
