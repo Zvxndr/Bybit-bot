@@ -153,17 +153,26 @@ except ImportError as e:
 # Import Multi-Exchange Data Provider
 try:
     try:
-        from .data.multi_exchange_provider import MultiExchangeDataManager
+        # Production/Docker environment - absolute import
+        from src.data.multi_exchange_provider import MultiExchangeDataManager
     except ImportError:
         try:
-            # Fallback for deployment context
-            import sys
-            import os
-            sys.path.insert(0, os.path.dirname(__file__))
-            from data.multi_exchange_provider import MultiExchangeDataManager
+            # Relative import for local development
+            from .data.multi_exchange_provider import MultiExchangeDataManager
         except ImportError:
-            # Third fallback
-            from src.data.multi_exchange_provider import MultiExchangeDataManager
+            try:
+                # Alternative path setup for deployment
+                import sys
+                import os
+                sys.path.insert(0, '/app')  # Docker PYTHONPATH
+                sys.path.insert(0, os.path.dirname(__file__))
+                from data.multi_exchange_provider import MultiExchangeDataManager
+            except ImportError:
+                # Last fallback
+                import importlib.util
+                spec = importlib.util.find_spec("data.multi_exchange_provider")
+                if spec is None:
+                    raise ImportError("MultiExchangeDataManager not found in any path")
     multi_exchange_data = MultiExchangeDataManager()
     
     # Show which exchanges will be enabled
@@ -188,14 +197,19 @@ except ImportError as e:
 # Import AI Strategy Pipeline Manager
 try:
     try:
-        from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+        # Production/Docker environment - absolute import
+        from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     except ImportError:
         try:
-            # Fallback for deployment context
-            from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+            # Relative import for local development
+            from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
         except ImportError:
-            # Third fallback using pipeline package
-            from src.bot.pipeline import AutomatedPipelineManager
+            try:
+                # Alternative fallback
+                from src.bot.pipeline import AutomatedPipelineManager
+            except ImportError:
+                # Final fallback for deployment context
+                from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     logger.info("✅ AI Pipeline Manager imported")
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
@@ -403,14 +417,13 @@ class TradingAPI:
                 
             # Initialize ML Risk Manager (AI-first approach)  
             if self.testnet_client or self.bybit_client:
-                from src.bot.risk.ml_risk_manager import MLRiskManager
+                from src.bot.risk.ml_risk_manager import MLRiskManager, CircuitBreakerType
                 from src.bot.risk.core.unified_risk_manager import UnifiedRiskManager
                 
                 # Create base unified manager (required by ML manager)
                 base_risk_manager = UnifiedRiskManager()
                 
-                # ML Risk Manager with dynamic AI-driven parameters
-                # Only graduation/retirement criteria as input - AI determines optimal risk levels
+                # ML Risk Manager with proper circuit breaker configuration
                 ml_risk_params = {
                     'graduation_criteria': {
                         'min_sharpe_ratio': 1.5,
@@ -423,9 +436,18 @@ class TradingAPI:
                         'min_sharpe_ratio': 0.8,
                         'consecutive_losses': 8
                     },
-                    'ml_confidence_threshold': 0.7,  # AI confidence required for trades
-                    'dynamic_sizing_enabled': True,  # Let AI adjust position sizes
-                    'auto_circuit_breakers': True    # AI-controlled risk stops
+                    'ml_confidence_threshold': 0.7,
+                    'dynamic_sizing_enabled': True,
+                    'auto_circuit_breakers': True,
+                    # Add the required circuit_breaker_thresholds
+                    'circuit_breaker_thresholds': {
+                        CircuitBreakerType.DAILY_LOSS_LIMIT: 0.03,
+                        CircuitBreakerType.VOLATILITY_SPIKE: 3.0,
+                        CircuitBreakerType.MODEL_PERFORMANCE_DEGRADED: 0.4,
+                        CircuitBreakerType.CORRELATION_BREAKDOWN: 0.3,
+                        CircuitBreakerType.EXECUTION_FAILURE_RATE: 0.2,
+                        CircuitBreakerType.DATA_QUALITY_ISSUE: 0.8
+                    }
                 }
                 
                 self.risk_manager = MLRiskManager(
