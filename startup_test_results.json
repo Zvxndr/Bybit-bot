@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-10-09T18:21:28.884872",
+  "tests_run": 19,
+  "tests_passed": 10,
+  "tests_failed": 9,
+  "failures": [
+    "Required config sections present",
+    "Import Main application module: DatabaseManager.__init__() missing 1 required positional argument: 'config'",
+    "Server health check responds",
+    "API endpoint Root endpoint",
+    "API endpoint Health check",
+    "API endpoint Portfolio status API",
+    "API endpoint ML risk metrics API",
+    "Frontend dashboard accessible",
+    "Configuration API responds"
+  ],
+  "duration_seconds": 44.11466860771179,
+  "status": "NOT_READY"
+}
