@@ -183,45 +183,33 @@ try:
         exists = "✅" if os.path.exists(target_file) else "❌"
         logger.info(f"🔍 Target file {exists}: {target_file}")
     
-    # Try multiple import strategies
+    # Simplified import strategy optimized for Docker with python -m src.main
     MultiExchangeDataManager = None
     
-    # Strategy 1: Direct relative import (when running from src/)
-    if MultiExchangeDataManager is None:
+    try:
+        # Primary strategy: Use proper relative import for module execution
+        from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+        MultiExchangeDataManager = MEDM
+        logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
+    except ImportError as e:
+        logger.info(f"🔍 Relative import failed: {e}")
+        
         try:
-            from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-            MultiExchangeDataManager = MEDM
-            logger.info("✅ Multi-exchange provider: Direct import successful")
-        except ImportError as e:
-            logger.info(f"🔍 Strategy 1 failed: {e}")
-    
-    # Strategy 2: Absolute import with src prefix
-    if MultiExchangeDataManager is None:
-        try:
+            # Fallback strategy: Absolute import with src prefix
             from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
             MultiExchangeDataManager = MEDM
-            logger.info("✅ Multi-exchange provider: Absolute import successful")
+            logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
         except ImportError as e:
-            logger.info(f"🔍 Strategy 2 failed: {e}")
-    
-    # Strategy 3: Import from current directory
-    if MultiExchangeDataManager is None:
-        try:
-            import importlib.util
-            module_path = os.path.join(current_dir, 'data', 'multi_exchange_provider.py')
-            logger.info(f"🔍 Strategy 3 - Checking file path: {module_path}")
-            logger.info(f"🔍 Strategy 3 - File exists: {os.path.exists(module_path)}")
-            if os.path.exists(module_path):
-                spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
-                if spec and spec.loader:
-                    module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
-                    MultiExchangeDataManager = module.MultiExchangeDataManager
-                    logger.info("✅ Multi-exchange provider: File import successful")
-                else:
-                    logger.info("🔍 Strategy 3 failed: Could not create spec")
-        except Exception as e:
-            logger.info(f"🔍 Strategy 3 failed: {e}")
+            logger.info(f"🔍 Absolute import failed: {e}")
+            
+            try:
+                # Final fallback: Direct import (for legacy compatibility)
+                from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+                MultiExchangeDataManager = MEDM
+                logger.info("✅ Multi-exchange provider: Direct import successful (data)")
+            except ImportError as e:
+                logger.info(f"🔍 Direct import failed: {e}")
+                MultiExchangeDataManager = None
     
     if MultiExchangeDataManager:
         multi_exchange_data = MultiExchangeDataManager()
@@ -250,41 +238,32 @@ except ImportError as e:
 # Import AI Strategy Pipeline Manager  
 AutomatedPipelineManager = None
 try:
-    # Try multiple import strategies for Docker compatibility
-    
-    # Strategy 1: Direct relative import (when running from src/)
-    if AutomatedPipelineManager is None:
+    # Simplified import strategy optimized for Docker with python -m src.main
+    try:
+        # Primary strategy: Use proper relative import for module execution
+        from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
+        AutomatedPipelineManager = APM
+        logger.info("✅ AI Pipeline Manager: Relative import successful (.bot.pipeline)")
+    except ImportError as e:
+        logger.info(f"🔍 Relative import failed: {e}")
+        
         try:
-            from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
-            AutomatedPipelineManager = APM
-            logger.info("✅ AI Pipeline Manager: Direct import successful")
-        except ImportError:
-            pass
-    
-    # Strategy 2: Absolute import with src prefix
-    if AutomatedPipelineManager is None:
-        try:
+            # Fallback strategy: Absolute import with src prefix
             from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
             AutomatedPipelineManager = APM
-            logger.info("✅ AI Pipeline Manager: Absolute import successful")
-        except ImportError:
-            pass
-    
-    # Strategy 3: File-based import
-    if AutomatedPipelineManager is None:
-        try:
-            import importlib.util
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            module_path = os.path.join(current_dir, 'bot', 'pipeline', 'automated_pipeline_manager.py')
-            if os.path.exists(module_path):
-                spec = importlib.util.spec_from_file_location("automated_pipeline_manager", module_path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                AutomatedPipelineManager = module.AutomatedPipelineManager
-                logger.info("✅ AI Pipeline Manager: File import successful")
-        except Exception:
-            pass
+            logger.info("✅ AI Pipeline Manager: Absolute import successful (src.bot.pipeline)")
+        except ImportError as e:
+            logger.info(f"🔍 Absolute import failed: {e}")
             
+            try:
+                # Final fallback: Direct import (for legacy compatibility)
+                from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
+                AutomatedPipelineManager = APM
+                logger.info("✅ AI Pipeline Manager: Direct import successful (bot.pipeline)")
+            except ImportError as e:
+                logger.info(f"🔍 Direct import failed: {e}")
+                AutomatedPipelineManager = None
+        
     if not AutomatedPipelineManager:
         raise ImportError("All import strategies failed")
         
