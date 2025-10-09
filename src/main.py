@@ -235,6 +235,10 @@ class TradingAPI:
         self.api_key = self.testnet_credentials['api_key'] if self.testnet_credentials['valid'] else None
         self.api_secret = self.testnet_credentials['api_secret'] if self.testnet_credentials['valid'] else None
         self.testnet = True  # Default to testnet for safety
+        
+        # Initialize API clients and components
+        print(f"🔍 DEBUG: Initializing trading components...")
+        self._initialize_components()
     
     def _load_testnet_credentials(self):
         """Load testnet API credentials for paper trading and strategy development"""
