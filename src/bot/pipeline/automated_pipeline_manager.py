@@ -126,12 +126,18 @@ class AutomatedPipelineManager:
         backtest_engine: Optional[BybitEnhancedBacktestEngine] = None
     ):
         self.config = config or PipelineConfig()
-        self.db_manager = db_manager or DatabaseManager()
+        if db_manager:
+            self.db_manager = db_manager
+        else:
+            from ..config import DatabaseConfig
+            db_config = DatabaseConfig(pool_size=10, max_overflow=20, echo=False)
+            self.db_manager = DatabaseManager(db_config)
         self.ml_engine = ml_engine
         self.backtest_engine = backtest_engine
         self.naming_engine = strategy_naming_engine
         
-        self.logger = TradingLogger.get_logger(__name__)
+        from loguru import logger
+        self.logger = logger
         
         # Pipeline state
         self.is_running = False

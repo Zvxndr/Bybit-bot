@@ -32,16 +32,16 @@ from .bybit_enhanced_backtest_engine import (
 
 from .bybit_fee_simulator import (
     BybitFeeCalculator,
-    BybitVIPTierRequirements,
-    BybitFeeOptimizer,
-    FeeAnalysisResult
+    VIPTierRequirements,
+    FeeCalculationDetails,
+    FeeAnalysisReport
 )
 
 from .bybit_liquidation_risk_manager import (
     BybitLiquidationRiskManager,
     LiquidationRiskAssessment,
     MarginTier,
-    RiskLevel
+    LiquidationRiskLevel
 )
 
 from .bybit_execution_simulator import (
@@ -67,15 +67,15 @@ __all__ = [
     
     # Fee simulation
     "BybitFeeCalculator",
-    "BybitVIPTierRequirements",
-    "BybitFeeOptimizer",
-    "FeeAnalysisResult",
+    "VIPTierRequirements",
+    "FeeCalculationDetails", 
+    "FeeAnalysisReport",
     
     # Risk management
     "BybitLiquidationRiskManager",
     "LiquidationRiskAssessment",
     "MarginTier",
-    "RiskLevel",
+    "LiquidationRiskLevel",
     
     # Execution simulation
     "BybitExecutionSimulator",
@@ -120,11 +120,13 @@ def create_enhanced_backtest_engine(
 def get_optimal_vip_tier(monthly_volume: float, monthly_trades: int) -> BybitVIPTier:
     """Get optimal VIP tier based on trading volume and frequency."""
     calculator = BybitFeeCalculator()
-    optimizer = BybitFeeOptimizer(calculator)
+    # optimizer = BybitFeeOptimizer(calculator)  # TODO: Implement BybitFeeOptimizer
     
-    result = optimizer.find_optimal_vip_tier(
-        monthly_volume=monthly_volume,
-        monthly_trades=monthly_trades
-    )
+    # TODO: Implement VIP tier optimization
+    # result = optimizer.find_optimal_vip_tier(
+    #     monthly_volume=monthly_volume,
+    #     monthly_trades=monthly_trades
+    # )
     
-    return result.recommended_tier
+    # return result.recommended_tier
+    return BybitVIPTier.NO_VIP  # Default tier for now

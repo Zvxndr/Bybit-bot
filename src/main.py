@@ -503,7 +503,15 @@ class TradingAPI:
         try:
             # Initialize database manager if needed
             from src.bot.database.manager import DatabaseManager
-            db_manager = DatabaseManager()
+            from src.bot.config import DatabaseConfig
+            
+            # Create database config from main config  
+            db_config = DatabaseConfig(
+                pool_size=10,
+                max_overflow=20,
+                echo=False
+            )
+            db_manager = DatabaseManager(db_config)
             
             # Initialize ML Strategy Discovery Engine  
             from src.bot.ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine
@@ -943,7 +951,15 @@ class TradingAPI:
                     
             # Fallback to direct database connection
             from src.bot.database.manager import DatabaseManager
-            db_manager = DatabaseManager()
+            from src.bot.config import DatabaseConfig
+            
+            # Create database config
+            db_config = DatabaseConfig(
+                pool_size=10,
+                max_overflow=20,
+                echo=False
+            )
+            db_manager = DatabaseManager(db_config)
             
             # Try to fetch strategies from database
             strategies = await db_manager.get_strategies_by_phase()

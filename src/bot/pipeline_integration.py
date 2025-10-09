@@ -7,13 +7,14 @@ This script demonstrates how to add the pipeline endpoints to your FastAPI appli
 
 import asyncio
 import logging
+from typing import Optional
 from fastapi import FastAPI
 from ..bot.database.manager import DatabaseManager
 from ..api.pipeline_api import PipelineAPI
 from ..bot.pipeline import pipeline_manager
 
 
-def integrate_pipeline_api(app: FastAPI, db_manager: DatabaseManager = None) -> PipelineAPI:
+def integrate_pipeline_api(app: FastAPI, db_manager: Optional[DatabaseManager] = None) -> PipelineAPI:
     """
     Integrate pipeline API endpoints into an existing FastAPI application.
     
@@ -27,7 +28,9 @@ def integrate_pipeline_api(app: FastAPI, db_manager: DatabaseManager = None) -> 
     
     # Initialize database manager if not provided
     if db_manager is None:
-        db_manager = DatabaseManager()
+        from .config import DatabaseConfig
+        db_config = DatabaseConfig(pool_size=10, max_overflow=20, echo=False)
+        db_manager = DatabaseManager(db_config)
     
     # Create and register pipeline API
     pipeline_api = PipelineAPI(app, db_manager)

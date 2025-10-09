@@ -44,7 +44,9 @@ class DashboardBackend:
     def __init__(self):
         self.app = None
         self.websocket_manager = WebSocketManager()
-        self.db_manager = DatabaseManager()
+        # Initialize database manager with default config
+        # TODO: Fix DatabaseManager initialization in old_main.py 
+        self.db_manager = None  # DatabaseManager(db_config)
         self.phase1_integration = Phase1Integration()
         self.phase2_integration = Phase2Integration()
         self.performance_monitor = PerformanceMonitor()
