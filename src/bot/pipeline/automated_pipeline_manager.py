@@ -27,13 +27,24 @@ import json
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc, func
 
-from ..database.manager import DatabaseManager
-from ..database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
-from ..ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
-from ..backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
-from .strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
-from ..config_manager import ConfigurationManager
-from ..utils.logging import TradingLogger
+# Use absolute imports for production compatibility
+try:
+    from src.bot.database.manager import DatabaseManager
+    from src.bot.database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
+    from src.bot.ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
+    from src.bot.backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
+    from src.bot.pipeline.strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
+    from src.bot.config_manager import ConfigurationManager
+    from src.bot.utils.logging import TradingLogger
+except ImportError:
+    # Fallback to relative imports for local development
+    from ..database.manager import DatabaseManager
+    from ..database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
+    from ..ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
+    from ..backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
+    from .strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
+    from ..config_manager import ConfigurationManager
+    from ..utils.logging import TradingLogger
 
 
 class PipelinePhase(Enum):
