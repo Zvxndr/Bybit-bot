@@ -1504,7 +1504,7 @@
                                 <option value="DOGEUSDT">DOGE/USDT</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small">Timeframe</label>
                             <select class="form-select form-select-sm" id="historicalTimeframe">
                                 <option value="1m">1 Minute</option>
@@ -1515,14 +1515,29 @@
                                 <option value="1d">1 Day</option>
                             </select>
                         </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-muted small">Days</label>
+                            <select class="form-select form-select-sm" id="historicalPeriod">
+                                <option value="7">7 Days</option>
+                                <option value="30" selected>30 Days</option>
+                                <option value="90">90 Days</option>
+                                <option value="180">6 Months</option>
+                                <option value="365">1 Year</option>
+                            </select>
+                        </div>
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-primary flex-fill" onclick="dashboard.downloadHistoricalData()">
+                                <button class="btn btn-sm btn-primary flex-fill" id="downloadDataBtn" onclick="dashboard.downloadHistoricalData()">
                                     <i class="bi bi-download"></i> Download Data
                                 </button>
                                 <button class="btn btn-sm btn-outline-primary flex-fill" onclick="dashboard.refreshHistoricalChart()">
                                     <i class="bi bi-arrow-clockwise"></i> Refresh Chart
                                 </button>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div class="progress mt-2" id="downloadProgress" style="display: none;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                                <small class="progress-text text-muted ms-2"></small>
                             </div>
                         </div>
                     </div>
@@ -4260,9 +4275,9 @@
 
             async downloadHistoricalData() {
                 try {
-                    const pair = document.getElementById('histDataPair').value;
-                    const timeframe = document.getElementById('histDataTimeframe').value;
-                    const period = parseInt(document.getElementById('histDataPeriod').value);
+                    const pair = document.getElementById('historicalPair').value;
+                    const timeframe = document.getElementById('historicalTimeframe').value;
+                    const period = parseInt(document.getElementById('historicalPeriod').value);
                     
                     // Show loading state
                     const downloadBtn = document.getElementById('downloadDataBtn');
@@ -4282,7 +4297,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            pair: pair,
+                            symbol: pair,
                             timeframe: timeframe,
                             days: period
                         })
