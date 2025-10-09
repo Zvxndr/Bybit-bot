@@ -1,5 +1,0 @@
-# DEPRECATED - DO NOT USE
-# This file is deprecated. Use requirements.txt instead.
-# 
-# The main application now uses src/main.py with proper FastAPI backend
-# See requirements.txt for current dependencies
