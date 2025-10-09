@@ -166,11 +166,11 @@ try:
                 import os
                 sys.path.insert(0, '/app')  # Docker PYTHONPATH
                 sys.path.insert(0, os.path.dirname(__file__))
-                from data.multi_exchange_provider import MultiExchangeDataManager
+                from src.data.multi_exchange_provider import MultiExchangeDataManager
             except ImportError:
                 # Last fallback
                 import importlib.util
-                spec = importlib.util.find_spec("data.multi_exchange_provider")
+                spec = importlib.util.find_spec("src.data.multi_exchange_provider")
                 if spec is None:
                     raise ImportError("MultiExchangeDataManager not found in any path")
     multi_exchange_data = MultiExchangeDataManager()
@@ -209,7 +209,7 @@ try:
                 from src.bot.pipeline import AutomatedPipelineManager
             except ImportError:
                 # Final fallback for deployment context
-                from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+                from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     logger.info("✅ AI Pipeline Manager imported")
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
