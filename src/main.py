@@ -401,11 +401,38 @@ class TradingAPI:
                 logger.error("❌ No API clients initialized - check your API keys")
                 return
                 
-            # Initialize risk manager if we have any client
+            # Initialize ML Risk Manager (AI-first approach)  
             if self.testnet_client or self.bybit_client:
+                from src.bot.risk.ml_risk_manager import MLRiskManager
                 from src.bot.risk.core.unified_risk_manager import UnifiedRiskManager
-                self.risk_manager = UnifiedRiskManager()
-                logger.info("✅ Risk management system initialized")
+                
+                # Create base unified manager (required by ML manager)
+                base_risk_manager = UnifiedRiskManager()
+                
+                # ML Risk Manager with dynamic AI-driven parameters
+                # Only graduation/retirement criteria as input - AI determines optimal risk levels
+                ml_risk_params = {
+                    'graduation_criteria': {
+                        'min_sharpe_ratio': 1.5,
+                        'min_win_rate': 0.65, 
+                        'min_profit_factor': 1.8,
+                        'max_drawdown': 0.15
+                    },
+                    'retirement_criteria': {
+                        'max_drawdown': 0.25,
+                        'min_sharpe_ratio': 0.8,
+                        'consecutive_losses': 8
+                    },
+                    'ml_confidence_threshold': 0.7,  # AI confidence required for trades
+                    'dynamic_sizing_enabled': True,  # Let AI adjust position sizes
+                    'auto_circuit_breakers': True    # AI-controlled risk stops
+                }
+                
+                self.risk_manager = MLRiskManager(
+                    unified_risk_manager=base_risk_manager,
+                    ml_risk_params=ml_risk_params
+                )
+                logger.info("✅ ML-Enhanced Risk Management system initialized (AI-driven)")
                 
                 # Initialize strategy executor - works with testnet only
                 try:
@@ -765,7 +792,7 @@ class TradingAPI:
                         "current_risk_level": risk_level,
                         "risk_percentage": f"{portfolio_risk.portfolio_risk_percentage:.1f}%",
                         "max_position_usd": float(max_position_size),
-                        "daily_risk_budget": balance * 0.01,  # 1% daily risk budget
+                        "daily_risk_budget": float(portfolio_risk.recommended_daily_risk_budget),  # ML-calculated budget
                         "portfolio_balance": balance,
                         "positions_at_risk": len([p for p in positions if p.get("unrealized_pnl", 0) < 0]),
                         "status": "UnifiedRiskManager Active",
@@ -1820,6 +1847,40 @@ async def get_settings():
 async def get_pipeline_metrics_api():
     """Get pipeline performance metrics"""
     return await trading_api.get_pipeline_metrics()
+
+@app.get("/api/ml-risk-metrics")
+async def get_ml_risk_metrics_api():
+    """Get real-time ML risk management metrics"""
+    try:
+        if not trading_api.risk_manager:
+            return {
+                "ml_confidence": "Not Available",
+                "risk_adjustment": "Static",
+                "graduation_ready": 0,
+                "risk_score": "No ML Engine",
+                "status": "ML Risk Manager Offline"
+            }
+        
+        # Get ML-specific risk metrics
+        risk_metrics = await trading_api.get_risk_metrics()
+        
+        return {
+            "ml_confidence": f"{risk_metrics.get('ml_confidence_score', 0):.1%}" if 'ml_confidence_score' in risk_metrics else "Calculating...",
+            "risk_adjustment": risk_metrics.get('current_risk_level', 'Dynamic'),
+            "graduation_ready": 0,  # Will be updated when graduation logic is integrated
+            "risk_score": risk_metrics.get('current_risk_level', 'Safe'),
+            "daily_budget": f"${risk_metrics.get('daily_risk_budget', 0):,.2f}",
+            "status": "ML Risk Engine Active" if trading_api.risk_manager else "Offline"
+        }
+    except Exception as e:
+        logger.error(f"ML risk metrics error: {e}")
+        return {
+            "ml_confidence": "Error",
+            "risk_adjustment": "Static Fallback", 
+            "graduation_ready": 0,
+            "risk_score": "System Error",
+            "status": "ML Engine Error"
+        }
 
 @app.get("/api/ml-signals")
 async def get_ml_signals_api():

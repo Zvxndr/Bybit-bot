@@ -5068,9 +5068,81 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
         // Auto-refresh monitoring metrics every 30 seconds
         setInterval(refreshMetrics, 30000);
         
+        // ML Risk Engine Metrics
+        async function updateMLRiskMetrics() {
+            try {
+                const response = await fetch('/api/ml-risk-metrics');
+                const data = await response.json();
+                
+                // Update ML Confidence
+                const mlConfidenceElement = document.getElementById('mlConfidence');
+                if (mlConfidenceElement) {
+                    mlConfidenceElement.textContent = data.ml_confidence || 'Loading...';
+                    mlConfidenceElement.className = `fw-bold ${data.ml_confidence && data.ml_confidence !== 'Error' ? 'text-info' : 'text-warning'}`;
+                }
+                
+                // Update Risk Score
+                const riskScoreElement = document.getElementById('riskScore');
+                if (riskScoreElement) {
+                    riskScoreElement.textContent = data.risk_score || 'Calculating...';
+                    const riskClass = data.risk_score === 'Safe' ? 'text-success' : 
+                                     data.risk_score === 'System Error' ? 'text-danger' : 'text-warning';
+                    riskScoreElement.className = `fw-bold ${riskClass}`;
+                }
+                
+                // Update Risk Adjustment
+                const riskAdjustmentElement = document.getElementById('riskAdjustment');
+                if (riskAdjustmentElement) {
+                    riskAdjustmentElement.textContent = data.risk_adjustment || 'Static';
+                    riskAdjustmentElement.className = `fw-bold ${data.risk_adjustment === 'Dynamic' ? 'text-warning' : 'text-muted'}`;
+                }
+                
+                // Update Daily Budget
+                const dailyBudgetElement = document.getElementById('dailyBudget');
+                if (dailyBudgetElement) {
+                    dailyBudgetElement.textContent = data.daily_budget || 'Calculating...';
+                    dailyBudgetElement.className = 'fw-bold text-primary';
+                }
+                
+                // Update ML Engine Status
+                const mlEngineStatusElement = document.getElementById('mlEngineStatus');
+                if (mlEngineStatusElement) {
+                    mlEngineStatusElement.textContent = data.status === 'ML Risk Engine Active' ? '🤖 ML Engine Active' : 
+                                                      data.status === 'ML Engine Error' ? '⚠️ ML Engine Error' : 
+                                                      '⏳ ML Engine Loading';
+                    const statusClass = data.status === 'ML Risk Engine Active' ? 'bg-primary' : 
+                                       data.status === 'ML Engine Error' ? 'bg-danger' : 'bg-warning';
+                    mlEngineStatusElement.className = `badge ${statusClass}`;
+                }
+                
+            } catch (error) {
+                console.error('Failed to fetch ML risk metrics:', error);
+                
+                // Set error states
+                const elements = ['mlConfidence', 'riskScore', 'riskAdjustment', 'dailyBudget'];
+                elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = 'Connection Error';
+                        element.className = 'fw-bold text-danger';
+                    }
+                });
+                
+                const statusElement = document.getElementById('mlEngineStatus');
+                if (statusElement) {
+                    statusElement.textContent = '❌ Connection Error';
+                    statusElement.className = 'badge bg-danger';
+                }
+            }
+        }
+
         // Initialize monitoring on page load
         document.addEventListener('DOMContentLoaded', function() {
             refreshMetrics();
+            updateMLRiskMetrics();
+            
+            // Update ML metrics every 10 seconds
+            setInterval(updateMLRiskMetrics, 10000);
         });
     </script>
 </body>
