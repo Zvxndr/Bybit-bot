@@ -321,10 +321,12 @@ class SystemTestSuite:
     async def test_frontend(self):
         """Test frontend interface"""
         try:
-            # Check if frontend files exist
+            # Check if current frontend files exist
             frontend_files = [
-                "src/dashboard/frontend/fire-dashboard-clean.js",
-                "src/dashboard/frontend/fire-cybersigilism.css"
+                "frontend/unified_dashboard.html",
+                "frontend/comprehensive_dashboard.html",
+                "frontend/js/dashboard.js",
+                "frontend/css"
             ]
             
             files_found = 0
