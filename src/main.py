@@ -152,8 +152,16 @@ except ImportError as e:
 
 # Import Multi-Exchange Data Provider
 try:
-    # Docker environment (PYTHONPATH=/app) - import from src
-    from src.data.multi_exchange_provider import MultiExchangeDataManager
+    # Add current directory and parent to Python path for Docker compatibility
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
+    try:
+        from data.multi_exchange_provider import MultiExchangeDataManager
+    except ImportError:
+        from src.data.multi_exchange_provider import MultiExchangeDataManager
     multi_exchange_data = MultiExchangeDataManager()
     
     # Show which exchanges will be enabled
@@ -177,8 +185,10 @@ except ImportError as e:
 
 # Import AI Strategy Pipeline Manager  
 try:
-    # Docker environment (PYTHONPATH=/app) - import from src
-    from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+    try:
+        from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+    except ImportError:
+        from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
     logger.info("✅ AI Pipeline Manager imported")
 except ImportError as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
