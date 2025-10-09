@@ -363,12 +363,16 @@ class TradingAPI:
             
             # Initialize testnet client if we have testnet credentials
             if self.testnet_credentials['valid']:
+                print(f"🔍 DEBUG: Initializing testnet client with key: {self.testnet_credentials['api_key'][:8]}...")
                 self.testnet_client = BybitAPIClient(
                     api_key=self.testnet_credentials['api_key'],
                     api_secret=self.testnet_credentials['api_secret'],
                     testnet=True  # Always testnet for paper trading
                 )
+                print(f"✅ DEBUG: Testnet client created successfully: {type(self.testnet_client)}")
                 logger.info("✅ Bybit testnet API client initialized")
+            else:
+                print(f"❌ DEBUG: Cannot initialize testnet client - credentials invalid")
             
             # Initialize mainnet client only if we have live credentials AND live trading is enabled
             if self.live_credentials['valid'] and self.enable_live:
@@ -582,6 +586,7 @@ class TradingAPI:
     async def _get_paper_portfolio(self):
         """Paper trading portfolio - Phase 2 of 3-phase system - Uses REAL testnet API"""
         try:
+            print(f"🔍 DEBUG: _get_paper_portfolio called, testnet_client: {type(self.testnet_client) if self.testnet_client else 'None'}")
             if not self.testnet_client:
                 return {
                     "total_balance": 10000,  # Default paper trading balance
@@ -595,7 +600,9 @@ class TradingAPI:
                 }
             
             # Get real testnet account balance using dedicated testnet client
+            print(f"🔍 DEBUG: Calling testnet_client.get_account_balance()...")
             balance_result = await self.testnet_client.get_account_balance()
+            print(f"🔍 DEBUG: Balance result: {balance_result}")
             if not balance_result.get("success"):
                 logger.warning(f"Paper/Testnet balance fetch failed: {balance_result.get('message')}")
                 return {
