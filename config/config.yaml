@@ -1,33 +1,23 @@
 # AI-Driven Automated Trading Pipeline Configuration
 # This configuration supports the 3-phase automated strategy discovery system
 
-# Core trading settings
+# Core trading settings - AI-First Configuration
 trading:
-  mode: aggressive  # Options: 'conservative' or 'aggressive'
-  base_balance: 10000  # Base balance in USDT for risk scaling
+  mode: ai_driven  # AI determines optimal trading parameters
+  base_balance: 10000  # Starting balance for ML risk calculations
   
-  # Dynamic risk parameters for aggressive mode
-  aggressive_mode:
-    max_risk_ratio: 0.02  # Max risk per trade (2%) for small accounts
-    min_risk_ratio: 0.005  # Min risk per trade (0.5%) for large accounts
-    portfolio_drawdown_limit: 0.40
-    strategy_drawdown_limit: 0.25
-    sharpe_ratio_min: 0.5
-    var_daily_limit: 0.05
-    consistency_min: 0.50
-    balance_thresholds:
-      low: 10000  # Balance below this uses max risk
-      high: 100000  # Balance above this uses min risk
-    risk_decay: exponential  # Options: 'linear' or 'exponential'
-  
-  # Conservative mode parameters
-  conservative_mode:
-    risk_ratio: 0.01  # Fixed 1% risk per trade
-    portfolio_drawdown_limit: 0.25
-    strategy_drawdown_limit: 0.15
-    sharpe_ratio_min: 0.8
-    var_daily_limit: 0.03
-    consistency_min: 0.60
+  # ML Risk Engine Configuration (graduation/retirement criteria only)
+  ml_risk_params:
+    graduation_criteria:
+      min_profit_consistency: 0.7      # 70% profit consistency for promotion
+      min_sharpe_ratio: 1.0           # Minimum Sharpe ratio for live deployment
+      min_backtest_return: 0.05       # 5% minimum backtest return
+      min_paper_days: 14              # Minimum paper trading validation period
+    
+    retirement_criteria:
+      max_consecutive_losses: 10       # Auto-retire after 10 consecutive losses
+      max_drawdown_threshold: 0.20     # Retire if drawdown exceeds 20%
+      min_confidence_score: 0.3        # Retire if ML confidence drops below 30%
 
 # Exchange configuration with environment-specific credentials
 exchange:
@@ -161,25 +151,20 @@ backtesting:
     taker_fee: 0.0006  # 0.06%
     slippage: 0.0005  # 0.05%
 
-# Risk management
+# Risk management - ML Determined (no hardcoded limits)
 risk:
-  # Portfolio-level limits
-  portfolio:
-    max_strategies: 10
-    max_correlation: 0.7
-    rebalance_frequency: daily
+  # ML Risk Engine will determine these dynamically:
+  # - Portfolio allocation limits based on balance and market conditions
+  # - Position sizing based on volatility and correlation analysis  
+  # - Stop losses optimized for tax efficiency and market regime
+  # - Take profits based on momentum and mean reversion analysis
+  # - Circuit breakers adjusted for current market volatility
   
-  # Strategy-level limits
-  strategy:
-    max_position_size: 0.1  # 10% of portfolio per strategy
-    stop_loss: 0.05  # 5% stop loss
-    take_profit: 0.15  # 15% take profit
-  
-  # Circuit breakers
-  circuit_breakers:
-    daily_loss_limit: 0.05  # 5% daily portfolio loss
-    volatility_threshold: 3.0  # 3x normal volatility
-    news_blackout_hours: 2  # Hours to pause after major news
+  # Only keep emergency safety overrides
+  emergency_overrides:
+    absolute_max_portfolio_risk: 0.50  # Hard limit: never risk more than 50% of portfolio
+    min_emergency_balance: 100  # Always keep $100 minimum balance
+    max_api_calls_per_minute: 50  # Rate limiting for exchange APIs
 
 # Tax configuration (Australia)
 tax:
