@@ -167,6 +167,22 @@ try:
         if path and os.path.exists(path) and path not in sys.path:
             sys.path.insert(0, path)
     
+    # Debug environment info
+    logger.info(f"🔍 Import Debug - Current dir: {current_dir}")
+    logger.info(f"🔍 Import Debug - Parent dir: {parent_dir}")
+    logger.info(f"🔍 Import Debug - Working dir: {os.getcwd()}")
+    logger.info(f"🔍 Import Debug - Python paths added: {[p for p in paths_to_add if os.path.exists(p)]}")
+    
+    # Check if target files exist
+    target_files = [
+        os.path.join(current_dir, 'data', 'multi_exchange_provider.py'),
+        os.path.join(parent_dir, 'src', 'data', 'multi_exchange_provider.py'),
+        '/app/src/data/multi_exchange_provider.py'
+    ]
+    for target_file in target_files:
+        exists = "✅" if os.path.exists(target_file) else "❌"
+        logger.info(f"🔍 Target file {exists}: {target_file}")
+    
     # Try multiple import strategies
     MultiExchangeDataManager = None
     
@@ -176,8 +192,8 @@ try:
             from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
             MultiExchangeDataManager = MEDM
             logger.info("✅ Multi-exchange provider: Direct import successful")
-        except ImportError:
-            pass
+        except ImportError as e:
+            logger.info(f"🔍 Strategy 1 failed: {e}")
     
     # Strategy 2: Absolute import with src prefix
     if MultiExchangeDataManager is None:
@@ -185,22 +201,27 @@ try:
             from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
             MultiExchangeDataManager = MEDM
             logger.info("✅ Multi-exchange provider: Absolute import successful")
-        except ImportError:
-            pass
+        except ImportError as e:
+            logger.info(f"🔍 Strategy 2 failed: {e}")
     
     # Strategy 3: Import from current directory
     if MultiExchangeDataManager is None:
         try:
             import importlib.util
             module_path = os.path.join(current_dir, 'data', 'multi_exchange_provider.py')
+            logger.info(f"🔍 Strategy 3 - Checking file path: {module_path}")
+            logger.info(f"🔍 Strategy 3 - File exists: {os.path.exists(module_path)}")
             if os.path.exists(module_path):
                 spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                MultiExchangeDataManager = module.MultiExchangeDataManager
-                logger.info("✅ Multi-exchange provider: File import successful")
-        except Exception:
-            pass
+                if spec and spec.loader:
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    MultiExchangeDataManager = module.MultiExchangeDataManager
+                    logger.info("✅ Multi-exchange provider: File import successful")
+                else:
+                    logger.info("🔍 Strategy 3 failed: Could not create spec")
+        except Exception as e:
+            logger.info(f"🔍 Strategy 3 failed: {e}")
     
     if MultiExchangeDataManager:
         multi_exchange_data = MultiExchangeDataManager()
