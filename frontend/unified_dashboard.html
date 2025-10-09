@@ -2037,7 +2037,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Graduation Criteria</label>
-                                    <select class="form-select">
+                                    <select class="form-select" name="graduation_criteria" id="graduationCriteria">
                                         <option value="strict">Strict (Sharpe > 1.5)</option>
                                         <option value="standard" selected>Standard (Sharpe > 1.2)</option>
                                         <option value="relaxed">Relaxed (Sharpe > 1.0)</option>
@@ -2046,7 +2046,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Paper Duration</label>
-                                    <select class="form-select">
+                                    <select class="form-select" name="paper_duration" id="paperDuration">
                                         <option value="7">7 days (Fast)</option>
                                         <option value="14" selected>14 days (Standard)</option>
                                         <option value="21">21 days (Conservative)</option>
@@ -2131,7 +2131,10 @@
                         <!-- Pipeline Actions -->
                         <div class="row mt-4">
                             <div class="col-12">
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-2 mb-3">
+                                    <button class="btn btn-success" onclick="dashboard.savePipelineConfig()" id="saveConfigBtn">
+                                        <i class="bi bi-check-circle"></i> Save Configuration
+                                    </button>
                                     <button class="btn btn-primary" onclick="dashboard.batchProcessPipeline()">
                                         <i class="bi bi-gear"></i> Batch Process Pipeline
                                     </button>
@@ -2139,7 +2142,8 @@
                                         <i class="bi bi-arrow-clockwise"></i> Refresh Data
                                     </button>
                                 </div>
-                                <small class="text-muted">Manual pipeline operations and data refresh</small>
+                                <div id="configSaveStatus" class="alert d-none" role="alert"></div>
+                                <small class="text-muted">Configuration changes are automatically saved and applied</small>
                             </div>
                         </div>
                     </div>
@@ -2428,7 +2432,7 @@
             }
 
             initCharts() {
-                // Portfolio Performance Chart - Live Trading (Standardized Style)
+                // Portfolio Performance Chart - Live Trading (Unified Professional Style)
                 const performanceCtx = document.getElementById('performanceChart').getContext('2d');
                 this.charts.performance = new Chart(performanceCtx, {
                     type: 'line',
@@ -2437,14 +2441,15 @@
                         datasets: [{
                             label: 'Live Portfolio Value ($)',
                             data: [],
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             tension: 0.4,
-                            pointRadius: 2,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 3,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#10b981',
                             pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
+                            pointBorderWidth: 2,
+                            borderWidth: 2
                         }]
                     },
                     options: {
@@ -2496,7 +2501,7 @@
                 this.currentTimeframe = '1d';
                 this.showNoDataState();
 
-                // Paper Trading Performance Chart (Standardized Style)
+                // Paper Trading Performance Chart (Unified Professional Style)
                 const paperPerformanceCtx = document.getElementById('paperPerformanceChart').getContext('2d');
                 this.charts.paperPerformance = new Chart(paperPerformanceCtx, {
                     type: 'line',
@@ -2505,14 +2510,15 @@
                         datasets: [{
                             label: 'Paper Portfolio Value ($)',
                             data: [],
-                            borderColor: '#22c55e',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             tension: 0.4,
-                            pointRadius: 2,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: '#22c55e',
+                            pointRadius: 3,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#10b981',
                             pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
+                            pointBorderWidth: 2,
+                            borderWidth: 2
                         }]
                     },
                     options: {
@@ -3115,20 +3121,26 @@
             }
 
             updateLivePortfolioStatus(portfolio) {
-                // Update live portfolio metrics with real data
+                // Update live portfolio metrics - ONLY use live data for Live Portfolio Status
                 const live = portfolio?.live || {};
                 const paper = portfolio?.paper_testnet || {};
                 
-                // Use live data if available, otherwise show paper data - with proper null checks
-                const activeBalance = Number(live.total_balance || paper.total_balance || 0);
-                const dailyPnL = Number(live.daily_pnl || paper.unrealized_pnl || 0);
-                const totalStrategies = Number(live.active_strategies || 0) + Number(paper.active_strategies || 0);
+                // Live Portfolio Status should ONLY show live trading data (not testnet)
+                const activeBalance = Number(live.total_balance || 0);
+                const dailyPnL = Number(live.daily_pnl || 0);
+                const totalStrategies = Number(live.active_strategies || 0);
                 
-                // Update balance display with safe formatting
+                // Update balance display - show "Live API Required" if no live data
                 const balanceElement = document.getElementById('totalBalance');
                 if (balanceElement) {
-                    balanceElement.textContent = 
-                        `$${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    if (activeBalance > 0 || live.total_balance !== undefined) {
+                        balanceElement.textContent = 
+                            `$${activeBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    } else {
+                        balanceElement.textContent = 'Live API Required';
+                        balanceElement.style.color = '#6b7280';
+                        balanceElement.style.fontStyle = 'italic';
+                    }
                 }
                 
                 // Update daily P&L with safe formatting
@@ -3557,6 +3569,110 @@
                     this.showBrowserNotification('Batch Processing Error', 'Pipeline batch processing failed', 'danger');
                 } finally {
                     this.hideLoadingState();
+                }
+            }
+
+            async savePipelineConfig() {
+                try {
+                    this.showLoadingState();
+                    
+                    // Collect all configuration values from the form
+                    const config = {
+                        graduation_criteria: document.querySelector('[name="graduation_criteria"]')?.value || 'standard',
+                        paper_duration: parseInt(document.querySelector('[name="paper_duration"]')?.value) || 14,
+                        auto_graduate: document.getElementById('autoGraduate')?.checked || true,
+                        max_risk_per_trade: parseInt(document.getElementById('maxRiskPerTrade')?.value) || 2,
+                        max_live_strategies: parseInt(document.getElementById('maxLiveStrategies')?.value) || 5,
+                        max_drawdown: parseInt(document.getElementById('maxDrawdown')?.value) || 15,
+                        emergency_stop: document.getElementById('emergencyStop')?.checked || true,
+                        retirement_performance: document.getElementById('retirementPerformance')?.value || 'standard',
+                        retirement_drawdown: parseInt(document.getElementById('retirementDrawdown')?.value) || 20,
+                        retirement_period: parseInt(document.getElementById('retirementPeriod')?.value) || 14
+                    };
+
+                    // Send configuration to server
+                    const response = await fetch('/api/pipeline/config', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(config)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showConfigSaveStatus('Configuration saved successfully!', 'success');
+                        this.showToastNotification('Pipeline configuration saved', 'success');
+                    } else {
+                        this.showConfigSaveStatus('Save failed: ' + (result.error || 'Unknown error'), 'danger');
+                        this.showToastNotification('Configuration save failed', 'danger');
+                    }
+                } catch (error) {
+                    this.showConfigSaveStatus('Save failed: ' + error.message, 'danger');
+                    this.showToastNotification('Configuration save error: ' + error.message, 'danger');
+                } finally {
+                    this.hideLoadingState();
+                }
+            }
+
+            async loadPipelineConfig() {
+                try {
+                    const response = await fetch('/api/pipeline/config');
+                    const result = await response.json();
+                    
+                    if (result.success && result.config) {
+                        const config = result.config;
+                        
+                        // Apply configuration to form elements
+                        const graduationSelect = document.querySelector('[name="graduation_criteria"]');
+                        if (graduationSelect) graduationSelect.value = config.graduation_criteria || 'standard';
+                        
+                        const paperDurationSelect = document.querySelector('[name="paper_duration"]');
+                        if (paperDurationSelect) paperDurationSelect.value = config.paper_duration || 14;
+                        
+                        const autoGraduateCheck = document.getElementById('autoGraduate');
+                        if (autoGraduateCheck) autoGraduateCheck.checked = config.auto_graduate !== false;
+                        
+                        const maxRiskInput = document.getElementById('maxRiskPerTrade');
+                        if (maxRiskInput) maxRiskInput.value = config.max_risk_per_trade || 2;
+                        
+                        const maxStrategiesInput = document.getElementById('maxLiveStrategies');
+                        if (maxStrategiesInput) maxStrategiesInput.value = config.max_live_strategies || 5;
+                        
+                        const maxDrawdownInput = document.getElementById('maxDrawdown');
+                        if (maxDrawdownInput) maxDrawdownInput.value = config.max_drawdown || 15;
+                        
+                        const emergencyStopCheck = document.getElementById('emergencyStop');
+                        if (emergencyStopCheck) emergencyStopCheck.checked = config.emergency_stop !== false;
+                        
+                        const retirementPerfSelect = document.getElementById('retirementPerformance');
+                        if (retirementPerfSelect) retirementPerfSelect.value = config.retirement_performance || 'standard';
+                        
+                        const retirementDrawdownInput = document.getElementById('retirementDrawdown');
+                        if (retirementDrawdownInput) retirementDrawdownInput.value = config.retirement_drawdown || 20;
+                        
+                        const retirementPeriodSelect = document.getElementById('retirementPeriod');
+                        if (retirementPeriodSelect) retirementPeriodSelect.value = config.retirement_period || 14;
+                        
+                        this.showConfigSaveStatus('Configuration loaded successfully', 'info');
+                    }
+                } catch (error) {
+                    console.error('Failed to load pipeline configuration:', error);
+                }
+            }
+
+            showConfigSaveStatus(message, type) {
+                const statusElement = document.getElementById('configSaveStatus');
+                if (statusElement) {
+                    statusElement.className = `alert alert-${type} mb-2`;
+                    statusElement.textContent = message;
+                    statusElement.classList.remove('d-none');
+                    
+                    // Hide after 5 seconds
+                    setTimeout(() => {
+                        statusElement.classList.add('d-none');
+                    }, 5000);
                 }
             }
 
@@ -5166,6 +5282,9 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
         document.addEventListener('DOMContentLoaded', function() {
             refreshMetrics();
             updateMLRiskMetrics();
+            
+            // Load saved pipeline configuration
+            dashboard.loadPipelineConfig();
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);

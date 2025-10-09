@@ -203,7 +203,7 @@ class MLRiskManager:
     def _initialize_circuit_breakers(self):
         """Initialize all circuit breakers"""
         for breaker_type in CircuitBreakerType:
-            threshold = self.ml_risk_params['circuit_breaker_thresholds'].get(breaker_type, 1.0)
+            threshold = self.ml_risk_params['circuit_breaker_thresholds'].get(breaker_type.value, 1.0)
             self.circuit_breakers[breaker_type] = CircuitBreakerStatus(
                 breaker_type=breaker_type,
                 is_active=False,
