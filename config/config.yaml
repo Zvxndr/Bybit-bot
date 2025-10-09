@@ -1,5 +1,5 @@
-# Bybit Trading Bot Configuration
-# This configuration supports dual-mode operation: conservative and aggressive
+# AI-Driven Automated Trading Pipeline Configuration
+# This configuration supports the 3-phase automated strategy discovery system
 
 # Core trading settings
 trading:

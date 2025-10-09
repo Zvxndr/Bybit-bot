@@ -1322,8 +1322,8 @@
         <div class="system-status-banner" id="systemStatus">
             <div class="status-indicator">⚠️</div>
             <div>
-                <div class="status-title" id="statusTitle">Paper Trading Mode</div>
-                <div class="status-subtitle" id="statusSubtitle">Connect API credentials for live trading</div>
+                <div class="status-title" id="statusTitle">AI Pipeline Phase 2 Active</div>
+                <div class="status-subtitle" id="statusSubtitle">Connect API credentials to enable Phase 3 graduation</div>
             </div>
         </div>
 
@@ -1629,7 +1629,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title mb-0">📈 Live Portfolio Performance</h3>
                         <div class="d-flex gap-2 align-items-center">
-                            <small class="text-muted me-2">Live Trading Results</small>
+                            <small class="text-muted me-2">AI Pipeline Phase 3</small>
                             <div class="btn-group" role="group" id="timeframeControls">
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('1h')" id="tf-1h">1H</button>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPerformanceTimeframe('4h')" id="tf-4h">4H</button>
@@ -1649,14 +1649,14 @@
                             <!-- No Data Overlay -->
                             <div class="chart-no-data-overlay" id="chartNoDataOverlay">
                                 <div class="no-data-content">
-                                    <i class="bi bi-graph-up display-1 text-muted mb-3"></i>
-                                    <h5 class="text-muted">No Live Trading Data Available</h5>
+                                    <i class="bi bi-graph-up display-1 text-primary mb-3"></i>
+                                    <h5 class="text-muted">AI Strategy Graduation Pending</h5>
                                     <p class="text-muted mb-3">
-                                        Portfolio performance will appear here once you have active live trading strategies.
+                                        Live trading performance shows strategies that have graduated from paper testing.
                                     </p>
                                     <div class="d-flex gap-2 justify-content-center">
-                                        <span class="badge bg-secondary">📊 Currently in Paper Mode</span>
-                                        <span class="badge bg-info">🔄 API Disconnected</span>
+                                        <span class="badge bg-primary">� Phase 3: Live Deployment</span>
+                                        <span class="badge bg-warning">⏳ Awaiting Graduation</span>
                                     </div>
                                 </div>
                             </div>
@@ -1664,7 +1664,7 @@
                         <!-- Portfolio Performance Status -->
                         <div class="mt-2">
                             <small id="portfolioStatus" class="text-muted">
-                                <i class="bi bi-info-circle"></i> No live portfolio data available - System in paper mode
+                                <i class="bi bi-cpu"></i> AI Pipeline Phase 3: Live deployment of graduated strategies
                             </small>
                         </div>
                     </div>
@@ -1673,7 +1673,7 @@
             <div class="col-lg-4">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🎯 Strategy Distribution</h3>
+                        <h3 class="card-title">🤖 AI Strategy Pipeline</h3>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -1691,7 +1691,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title mb-0">📊 Paper Trading Performance</h3>
                         <div class="d-flex gap-2 align-items-center">
-                            <small class="text-muted me-2">Testnet Results</small>
+                            <small class="text-muted me-2">AI Pipeline Phase 2</small>
                             <div class="btn-group" role="group" id="paperTimeframeControls">
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1h')" id="paper-tf-1h">1H</button>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('4h')" id="paper-tf-4h">4H</button>
@@ -1699,7 +1699,7 @@
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1w')" id="paper-tf-1w">1W</button>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="dashboard.setPaperPerformanceTimeframe('1m')" id="paper-tf-1m">1M</button>
                             </div>
-                            <button class="btn btn-sm btn-outline-success" onclick="dashboard.refreshPaperPerformance()">
+                            <button class="btn btn-sm btn-outline-primary" onclick="dashboard.refreshPaperPerformance()">
                                 <i class="bi bi-arrow-clockwise"></i> Refresh
                             </button>
                         </div>
@@ -1711,14 +1711,14 @@
                             <!-- No Data Overlay -->
                             <div class="chart-no-data-overlay" id="paperChartNoDataOverlay">
                                 <div class="no-data-content">
-                                    <i class="bi bi-graph-up display-1 text-success mb-3"></i>
-                                    <h5 class="text-muted">No Paper Trading Data Available</h5>
+                                    <i class="bi bi-graph-up display-1 text-primary mb-3"></i>
+                                    <h5 class="text-muted">AI Strategy Validation Active</h5>
                                     <p class="text-muted mb-3">
-                                        Paper trading performance will appear here once you have active testnet strategies.
+                                        Paper trading performance shows AI-discovered strategies being tested on testnet.
                                     </p>
                                     <div class="d-flex gap-2 justify-content-center">
-                                        <span class="badge bg-success">📊 Paper Mode Active</span>
-                                        <span class="badge bg-secondary">🔧 Testnet Ready</span>
+                                        <span class="badge bg-primary">🤖 Phase 2: Paper Validation</span>
+                                        <span class="badge bg-secondary">🧪 ML Testing Mode</span>
                                     </div>
                                 </div>
                             </div>
@@ -1726,7 +1726,7 @@
                         <!-- Paper Performance Status -->
                         <div class="mt-2">
                             <small id="paperPortfolioStatus" class="text-muted">
-                                <i class="bi bi-info-circle"></i> Paper trading portfolio ready - Safe testing environment
+                                <i class="bi bi-cpu"></i> AI Pipeline Phase 2: Testing strategies on testnet before live deployment
                             </small>
                         </div>
                     </div>
@@ -1735,7 +1735,7 @@
             <div class="col-lg-4">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🧪 Paper Trading Stats</h3>
+                        <h3 class="card-title">� AI Validation Metrics</h3>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -1780,7 +1780,7 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📋 Recent Activity</h3>
+                        <h3 class="card-title">📋 AI Pipeline Activity</h3>
                     </div>
                     <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                         <div id="activityFeed">
@@ -1976,7 +1976,7 @@
                                 <div class="console-line console-info">
                                     <span class="console-time">[${new Date().toLocaleTimeString()}]</span>
                                     <span class="console-level">SYSTEM</span>
-                                    <span class="console-message">Dashboard loaded - Awaiting bot connection...</span>
+                                    <span class="console-message">AI Pipeline Dashboard loaded - Awaiting bot connection...</span>
                                 </div>
                                 <div class="console-line console-warning">
                                     <span class="console-time">[${new Date().toLocaleTimeString()}]</span>
@@ -2835,7 +2835,7 @@
                                 <i class="bi bi-info-circle"></i>
                             </div>
                             <div class="activity-content">
-                                <div class="activity-message">No recent activity</div>
+                                <div class="activity-message">No recent AI pipeline activity</div>
                                 <div class="activity-meta">
                                     <span class="activity-time">Connect API for live updates</span>
                                 </div>
@@ -2987,7 +2987,7 @@
                         `<i class="bi bi-activity"></i> Portfolio: $${latestValue.toLocaleString()} (${change >= 0 ? '+' : ''}${change}% ${this.getTimeframeLabel()})`;
                 } else {
                     document.getElementById('portfolioStatus').innerHTML = 
-                        `<i class="bi bi-activity"></i> Portfolio: No Data Available`;
+                        `<i class="bi bi-activity"></i> AI Pipeline: No Data Available`;
                 }
             }
 

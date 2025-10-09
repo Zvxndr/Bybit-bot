@@ -1,7 +1,7 @@
-# 🚀 Bybit Trading Bot - Australian Tax Compliant
+# 🤖 AI-Driven Automated Trading Pipeline - Australian Tax Compliant
 ========================================================
 
-**🇦🇺 Enterprise-Grade Cryptocurrency Trading Bot with Australian Tax Compliance**
+**🇦🇺 Enterprise-Grade ML-Powered Cryptocurrency Strategy Discovery System with Australian Tax Compliance**
 
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 ![Version](https://img.shields.io/badge/Version-2.1.0-blue) 
@@ -14,7 +14,7 @@
 - **✅ Risk Management**: UnifiedRiskManager integrated with Speed Demon fallback
 - **✅ Configuration System**: YAML config loading with environment variable support
 - **✅ Australian Tax Compliance**: ATO-ready logging with FIFO calculations  
-- **✅ 3-Phase Trading System**: Backtest → Paper → Live trading progression
+- **✅ 3-Phase AI Pipeline**: Automated strategy discovery → validation → graduation system
 - **✅ Security**: Enterprise-grade with DigitalOcean encrypted environment variables
 - **✅ Deployment**: Ready for secure live trading on DigitalOcean
 

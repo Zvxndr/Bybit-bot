@@ -1,10 +1,11 @@
 """
-Simplified Bybit Trading Dashboard
-=================================
+AI-Driven Automated Trading Pipeline System
+==========================================
 
-Clean single-page application with real data only.
-No debug mode, no mock data, production-ready with monitoring.
-Integrated with AI Strategy Discovery Pipeline System.
+Fully automated ML-based trading strategy discovery and execution platform.
+3-Phase Pipeline: Backtest → Paper Trading → Live Trading
+Real-time strategy graduation based on AI performance analysis.
+Production-ready with comprehensive monitoring and Australian tax compliance.
 """
 
 import os
@@ -1321,7 +1322,7 @@ websocket_connections = set()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("🚀 Starting Bybit Trading Dashboard")
+    logger.info("🚀 Starting AI-Driven Automated Trading Pipeline System")
     logger.info(f"Environment: {'Testnet' if trading_api.testnet else 'Mainnet'}")
     logger.info(f"API Connected: {bool(trading_api.api_key and trading_api.api_secret)}")
     
@@ -1378,7 +1379,7 @@ class RateLimiter:
 rate_limiter = RateLimiter(max_requests=100, time_window=60)  # 100 requests per minute
 
 # FastAPI app
-app = FastAPI(title="Bybit Trading Bot", version="1.0", lifespan=lifespan)
+app = FastAPI(title="AI-Driven Automated Trading Pipeline", version="1.0", lifespan=lifespan)
 
 # Security Configuration
 DASHBOARD_USERNAME = os.getenv('DASHBOARD_USERNAME', 'admin')
@@ -2963,7 +2964,7 @@ async def get_credentials_status():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
-    logger.info(f"🌐 Starting server on port {port}")
+    logger.info(f"🌐 Starting AI Pipeline Dashboard Server on port {port}")
     
     uvicorn.run(
         "src.main:app",
