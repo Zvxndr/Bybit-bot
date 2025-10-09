@@ -80,62 +80,103 @@ __all__ = ['MultiExchangeDataManager']
     except Exception as e:
         print(f"   ❌ Failed to create data structure: {e}")
 
-# Direct main.py execution approach
+# Load AI components directly before starting main app
+print("\n🤖 Loading AI Components...")
+
+def load_ai_component_directly(module_name, class_name, file_path):
+    """Load AI component directly from file path"""
+    try:
+        if not os.path.exists(file_path):
+            return None
+            
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        if not spec or not spec.loader:
+            return None
+            
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        sys.modules[f"src.{module_name}"] = module
+        
+        spec.loader.exec_module(module)
+        
+        if hasattr(module, class_name):
+            component_class = getattr(module, class_name)
+            print(f"   ✅ {class_name} loaded successfully")
+            return component_class
+        return None
+    except Exception as e:
+        print(f"   ⚠️  {class_name} load failed: {e}")
+        return None
+
+# Pre-load AI components into sys.modules
+ai_components = {}
+
+# Load MultiExchangeDataManager
+medm_class = load_ai_component_directly(
+    'multi_exchange_provider',
+    'MultiExchangeDataManager',
+    '/app/src/data/multi_exchange_provider.py'
+)
+if medm_class:
+    sys.modules['src.data.multi_exchange_provider'] = sys.modules['multi_exchange_provider']
+    ai_components['MultiExchangeDataManager'] = medm_class
+
+# Load AutomatedPipelineManager  
+apm_class = load_ai_component_directly(
+    'automated_pipeline_manager',
+    'AutomatedPipelineManager',
+    '/app/src/bot/pipeline/automated_pipeline_manager.py'
+)
+if apm_class:
+    sys.modules['src.bot.pipeline.automated_pipeline_manager'] = sys.modules['automated_pipeline_manager']
+    ai_components['AutomatedPipelineManager'] = apm_class
+
+# Load MLStrategyDiscoveryEngine
+ml_class = load_ai_component_directly(
+    'ml_engine', 
+    'MLStrategyDiscoveryEngine',
+    '/app/src/bot/ml_strategy_discovery/ml_engine.py'
+)
+if ml_class:
+    sys.modules['src.bot.ml_strategy_discovery.ml_engine'] = sys.modules['ml_engine']
+    ai_components['MLStrategyDiscoveryEngine'] = ml_class
+
+print(f"   🎯 AI Components loaded: {len(ai_components)}/3")
+
+# Now start the main application
 print("\n🎯 Starting Application...")
 
 try:
-    # Change to src directory for relative imports
+    # Change to working directory
     os.chdir('/app')
     
-    # Add src to path if not already there
+    # Ensure proper Python path
     if '/app/src' not in sys.path:
         sys.path.insert(0, '/app/src')
     
-    # Try direct import first
-    print("   📦 Attempting direct main import...")
+    # Import main module with AI components pre-loaded
+    print("   📦 Importing main module with AI components...")
+    
     try:
-        from src import main as main_module
-        app = main_module.app
-        print("   ✅ Direct import successful!")
+        # Direct import approach
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("main", "/app/src/main.py")
         
-    except ImportError as import_err:
-        print(f"   ⚠️  Direct import failed: {import_err}")
-        print("   📦 Attempting sys.path manipulation...")
+        if spec and spec.loader:
+            main_module = importlib.util.module_from_spec(spec)
+            sys.modules['main'] = main_module
+            spec.loader.exec_module(main_module)
+            
+            app = main_module.app
+            print("   ✅ Main application loaded with AI components!")
+        else:
+            raise ImportError("Could not create module spec for main.py")
         
-        # Fallback: manipulate sys.path and try again
-        original_path = sys.path.copy()
-        try:
-            # Clear and rebuild path
-            sys.path = ['/app/src', '/app', '/usr/local/lib/python3.11/site-packages'] + sys.path
-            
-            import main as main_module
-            app = main_module.app 
-            print("   ✅ Fallback import successful!")
-            
-        except Exception as fallback_err:
-            print(f"   ❌ Fallback import also failed: {fallback_err}")
-            
-            # Last resort: exec the file directly
-            print("   📦 Attempting direct file execution...")
-            try:
-                main_globals = {}
-                with open('/app/src/main.py', 'r') as f:
-                    main_code = f.read()
-                
-                # Execute the main.py file in a controlled environment
-                exec(main_code, main_globals)
-                
-                if 'app' in main_globals:
-                    app = main_globals['app']
-                    print("   ✅ Direct execution successful!")
-                else:
-                    raise ValueError("No 'app' object found in main.py")
-                    
-            except Exception as exec_err:
-                print(f"   💥 All import methods failed!")
-                print(f"      Last error: {exec_err}")
-                traceback.print_exc()
-                sys.exit(1)
+    except Exception as import_err:
+        print(f"   ❌ Main import failed: {import_err}")
+        traceback.print_exc()
+        sys.exit(1)
     
     # Start the server
     print("   🌐 Starting uvicorn server...")

@@ -177,163 +177,83 @@ except ImportError as e:
     logger.warning(f"⚠️ Monitoring system not available: {e}")
     infrastructure_monitor = None
 
-# Import Multi-Exchange Data Provider
+# Import Multi-Exchange Data Provider - Use pre-loaded component
 multi_exchange_data = None
 try:
-    # Docker-safe import with comprehensive fallback strategy
-    import sys
-    import os
-    
-    # Ensure all possible paths are available
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.dirname(current_dir)
-    
-    # Add paths in order of preference
-    paths_to_add = [current_dir, parent_dir, '/app', '/app/src']
-    for path in paths_to_add:
-        if path and os.path.exists(path) and path not in sys.path:
-            sys.path.insert(0, path)
-    
-    # Debug environment info
-    logger.info(f"🔍 Import Debug - Current dir: {current_dir}")
-    logger.info(f"🔍 Import Debug - Parent dir: {parent_dir}")
-    logger.info(f"🔍 Import Debug - Working dir: {os.getcwd()}")
-    logger.info(f"🔍 Import Debug - Python paths added: {[p for p in paths_to_add if os.path.exists(p)]}")
-    
-    # Check if target files exist
-    target_files = [
-        os.path.join(current_dir, 'data', 'multi_exchange_provider.py'),
-        os.path.join(parent_dir, 'src', 'data', 'multi_exchange_provider.py'),
-        '/app/src/data/multi_exchange_provider.py'
-    ]
-    for target_file in target_files:
-        exists = "✅" if os.path.exists(target_file) else "❌"
-        logger.info(f"🔍 Target file {exists}: {target_file}")
-    
-    # Docker-optimized import strategy with dynamic path adjustment
+    # Check if MultiExchangeDataManager was pre-loaded by startup script
     MultiExchangeDataManager = None
     
-    # Ensure the app directory is in Python path
-    app_root = Path(__file__).parent.parent.absolute()
-    if str(app_root) not in sys.path:
-        sys.path.insert(0, str(app_root))
-        logger.info(f"🔧 Added to PYTHONPATH: {app_root}")
+    # Try to get from sys.modules first (pre-loaded by simple_startup.py)
+    if 'multi_exchange_provider' in sys.modules:
+        module = sys.modules['multi_exchange_provider']
+        if hasattr(module, 'MultiExchangeDataManager'):
+            MultiExchangeDataManager = module.MultiExchangeDataManager
+            logger.info("✅ Using pre-loaded MultiExchangeDataManager from startup script")
     
-    try:
-        # Strategy 1: Relative import (when run as python -m src.main)
-        from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-        MultiExchangeDataManager = MEDM
-        logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
-    except ImportError as e:
-        logger.info(f"🔍 Relative import failed: {e}")
-        
+    # Fallback to direct import if not pre-loaded
+    if not MultiExchangeDataManager:
         try:
-            # Strategy 2: Absolute with src prefix  
-            from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-            MultiExchangeDataManager = MEDM
-            logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
-        except ImportError as e:
-            logger.info(f"🔍 Absolute import failed: {e}")
-            
+            from data.multi_exchange_provider import MultiExchangeDataManager
+            logger.info("✅ Multi-exchange provider: Direct import fallback successful")
+        except ImportError:
             try:
-                # Strategy 3: Direct import from current working directory
-                sys.path.insert(0, '/app/src')  # Docker-specific path
-                from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-                MultiExchangeDataManager = MEDM
-                logger.info("✅ Multi-exchange provider: Docker direct import successful")
-            except ImportError as e:
-                logger.info(f"🔍 Docker direct import failed: {e}")
-                
-                try:
-                    # Strategy 4: Manual module loading
-                    import importlib.util
-                    module_path = app_root / 'src' / 'data' / 'multi_exchange_provider.py'
-                    if module_path.exists():
-                        spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
-                        module = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(module)
-                        MultiExchangeDataManager = module.MultiExchangeDataManager
-                        logger.info("✅ Multi-exchange provider: Manual module loading successful")
-                    else:
-                        MultiExchangeDataManager = None
-                except Exception as e:
-                    logger.info(f"🔍 Manual loading failed: {e}")
-                    MultiExchangeDataManager = None
+                from src.data.multi_exchange_provider import MultiExchangeDataManager  
+                logger.info("✅ Multi-exchange provider: Absolute import fallback successful")
+            except ImportError:
+                MultiExchangeDataManager = None
+                logger.warning("⚠️ MultiExchangeDataManager not available via any import method")
 
     if MultiExchangeDataManager:
         multi_exchange_data = MultiExchangeDataManager()
-    else:
-        raise ImportError("All import strategies failed")
-    
-    # Show which exchanges will be enabled
-    binance_enabled = os.getenv("ENABLE_BINANCE_DATA", "true").lower() == "true"
-    okx_enabled = os.getenv("ENABLE_OKX_DATA", "true").lower() == "true"
-    
-    enabled_exchanges = []
-    if binance_enabled:
-        enabled_exchanges.append("Binance")
-    if okx_enabled:
-        enabled_exchanges.append("OKX")
-    
-    if enabled_exchanges:
-        logger.info(f"✅ Multi-exchange data provider configured with: {', '.join(enabled_exchanges)}")
-    else:
-        logger.info("✅ Multi-exchange data provider configured (external exchanges disabled)")
         
-except ImportError as e:
+        # Show which exchanges will be enabled
+        binance_enabled = os.getenv("ENABLE_BINANCE_DATA", "true").lower() == "true"
+        okx_enabled = os.getenv("ENABLE_OKX_DATA", "true").lower() == "true"
+        
+        enabled_exchanges = []
+        if binance_enabled:
+            enabled_exchanges.append("Binance")
+        if okx_enabled:
+            enabled_exchanges.append("OKX")
+        
+        if enabled_exchanges:
+            logger.info(f"✅ Multi-exchange data provider configured with: {', '.join(enabled_exchanges)}")
+        else:
+            logger.info("✅ Multi-exchange data provider configured (external exchanges disabled)")
+    else:
+        raise ImportError("MultiExchangeDataManager class not found")
+        
+except Exception as e:
     logger.warning(f"⚠️ Multi-exchange data provider not available: {e}")
     multi_exchange_data = None
 
-# Import AI Strategy Pipeline Manager  
+# Import AI Strategy Pipeline Manager - Use pre-loaded component
 AutomatedPipelineManager = None
 try:
-    # Simplified import strategy optimized for Docker with python -m src.main
-    # Use the same robust import strategy established above
-    try:
-        # Strategy 1: Relative import (when run as python -m src.main)
-        from .bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
-        AutomatedPipelineManager = APM
-        logger.info("✅ AI Pipeline Manager: Relative import successful (.bot.pipeline)")
-    except ImportError as e:
-        logger.info(f"🔍 Relative import failed: {e}")
-        
+    # Check if AutomatedPipelineManager was pre-loaded by startup script
+    if 'automated_pipeline_manager' in sys.modules:
+        module = sys.modules['automated_pipeline_manager']
+        if hasattr(module, 'AutomatedPipelineManager'):
+            AutomatedPipelineManager = module.AutomatedPipelineManager
+            logger.info("✅ Using pre-loaded AutomatedPipelineManager from startup script")
+    
+    # Fallback to direct import if not pre-loaded
+    if not AutomatedPipelineManager:
         try:
-            # Strategy 2: Absolute with src prefix
-            from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
-            AutomatedPipelineManager = APM
-            logger.info("✅ AI Pipeline Manager: Absolute import successful (src.bot.pipeline)")
-        except ImportError as e:
-            logger.info(f"🔍 Absolute import failed: {e}")
-            
+            from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+            logger.info("✅ AI Pipeline Manager: Direct import fallback successful")
+        except ImportError:
             try:
-                # Strategy 3: Docker direct path
-                from bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager as APM
-                AutomatedPipelineManager = APM
-                logger.info("✅ AI Pipeline Manager: Docker direct import successful")
-            except ImportError as e:
-                logger.info(f"🔍 Docker direct import failed: {e}")
-                
-                try:
-                    # Strategy 4: Manual module loading with full path
-                    import importlib.util
-                    module_path = app_root / 'src' / 'bot' / 'pipeline' / 'automated_pipeline_manager.py'
-                    if module_path.exists():
-                        spec = importlib.util.spec_from_file_location("automated_pipeline_manager", module_path)
-                        module = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(module)
-                        AutomatedPipelineManager = module.AutomatedPipelineManager
-                        logger.info("✅ AI Pipeline Manager: Manual module loading successful")
-                    else:
-                        logger.info(f"🔍 Module path does not exist: {module_path}")
-                        AutomatedPipelineManager = None
-                except Exception as e:
-                    logger.info(f"🔍 Manual loading failed: {e}")
-                    AutomatedPipelineManager = None
+                from src.bot.pipeline.automated_pipeline_manager import AutomatedPipelineManager
+                logger.info("✅ AI Pipeline Manager: Absolute import fallback successful")
+            except ImportError:
+                AutomatedPipelineManager = None
+                logger.warning("⚠️ AutomatedPipelineManager not available via any import method")
         
     if not AutomatedPipelineManager:
-        raise ImportError("All import strategies failed")
+        raise ImportError("AutomatedPipelineManager class not found")
         
-except ImportError as e:
+except Exception as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
     AutomatedPipelineManager = None
 
