@@ -7,10 +7,13 @@ Minimal, robust startup script that avoids complex import manipulation.
 Focuses on getting the basic application running first.
 """
 
+from __future__ import annotations
+
 import sys
 import os
 import traceback
 from pathlib import Path
+import typing
 
 # Basic environment setup
 os.chdir('/app')
@@ -104,7 +107,20 @@ def load_ai_component_directly(module_name, class_name, file_path):
         def enhanced_import(name, *args, **kwargs):
             try:
                 return original_import(name, *args, **kwargs)
-            except ImportError as e:
+            except (ImportError, TypeError) as e:
+                # Handle type annotation issues
+                if "not subscriptable" in str(e) or "TypeError" in str(type(e).__name__):
+                    print(f"     🔧 Handling type annotation issue for: {name}")
+                    try:
+                        # Try importing typing module components
+                        if name == 'typing':
+                            import typing
+                            return typing
+                        elif hasattr(__builtins__, name):
+                            return getattr(__builtins__, name)
+                    except:
+                        pass
+                
                 # Handle relative imports by converting to absolute
                 if name.startswith('..'):
                     # Convert relative to absolute import
