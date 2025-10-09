@@ -210,59 +210,57 @@ try:
         exists = "✅" if os.path.exists(target_file) else "❌"
         logger.info(f"🔍 Target file {exists}: {target_file}")
     
-    # Simplified import strategy optimized for Docker with python -m src.main
+    # Docker-optimized import strategy with dynamic path adjustment
     MultiExchangeDataManager = None
     
-        # Docker-optimized import strategy with dynamic path adjustment
-        import sys
-        from pathlib import Path
-        
-        # Ensure the app directory is in Python path
-        app_root = Path(__file__).parent.parent.absolute()
-        if str(app_root) not in sys.path:
-            sys.path.insert(0, str(app_root))
-            logger.info(f"🔧 Added to PYTHONPATH: {app_root}")
+    # Ensure the app directory is in Python path
+    app_root = Path(__file__).parent.parent.absolute()
+    if str(app_root) not in sys.path:
+        sys.path.insert(0, str(app_root))
+        logger.info(f"🔧 Added to PYTHONPATH: {app_root}")
+    
+    try:
+        # Strategy 1: Relative import (when run as python -m src.main)
+        from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+        MultiExchangeDataManager = MEDM
+        logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
+    except ImportError as e:
+        logger.info(f"🔍 Relative import failed: {e}")
         
         try:
-            # Strategy 1: Relative import (when run as python -m src.main)
-            from .data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+            # Strategy 2: Absolute with src prefix  
+            from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
             MultiExchangeDataManager = MEDM
-            logger.info("✅ Multi-exchange provider: Relative import successful (.data)")
+            logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
         except ImportError as e:
-            logger.info(f"🔍 Relative import failed: {e}")
+            logger.info(f"🔍 Absolute import failed: {e}")
             
             try:
-                # Strategy 2: Absolute with src prefix  
-                from src.data.multi_exchange_provider import MultiExchangeDataManager as MEDM
+                # Strategy 3: Direct import from current working directory
+                sys.path.insert(0, '/app/src')  # Docker-specific path
+                from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
                 MultiExchangeDataManager = MEDM
-                logger.info("✅ Multi-exchange provider: Absolute import successful (src.data)")
+                logger.info("✅ Multi-exchange provider: Docker direct import successful")
             except ImportError as e:
-                logger.info(f"🔍 Absolute import failed: {e}")
+                logger.info(f"🔍 Docker direct import failed: {e}")
                 
                 try:
-                    # Strategy 3: Direct import from current working directory
-                    sys.path.insert(0, '/app/src')  # Docker-specific path
-                    from data.multi_exchange_provider import MultiExchangeDataManager as MEDM
-                    MultiExchangeDataManager = MEDM
-                    logger.info("✅ Multi-exchange provider: Docker direct import successful")
-                except ImportError as e:
-                    logger.info(f"🔍 Docker direct import failed: {e}")
-                    
-                    try:
-                        # Strategy 4: Manual module loading
-                        import importlib.util
-                        module_path = app_root / 'src' / 'data' / 'multi_exchange_provider.py'
-                        if module_path.exists():
-                            spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
-                            module = importlib.util.module_from_spec(spec)
-                            spec.loader.exec_module(module)
-                            MultiExchangeDataManager = module.MultiExchangeDataManager
-                            logger.info("✅ Multi-exchange provider: Manual module loading successful")
-                        else:
-                            MultiExchangeDataManager = None
-                    except Exception as e:
-                        logger.info(f"🔍 Manual loading failed: {e}")
-                        MultiExchangeDataManager = None    if MultiExchangeDataManager:
+                    # Strategy 4: Manual module loading
+                    import importlib.util
+                    module_path = app_root / 'src' / 'data' / 'multi_exchange_provider.py'
+                    if module_path.exists():
+                        spec = importlib.util.spec_from_file_location("multi_exchange_provider", module_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        MultiExchangeDataManager = module.MultiExchangeDataManager
+                        logger.info("✅ Multi-exchange provider: Manual module loading successful")
+                    else:
+                        MultiExchangeDataManager = None
+                except Exception as e:
+                    logger.info(f"🔍 Manual loading failed: {e}")
+                    MultiExchangeDataManager = None
+
+    if MultiExchangeDataManager:
         multi_exchange_data = MultiExchangeDataManager()
     else:
         raise ImportError("All import strategies failed")
