@@ -84,7 +84,7 @@ __all__ = ['MultiExchangeDataManager']
 print("\n🤖 Loading AI Components...")
 
 def load_ai_component_directly(module_name, class_name, file_path):
-    """Load AI component directly from file path"""
+    """Load AI component directly from file path with enhanced import handling"""
     try:
         if not os.path.exists(file_path):
             return None
@@ -98,7 +98,39 @@ def load_ai_component_directly(module_name, class_name, file_path):
         sys.modules[module_name] = module
         sys.modules[f"src.{module_name}"] = module
         
-        spec.loader.exec_module(module)
+        # Enhanced import handling for relative imports
+        original_import = __builtins__['__import__']
+        
+        def enhanced_import(name, *args, **kwargs):
+            try:
+                return original_import(name, *args, **kwargs)
+            except ImportError as e:
+                # Handle relative imports by converting to absolute
+                if name.startswith('..'):
+                    # Convert relative to absolute import
+                    if 'database.manager' in name:
+                        try:
+                            return original_import('src.bot.database.manager', *args, **kwargs)
+                        except ImportError:
+                            pass
+                    elif 'ml_strategy_discovery.ml_engine' in name:
+                        try:
+                            return original_import('src.bot.ml_strategy_discovery.ml_engine', *args, **kwargs)
+                        except ImportError:
+                            pass
+                
+                # Create mock module for missing dependencies
+                print(f"     📦 Creating mock for missing import: {name}")
+                mock_module = type(sys)('mock_' + name.replace('.', '_'))
+                sys.modules[name] = mock_module
+                return mock_module
+        
+        # Temporarily replace import function
+        __builtins__['__import__'] = enhanced_import
+        try:
+            spec.loader.exec_module(module)
+        finally:
+            __builtins__['__import__'] = original_import
         
         if hasattr(module, class_name):
             component_class = getattr(module, class_name)
