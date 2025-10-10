@@ -31,7 +31,65 @@ def check_and_fix_schema():
         table_exists = cursor.fetchone() is not None
         
         if not table_exists:
-            print("📋 strategy_pipeline table doesn't exist - will be created by application")
+            print("📋 strategy_pipeline table doesn't exist - creating with correct schema")
+            
+            # Create table with correct schema immediately
+            create_table_sql = """
+            CREATE TABLE strategy_pipeline (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                strategy_id VARCHAR(255) NOT NULL UNIQUE,
+                strategy_name VARCHAR(255) NOT NULL,
+                current_phase VARCHAR(50) NOT NULL DEFAULT 'backtest',
+                phase_start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                phase_duration INTEGER,
+                asset_pair VARCHAR(20) NOT NULL,
+                base_asset VARCHAR(10) NOT NULL,
+                strategy_type VARCHAR(50) NOT NULL,
+                strategy_description TEXT,
+                backtest_score FLOAT,
+                backtest_return FLOAT,
+                sharpe_ratio FLOAT,
+                max_drawdown FLOAT,
+                win_rate FLOAT,
+                profit_factor FLOAT,
+                paper_start_date DATETIME,
+                paper_end_date DATETIME,
+                paper_pnl FLOAT,
+                paper_return_pct FLOAT,
+                paper_trade_count INTEGER DEFAULT 0,
+                paper_win_count INTEGER DEFAULT 0,
+                live_start_date DATETIME,
+                live_pnl FLOAT,
+                live_return_pct FLOAT,
+                live_trade_count INTEGER DEFAULT 0,
+                live_win_count INTEGER DEFAULT 0,
+                promotion_threshold FLOAT NOT NULL DEFAULT 10.0,
+                graduation_threshold FLOAT NOT NULL DEFAULT 10.0,
+                rejection_threshold FLOAT NOT NULL DEFAULT -5.0,
+                auto_promote BOOLEAN NOT NULL DEFAULT 1,
+                auto_graduate BOOLEAN NOT NULL DEFAULT 1,
+                max_paper_duration INTEGER NOT NULL DEFAULT 604800,
+                is_active BOOLEAN NOT NULL DEFAULT 1,
+                rejection_reason TEXT,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                promoted_at DATETIME,
+                graduated_at DATETIME,
+                rejected_at DATETIME,
+                risk_score FLOAT DEFAULT 0.0,
+                volatility_score FLOAT,
+                correlation_risk FLOAT,
+                total_pnl FLOAT,
+                best_return FLOAT,
+                worst_return FLOAT,
+                consistency_score FLOAT
+            )
+            """
+            
+            cursor.execute(create_table_sql)
+            conn.commit()
+            print("✅ strategy_pipeline table created with correct schema including phase_start_time")
             return True
         
         # Check if phase_start_time column exists
