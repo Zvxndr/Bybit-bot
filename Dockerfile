@@ -50,5 +50,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Use clean, reliable production startup - no import manipulation
-CMD ["python", "production_main.py"]
+# Use enhanced startup with schema validation
+CMD ["python", "startup_with_schema_check.py"]
