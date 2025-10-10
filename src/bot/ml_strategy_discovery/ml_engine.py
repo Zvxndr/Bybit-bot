@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
@@ -44,7 +44,7 @@ class ModelType(Enum):
 @dataclass
 class FeatureSet:
     """Feature engineering configuration"""
-    technical_indicators: "List[str]" = field(default_factory=lambda: [
+    technical_indicators: Any = field(default_factory=lambda: [
         'sma_5', 'sma_10', 'sma_20', 'sma_50',
         'ema_5', 'ema_10', 'ema_20',
         'rsi_14', 'rsi_21',
@@ -55,20 +55,20 @@ class FeatureSet:
         'price_change_1', 'price_change_5', 'price_change_10'
     ])
     
-    market_features: "List[str]" = field(default_factory=lambda: [
+    market_features: Any = field(default_factory=lambda: [
         'btc_dominance', 'market_cap_total',
         'fear_greed_index', 'funding_rates',
         'open_interest', 'futures_basis'
     ])
     
-    macro_features: "List[str]" = field(default_factory=lambda: [
+    macro_features: Any = field(default_factory=lambda: [
         'aud_usd_rate', 'aud_usd_volatility',
         'rba_cash_rate', 'asx_200_return',
         'us_dxy', 'gold_price_aud',
         'aussie_market_hours'
     ])
     
-    time_features: "List[str]" = field(default_factory=lambda: [
+    time_features: Any = field(default_factory=lambda: [
         'hour_of_day', 'day_of_week', 'day_of_month',
         'is_australian_business_hours', 'is_weekend',
         'sydney_session', 'london_session', 'ny_session'
@@ -88,16 +88,16 @@ class ModelConfiguration:
 @dataclass
 class StrategySignal:
     """ML-generated trading signal"""
-    timestamp: datetime
-    symbol: str
-    strategy_type: StrategyType
-    signal_strength: float  # -1 to 1
-    confidence: float  # 0 to 1
-    predicted_return: float
-    prediction_horizon: int
-    features_used: "List[str]"
-    model_version: str
-    australian_risk_adjusted: bool = True
+    timestamp: Any
+    symbol: Any
+    strategy_type: Any
+    signal_strength: Any  # -1 to 1
+    confidence: Any  # 0 to 1
+    predicted_return: Any
+    prediction_horizon: Any
+    features_used: Any
+    model_version: Any
+    australian_risk_adjusted: Any = True
 
 class FeatureEngineer:
     """

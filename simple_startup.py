@@ -154,7 +154,10 @@ def load_ai_component_directly(module_name, class_name, file_path):
             return component_class
         return None
     except Exception as e:
+        import traceback
         print(f"   ⚠️  {class_name} load failed: {e}")
+        print(f"     📍 Error type: {type(e).__name__}")
+        print(f"     📋 Traceback: {traceback.format_exc()}")
         return None
 
 # Pre-load AI components into sys.modules

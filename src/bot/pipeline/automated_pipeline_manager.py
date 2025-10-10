@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Any, Callable
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
@@ -66,10 +66,10 @@ class PipelineConfig:
     max_concurrent_backtests: int = 5
     
     # Asset configuration
-    primary_assets: "List[str]" = field(default_factory=lambda: [
+    primary_assets: Any = field(default_factory=lambda: [
         'BTCUSDT', 'ETHUSDT', 'SOLUSDT'
     ])
-    secondary_assets: "List[str]" = field(default_factory=lambda: [
+    secondary_assets: Any = field(default_factory=lambda: [
         'ADAUSDT', 'DOTUSDT', 'MATICUSDT', 'AVAXUSDT',
         'LINKUSDT', 'UNIUSDT', 'BNBUSDT', 'XRPUSDT'
     ])
@@ -117,8 +117,8 @@ class PipelineMetrics:
     avg_strategy_return: float = 0.0
     
     # Asset distribution
-    asset_distribution: "Dict[str, int]" = field(default_factory=dict)
-    type_distribution: "Dict[str, int]" = field(default_factory=dict)
+    asset_distribution: Any = field(default_factory=dict)
+    type_distribution: Any = field(default_factory=dict)
     
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
