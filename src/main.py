@@ -251,11 +251,12 @@ try:
                 logger.warning("⚠️ AutomatedPipelineManager not available via any import method")
         
     if not AutomatedPipelineManager:
-        logger.info("ℹ️ AutomatedPipelineManager not available - AI features disabled")
+        logger.error("❌ CRITICAL: AutomatedPipelineManager is required for core AI pipeline functionality")
+        raise ImportError("AutomatedPipelineManager is a core component and must be available")
         
 except Exception as e:
-    logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")
-    AutomatedPipelineManager = None
+    logger.error(f"❌ CRITICAL: AI Pipeline Manager failed to load: {e}")
+    raise ImportError(f"AutomatedPipelineManager is required: {e}")
 
 # Import Security Manager
 try:

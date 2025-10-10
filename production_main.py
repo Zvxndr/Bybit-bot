@@ -97,69 +97,97 @@ class ComponentRegistry:
         }
 
 def load_ai_components():
-    """Load AI components with graceful fallbacks"""
-    print("\n🤖 Loading AI Components...")
+    """Load core AI components - these are required for system operation"""
+    print("\n🤖 Loading Core AI Components...")
     
     registry = ComponentRegistry()
     
-    # Core trading components (always try to load)
-    registry.load_component(
+    # Core trading API
+    success_trading = registry.load_component(
         "TradingAPI", 
         "src.main", 
         "TradingAPI"
     )
     
-    # AI Pipeline components (optional)
-    registry.load_component(
+    # CORE AI Pipeline components - REQUIRED for system functionality
+    success_pipeline = registry.load_component(
         "AutomatedPipelineManager",
         "src.bot.pipeline.automated_pipeline_manager",
         "AutomatedPipelineManager"
     )
     
-    registry.load_component(
+    success_ml = registry.load_component(
         "MLStrategyDiscoveryEngine",
         "src.bot.ml_strategy_discovery.ml_engine",
         "MLStrategyDiscoveryEngine"
     )
     
+    # Verify core components loaded successfully
+    if not success_trading:
+        print("❌ CRITICAL: TradingAPI failed to load")
+    if not success_pipeline:
+        print("❌ CRITICAL: AutomatedPipelineManager failed to load - this is a core AI feature")
+    if not success_ml:
+        print("❌ CRITICAL: MLStrategyDiscoveryEngine failed to load - this is a core AI feature")
+    
+    # Optional multi-exchange support  
     registry.load_component(
         "MultiExchangeDataManager",
         "src.data.multi_exchange_provider",
         "MultiExchangeDataManager"
     )
     
-    # Database components
-    registry.load_component(
+    # Core database components
+    success_db = registry.load_component(
         "DatabaseManager",
         "src.bot.database.manager",
         "DatabaseManager"
     )
     
-    # Print status report
+    if not success_db:
+        print("❌ CRITICAL: DatabaseManager failed to load - required for AI pipeline data")
+    
+    # Print status report with emphasis on core AI features
     status = registry.get_status_report()
-    print(f"\n📊 Component Loading Summary:")
+    print(f"\n📊 Core AI System Loading Summary:")
     print(f"   📈 Success Rate: {status['availability_rate']:.1%}")
     print(f"   ✅ Available: {status['available_components']}")
     print(f"   📦 Total: {status['total_components']}")
     
+    # Highlight core AI components
+    core_components = ["AutomatedPipelineManager", "MLStrategyDiscoveryEngine", "TradingAPI", "DatabaseManager"]
+    
+    print(f"\n🤖 CORE AI FEATURES:")
+    for name in core_components:
+        if name in status['status_details']:
+            status_msg = status['status_details'][name]
+            print(f"   {status_msg} {name}")
+    
+    print(f"\n📦 OPTIONAL FEATURES:")
     for name, status_msg in status['status_details'].items():
-        print(f"   {status_msg} {name}")
+        if name not in core_components:
+            print(f"   {status_msg} {name}")
     
     return registry
 
 def start_application(registry: ComponentRegistry):
-    """Start the main application with available components"""
+    """Start the main application with required core components"""
     print(f"\n🎯 Starting Application...")
     
-    # Check if we have the core TradingAPI
-    TradingAPI = registry.get_component("TradingAPI")
-    if not TradingAPI:
-        print("❌ CRITICAL: TradingAPI not available - cannot start")
+    # Check core components that MUST be available
+    required_components = ["TradingAPI", "AutomatedPipelineManager", "MLStrategyDiscoveryEngine"]
+    missing_components = []
+    
+    for component in required_components:
+        if not registry.is_available(component):
+            missing_components.append(component)
+    
+    if missing_components:
+        print(f"❌ CRITICAL: Missing required core components: {', '.join(missing_components)}")
+        print("❌ Cannot start without AI pipeline components - these are core features")
         return False
     
-    # Set feature flags based on available components
-    os.environ['AI_PIPELINE_AVAILABLE'] = str(registry.is_available("AutomatedPipelineManager"))
-    os.environ['ML_DISCOVERY_AVAILABLE'] = str(registry.is_available("MLStrategyDiscoveryEngine"))
+    # Set status for optional components only
     os.environ['MULTI_EXCHANGE_AVAILABLE'] = str(registry.is_available("MultiExchangeDataManager"))
     
     try:
@@ -169,7 +197,9 @@ def start_application(registry: ComponentRegistry):
         # The main application will check feature flags and adapt accordingly
         print("🌐 Starting FastAPI server...")
         print(f"📡 Server will start on 0.0.0.0:8080")
-        print(f"💡 AI Features: {'Enabled' if registry.is_available('AutomatedPipelineManager') else 'Disabled'}")
+        print(f"🤖 AI Pipeline System: Fully Operational")
+        print(f"📊 ML Discovery Engine: Active") 
+        print(f"🎯 3-Phase Pipeline: Backtest → Paper → Live")
         
         # Start the server
         uvicorn.run(
