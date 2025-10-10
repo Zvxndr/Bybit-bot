@@ -29,24 +29,51 @@ import json
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc, func
 
-# Use absolute imports for production compatibility
+# Import core dependencies first
 try:
     from src.bot.database.manager import DatabaseManager
     from src.bot.database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
     from src.bot.ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
-    from src.bot.backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
-    from src.bot.pipeline.strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
-    from src.bot.config_manager import ConfigurationManager
-    from src.bot.utils.logging import TradingLogger
 except ImportError:
     # Fallback to relative imports for local development
     from ..database.manager import DatabaseManager
     from ..database.models import StrategyPipeline, StrategyMetadata, StrategyPerformance, MarketData
     from ..ml_strategy_discovery.ml_engine import MLStrategyDiscoveryEngine, StrategyType
-    from ..backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
-    from .strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
-    from ..config_manager import ConfigurationManager
-    from ..utils.logging import TradingLogger
+
+# Import optional dependencies
+try:
+    from src.bot.backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
+except ImportError:
+    try:
+        from ..backtesting.bybit_enhanced_backtest_engine import BybitEnhancedBacktestEngine
+    except ImportError:
+        BybitEnhancedBacktestEngine = None
+
+try:
+    from src.bot.pipeline.strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
+except ImportError:
+    try:
+        from .strategy_naming_engine import StrategyNamingEngine, strategy_naming_engine
+    except ImportError:
+        StrategyNamingEngine = None
+        strategy_naming_engine = None
+
+try:
+    from src.bot.config_manager import ConfigurationManager
+except ImportError:
+    try:
+        from ..config_manager import ConfigurationManager
+    except ImportError:
+        ConfigurationManager = None
+
+try:
+    from src.bot.utils.logging import TradingLogger
+except ImportError:
+    try:
+        from ..utils.logging import TradingLogger
+    except ImportError:
+        import logging
+        TradingLogger = logging.getLogger
 
 
 class PipelinePhase(Enum):
@@ -147,7 +174,7 @@ class AutomatedPipelineManager:
             self.db_manager = DatabaseManager(db_config)
         self.ml_engine = ml_engine
         self.backtest_engine = backtest_engine
-        self.naming_engine = strategy_naming_engine
+        self.naming_engine = strategy_naming_engine if strategy_naming_engine else None
         
         from loguru import logger
         self.logger = logger

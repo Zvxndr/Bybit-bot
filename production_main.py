@@ -52,13 +52,9 @@ class ComponentRegistry:
     def load_component(self, name: str, module_path: str, class_name: str):
         """Load a single component with proper error handling"""
         try:
-            # Standard import approach
-            if module_path.startswith('src.'):
-                module = __import__(module_path, fromlist=[class_name])
-            else:
-                # Handle relative imports
-                spec = __import__(module_path, fromlist=[class_name])
-                module = spec
+            # Use importlib for more reliable imports
+            import importlib
+            module = importlib.import_module(module_path)
             
             component_class = getattr(module, class_name)
             self.components[name] = component_class

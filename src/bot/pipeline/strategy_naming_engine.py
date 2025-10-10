@@ -21,7 +21,20 @@ from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 from enum import Enum
 
-from ..ml_strategy_discovery.ml_engine import StrategyType
+try:
+    from ..ml_strategy_discovery.ml_engine import StrategyType
+except ImportError:
+    try:
+        from src.bot.ml_strategy_discovery.ml_engine import StrategyType
+    except ImportError:
+        # Fallback enum if ML engine not available
+        from enum import Enum
+        class StrategyType(Enum):
+            TREND_FOLLOWING = "ml_trend_following"
+            MEAN_REVERSION = "ml_mean_reversion"
+            MOMENTUM = "ml_momentum"
+            VOLATILITY = "ml_volatility"
+            MULTI_FACTOR = "ml_multi_factor"
 
 
 class StrategyTypeCode(Enum):
