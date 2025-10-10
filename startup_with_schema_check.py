@@ -12,6 +12,32 @@ import os
 import subprocess
 from pathlib import Path
 
+def setup_data_persistence():
+    """Setup data persistence to survive deployments."""
+    print("🔄 Setting up data persistence...")
+    
+    try:
+        # Import and run data persistence setup
+        sys.path.insert(0, '/app')
+        from data_persistence_manager import ensure_data_persistence
+        import asyncio
+        
+        # Run async persistence setup
+        result = asyncio.run(ensure_data_persistence())
+        
+        if result.get("persistence_ready"):
+            print("✅ Data persistence configured successfully")
+            if result.get("status", {}).get("total_size_mb", 0) > 0:
+                print(f"📊 Existing data found: {result['status']['total_size_mb']:.2f} MB")
+            return True
+        else:
+            print(f"⚠️  Data persistence setup failed: {result.get('error', 'Unknown error')}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Data persistence setup error: {e}")
+        return False
+
 def run_schema_check():
     """Run database schema validation before startup."""
     print("🔍 Validating database schema...")
@@ -69,6 +95,9 @@ def main():
     
     # Run schema validation
     schema_ok = run_schema_check()
+    
+    # Setup data persistence
+    persistence_ok = setup_data_persistence()
     
     # Continue with normal startup
     print("\n🚀 Launching main application...")

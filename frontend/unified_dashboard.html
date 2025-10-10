@@ -1606,6 +1606,49 @@
                                 <div class="small" id="validationContent"></div>
                             </div>
                         </div>
+                        
+                        <!-- Production Data Persistence Section -->
+                        <div class="mt-3 p-3" style="background: rgba(108,117,125,0.1); border: 1px solid rgba(108,117,125,0.2); border-radius: 8px;" id="dataPersistenceSection">
+                            <h6 class="mb-3"><i class="bi bi-database"></i> Data Persistence</h6>
+                            
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="getDataStatus()" id="statusBtn">
+                                        <i class="bi bi-info-circle"></i> Status
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary btn-sm w-100" onclick="createBackup()" id="backupBtn">
+                                        <i class="bi bi-download"></i> Backup
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="restoreFromBackup()" id="restoreBtn">
+                                        <i class="bi bi-upload"></i> Restore
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-warning btn-sm w-100" onclick="validatePersistentData()" id="validatePersistentBtn">
+                                        <i class="bi bi-check-circle"></i> Validate
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- DANGER ZONE -->
+                            <div class="alert alert-danger p-2 mb-0" style="border: 2px solid #dc3545;">
+                                <h6 class="text-danger mb-2"><i class="bi bi-exclamation-triangle-fill"></i> DANGER ZONE</h6>
+                                <p class="small mb-2">⚠️ Hard Reset clears ALL data: strategies, historical data, models, cache</p>
+                                <button class="btn btn-danger btn-sm w-100" onclick="productionHardReset()" id="hardResetBtn">
+                                    <i class="bi bi-nuclear"></i> PRODUCTION HARD RESET
+                                </button>
+                            </div>
+                            
+                            <!-- Data Status Display -->
+                            <div id="dataStatusResults" class="mt-3" style="display: none;">
+                                <h6 class="text-info">Data Status:</h6>
+                                <div class="small" id="dataStatusContent"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -5186,6 +5229,180 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                 addConsoleLog('INFO', 'Dashboard initialized - Bot Activity Console ready');
                 addConsoleLog('INFO', 'Waiting for bot activity...');
             }
+
+            // ====================================
+            // DATA PERSISTENCE MANAGEMENT METHODS  
+            // ====================================
+
+            async getDataStatus() {
+                try {
+                    this.showToastNotification('📊 Loading data status...', 'info');
+                    
+                    const response = await fetch('/api/data/status');
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const status = result.status;
+                        const validation = result.validation;
+                        
+                        let html = '<div class="small text-light">';
+                        html += `<h6>💾 Data Overview (${status.total_size_mb} MB total)</h6>`;
+                        
+                        // Database files
+                        html += '<h6 class="mt-2">📂 Database Files:</h6><ul>';
+                        Object.entries(status.files).forEach(([file, info]) => {
+                            const status_icon = info.exists ? '✅' : '❌';
+                            const size_info = info.exists ? ` (${info.size_mb} MB)` : '';
+                            html += `<li>${status_icon} ${file}${size_info}</li>`;
+                        });
+                        html += '</ul>';
+                        
+                        // Directories
+                        html += '<h6 class="mt-2">📁 Data Directories:</h6><ul>';
+                        Object.entries(status.directories).forEach(([dir, info]) => {
+                            const status_icon = info.exists ? '✅' : '❌';
+                            const file_info = info.exists ? ` (${info.file_count} files, ${info.size_mb} MB)` : '';
+                            html += `<li>${status_icon} ${dir}${file_info}</li>`;
+                        });
+                        html += '</ul>';
+                        
+                        // Backups
+                        if (status.backups && status.backups.length > 0) {
+                            html += '<h6 class="mt-2">💾 Available Backups:</h6><ul>';
+                            status.backups.slice(0, 3).forEach(backup => {
+                                html += `<li>📦 ${backup.name} (${backup.files + backup.directories} items)</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                        
+                        // Validation status
+                        const health_icon = validation.overall_status === 'healthy' ? '✅' : 
+                                          validation.overall_status === 'warning' ? '⚠️' : '❌';
+                        html += `<h6 class="mt-2">${health_icon} Data Health: ${validation.overall_status.toUpperCase()}</h6>`;
+                        
+                        if (validation.issues && validation.issues.length > 0) {
+                            html += '<div class="text-warning">Issues found:</div><ul>';
+                            validation.issues.forEach(issue => {
+                                html += `<li class="text-warning">⚠️ ${issue}</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                        
+                        html += '</div>';
+                        
+                        // Show in data status results area
+                        const resultsDiv = document.getElementById('dataStatusResults');
+                        const contentDiv = document.getElementById('dataStatusContent');
+                        contentDiv.innerHTML = html;
+                        resultsDiv.style.display = 'block';
+                        
+                        this.showToastNotification('📊 Data status loaded', 'success');
+                    } else {
+                        this.showToastNotification(`❌ Failed to load data status: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Data status error:', error);
+                    this.showToastNotification('❌ Failed to load data status', 'danger');
+                }
+            }
+
+            async createBackup() {
+                try {
+                    this.showToastNotification('💾 Creating backup...', 'info');
+                    
+                    const response = await fetch('/api/data/backup', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const backup_name = result.backup_info.backup_name;
+                        this.showToastNotification(`✅ Backup created: ${backup_name}`, 'success');
+                    } else {
+                        this.showToastNotification(`❌ Backup failed: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Backup error:', error);
+                    this.showToastNotification('❌ Backup creation failed', 'danger');
+                }
+            }
+
+            async restoreFromBackup() {
+                if (!confirm('🔄 Restore data from latest backup? This will overwrite current data.')) {
+                    return;
+                }
+
+                try {
+                    this.showToastNotification('🔄 Restoring from backup...', 'info');
+                    
+                    const response = await fetch('/api/data/restore', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const backup_used = result.restore_info.backup_used;
+                        this.showToastNotification(`✅ Data restored from: ${backup_used}`, 'success');
+                        // Refresh page to show restored data
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        this.showToastNotification(`❌ Restore failed: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Restore error:', error);
+                    this.showToastNotification('❌ Data restore failed', 'danger');
+                }
+            }
+
+            async validatePersistentData() {
+                try {
+                    this.showToastNotification('🔍 Validating persistent data...', 'info');
+                    
+                    // Use the same data status endpoint which includes validation
+                    await this.getDataStatus();
+                    
+                } catch (error) {
+                    console.error('Persistent data validation error:', error);
+                    this.showToastNotification('❌ Data validation failed', 'danger');
+                }
+            }
+
+            async productionHardReset() {
+                // Double confirmation for hard reset
+                if (!confirm('⚠️ DANGER: This will DELETE ALL data (strategies, historical data, models, cache).\n\nAn emergency backup will be created first.\n\nAre you absolutely sure?')) {
+                    return;
+                }
+
+                if (!confirm('🔥 FINAL WARNING: This action is IRREVERSIBLE!\n\nType "CONFIRM" in the next dialog to proceed.')) {
+                    return;
+                }
+
+                const confirmation = prompt('Type "CONFIRM" to proceed with hard reset:');
+                if (confirmation !== 'CONFIRM') {
+                    this.showToastNotification('❌ Hard reset cancelled', 'warning');
+                    return;
+                }
+
+                try {
+                    this.showToastNotification('🔥 HARD RESET IN PROGRESS...', 'warning');
+                    
+                    const response = await fetch('/api/data/hard-reset?confirm=true', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const backup_name = result.reset_info.emergency_backup;
+                        this.showToastNotification(`🔥 HARD RESET COMPLETE! Emergency backup: ${backup_name}`, 'success');
+                        
+                        // Reload page after 3 seconds to show clean state
+                        setTimeout(() => {
+                            alert('Hard reset complete. Page will reload to show clean state.');
+                            location.reload();
+                        }, 3000);
+                        
+                    } else {
+                        this.showToastNotification(`❌ Hard reset failed: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Hard reset error:', error);
+                    this.showToastNotification('❌ Hard reset failed', 'danger');
+                }
+            }
         }
 
         function addConsoleLog(level, message, timestamp) {
@@ -5321,6 +5538,37 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
         function showDataSummary() {
             if (dashboard) {
                 dashboard.showDataSummary();
+            }
+        }
+
+        // Global wrapper functions for data persistence management
+        function getDataStatus() {
+            if (dashboard) {
+                dashboard.getDataStatus();
+            }
+        }
+
+        function createBackup() {
+            if (dashboard) {
+                dashboard.createBackup();
+            }
+        }
+
+        function restoreFromBackup() {
+            if (dashboard) {
+                dashboard.restoreFromBackup();
+            }
+        }
+
+        function validatePersistentData() {
+            if (dashboard) {
+                dashboard.validatePersistentData();
+            }
+        }
+
+        function productionHardReset() {
+            if (dashboard) {
+                dashboard.productionHardReset();
             }
         }
 

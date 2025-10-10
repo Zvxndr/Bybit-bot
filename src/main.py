@@ -2393,6 +2393,103 @@ async def validate_data_integrity(symbol: str, timeframe: str):
         logger.error(f"Data validation error: {e}")
         return {"success": False, "message": str(e)}
 
+# ==========================================
+# DATA PERSISTENCE & HARD RESET ENDPOINTS
+# ==========================================
+
+@app.post("/api/data/hard-reset")
+async def production_hard_reset(confirm: bool = False):
+    """
+    PRODUCTION HARD RESET: Clear ALL data (strategies, historical data, cache)
+    WARNING: This is irreversible! Creates emergency backup first.
+    """
+    try:
+        from data_persistence_manager import persistence_manager
+        
+        if not confirm:
+            return {
+                "success": False, 
+                "message": "Hard reset requires confirmation. Add ?confirm=true to URL",
+                "warning": "This will DELETE ALL: strategies, historical data, models, cache"
+            }
+        
+        # Perform hard reset
+        reset_info = persistence_manager.hard_reset_production_data(confirm=True)
+        
+        logger.warning("🔥 PRODUCTION HARD RESET COMPLETED")
+        logger.info(f"💾 Emergency backup: {reset_info['emergency_backup']}")
+        
+        return {
+            "success": True,
+            "message": "Production hard reset completed",
+            "reset_info": reset_info,
+            "warning": "All data cleared. Emergency backup created."
+        }
+        
+    except Exception as e:
+        logger.error(f"Hard reset failed: {e}")
+        return {"success": False, "message": f"Hard reset failed: {e}"}
+
+@app.get("/api/data/status")
+async def get_data_status():
+    """Get comprehensive data status and statistics"""
+    try:
+        from data_persistence_manager import persistence_manager
+        
+        status = persistence_manager.get_data_status()
+        validation = persistence_manager.validate_data_integrity()
+        
+        return {
+            "success": True,
+            "status": status,
+            "validation": validation,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Data status error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/data/backup")
+async def create_data_backup():
+    """Create backup of all persistent data"""
+    try:
+        from data_persistence_manager import persistence_manager
+        
+        backup_info = persistence_manager.create_deployment_backup()
+        
+        logger.info(f"💾 Backup created: {backup_info['backup_name']}")
+        
+        return {
+            "success": True,
+            "message": "Backup created successfully",
+            "backup_info": backup_info
+        }
+        
+    except Exception as e:
+        logger.error(f"Backup creation failed: {e}")
+        return {"success": False, "message": f"Backup failed: {e}"}
+
+@app.post("/api/data/restore")
+async def restore_data_backup(backup_name: Optional[str] = None):
+    """Restore data from backup (latest if backup_name not specified)"""
+    try:
+        from data_persistence_manager import persistence_manager
+        
+        restore_info = persistence_manager.restore_from_backup(backup_name)
+        
+        logger.info(f"🔄 Data restored from: {restore_info['backup_used']}")
+        
+        return {
+            "success": True,
+            "message": "Data restored successfully",
+            "restore_info": restore_info
+        }
+        
+    except Exception as e:
+        logger.error(f"Data restore failed: {e}")
+        return {"success": False, "message": f"Restore failed: {e}"}
+
 # ========================================================================================
 # STRATEGY EXECUTION ENDPOINTS - CRITICAL PRODUCTION COMPONENT
 # ========================================================================================
