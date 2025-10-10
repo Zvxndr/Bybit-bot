@@ -50,6 +50,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Use simplified startup script to avoid Python compatibility issues  
-# Falls back to multiple import strategies and creates missing directories
-CMD ["python", "simple_startup.py"]
+# Use clean, reliable production startup - no import manipulation
+CMD ["python", "production_main.py"]

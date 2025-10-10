@@ -221,7 +221,7 @@ try:
         else:
             logger.info("✅ Multi-exchange data provider configured (external exchanges disabled)")
     else:
-        raise ImportError("MultiExchangeDataManager class not found")
+        logger.info("ℹ️ MultiExchangeDataManager not available - using single exchange mode")
         
 except Exception as e:
     logger.warning(f"⚠️ Multi-exchange data provider not available: {e}")
@@ -251,7 +251,7 @@ try:
                 logger.warning("⚠️ AutomatedPipelineManager not available via any import method")
         
     if not AutomatedPipelineManager:
-        raise ImportError("AutomatedPipelineManager class not found")
+        logger.info("ℹ️ AutomatedPipelineManager not available - AI features disabled")
         
 except Exception as e:
     logger.warning(f"⚠️ AI Pipeline Manager not available: {e}")

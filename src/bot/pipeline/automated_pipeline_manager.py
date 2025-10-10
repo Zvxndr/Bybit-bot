@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, Dict, List, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import json
@@ -261,11 +261,12 @@ class AutomatedPipelineManager:
                 ).all()
                 
                 for strategy in strategies:
-                    if strategy.current_phase == 'backtest':
+                    phase = str(strategy.current_phase)
+                    if phase == 'backtest':
                         self.active_backtests.add(strategy.strategy_id)
-                    elif strategy.current_phase == 'paper':
+                    elif phase == 'paper':
                         self.paper_strategies.add(strategy.strategy_id)
-                    elif strategy.current_phase == 'live':
+                    elif phase == 'live':
                         self.live_strategies.add(strategy.strategy_id)
                 
                 self.logger.info(
@@ -504,10 +505,14 @@ class AutomatedPipelineManager:
     async def _promote_to_paper(self, strategy: StrategyPipeline, session: Session):
         """Promote strategy from backtest to paper trading."""
         try:
-            strategy.current_phase = 'paper'
-            strategy.phase_start_time = datetime.utcnow()
-            strategy.paper_start_date = datetime.utcnow()
-            strategy.promoted_at = datetime.utcnow()
+            # Update strategy using SQLAlchemy update
+            session.query(StrategyPipeline).filter_by(id=strategy.id).update({
+                'current_phase': 'paper',
+                'phase_start_time': datetime.utcnow(),
+                'paper_start_date': datetime.utcnow(),
+                'promoted_at': datetime.utcnow()
+            })
+            session.commit()
             
             # Move from backtest to paper tracking
             self.active_backtests.discard(strategy.strategy_id)
@@ -534,11 +539,15 @@ class AutomatedPipelineManager:
                 self.logger.warning(f"Cannot graduate {strategy.strategy_id}: live limit reached")
                 return
             
-            strategy.current_phase = 'live'
-            strategy.phase_start_time = datetime.utcnow()
-            strategy.paper_end_date = datetime.utcnow()
-            strategy.live_start_date = datetime.utcnow()
-            strategy.graduated_at = datetime.utcnow()
+            # Update strategy using SQLAlchemy update
+            session.query(StrategyPipeline).filter_by(id=strategy.id).update({
+                'current_phase': 'live',
+                'phase_start_time': datetime.utcnow(),
+                'paper_end_date': datetime.utcnow(),
+                'live_start_date': datetime.utcnow(),
+                'graduated_at': datetime.utcnow()
+            })
+            session.commit()
             
             # Move from paper to live tracking
             self.paper_strategies.discard(strategy.strategy_id)
@@ -593,12 +602,18 @@ class AutomatedPipelineManager:
     async def _reject_strategy(self, strategy: StrategyPipeline, reason: str, session: Session):
         """Reject a strategy from the pipeline."""
         try:
-            old_phase = strategy.current_phase
+            # Get old phase before update
+            old_phase_result = session.query(StrategyPipeline.current_phase).filter_by(id=strategy.id).first()
+            old_phase = old_phase_result[0] if old_phase_result else 'unknown'
             
-            strategy.current_phase = 'rejected'
-            strategy.is_active = False
-            strategy.rejection_reason = reason
-            strategy.rejected_at = datetime.utcnow()
+            # Update strategy using SQLAlchemy update
+            session.query(StrategyPipeline).filter_by(id=strategy.id).update({
+                'current_phase': 'rejected',
+                'is_active': False,
+                'rejection_reason': reason,
+                'rejected_at': datetime.utcnow()
+            })
+            session.commit()
             
             # Remove from tracking sets
             self.active_backtests.discard(strategy.strategy_id)
@@ -775,9 +790,10 @@ class AutomatedPipelineManager:
                 if not strategy:
                     return False
                 
-                if strategy.current_phase == 'backtest':
+                phase = str(strategy.current_phase)
+                if phase == 'backtest':
                     await self._promote_to_paper(strategy, session)
-                elif strategy.current_phase == 'paper':
+                elif phase == 'paper':
                     await self._graduate_to_live(strategy, session)
                 else:
                     return False

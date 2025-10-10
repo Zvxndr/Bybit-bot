@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional, Dict, List, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
@@ -123,7 +123,7 @@ class FeatureEngineer:
         
         # RSI
         delta = df['close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        gain = delta.where(delta > 0, 0).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['rsi_14'] = 100 - (100 / (1 + rs))
@@ -146,7 +146,8 @@ class FeatureEngineer:
         high_low = df['high'] - df['low']
         high_close = np.abs(df['high'] - df['close'].shift())
         low_close = np.abs(df['low'] - df['close'].shift())
-        true_range = np.maximum(high_low, np.maximum(high_close, low_close))
+        ranges = pd.concat([high_low, high_close, low_close], axis=1)
+        true_range = ranges.max(axis=1)
         df['atr_14'] = true_range.rolling(14).mean()
         
         # Volume features
@@ -333,7 +334,7 @@ class MLStrategyModel:
         y = df[target_col].values
         
         # Remove rows with NaN in target
-        valid_idx = ~np.isnan(y)
+        valid_idx = ~pd.isna(y)
         X = X[valid_idx]
         y = y[valid_idx]
         
