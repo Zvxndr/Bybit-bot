@@ -1544,6 +1544,34 @@
                                 <small class="progress-text text-muted ms-2"></small>
                             </div>
                         </div>
+                        
+                        <!-- Data Status Section -->
+                        <div class="mt-3 p-3" style="background: rgba(40,167,69,0.1); border: 1px solid rgba(40,167,69,0.2); border-radius: 8px;" id="dataStatusSection">
+                            <h6 class="mb-2"><i class="bi bi-database-check"></i> Data Status</h6>
+                            <div id="chartDataStatus" class="small text-muted">
+                                <i class="bi bi-info-circle"></i> No historical data loaded yet. Use download button above.
+                            </div>
+                            <div id="dataStats" class="mt-2 small" style="display: none;">
+                                <div class="row text-center">
+                                    <div class="col">
+                                        <strong id="dataPoints">0</strong><br>
+                                        <span class="text-muted">Data Points</span>
+                                    </div>
+                                    <div class="col">
+                                        <strong id="dataPeriod">-</strong><br>
+                                        <span class="text-muted">Period</span>
+                                    </div>
+                                    <div class="col">
+                                        <strong id="dataSymbol">-</strong><br>
+                                        <span class="text-muted">Symbol</span>
+                                    </div>
+                                    <div class="col">
+                                        <strong id="dataTimeframe">-</strong><br>
+                                        <span class="text-muted">Timeframe</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4465,12 +4493,8 @@
                         // Update chart with new data
                         await this.loadHistoricalPerformanceData();
                         
-                        // Update status - check if element exists
-                        const statusElement = document.getElementById('chartDataStatus');
-                        if (statusElement) {
-                            statusElement.innerHTML = 
-                                `<i class="bi bi-check-circle text-success"></i> Real data: ${pair} ${timeframe} (${period} days) - Last updated: ${new Date().toLocaleString()}`;
-                        }
+                        // Update detailed status
+                        this.updateDataStatus(result, pair, timeframe, period);
                         
                         this.showToastNotification(`✅ Successfully loaded ${result.data_points || 'N/A'} data points for ${pair}`, 'success');
                         this.hideHistoricalDataControls();
@@ -4481,6 +4505,12 @@
                 } catch (error) {
                     console.error('Historical data download error:', error);
                     this.showToastNotification(`❌ Failed to download historical data: ${error.message}`, 'danger');
+                    
+                    // Update status to show error
+                    const statusElement = document.getElementById('chartDataStatus');
+                    if (statusElement) {
+                        statusElement.innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> Download failed: ${error.message}`;
+                    }
                 } finally {
                     // Restore button state
                     const downloadBtn = document.getElementById('downloadDataBtn');
@@ -4515,6 +4545,25 @@
                         textElement.textContent = message;
                         progressContainer.appendChild(textElement);
                     }
+                }
+            }
+
+            updateDataStatus(result, pair, timeframe, period) {
+                // Update main status message
+                const statusElement = document.getElementById('chartDataStatus');
+                if (statusElement) {
+                    statusElement.innerHTML = 
+                        `<i class="bi bi-check-circle text-success"></i> Real data loaded: ${pair} ${timeframe} (${period} days) - ${new Date().toLocaleString()}`;
+                }
+                
+                // Update detailed stats
+                const dataStatsElement = document.getElementById('dataStats');
+                if (dataStatsElement && result.data_points) {
+                    document.getElementById('dataPoints').textContent = result.data_points.toLocaleString();
+                    document.getElementById('dataPeriod').textContent = `${period} days`;
+                    document.getElementById('dataSymbol').textContent = pair;
+                    document.getElementById('dataTimeframe').textContent = timeframe;
+                    dataStatsElement.style.display = 'block';
                 }
             }
 

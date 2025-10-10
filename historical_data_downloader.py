@@ -23,9 +23,13 @@ class HistoricalDataDownloader:
         self.db_path = db_path
         self.exchanges = {
             'bybit': ccxt.bybit({
-                'sandbox': True,  # Use testnet by default
+                'sandbox': False,  # Use mainnet for historical data (public data doesn't need credentials)
                 'rateLimit': 1200,
                 'enableRateLimit': True,
+                'timeout': 30000,  # 30 second timeout
+                'options': {
+                    'adjustForTimeDifference': True,
+                }
             })
         }
         self._init_database()
@@ -83,8 +87,18 @@ class HistoricalDataDownloader:
                 days = 3650
                 logger.warning(f"⚠️ Limited download to 10 years maximum")
                 
-            # Convert symbol format for CCXT
-            ccxt_symbol = symbol.replace('USDT', '/USDT').replace('BTC', 'BTC').replace('ETH', 'ETH')
+            # Convert symbol format for CCXT (ensure proper format)
+            if '/' not in symbol:
+                # Convert BTCUSDT to BTC/USDT format
+                if symbol.endswith('USDT'):
+                    base = symbol.replace('USDT', '')
+                    ccxt_symbol = f"{base}/USDT"
+                else:
+                    ccxt_symbol = symbol
+            else:
+                ccxt_symbol = symbol
+            
+            logger.info(f"🔄 Using symbol format: {ccxt_symbol}")
             
             # Calculate time range
             end_time = datetime.now()
@@ -194,19 +208,31 @@ class HistoricalDataDownloader:
         since: int, 
         limit: int,
         max_retries: int = 3
-    ) -> List:
+    ) -> List[List]:
         """Fetch data with retry logic"""
         
         for attempt in range(max_retries):
             try:
-                data = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
-                return data
+                # Run synchronous CCXT call in thread pool to avoid blocking
+                loop = asyncio.get_event_loop()
+                data = await loop.run_in_executor(
+                    None, 
+                    lambda: exchange.fetch_ohlcv(symbol, timeframe, since, limit)
+                )
+                
+                if data and len(data) > 0:
+                    logger.info(f"✅ Fetched {len(data)} candles for {symbol} {timeframe}")
+                    return data
+                else:
+                    logger.warning(f"⚠️ No data returned for {symbol} {timeframe}")
+                    return []
                 
             except Exception as e:
                 logger.warning(f"⚠️ Attempt {attempt + 1} failed: {e}")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(2 ** attempt)  # Exponential backoff
                 else:
+                    logger.error(f"❌ All {max_retries} attempts failed for {symbol}")
                     raise e
     
     async def _store_data(self, symbol: str, timeframe: str, ohlcv_data: List) -> int:
