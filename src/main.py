@@ -2237,6 +2237,28 @@ async def download_historical_data(request: Request):
         logger.error(f"Historical data download error: {e}")
         return {"success": False, "message": str(e)}
 
+@app.get("/api/historical-data/status")
+async def get_historical_data_status():
+    """Get status of stored historical data"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        # Get data summary from the downloader
+        summary = historical_downloader.get_data_summary()
+        
+        return {
+            "success": True,
+            "data": summary.get('summary', []),
+            "total_datasets": len(summary.get('summary', [])),
+            "total_data_points": sum(item.get('data_points', 0) for item in summary.get('summary', [])),
+            "last_updated": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Historical data status error: {e}")
+        return {"success": False, "message": str(e)}
+
 @app.get("/api/historical-data/performance")
 async def get_historical_performance():
     """Get historical performance data for chart"""
