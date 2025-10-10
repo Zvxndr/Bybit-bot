@@ -95,8 +95,11 @@ def main():
     print("\n🎯 Starting main application...")
     
     try:
-        # Import and start main application
-        import main
+        # Set __name__ to __main__ to trigger server startup
+        import runpy
+        
+        # Execute main.py as a script to ensure the uvicorn server starts
+        runpy.run_path("/app/src/main.py", run_name="__main__")
         
     except Exception as e:
         print(f"💥 Application startup failed: {e}")
