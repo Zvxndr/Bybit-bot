@@ -136,7 +136,7 @@ except ImportError:
 except Exception as e:
     print(f"⚠️ Configuration loading error: {e}")
     app_config = {}
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException, Depends
