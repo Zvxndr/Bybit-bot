@@ -44,7 +44,7 @@ class ModelType(Enum):
 @dataclass
 class FeatureSet:
     """Feature engineering configuration"""
-    technical_indicators: List[str] = field(default_factory=lambda: [
+    technical_indicators: "List[str]" = field(default_factory=lambda: [
         'sma_5', 'sma_10', 'sma_20', 'sma_50',
         'ema_5', 'ema_10', 'ema_20',
         'rsi_14', 'rsi_21',
@@ -55,20 +55,20 @@ class FeatureSet:
         'price_change_1', 'price_change_5', 'price_change_10'
     ])
     
-    market_features: List[str] = field(default_factory=lambda: [
+    market_features: "List[str]" = field(default_factory=lambda: [
         'btc_dominance', 'market_cap_total',
         'fear_greed_index', 'funding_rates',
         'open_interest', 'futures_basis'
     ])
     
-    macro_features: List[str] = field(default_factory=lambda: [
+    macro_features: "List[str]" = field(default_factory=lambda: [
         'aud_usd_rate', 'aud_usd_volatility',
         'rba_cash_rate', 'asx_200_return',
         'us_dxy', 'gold_price_aud',
         'aussie_market_hours'
     ])
     
-    time_features: List[str] = field(default_factory=lambda: [
+    time_features: "List[str]" = field(default_factory=lambda: [
         'hour_of_day', 'day_of_week', 'day_of_month',
         'is_australian_business_hours', 'is_weekend',
         'sydney_session', 'london_session', 'ny_session'
@@ -95,7 +95,7 @@ class StrategySignal:
     confidence: float  # 0 to 1
     predicted_return: float
     prediction_horizon: int
-    features_used: List[str]
+    features_used: "List[str]"
     model_version: str
     australian_risk_adjusted: bool = True
 
@@ -214,9 +214,12 @@ class FeatureEngineer:
     def create_target_variables(
         self,
         df: pd.DataFrame,
-        horizons: List[int] = [1, 5, 10, 20]
+        horizons = None
     ) -> pd.DataFrame:
         """Create target variables for different prediction horizons"""
+        
+        if horizons is None:
+            horizons = [1, 5, 10, 20]
         
         for horizon in horizons:
             # Forward returns
@@ -500,7 +503,7 @@ class MLStrategyDiscoveryEngine:
     def __init__(self, australian_bias: float = 0.3):
         self.australian_bias = australian_bias
         self.feature_engineer = FeatureEngineer(FeatureSet())
-        self.models: Dict[str, MLStrategyModel] = {}
+        self.models = {}
         self.strategy_allocations = {
             StrategyType.TREND_FOLLOWING: 0.45,
             StrategyType.MEAN_REVERSION: 0.25,

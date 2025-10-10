@@ -66,10 +66,10 @@ class PipelineConfig:
     max_concurrent_backtests: int = 5
     
     # Asset configuration
-    primary_assets: List[str] = field(default_factory=lambda: [
+    primary_assets: "List[str]" = field(default_factory=lambda: [
         'BTCUSDT', 'ETHUSDT', 'SOLUSDT'
     ])
-    secondary_assets: List[str] = field(default_factory=lambda: [
+    secondary_assets: "List[str]" = field(default_factory=lambda: [
         'ADAUSDT', 'DOTUSDT', 'MATICUSDT', 'AVAXUSDT',
         'LINKUSDT', 'UNIUSDT', 'BNBUSDT', 'XRPUSDT'
     ])
@@ -117,8 +117,8 @@ class PipelineMetrics:
     avg_strategy_return: float = 0.0
     
     # Asset distribution
-    asset_distribution: Dict[str, int] = field(default_factory=dict)
-    type_distribution: Dict[str, int] = field(default_factory=dict)
+    asset_distribution: "Dict[str, int]" = field(default_factory=dict)
+    type_distribution: "Dict[str, int]" = field(default_factory=dict)
     
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
@@ -158,16 +158,16 @@ class AutomatedPipelineManager:
         self.monitoring_task = None
         
         # Callbacks for real-time updates
-        self.update_callbacks: List[Callable] = []
+        self.update_callbacks = []
         
         # Performance tracking
         self.current_metrics = PipelineMetrics()
         self._last_discovery_time = None
         
         # Active strategy tracking
-        self.active_backtests: Set[str] = set()
-        self.paper_strategies: Set[str] = set()
-        self.live_strategies: Set[str] = set()
+        self.active_backtests = set()
+        self.paper_strategies = set()
+        self.live_strategies = set()
     
     async def start_pipeline(self) -> bool:
         """Start the automated pipeline system."""
