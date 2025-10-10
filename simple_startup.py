@@ -102,7 +102,11 @@ def load_ai_component_directly(module_name, class_name, file_path):
         sys.modules[f"src.{module_name}"] = module
         
         # Enhanced import handling for relative imports
-        original_import = __builtins__['__import__']
+        # Handle __builtins__ being either dict or module
+        if isinstance(__builtins__, dict):
+            original_import = __builtins__['__import__']
+        else:
+            original_import = getattr(__builtins__, '__import__')
         
         def enhanced_import(name, *args, **kwargs):
             try:
@@ -116,6 +120,8 @@ def load_ai_component_directly(module_name, class_name, file_path):
                         if name == 'typing':
                             import typing
                             return typing
+                        elif isinstance(__builtins__, dict) and name in __builtins__:
+                            return __builtins__[name]
                         elif hasattr(__builtins__, name):
                             return getattr(__builtins__, name)
                     except:
@@ -142,11 +148,17 @@ def load_ai_component_directly(module_name, class_name, file_path):
                 return mock_module
         
         # Temporarily replace import function
-        __builtins__['__import__'] = enhanced_import
+        if isinstance(__builtins__, dict):
+            __builtins__['__import__'] = enhanced_import
+        else:
+            setattr(__builtins__, '__import__', enhanced_import)
         try:
             spec.loader.exec_module(module)
         finally:
-            __builtins__['__import__'] = original_import
+            if isinstance(__builtins__, dict):
+                __builtins__['__import__'] = original_import
+            else:
+                setattr(__builtins__, '__import__', original_import)
         
         if hasattr(module, class_name):
             component_class = getattr(module, class_name)
