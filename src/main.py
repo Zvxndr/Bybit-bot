@@ -162,10 +162,11 @@ Path('logs').mkdir(exist_ok=True)
 
 # Import historical data downloader
 try:
-    from historical_data_downloader import historical_downloader
-    logger.info("✅ Historical data downloader imported")
-except ImportError:
-    logger.warning("⚠️ Historical data downloader not found")
+    from historical_data_downloader import HistoricalDataDownloader
+    historical_downloader = HistoricalDataDownloader()
+    logger.info("✅ Historical data downloader initialized")
+except ImportError as e:
+    logger.warning(f"⚠️ Historical data downloader not available: {e}")
     historical_downloader = None
 
 # Import monitoring system
@@ -859,9 +860,27 @@ class TradingAPI:
             if self.risk_manager:
                 try:
                     # Calculate portfolio risk using sophisticated risk manager
-                    portfolio_risk = await self.risk_manager.calculate_portfolio_risk(
+                    # MLRiskManager wraps UnifiedRiskManager, so we need to access the unified manager
+                    if hasattr(self.risk_manager, 'unified_risk_manager'):
+                        unified_manager = self.risk_manager.unified_risk_manager
+                    else:
+                        unified_manager = self.risk_manager
+                    
+                    # Mock market data for calculation (in production this would be real market data)
+                    mock_market_data = {}
+                    for pos in positions:
+                        symbol = pos.get("symbol", "")
+                        if symbol:
+                            # Create mock price series for risk calculation
+                            import pandas as pd
+                            import numpy as np
+                            dates = pd.date_range(end=datetime.now(), periods=100, freq='1H')
+                            prices = np.random.normal(0, 0.01, 100).cumsum() + 100  # Mock price data
+                            mock_market_data[symbol] = pd.Series(prices, index=dates)
+                    
+                    portfolio_risk = await unified_manager.calculate_portfolio_risk(
                         positions={pos.get("symbol", ""): pos for pos in positions},
-                        total_portfolio_value=balance
+                        market_data=mock_market_data
                     )
                     
                     risk_level = portfolio_risk.overall_risk_level.value
@@ -1053,16 +1072,11 @@ class TradingAPI:
                     logger.warning(f"Database query error: {e}")
                     conn.close()
             
-            # Fallback to sample data for demonstration
-            logger.info("Using sample strategy data - add real strategies to database")
+            # Return empty data - strategies should only show up after ML discovery or backtesting
+            logger.info("No strategies found in database - run ML discovery or backtesting to generate strategies")
             return {
-                "discovery": [
-                    {"name": "Speed Demon Alpha", "performance": 12.5, "status": "testing"},
-                    {"name": "Conservative Growth", "performance": 8.2, "status": "active"}
-                ],
-                "paper": [
-                    {"name": "Momentum Trader", "performance": 15.3, "status": "active"}
-                ],
+                "discovery": [],
+                "paper": [],
                 "live": []
             }
             
@@ -2124,28 +2138,7 @@ async def get_backtest_details(strategy_id: str):
         logger.error(f"Backtest details error: {e}")
         return {"success": False, "error": str(e)}
 
-@app.post("/api/historical-data/download")
-async def download_historical_data(request: Request):
-    """Download historical market data"""
-    try:
-        data = await request.json()
-        symbol = data.get('symbol', 'BTCUSDT')
-        timeframe = data.get('timeframe', '1h')
-        days = data.get('days', 30)
-        
-        # In real implementation, this would trigger historical data download
-        return {
-            "success": True,
-            "message": f"Historical data download started for {symbol}",
-            "symbol": symbol,
-            "timeframe": timeframe,
-            "days": days,
-            "status": "downloading",
-            "estimated_completion": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Historical data download error: {e}")
-        return {"success": False, "error": str(e)}
+# REMOVED DUPLICATE ENDPOINT - Using the proper implementation below
 
 @app.post("/api/historical-data/clear")
 async def clear_historical_data():
