@@ -2343,6 +2343,56 @@ async def get_historical_data_summary():
         logger.error(f"Historical data summary error: {e}")
         return {"success": False, "message": str(e), "summary": []}
 
+@app.delete("/api/historical-data/symbol/{symbol}")
+async def delete_symbol_data(symbol: str, timeframe: Optional[str] = None):
+    """Delete historical data for a specific symbol and optionally timeframe"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        result = historical_downloader.delete_symbol_data(symbol, timeframe)
+        logger.info(f"🗑️ Symbol data deletion: {result['message']}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Symbol data deletion error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.delete("/api/historical-data/clear-all")
+async def clear_all_historical_data():
+    """Clear all historical data from database"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        result = historical_downloader.clear_all_data()
+        logger.info(f"🗑️ All data cleared: {result['message']}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Clear all data error: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/historical-data/validate/{symbol}/{timeframe}")
+async def validate_data_integrity(symbol: str, timeframe: str):
+    """Validate data integrity for a specific symbol and timeframe"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available"}
+    
+    try:
+        result = historical_downloader.validate_data_integrity(symbol, timeframe)
+        
+        if result['success']:
+            summary = result['summary']
+            logger.info(f"🔍 Data validation for {symbol} {timeframe}: "
+                       f"{summary['issues_found']} issues found in {summary['total_candles']} candles")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Data validation error: {e}")
+        return {"success": False, "message": str(e)}
+
 # ========================================================================================
 # STRATEGY EXECUTION ENDPOINTS - CRITICAL PRODUCTION COMPONENT
 # ========================================================================================

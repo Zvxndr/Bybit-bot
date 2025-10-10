@@ -1572,6 +1572,40 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Data Management Section -->
+                        <div class="mt-3 p-3" style="background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.2); border-radius: 8px;" id="dataManagementSection">
+                            <h6 class="mb-3"><i class="bi bi-tools"></i> Data Management</h6>
+                            
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-warning btn-sm w-100" onclick="validateDataIntegrity()" id="validateBtn">
+                                        <i class="bi bi-shield-check"></i> Validate Data
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-info btn-sm w-100" onclick="showDataSummary()" id="summaryBtn">
+                                        <i class="bi bi-list-ul"></i> View Summary
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteCurrentSymbolData()" id="deleteSymbolBtn">
+                                        <i class="bi bi-trash"></i> Delete Symbol
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-danger btn-sm w-100" onclick="clearAllHistoricalData()" id="clearAllBtn">
+                                        <i class="bi bi-trash-fill"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Validation Results -->
+                            <div id="validationResults" class="mt-3" style="display: none;">
+                                <h6 class="text-warning">Validation Results:</h6>
+                                <div class="small" id="validationContent"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4589,6 +4623,182 @@
                 }
             }
 
+            async validateDataIntegrity() {
+                try {
+                    const pair = document.getElementById('historicalPair').value;
+                    const timeframe = document.getElementById('historicalTimeframe').value;
+                    
+                    this.showToastNotification('🔍 Validating data integrity...', 'info');
+                    
+                    const response = await fetch(`/api/historical-data/validate/${pair}/${timeframe}`);
+                    const result = await response.json();
+                    
+                    const resultsDiv = document.getElementById('validationResults');
+                    const contentDiv = document.getElementById('validationContent');
+                    
+                    if (result.success) {
+                        const summary = result.summary;
+                        const issues = result.issues || [];
+                        
+                        let html = `
+                            <div class="alert alert-${issues.length > 0 ? 'warning' : 'success'} p-2">
+                                <strong>${summary.total_candles}</strong> candles analyzed, 
+                                <strong>${summary.issues_found}</strong> issues found
+                            </div>
+                        `;
+                        
+                        if (issues.length > 0) {
+                            html += '<div class="mt-2"><h6>Issues Found:</h6><ul class="small">';
+                            issues.slice(0, 10).forEach(issue => { // Show first 10 issues
+                                html += `<li><strong>${issue.timestamp}:</strong> ${issue.issues.join(', ')}</li>`;
+                            });
+                            if (issues.length > 10) {
+                                html += `<li><em>... and ${issues.length - 10} more issues</em></li>`;
+                            }
+                            html += '</ul></div>';
+                        }
+                        
+                        contentDiv.innerHTML = html;
+                        resultsDiv.style.display = 'block';
+                        
+                        this.showToastNotification(
+                            issues.length > 0 
+                                ? `⚠️ Validation complete: ${issues.length} issues found`
+                                : '✅ Data validation passed!', 
+                            issues.length > 0 ? 'warning' : 'success'
+                        );
+                    } else {
+                        contentDiv.innerHTML = `<div class="alert alert-danger p-2">Validation failed: ${result.message}</div>`;
+                        resultsDiv.style.display = 'block';
+                        this.showToastNotification(`❌ Validation failed: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Data validation error:', error);
+                    this.showToastNotification('❌ Failed to validate data integrity', 'danger');
+                }
+            }
+
+            async deleteCurrentSymbolData() {
+                const pair = document.getElementById('historicalPair').value;
+                const timeframe = document.getElementById('historicalTimeframe').value;
+                
+                if (!confirm(`Are you sure you want to delete all ${pair} ${timeframe} data? This action cannot be undone.`)) {
+                    return;
+                }
+                
+                try {
+                    this.showToastNotification(`🗑️ Deleting ${pair} ${timeframe} data...`, 'info');
+                    
+                    const response = await fetch(`/api/historical-data/symbol/${pair}?timeframe=${timeframe}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showToastNotification(`✅ Deleted ${result.deleted_count} candles for ${pair} ${timeframe}`, 'success');
+                        
+                        // Update UI to show no data
+                        const statusElement = document.getElementById('chartDataStatus');
+                        const dataStatsElement = document.getElementById('dataStats');
+                        
+                        if (statusElement) {
+                            statusElement.innerHTML = '<i class="bi bi-info-circle"></i> No historical data loaded yet. Use download button above.';
+                        }
+                        if (dataStatsElement) {
+                            dataStatsElement.style.display = 'none';
+                        }
+                        
+                        // Hide validation results
+                        document.getElementById('validationResults').style.display = 'none';
+                        
+                    } else {
+                        this.showToastNotification(`❌ Failed to delete data: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Delete symbol data error:', error);
+                    this.showToastNotification('❌ Failed to delete symbol data', 'danger');
+                }
+            }
+
+            async clearAllHistoricalData() {
+                if (!confirm('Are you sure you want to delete ALL historical data? This action cannot be undone and will remove data for all symbols and timeframes.')) {
+                    return;
+                }
+                
+                try {
+                    this.showToastNotification('🗑️ Clearing all historical data...', 'info');
+                    
+                    const response = await fetch('/api/historical-data/clear-all', { method: 'DELETE' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showToastNotification(`✅ Cleared all data: ${result.deleted_count} candles deleted`, 'success');
+                        
+                        // Update UI
+                        const statusElement = document.getElementById('chartDataStatus');
+                        const dataStatsElement = document.getElementById('dataStats');
+                        
+                        if (statusElement) {
+                            statusElement.innerHTML = '<i class="bi bi-info-circle"></i> No historical data loaded yet. Use download button above.';
+                        }
+                        if (dataStatsElement) {
+                            dataStatsElement.style.display = 'none';
+                        }
+                        
+                        // Hide validation results
+                        document.getElementById('validationResults').style.display = 'none';
+                        
+                    } else {
+                        this.showToastNotification(`❌ Failed to clear all data: ${result.message}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Clear all data error:', error);
+                    this.showToastNotification('❌ Failed to clear all data', 'danger');
+                }
+            }
+
+            async showDataSummary() {
+                try {
+                    this.showToastNotification('📊 Loading data summary...', 'info');
+                    
+                    const response = await fetch('/api/historical-data/summary');
+                    const result = await response.json();
+                    
+                    if (result.success && result.summary) {
+                        let html = '<div class="alert alert-info p-2"><h6>Historical Data Summary:</h6>';
+                        
+                        if (result.summary.length === 0) {
+                            html += '<p class="mb-0">No historical data stored.</p>';
+                        } else {
+                            html += `<p><strong>Total Datasets:</strong> ${result.summary.length}</p><ul class="small mb-0">`;
+                            result.summary.forEach(item => {
+                                html += `
+                                    <li><strong>${item.symbol} ${item.timeframe}:</strong> 
+                                    ${item.candle_count.toLocaleString()} candles 
+                                    (${item.earliest_date ? new Date(item.earliest_date).toLocaleDateString() : 'N/A'} - 
+                                    ${item.latest_date ? new Date(item.latest_date).toLocaleDateString() : 'N/A'})</li>
+                                `;
+                            });
+                            html += '</ul>';
+                        }
+                        html += '</div>';
+                        
+                        // Show in validation results area
+                        const resultsDiv = document.getElementById('validationResults');
+                        const contentDiv = document.getElementById('validationContent');
+                        contentDiv.innerHTML = html;
+                        resultsDiv.style.display = 'block';
+                        
+                        this.showToastNotification('📊 Data summary loaded', 'success');
+                    } else {
+                        this.showToastNotification(`❌ Failed to load data summary: ${result.message || 'Unknown error'}`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Data summary error:', error);
+                    this.showToastNotification('❌ Failed to load data summary', 'danger');
+                }
+            }
+
             async loadHistoricalPerformanceData() {
                 try {
                     const response = await fetch('/api/historical-data/performance');
@@ -5086,6 +5296,31 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                         location.reload();
                     })
                     .catch(err => alert('Error: ' + err.message));
+            }
+        }
+
+        // Global wrapper functions for historical data management
+        function validateDataIntegrity() {
+            if (dashboard) {
+                dashboard.validateDataIntegrity();
+            }
+        }
+
+        function deleteCurrentSymbolData() {
+            if (dashboard) {
+                dashboard.deleteCurrentSymbolData();
+            }
+        }
+
+        function clearAllHistoricalData() {
+            if (dashboard) {
+                dashboard.clearAllHistoricalData();
+            }
+        }
+
+        function showDataSummary() {
+            if (dashboard) {
+                dashboard.showDataSummary();
             }
         }
 

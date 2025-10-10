@@ -369,6 +369,175 @@ class HistoricalDataDownloader:
                 'error': str(e)
             }
 
+    def delete_symbol_data(self, symbol: str, timeframe: str = None) -> Dict:
+        """Delete historical data for a specific symbol and optionally timeframe"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                if timeframe:
+                    # Delete specific symbol-timeframe combination
+                    cursor = conn.execute("""
+                        DELETE FROM historical_data 
+                        WHERE symbol = ? AND timeframe = ?
+                    """, (symbol, timeframe))
+                    deleted_count = cursor.rowcount
+                    logger.info(f"🗑️ Deleted {deleted_count} candles for {symbol} {timeframe}")
+                else:
+                    # Delete all data for symbol across all timeframes
+                    cursor = conn.execute("""
+                        DELETE FROM historical_data 
+                        WHERE symbol = ?
+                    """, (symbol,))
+                    deleted_count = cursor.rowcount
+                    logger.info(f"🗑️ Deleted {deleted_count} candles for {symbol} (all timeframes)")
+                
+                conn.commit()
+                
+                return {
+                    'success': True,
+                    'message': f'Deleted {deleted_count} candles',
+                    'deleted_count': deleted_count
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Error deleting data for {symbol}: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'deleted_count': 0
+            }
+
+    def clear_all_data(self) -> Dict:
+        """Clear all historical data from database"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("DELETE FROM historical_data")
+                deleted_count = cursor.rowcount
+                conn.commit()
+                
+                logger.info(f"🗑️ Cleared all historical data: {deleted_count} candles deleted")
+                
+                return {
+                    'success': True,
+                    'message': f'Cleared all data: {deleted_count} candles deleted',
+                    'deleted_count': deleted_count
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Error clearing all data: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'deleted_count': 0
+            }
+
+    def validate_data_integrity(self, symbol: str, timeframe: str) -> Dict:
+        """Check for data corruption, gaps, and anomalies"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # Get all candles for symbol-timeframe ordered by timestamp
+                cursor = conn.execute("""
+                    SELECT timestamp, open, high, low, close, volume
+                    FROM historical_data 
+                    WHERE symbol = ? AND timeframe = ?
+                    ORDER BY timestamp ASC
+                """, (symbol, timeframe))
+                
+                candles = cursor.fetchall()
+                if not candles:
+                    return {
+                        'success': True,
+                        'issues': [],
+                        'summary': {'total_candles': 0, 'issues_found': 0}
+                    }
+                
+                issues = []
+                
+                # Check for data corruption and anomalies
+                for i, (timestamp, open_price, high, low, close, volume) in enumerate(candles):
+                    candle_issues = []
+                    
+                    # Check OHLC validity
+                    if not (low <= open_price <= high and low <= close <= high):
+                        candle_issues.append("Invalid OHLC: prices outside high-low range")
+                    
+                    if high < low:
+                        candle_issues.append("Invalid OHLC: high < low")
+                    
+                    # Check for negative values
+                    if any(val < 0 for val in [open_price, high, low, close, volume]):
+                        candle_issues.append("Negative price or volume values")
+                    
+                    # Check for zero values (might be valid for volume but suspicious for prices)
+                    if any(val == 0 for val in [open_price, high, low, close]):
+                        candle_issues.append("Zero price values detected")
+                    
+                    # Check for extreme price movements (more than 50% change)
+                    if i > 0:
+                        prev_close = candles[i-1][4]  # Previous candle's close
+                        if prev_close > 0:  # Avoid division by zero
+                            price_change_pct = abs(open_price - prev_close) / prev_close * 100
+                            if price_change_pct > 50:
+                                candle_issues.append(f"Extreme price gap: {price_change_pct:.1f}% change from previous close")
+                    
+                    if candle_issues:
+                        issues.append({
+                            'timestamp': datetime.fromtimestamp(timestamp / 1000).isoformat(),
+                            'candle_index': i,
+                            'issues': candle_issues,
+                            'data': {
+                                'open': open_price, 'high': high, 'low': low, 
+                                'close': close, 'volume': volume
+                            }
+                        })
+                
+                # Check for time gaps
+                timeframe_minutes = self._get_timeframe_minutes(timeframe)
+                for i in range(1, len(candles)):
+                    current_time_ms = candles[i][0]
+                    prev_time_ms = candles[i-1][0]
+                    expected_diff_ms = timeframe_minutes * 60 * 1000
+                    actual_diff_ms = current_time_ms - prev_time_ms
+                    
+                    if actual_diff_ms > expected_diff_ms * 1.5:  # Allow some tolerance
+                        gap_minutes = actual_diff_ms / (1000 * 60)
+                        issues.append({
+                            'timestamp': datetime.fromtimestamp(current_time_ms / 1000).isoformat(),
+                            'candle_index': i,
+                            'issues': [f"Time gap detected: {gap_minutes:.0f} minutes (expected {timeframe_minutes})"],
+                            'data': {'gap_duration_minutes': gap_minutes}
+                        })
+                
+                return {
+                    'success': True,
+                    'issues': issues,
+                    'summary': {
+                        'total_candles': len(candles),
+                        'issues_found': len(issues),
+                        'period_start': datetime.fromtimestamp(candles[0][0] / 1000).isoformat() if candles else None,
+                        'period_end': datetime.fromtimestamp(candles[-1][0] / 1000).isoformat() if candles else None,
+                        'has_corruption': any('Invalid OHLC' in str(issue['issues']) for issue in issues),
+                        'has_gaps': any('Time gap' in str(issue['issues']) for issue in issues),
+                        'has_anomalies': any('Extreme price' in str(issue['issues']) for issue in issues)
+                    }
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Error validating data integrity for {symbol} {timeframe}: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'issues': []
+            }
+
+    def _get_timeframe_minutes(self, timeframe: str) -> int:
+        """Convert timeframe string to minutes"""
+        timeframe_map = {
+            '1m': 1, '3m': 3, '5m': 5, '15m': 15, '30m': 30,
+            '1h': 60, '2h': 120, '4h': 240, '6h': 360, '8h': 480, '12h': 720,
+            '1d': 1440, '3d': 4320, '1w': 10080, '1M': 43200
+        }
+        return timeframe_map.get(timeframe, 15)  # Default to 15 minutes
+
     # Legacy methods for compatibility
     def get_available_symbols(self):
         """Get available symbols for download"""
