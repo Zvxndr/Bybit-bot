@@ -12,7 +12,7 @@ from datetime import datetime
 def monitor_production_issues():
     """Monitor the production deployment for the fixes"""
     
-    base_url = "https://trading-bot-8smkq.ondigitalocean.app"
+    base_url = "https://auto-wealth-j58sx.ondigitalocean.app"
     
     print("🔍 Production Issue Monitoring Script")
     print("=" * 50)
@@ -20,31 +20,39 @@ def monitor_production_issues():
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
-    # Test 1: Check if historical data download works
+    # Test 1: Check if historical data download works (enhanced testing)
     print("📊 Testing Historical Data Download...")
-    try:
-        response = requests.post(f"{base_url}/api/historical-data/download", 
-                               json={
-                                   "symbol": "BTCUSDT",
-                                   "timeframe": "15m", 
-                                   "days": 7
-                               }, 
-                               timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("success"):
-                print("✅ Historical data download API working")
-                print(f"   Message: {data.get('message', 'N/A')}")
-                print(f"   Data points: {data.get('data_points', 'N/A')}")
-            else:
-                print("❌ Historical data download failed")
-                print(f"   Error: {data.get('message', 'Unknown error')}")
-        else:
-            print(f"❌ HTTP Error {response.status_code}")
+    
+    test_cases = [
+        {"symbol": "BTCUSDT", "timeframe": "1h", "days": 1, "desc": "BTCUSDT 1 day"},
+        {"symbol": "BTC/USDT", "timeframe": "15m", "days": 7, "desc": "BTC/USDT 7 days"},
+    ]
+    
+    success_count = 0
+    for i, test_case in enumerate(test_cases, 1):
+        print(f"   Test {i}: {test_case['desc']}")
+        try:
+            response = requests.post(f"{base_url}/api/historical-data/download", 
+                                   json={k: v for k, v in test_case.items() if k != 'desc'}, 
+                                   timeout=45)
             
-    except Exception as e:
-        print(f"❌ Connection error: {e}")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get('data_points', 0) > 0:
+                    print(f"      ✅ Success: {data['data_points']} data points")
+                    success_count += 1
+                else:
+                    print(f"      ❌ Failed: {data.get('message', 'No data retrieved')}")
+            else:
+                print(f"      ❌ HTTP Error {response.status_code}")
+                
+        except Exception as e:
+            print(f"      ❌ Connection error: {e}")
+    
+    if success_count > 0:
+        print("✅ Historical data download working")
+    else:
+        print("❌ Historical data download failed for all test cases")
     
     print()
     
