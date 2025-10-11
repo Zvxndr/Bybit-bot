@@ -1711,13 +1711,12 @@
                         <div class="col-md-2">
                             <label class="form-label text-muted small">Period</label>
                             <select class="form-select form-select-sm" id="historicalPeriod">
-                                <option value="7">7 Days</option>
-                                <option value="30" selected>30 Days</option>
-                                <option value="90">3 Months</option>
-                                <option value="180">6 Months</option>
-                                <option value="365">1 Year</option>
-                                <option value="730">2 Years</option>
-                                <option value="1095">3 Years</option>
+                                <option value="1m">Last 1 Month</option>
+                                <option value="3m" selected>Last 3 Months</option>
+                                <option value="6m">Last 6 Months</option>
+                                <option value="1y">Last 12 Months</option>
+                                <option value="2y">Last 24 Months</option>
+                                <option value="3y">Last 36 Months</option>
                                 <option value="1825">5 Years</option>
                                 <option value="3650">10 Years</option>
                             </select>
@@ -1845,13 +1844,45 @@
                     </div>
                 </div>
 
-                <!-- Strategy Backtesting Controls -->
+                <!-- Enhanced Strategy Backtesting Controls -->
                 <div class="backtest-controls mb-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <h6 class="text-light mb-2">
+                    <h6 class="text-light mb-3">
                         <i class="bi bi-graph-up-arrow"></i> Strategy Backtesting
+                        <small class="text-muted ms-2">Comprehensive Historical Analysis</small>
                     </h6>
-                    <div class="row g-2">
-                        <div class="col-md-6">
+                    
+                    <!-- Main Controls Grid -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small">Trading Pair</label>
+                            <select class="form-select form-select-sm" id="backtestPair">
+                                <option value="BTCUSDT" selected>BTC/USDT</option>
+                                <option value="ETHUSDT">ETH/USDT</option>
+                                <option value="ADAUSDT">ADA/USDT</option>
+                                <option value="SOLUSDT">SOL/USDT</option>
+                                <option value="DOTUSDT">DOT/USDT</option>
+                                <option value="MATICUSDT">MATIC/USDT</option>
+                                <option value="AVAXUSDT">AVAX/USDT</option>
+                                <option value="LINKUSDT">LINK/USDT</option>
+                                <option value="UNIUSDT">UNI/USDT</option>
+                                <option value="LTCUSDT">LTC/USDT</option>
+                                <option value="BCHUSDT">BCH/USDT</option>
+                                <option value="XRPUSDT">XRP/USDT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small">Timeframe</label>
+                            <select class="form-select form-select-sm" id="backtestTimeframe">
+                                <option value="1m">1 Minute</option>
+                                <option value="5m">5 Minutes</option>
+                                <option value="15m" selected>15 Minutes</option>
+                                <option value="30m">30 Minutes</option>
+                                <option value="1h">1 Hour</option>
+                                <option value="4h">4 Hours</option>
+                                <option value="1d">1 Day</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label text-muted small">Starting Balance</label>
                             <select class="form-select form-select-sm" id="backtestStartingBalance">
                                 <option value="1000">$1,000</option>
@@ -1859,33 +1890,98 @@
                                 <option value="10000" selected>$10,000</option>
                                 <option value="25000">$25,000</option>
                                 <option value="50000">$50,000</option>
+                                <option value="100000">$100,000</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label text-muted small">Historical Period</label>
                             <select class="form-select form-select-sm" id="backtestPeriod">
-                                <option value="1m">Last 1 Month</option>
-                                <option value="3m" selected>Last 3 Months</option>
-                                <option value="6m">Last 6 Months</option>
-                                <option value="1y">Last 12 Months</option>
-                                <option value="2y">Last 24 Months</option>
-                                <option value="3y">Last 36 Months</option>
+                                <option value="1w">1 Week</option>
+                                <option value="2w">2 Weeks</option>
+                                <option value="1m">1 Month</option>
+                                <option value="3m" selected>3 Months</option>
+                                <option value="6m">6 Months</option>
+                                <option value="1y">1 Year</option>
+                                <option value="2y">2 Years</option>
+                                <option value="3y">3 Years</option>
+                                <option value="all">All Available Data</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" onclick="dashboard.runHistoricalBacktest()" id="backtestRunBtn">
-                                <i class="bi bi-play-fill"></i> Run Strategy Backtest
+                    </div>
+
+                    <!-- Advanced Settings Toggle -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#advancedBacktestSettings" aria-expanded="false" aria-controls="advancedBacktestSettings">
+                                <i class="bi bi-sliders"></i> Advanced Settings
                             </button>
                         </div>
-                        <div class="col-12">
-                            <div class="d-flex gap-2 mt-1">
-                                <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="dashboard.resetBacktestDefaults()">
-                                    <i class="bi bi-arrow-clockwise"></i> Reset Defaults
-                                </button>
-                                <button class="btn btn-sm btn-outline-info flex-fill" onclick="dashboard.showBacktestSettings()">
-                                    <i class="bi bi-gear"></i> Advanced Settings
-                                </button>
+                    </div>
+
+                    <!-- Advanced Settings Panel -->
+                    <div class="collapse" id="advancedBacktestSettings">
+                        <div class="card card-body bg-dark border-secondary mb-3" style="background: rgba(255,255,255,0.03) !important;">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small">Commission Rate (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="backtestCommission" value="0.1" step="0.01" min="0" max="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small">Slippage (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="backtestSlippage" value="0.05" step="0.01" min="0" max="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small">Max Drawdown (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="backtestMaxDrawdown" value="20" step="1" min="1" max="100">
+                                </div>
                             </div>
+                            <div class="row g-2 mt-1">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="backtestIncludeSlippage" checked>
+                                        <label class="form-check-label text-light small" for="backtestIncludeSlippage">
+                                            Include Slippage in Calculations
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="backtestRealTimeData" checked>
+                                        <label class="form-check-label text-light small" for="backtestRealTimeData">
+                                            Use Real Market Data
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <button class="btn btn-sm btn-primary w-100" onclick="dashboard.runHistoricalBacktest()" id="backtestRunBtn">
+                                <i class="bi bi-play-fill"></i> Run Backtest
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="dashboard.resetBacktestDefaults()">
+                                <i class="bi bi-arrow-clockwise"></i> Reset Defaults
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-sm btn-outline-info w-100" onclick="dashboard.showBacktestFilters()">
+                                <i class="bi bi-funnel"></i> Filters
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-sm btn-outline-success w-100" onclick="dashboard.exportBacktestResults()">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-sm btn-outline-warning w-100" onclick="dashboard.compareBacktests()">
+                                <i class="bi bi-bar-chart"></i> Compare
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -4665,9 +4761,12 @@
                     pair: document.getElementById('backtestPair')?.value || 'BTCUSDT',
                     timeframe: document.getElementById('backtestTimeframe')?.value || '15m',
                     starting_balance: parseInt(document.getElementById('backtestStartingBalance')?.value || 10000),
-                    period: document.getElementById('backtestPeriod')?.value || '2y',
-                    include_slippage: true,
-                    commission_rate: 0.001
+                    period: document.getElementById('backtestPeriod')?.value || '3m',
+                    commission_rate: parseFloat(document.getElementById('backtestCommission')?.value || 0.1) / 100,
+                    slippage_rate: parseFloat(document.getElementById('backtestSlippage')?.value || 0.05) / 100,
+                    max_drawdown: parseFloat(document.getElementById('backtestMaxDrawdown')?.value || 20) / 100,
+                    include_slippage: document.getElementById('backtestIncludeSlippage')?.checked ?? true,
+                    use_real_data: document.getElementById('backtestRealTimeData')?.checked ?? true
                 };
             }
 
@@ -4694,9 +4793,23 @@
                 document.getElementById('backtestPair').value = 'BTCUSDT';
                 document.getElementById('backtestTimeframe').value = '15m';
                 document.getElementById('backtestStartingBalance').value = '10000';
-                document.getElementById('backtestPeriod').value = '2y';
+                document.getElementById('backtestPeriod').value = '3m';
                 
-                this.showToastNotification('🔄 Backtest settings reset to defaults', 'info');
+                // Reset advanced settings
+                document.getElementById('backtestCommission').value = '0.1';
+                document.getElementById('backtestSlippage').value = '0.05';
+                document.getElementById('backtestMaxDrawdown').value = '20';
+                document.getElementById('backtestIncludeSlippage').checked = true;
+                document.getElementById('backtestRealTimeData').checked = true;
+                
+                // Collapse advanced settings
+                const advancedSettings = document.getElementById('advancedBacktestSettings');
+                if (advancedSettings && advancedSettings.classList.contains('show')) {
+                    const collapseInstance = new bootstrap.Collapse(advancedSettings);
+                    collapseInstance.hide();
+                }
+                
+                this.showToastNotification('🔄 All backtest settings reset to defaults', 'info');
             }
 
             async refreshBacktestHistory() {
@@ -4769,6 +4882,233 @@
                 } else {
                     filters.style.display = 'none';
                 }
+            }
+
+            async exportBacktestResults() {
+                try {
+                    this.showToastNotification('📊 Preparing backtest export...', 'info');
+                    
+                    const response = await fetch('/api/backtest/detailed-history?limit=100');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        const csvContent = this.convertBacktestToCsv(result.data);
+                        this.downloadCsv(csvContent, `backtest_results_${new Date().toISOString().split('T')[0]}.csv`);
+                        this.showToastNotification(`✅ Exported ${result.data.length} backtest results`, 'success');
+                    } else {
+                        this.showToastNotification('⚠️ No backtest results to export', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    this.showToastNotification('❌ Failed to export results', 'danger');
+                }
+            }
+
+            convertBacktestToCsv(data) {
+                const headers = [
+                    'Date', 'Pair', 'Timeframe', 'Period', 'Starting Balance', 
+                    'Total Return (%)', 'Total PnL', 'Sharpe Ratio', 'Max Drawdown (%)',
+                    'Win Rate (%)', 'Total Trades', 'Recommendation'
+                ];
+                
+                let csv = headers.join(',') + '\n';
+                
+                data.forEach(row => {
+                    const values = [
+                        new Date(row.created_at).toLocaleDateString(),
+                        row.pair || 'N/A',
+                        row.timeframe || 'N/A',
+                        row.period || 'N/A',
+                        row.starting_balance || 0,
+                        (row.total_return_pct || 0).toFixed(2),
+                        (row.total_pnl || 0).toFixed(2),
+                        (row.sharpe_ratio || 0).toFixed(2),
+                        (row.max_drawdown_pct || 0).toFixed(2),
+                        (row.win_rate_pct || 0).toFixed(2),
+                        row.total_trades || 0,
+                        row.graduation_recommendation || 'NONE'
+                    ];
+                    csv += values.map(v => `"${v}"`).join(',') + '\n';
+                });
+                
+                return csv;
+            }
+
+            downloadCsv(content, filename) {
+                const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+
+            async compareBacktests() {
+                try {
+                    this.showToastNotification('📊 Loading comparison interface...', 'info');
+                    
+                    const response = await fetch('/api/backtest/detailed-history?limit=50');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length >= 2) {
+                        this.showBacktestComparison(result.data);
+                    } else {
+                        this.showToastNotification('⚠️ Need at least 2 backtest results to compare', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Comparison error:', error);
+                    this.showToastNotification('❌ Failed to load comparison', 'danger');
+                }
+            }
+
+            showBacktestComparison(backtests) {
+                const modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.id = 'backtestComparisonModal';
+                modal.setAttribute('tabindex', '-1');
+                
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title text-light">
+                                    <i class="bi bi-bar-chart"></i> Backtest Comparison
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-light">Select First Backtest</label>
+                                        <select class="form-select" id="compareBacktest1">
+                                            ${backtests.map((bt, i) => 
+                                                `<option value="${i}">${bt.pair || 'N/A'} - ${bt.timeframe || 'N/A'} - ${new Date(bt.created_at).toLocaleDateString()} (${(bt.total_return_pct || 0).toFixed(2)}%)</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-light">Select Second Backtest</label>
+                                        <select class="form-select" id="compareBacktest2">
+                                            ${backtests.map((bt, i) => 
+                                                `<option value="${i}" ${i === 1 ? 'selected' : ''}>${bt.pair || 'N/A'} - ${bt.timeframe || 'N/A'} - ${new Date(bt.created_at).toLocaleDateString()} (${(bt.total_return_pct || 0).toFixed(2)}%)</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="comparisonResults">
+                                    <!-- Comparison results will be displayed here -->
+                                </div>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-primary" onclick="dashboard.updateComparison()">
+                                    <i class="bi bi-arrow-repeat"></i> Update Comparison
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+                
+                // Store backtest data for comparison
+                this.comparisonData = backtests;
+                
+                // Initial comparison
+                this.updateComparison();
+                
+                // Clean up after modal is hidden
+                modal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(modal);
+                    delete this.comparisonData;
+                });
+            }
+
+            updateComparison() {
+                if (!this.comparisonData) return;
+                
+                const index1 = parseInt(document.getElementById('compareBacktest1').value);
+                const index2 = parseInt(document.getElementById('compareBacktest2').value);
+                
+                const bt1 = this.comparisonData[index1];
+                const bt2 = this.comparisonData[index2];
+                
+                const resultsContainer = document.getElementById('comparisonResults');
+                resultsContainer.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table table-dark table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-info">Backtest 1</th>
+                                        <th class="text-warning">Backtest 2</th>
+                                        <th class="text-success">Difference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Trading Pair</td>
+                                        <td class="text-info">${bt1.pair || 'N/A'}</td>
+                                        <td class="text-warning">${bt2.pair || 'N/A'}</td>
+                                        <td class="text-muted">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Timeframe</td>
+                                        <td class="text-info">${bt1.timeframe || 'N/A'}</td>
+                                        <td class="text-warning">${bt2.timeframe || 'N/A'}</td>
+                                        <td class="text-muted">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Return (%)</td>
+                                        <td class="text-info">${(bt1.total_return_pct || 0).toFixed(2)}%</td>
+                                        <td class="text-warning">${(bt2.total_return_pct || 0).toFixed(2)}%</td>
+                                        <td class="${(bt1.total_return_pct || 0) > (bt2.total_return_pct || 0) ? 'text-success' : 'text-danger'}">
+                                            ${((bt1.total_return_pct || 0) - (bt2.total_return_pct || 0)).toFixed(2)}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sharpe Ratio</td>
+                                        <td class="text-info">${(bt1.sharpe_ratio || 0).toFixed(2)}</td>
+                                        <td class="text-warning">${(bt2.sharpe_ratio || 0).toFixed(2)}</td>
+                                        <td class="${(bt1.sharpe_ratio || 0) > (bt2.sharpe_ratio || 0) ? 'text-success' : 'text-danger'}">
+                                            ${((bt1.sharpe_ratio || 0) - (bt2.sharpe_ratio || 0)).toFixed(2)}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Max Drawdown (%)</td>
+                                        <td class="text-info">${(bt1.max_drawdown_pct || 0).toFixed(2)}%</td>
+                                        <td class="text-warning">${(bt2.max_drawdown_pct || 0).toFixed(2)}%</td>
+                                        <td class="${(bt1.max_drawdown_pct || 0) < (bt2.max_drawdown_pct || 0) ? 'text-success' : 'text-danger'}">
+                                            ${((bt1.max_drawdown_pct || 0) - (bt2.max_drawdown_pct || 0)).toFixed(2)}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Win Rate (%)</td>
+                                        <td class="text-info">${(bt1.win_rate_pct || 0).toFixed(2)}%</td>
+                                        <td class="text-warning">${(bt2.win_rate_pct || 0).toFixed(2)}%</td>
+                                        <td class="${(bt1.win_rate_pct || 0) > (bt2.win_rate_pct || 0) ? 'text-success' : 'text-danger'}">
+                                            ${((bt1.win_rate_pct || 0) - (bt2.win_rate_pct || 0)).toFixed(2)}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Trades</td>
+                                        <td class="text-info">${bt1.total_trades || 0}</td>
+                                        <td class="text-warning">${bt2.total_trades || 0}</td>
+                                        <td class="text-muted">${(bt1.total_trades || 0) - (bt2.total_trades || 0)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
             }
 
             displayDetailedBacktestResults(results) {
@@ -5056,9 +5396,20 @@
                 try {
                     const pair = document.getElementById('historicalPair').value;
                     const timeframe = document.getElementById('historicalTimeframe').value;
-                    const period = parseInt(document.getElementById('historicalPeriod').value);
+                    const periodCode = document.getElementById('historicalPeriod').value;
                     
-                    console.log('📊 Download parameters:', { pair, timeframe, period });
+                    // Convert period codes to days (same as backtesting)
+                    const periodMap = {
+                        '1m': 30,   // 1 month = 30 days
+                        '3m': 90,   // 3 months = 90 days
+                        '6m': 180,  // 6 months = 180 days
+                        '1y': 365,  // 1 year = 365 days
+                        '2y': 730,  // 2 years = 730 days
+                        '3y': 1095  // 3 years = 1095 days
+                    };
+                    const period = periodMap[periodCode] || 90; // Default to 3 months
+                    
+                    console.log('📊 Download parameters:', { pair, timeframe, periodCode, period });
                     
                     // Show loading state
                     const downloadBtn = document.getElementById('downloadDataBtn');
