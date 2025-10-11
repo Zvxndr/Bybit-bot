@@ -1796,12 +1796,12 @@
                         <div class="col-md-4">
                             <label class="form-label text-muted small">Period</label>
                             <select class="form-select form-select-sm" id="historicalPeriod">
-                                <option value="1m">Last 1 Month</option>
-                                <option value="3m" selected>Last 3 Months</option>
-                                <option value="6m">Last 6 Months</option>
-                                <option value="1y">Last 12 Months</option>
-                                <option value="2y">Last 24 Months</option>
-                                <option value="3y">Last 36 Months</option>
+                                <option value="1m">1 Month</option>
+                                <option value="3m" selected>3 Months</option>
+                                <option value="6m">6 Months</option>
+                                <option value="1y">12 Months</option>
+                                <option value="2y">24 Months</option>
+                                <option value="3y">36 Months</option>
                                 <option value="1825">5 Years</option>
                                 <option value="3650">10 Years</option>
                             </select>
@@ -4554,12 +4554,12 @@
             
             formatPeriod(period) {
                 const formats = {
-                    '1m': 'Last 1 Month',
-                    '3m': 'Last 3 Months',
-                    '6m': 'Last 6 Months',
-                    '1y': 'Last 12 Months',
-                    '2y': 'Last 24 Months', 
-                    '3y': 'Last 36 Months'
+                    '1m': '1 Month',
+                    '3m': '3 Months',
+                    '6m': '6 Months',
+                    '1y': '12 Months',
+                    '2y': '24 Months', 
+                    '3y': '36 Months'
                 };
                 return formats[period] || period;
             }

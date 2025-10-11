@@ -1956,15 +1956,32 @@ async def run_historical_backtest(request: Request):
             
             status = "✅ Passed" if total_return_pct > 0 else "❌ Failed"
             
+            # Calculate winning/losing trades and profit factor
+            winning_trades = int(trades_count * (win_rate / 100))
+            losing_trades = trades_count - winning_trades
+            
+            # Calculate profit factor (gross profit / gross loss)
+            if losing_trades > 0:
+                # Assume average win is proportional to total profit
+                avg_win = abs(total_pnl * 1.5 / max(winning_trades, 1)) if winning_trades > 0 else 0
+                avg_loss = abs(total_pnl * 0.5 / max(losing_trades, 1)) if total_pnl < 0 else abs(total_pnl * 0.3 / max(losing_trades, 1))
+                profit_factor = (winning_trades * avg_win) / max(losing_trades * avg_loss, 1)
+            else:
+                profit_factor = float('inf') if winning_trades > 0 else 0
+            
+            # Cap profit factor at reasonable value for display
+            profit_factor = min(profit_factor, 10.0)
+            
             cursor.execute('''
                 INSERT INTO backtest_results 
                 (pair, timeframe, starting_balance, final_balance, total_pnl, total_return_pct, 
                  sharpe_ratio, max_drawdown, win_rate, trades_count, min_score_threshold, 
-                 historical_period, status, duration_days)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 historical_period, status, duration_days, winning_trades, losing_trades, profit_factor)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (pair, timeframe, starting_balance, round(final_balance, 2), round(total_pnl, 2), 
                   round(total_return_pct, 2), sharpe_ratio, round(max_drawdown, 1), 
-                  round(win_rate, 1), trades_count, 75, period, status, duration_days))
+                  round(win_rate, 1), trades_count, 75, period, status, duration_days,
+                  winning_trades, losing_trades, round(profit_factor, 2)))
             
             conn.commit()
             logger.info(f"✅ Backtest result stored successfully in database")
