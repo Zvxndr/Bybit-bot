@@ -1295,6 +1295,136 @@
         .alert-info .bi-info-circle {
             color: #60a5fa;
         }
+
+        /* Strategy Graduation Styles */
+        .graduation-candidate {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .graduation-candidate:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .graduation-candidate.selected {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .graduation-score {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .graduation-score.strong {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .graduation-score.moderate {
+            background: rgba(249, 115, 22, 0.2);
+            color: #fb923c;
+        }
+
+        .graduation-score.weak {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: 500;
+        }
+
+        .risk-badge.low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .risk-badge.medium {
+            background: rgba(249, 115, 22, 0.2);
+            color: #fb923c;
+        }
+
+        .risk-badge.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .strategy-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .metric-label {
+            font-size: 0.7em;
+            color: #9ca3af;
+        }
+
+        .comparison-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+        }
+
+        .comparison-content {
+            position: relative;
+            background: var(--card-bg);
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .strategy-comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .strategy-comparison-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .strategy-comparison-card.winner {
+            border-color: rgba(34, 197, 94, 0.5);
+            background: rgba(34, 197, 94, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1340,24 +1470,87 @@
             <div class="col-md-4">
                 <div class="card border border-primary">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">📊 Phase 1: Historical Backtest</h5>
+                        <h5 class="mb-0">📊 Phase 1: Historical Backtest Results</h5>
                     </div>
                     <div class="card-body">
                         <div class="backtest-results-header mb-2">
                             <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">Recent Backtest Results</small>
-                                <button class="btn btn-xs btn-outline-info" onclick="dashboard.refreshBacktestHistory()">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
+                                <small class="text-muted">Strategy Performance Analysis</small>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info btn-sm" onclick="graduationDashboard.refreshGraduationCandidates()">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="graduationDashboard.showGraduationFilters()">
+                                        <i class="bi bi-funnel"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" onclick="graduationDashboard.showGraduatedStrategies()">
+                                        <i class="bi bi-trophy"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm" onclick="graduationDashboard.showComparisonTool()">
+                                        <i class="bi bi-bar-chart"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="backtest-results-list" id="backtestResultsList">
+                        
+                        <!-- Filters Panel (Initially Hidden) -->
+                        <div class="graduation-filters mb-2" id="graduationFilters" style="display: none;">
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="number" class="form-control form-control-sm" id="minReturnFilter" 
+                                           placeholder="Min Return %" step="0.1" value="0">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control form-control-sm" id="minSharpeFilter" 
+                                           placeholder="Min Sharpe" step="0.1" value="0.5">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control form-control-sm" id="minTradesFilter" 
+                                           placeholder="Min Trades" value="5">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-primary btn-sm" onclick="graduationDashboard.applyGraduationFilters()">Apply</button>
+                                <button class="btn btn-secondary btn-sm" onclick="graduationDashboard.clearGraduationFilters()">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Comparison Panel (Initially Hidden) -->
+                        <div class="strategy-comparison mb-2" id="strategyComparison" style="display: none;">
+                            <div class="card bg-dark border-info">
+                                <div class="card-header py-2">
+                                    <h6 class="mb-0">Compare Strategies</h6>
+                                </div>
+                                <div class="card-body py-2">
+                                    <div id="selectedStrategiesInfo" class="mb-2">
+                                        <small class="text-muted">Select 2-5 strategies to compare</small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-info btn-sm" onclick="graduationDashboard.compareSelectedStrategies()" disabled id="compareBtn">
+                                            <i class="bi bi-bar-chart"></i> Compare
+                                        </button>
+                                        <button class="btn btn-success btn-sm" onclick="graduationDashboard.bulkGraduateSelected()" disabled id="bulkGraduateBtn">
+                                            <i class="bi bi-check-all"></i> Graduate Selected
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" onclick="graduationDashboard.clearSelection()">
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="backtest-results-list" id="graduationCandidatesList" style="max-height: 400px; overflow-y: auto;">
                             <div class="text-center text-muted py-2">
-                                <small>No backtest results yet<br>Run a backtest below to see results</small>
+                                <small>Loading graduation candidates...</small>
                             </div>
                         </div>
+                        
                         <div class="mt-2">
-                            <small class="text-success">✓ Run controls below to add results</small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success">✓ Enhanced graduation analysis</small>
+                                <small class="text-muted" id="graduationStatusText">Ready for selection</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2508,7 +2701,7 @@
                 this.initKeyboardShortcuts();
                 this.initBrowserNotifications();
                 this.loadDashboardData();
-                this.refreshBacktestHistory();
+                this.refreshDetailedBacktestHistory();
                 
                 // Initialize Australian tax compliance
                 await this.initializeTaxCompliance();
@@ -4443,7 +4636,7 @@
                     
                     if (result.success) {
                         // Refresh backtest history list
-                        this.refreshBacktestHistory();
+                        this.refreshDetailedBacktestHistory();
                         this.showToastNotification(
                             `✅ Historical backtest completed! ROI: ${result.data.total_return}%`, 
                             'success'
@@ -4519,34 +4712,300 @@
                 }
             }
 
-            displayBacktestResults(results) {
+            async refreshDetailedBacktestHistory() {
+                try {
+                    const response = await fetch('/api/backtest/detailed-history?limit=20');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        this.displayDetailedBacktestResults(result.data);
+                    } else {
+                        this.displayEmptyBacktestResults();
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch detailed backtest history:', error);
+                    this.displayEmptyBacktestResults();
+                }
+            }
+
+            async applyBacktestFilters() {
+                try {
+                    const minReturn = document.getElementById('minReturnFilter').value;
+                    const minSharpe = document.getElementById('minSharpeFilter').value;
+                    
+                    let url = '/api/backtest/detailed-history?limit=20';
+                    if (minReturn) url += `&min_return=${minReturn}`;
+                    if (minSharpe) url += `&min_sharpe=${minSharpe}`;
+                    
+                    const response = await fetch(url);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        this.displayDetailedBacktestResults(result.data);
+                        this.showToastNotification(`📊 Found ${result.data.length} strategies matching filters`, 'success');
+                    } else {
+                        this.displayEmptyBacktestResults();
+                        this.showToastNotification('🔍 No strategies match your filters', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Failed to apply filters:', error);
+                    this.showToastNotification('❌ Failed to apply filters', 'error');
+                }
+            }
+
+            clearBacktestFilters() {
+                document.getElementById('minReturnFilter').value = '';
+                document.getElementById('minSharpeFilter').value = '';
+                this.refreshDetailedBacktestHistory();
+            }
+
+            showBacktestFilters() {
+                const filters = document.getElementById('backtestFilters');
+                if (filters.style.display === 'none') {
+                    filters.style.display = 'block';
+                } else {
+                    filters.style.display = 'none';
+                }
+            }
+
+            displayDetailedBacktestResults(results) {
                 const container = document.getElementById('backtestResultsList');
                 if (!container) return;
 
                 let html = '';
-                results.slice(0, 5).forEach(result => {
-                    const statusIcon = result.status.includes('✅') ? '✅' : '❌';
-                    const returnClass = result.total_return >= 0 ? 'text-success' : 'text-danger';
-                    const returnSign = result.total_return >= 0 ? '+' : '';
+                results.forEach(result => {
+                    const returnClass = (result.total_return_pct || 0) >= 0 ? 'text-success' : 'text-danger';
+                    const returnSign = (result.total_return_pct || 0) >= 0 ? '+' : '';
+                    
+                    // Graduation recommendation styling
+                    let recommendationClass = 'secondary';
+                    let recommendationText = 'Not Ready';
+                    let graduateBtn = '';
+                    
+                    switch (result.graduation_recommendation) {
+                        case 'STRONG':
+                            recommendationClass = 'success';
+                            recommendationText = 'Ready!';
+                            graduateBtn = `<button class="btn btn-success btn-sm mt-1" onclick="dashboard.graduateStrategy(${result.id}, 'paper')">Graduate to Paper</button>`;
+                            break;
+                        case 'MODERATE':
+                            recommendationClass = 'warning';
+                            recommendationText = 'Consider';
+                            graduateBtn = `<button class="btn btn-warning btn-sm mt-1" onclick="dashboard.graduateStrategy(${result.id}, 'paper')">Graduate to Paper</button>`;
+                            break;
+                        case 'WEAK':
+                            recommendationClass = 'info';
+                            recommendationText = 'Maybe';
+                            graduateBtn = `<button class="btn btn-outline-warning btn-sm mt-1" onclick="dashboard.graduateStrategy(${result.id}, 'paper')">Force Graduate</button>`;
+                            break;
+                    }
+
+                    const isGraduated = (result.status || '').includes('graduated');
+                    if (isGraduated) {
+                        recommendationClass = 'dark';
+                        recommendationText = 'Graduated';
+                        graduateBtn = `<small class="text-success">✅ Already graduated</small>`;
+                    }
                     
                     html += `
-                        <div class="backtest-result-item d-flex justify-content-between align-items-center py-1 border-bottom">
-                            <div class="result-info">
-                                <span class="result-status">${statusIcon}</span>
-                                <strong class="result-pair">${result.pair}</strong>
-                                <small class="text-muted">(${result.timeframe})</small>
-                            </div>
-                            <div class="result-metrics text-end">
-                                <div class="result-return ${returnClass}">
-                                    <strong>${returnSign}${result.total_return.toFixed(1)}%</strong>
+                        <div class="card border-start border-3 border-${recommendationClass} mb-2">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong class="text-primary">${result.pair}</strong>
+                                        <span class="badge bg-secondary ms-1">${result.timeframe}</span>
+                                        ${result.strategy_name ? `<br><small class="text-muted">${result.strategy_name}</small>` : ''}
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="result-return ${returnClass}">
+                                            <strong>${returnSign}${(result.total_return_pct || 0).toFixed(1)}%</strong>
+                                        </div>
+                                        <span class="badge bg-${recommendationClass}">${recommendationText}</span>
+                                    </div>
                                 </div>
-                                <small class="text-muted">Sharpe: ${result.sharpe_ratio.toFixed(1)}</small>
+                                
+                                <div class="row g-1 mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Sharpe Ratio</small>
+                                        <strong>${(result.sharpe_ratio || 0).toFixed(2)}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Win Rate</small>
+                                        <strong>${(result.win_rate_pct || 0).toFixed(1)}%</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Max Drawdown</small>
+                                        <strong class="text-danger">${(result.max_drawdown_pct || 0).toFixed(1)}%</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Profit Factor</small>
+                                        <strong>${(result.profit_factor || 0).toFixed(2)}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        ${result.total_trades || 0} trades | 
+                                        Score: ${(result.graduation_score || 0).toFixed(0)}
+                                    </small>
+                                    <div>
+                                        ${graduateBtn}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
                 
                 container.innerHTML = html;
+            }
+
+            displayBacktestResults(results) {
+                // Legacy function - redirect to detailed version
+                this.refreshDetailedBacktestHistory();
+            }
+
+            async graduateStrategy(backtestId, graduationType = 'paper') {
+                try {
+                    // Show confirmation dialog
+                    const userNotes = prompt(`Graduate strategy to ${graduationType} trading?\n\nOptional notes:`);
+                    if (userNotes === null) return; // User cancelled
+
+                    const response = await fetch('/api/strategy/graduate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            backtest_id: backtestId,
+                            graduation_type: graduationType,
+                            user_notes: userNotes
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showToastNotification(`🎓 Strategy graduated to ${graduationType} trading successfully!`, 'success');
+                        this.refreshDetailedBacktestHistory(); // Refresh to show updated status
+                    } else {
+                        this.showToastNotification(`❌ Failed to graduate strategy: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Strategy graduation error:', error);
+                    this.showToastNotification('❌ Failed to graduate strategy', 'error');
+                }
+            }
+
+            async showGraduatedStrategies() {
+                try {
+                    const response = await fetch('/api/strategy/graduated');
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.displayGraduatedStrategiesModal(result.data);
+                    } else {
+                        this.showToastNotification('❌ Failed to load graduated strategies', 'error');
+                    }
+                } catch (error) {
+                    console.error('Failed to load graduated strategies:', error);
+                    this.showToastNotification('❌ Failed to load graduated strategies', 'error');
+                }
+            }
+
+            displayGraduatedStrategiesModal(strategies) {
+                let html = `
+                    <div class="modal fade" id="graduatedStrategiesModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">🏆 Graduated Strategies</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                `;
+
+                if (strategies.length === 0) {
+                    html += `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-trophy-fill fs-1"></i>
+                            <p class="mt-2">No strategies graduated yet</p>
+                            <small>Graduate high-performing strategies from backtest results</small>
+                        </div>
+                    `;
+                } else {
+                    strategies.forEach(strategy => {
+                        const metrics = strategy.performance_metrics || {};
+                        const graduationTypeClass = strategy.graduation_type === 'live' ? 'success' : 'warning';
+                        
+                        html += `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title">${strategy.pair} (${strategy.timeframe})</h6>
+                                            <small class="text-muted">${strategy.strategy_name || 'Unknown Strategy'}</small>
+                                        </div>
+                                        <span class="badge bg-${graduationTypeClass}">${strategy.graduation_type.toUpperCase()}</span>
+                                    </div>
+                                    
+                                    <div class="row mt-2">
+                                        <div class="col-3">
+                                            <small class="text-muted">Return</small>
+                                            <div class="fw-bold text-success">+${(metrics.total_return_pct || 0).toFixed(1)}%</div>
+                                        </div>
+                                        <div class="col-3">
+                                            <small class="text-muted">Sharpe</small>
+                                            <div class="fw-bold">${(metrics.sharpe_ratio || 0).toFixed(2)}</div>
+                                        </div>
+                                        <div class="col-3">
+                                            <small class="text-muted">Win Rate</small>
+                                            <div class="fw-bold">${(metrics.win_rate_pct || 0).toFixed(1)}%</div>
+                                        </div>
+                                        <div class="col-3">
+                                            <small class="text-muted">Trades</small>
+                                            <div class="fw-bold">${metrics.total_trades || 0}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    ${strategy.user_notes ? `
+                                        <div class="mt-2">
+                                            <small class="text-muted">Notes:</small>
+                                            <div class="text-sm">${strategy.user_notes}</div>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <div class="mt-2">
+                                        <small class="text-muted">Graduated: ${new Date(strategy.graduation_timestamp).toLocaleString()}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if present
+                const existingModal = document.getElementById('graduatedStrategiesModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', html);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('graduatedStrategiesModal'));
+                modal.show();
             }
 
             displayEmptyBacktestResults() {
@@ -5435,6 +5894,447 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             }
         }
 
+        // Graduation Dashboard Class
+        class GraduationDashboard {
+            constructor() {
+                this.selectedStrategies = new Set();
+                this.currentGraduationCandidates = [];
+                this.init();
+            }
+
+            init() {
+                // Auto-load graduation candidates on init
+                this.refreshGraduationCandidates();
+            }
+
+            async refreshGraduationCandidates() {
+                try {
+                    const minReturn = document.getElementById('minReturnFilter')?.value || 0;
+                    const minSharpe = document.getElementById('minSharpeFilter')?.value || 0.5;
+                    const minTrades = document.getElementById('minTradesFilter')?.value || 5;
+                    
+                    const response = await fetch(
+                        `/api/backtest/results-for-graduation?min_return=${minReturn}&min_sharpe=${minSharpe}&min_trades=${minTrades}&limit=20`
+                    );
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.currentGraduationCandidates = result.data;
+                        this.renderGraduationCandidates();
+                        
+                        // Update status text
+                        const statusEl = document.getElementById('graduationStatusText');
+                        if (statusEl) {
+                            statusEl.textContent = `${result.data.length} candidates found`;
+                        }
+                    } else {
+                        console.error('Error loading graduation candidates:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error refreshing graduation candidates:', error);
+                }
+            }
+
+            renderGraduationCandidates() {
+                const container = document.getElementById('graduationCandidatesList');
+                if (!container) return;
+
+                if (this.currentGraduationCandidates.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <small>No strategies meet the current graduation criteria.<br>
+                            Adjust filters or run more backtests.</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const candidatesHtml = this.currentGraduationCandidates.map(candidate => {
+                    const isSelected = this.selectedStrategies.has(candidate.id);
+                    
+                    return `
+                        <div class="graduation-candidate ${isSelected ? 'selected' : ''}" 
+                             onclick="graduationDashboard.toggleStrategySelection(${candidate.id})"
+                             data-strategy-id="${candidate.id}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>${candidate.pair || 'Unknown Pair'}</strong> 
+                                    <span class="text-muted">(${candidate.timeframe || '1h'})</span>
+                                    ${isSelected ? '<i class="bi bi-check-circle-fill text-success ms-2"></i>' : ''}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <span class="graduation-score ${candidate.graduation_recommendation?.toLowerCase() || 'weak'}">
+                                        ${Math.round(candidate.graduation_score || 0)}
+                                    </span>
+                                    <span class="risk-badge ${candidate.risk_level?.toLowerCase() || 'high'}">
+                                        ${candidate.risk_level || 'HIGH'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="strategy-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value">${(candidate.total_return_pct || 0).toFixed(1)}%</div>
+                                    <div class="metric-label">Return</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">${(candidate.sharpe_ratio || 0).toFixed(2)}</div>
+                                    <div class="metric-label">Sharpe</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">${(candidate.win_rate_pct || 0).toFixed(1)}%</div>
+                                    <div class="metric-label">Win Rate</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">${candidate.total_trades || 0}</div>
+                                    <div class="metric-label">Trades</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">${(candidate.max_drawdown_pct || 0).toFixed(1)}%</div>
+                                    <div class="metric-label">Max DD</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    Recommendation: <strong class="${candidate.graduation_recommendation?.toLowerCase() || 'weak'}">${candidate.graduation_recommendation || 'WEAK'}</strong>
+                                </small>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-success btn-sm" 
+                                            onclick="event.stopPropagation(); graduationDashboard.graduateStrategy(${candidate.id}, 'paper')">
+                                        <i class="bi bi-clipboard-check"></i> Paper
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" 
+                                            onclick="event.stopPropagation(); graduationDashboard.graduateStrategy(${candidate.id}, 'live')">
+                                        <i class="bi bi-rocket"></i> Live
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = candidatesHtml;
+            }
+
+            toggleStrategySelection(strategyId) {
+                if (this.selectedStrategies.has(strategyId)) {
+                    this.selectedStrategies.delete(strategyId);
+                } else {
+                    this.selectedStrategies.add(strategyId);
+                }
+
+                // Update visual selection
+                this.renderGraduationCandidates();
+                this.updateSelectionButtons();
+            }
+
+            updateSelectionButtons() {
+                const selectedCount = this.selectedStrategies.size;
+                
+                const compareBtn = document.getElementById('compareBtn');
+                const bulkGraduateBtn = document.getElementById('bulkGraduateBtn');
+                const selectedInfo = document.getElementById('selectedStrategiesInfo');
+
+                if (compareBtn) {
+                    compareBtn.disabled = selectedCount < 2 || selectedCount > 5;
+                }
+
+                if (bulkGraduateBtn) {
+                    bulkGraduateBtn.disabled = selectedCount === 0;
+                }
+
+                if (selectedInfo) {
+                    if (selectedCount === 0) {
+                        selectedInfo.innerHTML = '<small class="text-muted">Select 2-5 strategies to compare</small>';
+                    } else if (selectedCount === 1) {
+                        selectedInfo.innerHTML = '<small class="text-info">1 strategy selected (need 2+ for comparison)</small>';
+                    } else {
+                        selectedInfo.innerHTML = `<small class="text-success">${selectedCount} strategies selected</small>`;
+                    }
+                }
+            }
+
+            clearSelection() {
+                this.selectedStrategies.clear();
+                this.renderGraduationCandidates();
+                this.updateSelectionButtons();
+            }
+
+            showGraduationFilters() {
+                const filtersPanel = document.getElementById('graduationFilters');
+                if (filtersPanel) {
+                    filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+
+            showComparisonTool() {
+                const comparisonPanel = document.getElementById('strategyComparison');
+                if (comparisonPanel) {
+                    comparisonPanel.style.display = comparisonPanel.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+
+            applyGraduationFilters() {
+                this.refreshGraduationCandidates();
+            }
+
+            clearGraduationFilters() {
+                document.getElementById('minReturnFilter').value = 0;
+                document.getElementById('minSharpeFilter').value = 0.5;
+                document.getElementById('minTradesFilter').value = 5;
+                this.refreshGraduationCandidates();
+            }
+
+            async graduateStrategy(strategyId, graduationType) {
+                try {
+                    const response = await fetch('/api/strategy/bulk-graduate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            strategy_ids: [strategyId],
+                            graduation_type: graduationType,
+                            notes: `Graduated via dashboard on ${new Date().toLocaleString()}`
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(`✅ Strategy graduated to ${graduationType} successfully!`);
+                        this.refreshGraduationCandidates();
+                        
+                        // Refresh the graduated strategies if that view is open
+                        if (typeof dashboard !== 'undefined') {
+                            dashboard.showToastNotification(`Strategy graduated to ${graduationType}`, 'success');
+                        }
+                    } else {
+                        alert(`❌ Graduation failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error graduating strategy:', error);
+                    alert(`❌ Graduation error: ${error.message}`);
+                }
+            }
+
+            async bulkGraduateSelected() {
+                if (this.selectedStrategies.size === 0) return;
+
+                const graduationType = prompt('Enter graduation type (paper/live):');
+                if (!graduationType || !['paper', 'live'].includes(graduationType.toLowerCase())) {
+                    alert('Please enter either "paper" or "live"');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/strategy/bulk-graduate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            strategy_ids: Array.from(this.selectedStrategies),
+                            graduation_type: graduationType.toLowerCase(),
+                            notes: `Bulk graduated via dashboard on ${new Date().toLocaleString()}`
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(`✅ Successfully graduated ${result.graduated_strategies.length} strategies to ${graduationType}!`);
+                        this.clearSelection();
+                        this.refreshGraduationCandidates();
+                        
+                        if (typeof dashboard !== 'undefined') {
+                            dashboard.showToastNotification(`${result.graduated_strategies.length} strategies graduated to ${graduationType}`, 'success');
+                        }
+                    } else {
+                        alert(`❌ Bulk graduation failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error bulk graduating strategies:', error);
+                    alert(`❌ Bulk graduation error: ${error.message}`);
+                }
+            }
+
+            async compareSelectedStrategies() {
+                if (this.selectedStrategies.size < 2) return;
+
+                try {
+                    const response = await fetch('/api/strategy/compare', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            strategy_ids: Array.from(this.selectedStrategies)
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showComparisonModal(result.comparison_data);
+                    } else {
+                        alert(`❌ Comparison failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error comparing strategies:', error);
+                    alert(`❌ Comparison error: ${error.message}`);
+                }
+            }
+
+            showComparisonModal(comparisonData) {
+                // Create modal if it doesn't exist
+                let modal = document.getElementById('comparisonModal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'comparisonModal';
+                    modal.className = 'comparison-modal';
+                    document.body.appendChild(modal);
+                }
+
+                const strategiesHtml = comparisonData.strategies.map((strategy, index) => `
+                    <div class="strategy-comparison-card ${index === 0 ? 'winner' : ''}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6>${strategy.pair} (${strategy.timeframe})</h6>
+                            <span class="badge ${index === 0 ? 'bg-success' : 'bg-secondary'}">
+                                #${strategy.comparison_rank}
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Score: ${strategy.comparison_score}</strong>
+                            <small class="text-muted">(${strategy.relative_performance}% of best)</small>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small>Return: <strong>${(strategy.total_return_pct || 0).toFixed(1)}%</strong></small>
+                            </div>
+                            <div class="col-6">
+                                <small>Sharpe: <strong>${(strategy.sharpe_ratio || 0).toFixed(2)}</strong></small>
+                            </div>
+                            <div class="col-6">
+                                <small>Win Rate: <strong>${(strategy.win_rate_pct || 0).toFixed(1)}%</strong></small>
+                            </div>
+                            <div class="col-6">
+                                <small>Max DD: <strong>${(strategy.max_drawdown_pct || 0).toFixed(1)}%</strong></small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                modal.innerHTML = `
+                    <div class="comparison-content">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Strategy Comparison Results</h5>
+                            <button class="btn btn-outline-light" onclick="this.closest('.comparison-modal').style.display='none'">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="strategy-comparison-grid">
+                            ${strategiesHtml}
+                        </div>
+                        <div class="mt-3 p-3 bg-dark rounded">
+                            <h6>Recommendation:</h6>
+                            <p class="mb-0">${comparisonData.recommendation}</p>
+                        </div>
+                    </div>
+                `;
+
+                modal.style.display = 'block';
+            }
+
+            async showGraduatedStrategies() {
+                try {
+                    const response = await fetch('/api/strategy/graduated');
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        let modal = document.getElementById('graduatedModal');
+                        if (!modal) {
+                            modal = document.createElement('div');
+                            modal.id = 'graduatedModal';
+                            modal.className = 'comparison-modal';
+                            document.body.appendChild(modal);
+                        }
+
+                        const strategiesHtml = result.data.length === 0 ? 
+                            '<p class="text-muted text-center">No graduated strategies yet.</p>' :
+                            result.data.map(strategy => `
+                                <div class="graduation-candidate">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <strong>${strategy.pair}</strong> 
+                                            <span class="text-muted">(${strategy.timeframe})</span>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <span class="badge ${strategy.graduation_type === 'live' ? 'bg-success' : 'bg-warning'}">
+                                                ${strategy.graduation_type.toUpperCase()}
+                                            </span>
+                                            <span class="badge bg-info">${strategy.status}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            Graduated: ${new Date(strategy.graduation_timestamp).toLocaleString()}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="graduationDashboard.removeGraduation(${strategy.id})">
+                                            <i class="bi bi-x-lg"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('');
+
+                        modal.innerHTML = `
+                            <div class="comparison-content">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>Graduated Strategies (${result.data.length})</h5>
+                                    <button class="btn btn-outline-light" onclick="this.closest('.comparison-modal').style.display='none'">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <div style="max-height: 60vh; overflow-y: auto;">
+                                    ${strategiesHtml}
+                                </div>
+                            </div>
+                        `;
+
+                        modal.style.display = 'block';
+                    } else {
+                        alert(`❌ Failed to load graduated strategies: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error loading graduated strategies:', error);
+                    alert(`❌ Error: ${error.message}`);
+                }
+            }
+
+            async removeGraduation(graduationId) {
+                if (!confirm('Remove this strategy from graduation? It will return to the backtest pool.')) return;
+
+                try {
+                    const response = await fetch(`/api/strategy/graduated/${graduationId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('✅ Strategy removed from graduation');
+                        this.showGraduatedStrategies(); // Refresh the modal
+                        this.refreshGraduationCandidates(); // Refresh candidates list
+                    } else {
+                        alert(`❌ Failed to remove: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error removing graduation:', error);
+                    alert(`❌ Error: ${error.message}`);
+                }
+            }
+        }
+
         // Console Management Functions
         let consoleData = [];
         let consolePaused = false;
@@ -5616,12 +6516,14 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             }
         }
 
-        // Global dashboard instance
+        // Global dashboard instances
         let dashboard;
+        let graduationDashboard;
 
         // Initialize dashboard when page loads
         document.addEventListener('DOMContentLoaded', () => {
             dashboard = new UnifiedDashboard();
+            graduationDashboard = new GraduationDashboard();
             initializeConsole();
             
             // Set up filter event listeners
@@ -5934,5 +6836,9 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             setInterval(updateMLRiskMetrics, 10000);
         });
     </script>
+
+    <!-- Modal Containers for Graduation Dashboard -->
+    <!-- These will be populated dynamically by JavaScript -->
+    
 </body>
 </html>

@@ -1898,6 +1898,631 @@ async def get_backtest_history():
             "error": str(e)
         }
 
+@app.get("/api/backtest/detailed-history")
+async def get_detailed_backtest_history(
+    limit: int = 50,
+    status: str = None,
+    min_return: float = None,
+    min_sharpe: float = None
+):
+    """Get detailed backtest results for strategy graduation analysis."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Build query with optional filters
+        where_clauses = []
+        params = []
+        
+        if status:
+            where_clauses.append("status = ?")
+            params.append(status)
+            
+        if min_return is not None:
+            where_clauses.append("total_return_pct >= ?")
+            params.append(min_return)
+            
+        if min_sharpe is not None:
+            where_clauses.append("sharpe_ratio >= ?")
+            params.append(min_sharpe)
+        
+        where_clause = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        
+        query = f"""
+        SELECT 
+            id, pair, timeframe, strategy_name, starting_balance, ending_balance,
+            total_return_pct, sharpe_ratio, sortino_ratio, calmar_ratio,
+            max_drawdown_pct, win_rate_pct, profit_factor, total_trades,
+            winning_trades, losing_trades, average_win_pct, average_loss_pct,
+            largest_win_pct, largest_loss_pct, annual_return_pct,
+            status, timestamp, trades_data, equity_curve_data,
+            risk_adjusted_return, volatility_pct, information_ratio
+        FROM backtest_results 
+        {where_clause}
+        ORDER BY timestamp DESC 
+        LIMIT ?
+        """
+        
+        params.append(limit)
+        cursor.execute(query, params)
+        columns = [description[0] for description in cursor.description]
+        rows = cursor.fetchall()
+        
+        results = []
+        for row in rows:
+            result = dict(zip(columns, row))
+            
+            # Parse JSON fields if they exist
+            if result.get('trades_data'):
+                try:
+                    result['trades_data'] = json.loads(result['trades_data'])
+                except:
+                    result['trades_data'] = None
+                    
+            if result.get('equity_curve_data'):
+                try:
+                    result['equity_curve_data'] = json.loads(result['equity_curve_data'])
+                except:
+                    result['equity_curve_data'] = None
+            
+            # Calculate additional derived metrics
+            if result['total_trades'] and result['total_trades'] > 0:
+                result['win_loss_ratio'] = (
+                    result['winning_trades'] / max(result['losing_trades'], 1)
+                    if result['losing_trades'] and result['losing_trades'] > 0 else float('inf')
+                )
+                result['trade_frequency'] = result['total_trades'] / max((
+                    (datetime.now() - datetime.fromisoformat(result['timestamp'])).days / 365
+                ), 0.1)
+            else:
+                result['win_loss_ratio'] = 0
+                result['trade_frequency'] = 0
+            
+            # Risk-adjusted scoring for graduation ranking
+            risk_score = 0
+            if result['sharpe_ratio'] and result['sharpe_ratio'] > 0:
+                risk_score += min(result['sharpe_ratio'] * 20, 40)  # Max 40 points
+            if result['total_return_pct'] and result['total_return_pct'] > 0:
+                risk_score += min(result['total_return_pct'], 30)  # Max 30 points
+            if result['max_drawdown_pct'] is not None:
+                risk_score -= min(abs(result['max_drawdown_pct']) * 2, 20)  # Penalty for drawdown
+            if result['win_rate_pct'] and result['win_rate_pct'] > 0:
+                risk_score += min(result['win_rate_pct'] / 5, 20)  # Max 20 points
+            if result['profit_factor'] and result['profit_factor'] > 1:
+                risk_score += min((result['profit_factor'] - 1) * 10, 10)  # Max 10 points
+                
+            result['graduation_score'] = max(0, risk_score)
+            
+            # Graduation recommendation
+            if (result['graduation_score'] >= 70 and 
+                result['total_trades'] and result['total_trades'] >= 10 and
+                result['sharpe_ratio'] and result['sharpe_ratio'] >= 1.0):
+                result['graduation_recommendation'] = 'STRONG'
+            elif (result['graduation_score'] >= 50 and 
+                  result['total_trades'] and result['total_trades'] >= 5):
+                result['graduation_recommendation'] = 'MODERATE'
+            elif result['graduation_score'] >= 30:
+                result['graduation_recommendation'] = 'WEAK'
+            else:
+                result['graduation_recommendation'] = 'NOT_RECOMMENDED'
+            
+            results.append(result)
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "data": results,
+            "total_results": len(results),
+            "filters_applied": {
+                "status": status,
+                "min_return": min_return,
+                "min_sharpe": min_sharpe,
+                "limit": limit
+            },
+            "message": f"Retrieved {len(results)} detailed backtest results"
+        }
+        
+    except Exception as e:
+        logger.error(f"Detailed backtest history error: {e}")
+        return {
+            "success": False,
+            "data": [],
+            "error": str(e)
+        }
+
+@app.post("/api/strategy/graduate")
+async def graduate_strategy(request: dict):
+    """Graduate a strategy from backtest to paper trading."""
+    try:
+        backtest_id = request.get('backtest_id')
+        graduation_type = request.get('graduation_type', 'paper')  # paper, live
+        user_notes = request.get('user_notes', '')
+        
+        if not backtest_id:
+            return {"success": False, "error": "backtest_id is required"}
+        
+        # Get backtest results
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT * FROM backtest_results WHERE id = ?
+        """, (backtest_id,))
+        
+        backtest_result = cursor.fetchone()
+        if not backtest_result:
+            conn.close()
+            return {"success": False, "error": "Backtest result not found"}
+        
+        # Get column names
+        cursor.execute("PRAGMA table_info(backtest_results)")
+        columns = [col[1] for col in cursor.fetchall()]
+        backtest_dict = dict(zip(columns, backtest_result))
+        
+        # Create graduated_strategies table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS graduated_strategies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                backtest_id INTEGER UNIQUE,
+                pair TEXT NOT NULL,
+                timeframe TEXT NOT NULL,
+                strategy_name TEXT,
+                graduation_type TEXT DEFAULT 'paper',
+                graduation_timestamp TEXT,
+                starting_balance REAL,
+                performance_metrics TEXT,
+                user_notes TEXT,
+                status TEXT DEFAULT 'active',
+                created_at TEXT,
+                FOREIGN KEY (backtest_id) REFERENCES backtest_results (id)
+            )
+        """)
+        
+        # Create graduated strategy record
+        graduation_timestamp = datetime.now().isoformat()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO graduated_strategies 
+            (backtest_id, pair, timeframe, strategy_name, graduation_type,
+             graduation_timestamp, starting_balance, performance_metrics,
+             user_notes, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            backtest_id,
+            backtest_dict['pair'],
+            backtest_dict['timeframe'],
+            backtest_dict.get('strategy_name', 'Unknown'),
+            graduation_type,
+            graduation_timestamp,
+            backtest_dict['starting_balance'],
+            json.dumps({
+                'total_return_pct': backtest_dict['total_return_pct'],
+                'sharpe_ratio': backtest_dict['sharpe_ratio'],
+                'max_drawdown_pct': backtest_dict['max_drawdown_pct'],
+                'win_rate_pct': backtest_dict['win_rate_pct'],
+                'profit_factor': backtest_dict['profit_factor'],
+                'total_trades': backtest_dict['total_trades']
+            }),
+            user_notes,
+            'active',
+            graduation_timestamp
+        ))
+        
+        # Update backtest result status
+        cursor.execute("""
+            UPDATE backtest_results 
+            SET status = ? 
+            WHERE id = ?
+        """, (f'graduated_{graduation_type}', backtest_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": f"Strategy successfully graduated to {graduation_type} trading",
+            "graduation_data": {
+                "backtest_id": backtest_id,
+                "graduation_type": graduation_type,
+                "timestamp": graduation_timestamp,
+                "strategy_name": backtest_dict.get('strategy_name', 'Unknown'),
+                "pair": backtest_dict['pair'],
+                "timeframe": backtest_dict['timeframe']
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Strategy graduation error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/strategy/graduated")
+async def get_graduated_strategies():
+    """Get all graduated strategies."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT gs.*, br.total_return_pct, br.sharpe_ratio, br.win_rate_pct
+            FROM graduated_strategies gs
+            LEFT JOIN backtest_results br ON gs.backtest_id = br.id
+            ORDER BY gs.graduation_timestamp DESC
+        """)
+        
+        columns = [description[0] for description in cursor.description]
+        rows = cursor.fetchall()
+        
+        results = []
+        for row in rows:
+            result = dict(zip(columns, row))
+            
+            # Parse performance metrics
+            if result.get('performance_metrics'):
+                try:
+                    result['performance_metrics'] = json.loads(result['performance_metrics'])
+                except:
+                    result['performance_metrics'] = {}
+            
+            results.append(result)
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "data": results,
+            "message": f"Retrieved {len(results)} graduated strategies"
+        }
+        
+    except Exception as e:
+        logger.error(f"Get graduated strategies error: {e}")
+        return {
+            "success": False,
+            "data": [],
+            "error": str(e)
+        }
+
+@app.get("/api/backtest/results-for-graduation")
+async def get_backtest_results_for_graduation(
+    limit: int = 20,
+    min_sharpe: float = 0.5,
+    min_trades: int = 5,
+    min_return: float = 0.0
+):
+    """Get backtest results suitable for strategy graduation with detailed metrics."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get detailed backtest results with filtering for graduation candidates
+        query = """
+            SELECT br.*, 
+                   gs.graduation_type as current_graduation,
+                   gs.status as graduation_status,
+                   CASE WHEN gs.id IS NOT NULL THEN 1 ELSE 0 END as is_graduated
+            FROM backtest_results br
+            LEFT JOIN graduated_strategies gs ON br.id = gs.backtest_id
+            WHERE br.total_trades >= ? 
+            AND br.sharpe_ratio >= ? 
+            AND br.total_return_pct >= ?
+            AND br.status NOT LIKE 'graduated_%'
+            ORDER BY 
+                (br.sharpe_ratio * 0.3 + 
+                 br.total_return_pct * 0.25 + 
+                 COALESCE(br.win_rate_pct, 0) * 0.2 + 
+                 (CASE WHEN br.max_drawdown_pct < -10 THEN 0 ELSE 0.25 END)) DESC
+            LIMIT ?
+        """
+        
+        cursor.execute(query, (min_trades, min_sharpe, min_return, limit))
+        columns = [description[0] for description in cursor.description]
+        rows = cursor.fetchall()
+        
+        results = []
+        for row in rows:
+            result = dict(zip(columns, row))
+            
+            # Calculate graduation score
+            graduation_score = 0
+            if result['sharpe_ratio']:
+                graduation_score += min(result['sharpe_ratio'] * 25, 50)
+            if result['total_return_pct']:
+                graduation_score += min(result['total_return_pct'] * 0.5, 25)
+            if result['win_rate_pct']:
+                graduation_score += min(result['win_rate_pct'] * 0.2, 15)
+            if result['max_drawdown_pct'] and result['max_drawdown_pct'] > -15:
+                graduation_score += 10
+                
+            result['graduation_score'] = round(graduation_score, 1)
+            
+            # Graduation recommendation
+            if graduation_score >= 70 and result['total_trades'] >= 10:
+                result['graduation_recommendation'] = 'STRONG'
+            elif graduation_score >= 50 and result['total_trades'] >= 5:
+                result['graduation_recommendation'] = 'MODERATE'
+            else:
+                result['graduation_recommendation'] = 'WEAK'
+                
+            # Risk assessment
+            risk_level = 'LOW'
+            if result['max_drawdown_pct'] and result['max_drawdown_pct'] < -20:
+                risk_level = 'HIGH'
+            elif result['max_drawdown_pct'] and result['max_drawdown_pct'] < -10:
+                risk_level = 'MEDIUM'
+                
+            result['risk_level'] = risk_level
+            
+            results.append(result)
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "data": results,
+            "total": len(results),
+            "filters_applied": {
+                "min_sharpe": min_sharpe,
+                "min_trades": min_trades, 
+                "min_return": min_return
+            },
+            "message": f"Found {len(results)} strategies suitable for graduation"
+        }
+        
+    except Exception as e:
+        logger.error(f"Get graduation candidates error: {e}")
+        return {
+            "success": False,
+            "data": [],
+            "error": str(e)
+        }
+
+@app.post("/api/strategy/compare")
+async def compare_strategies(strategy_ids: list[int]):
+    """Compare multiple strategies side-by-side for graduation decision."""
+    try:
+        if len(strategy_ids) < 2:
+            return {
+                "success": False,
+                "error": "At least 2 strategies required for comparison"
+            }
+            
+        if len(strategy_ids) > 5:
+            return {
+                "success": False,
+                "error": "Maximum 5 strategies can be compared at once"
+            }
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get details for all strategies
+        placeholders = ','.join(['?' for _ in strategy_ids])
+        query = f"""
+            SELECT * FROM backtest_results 
+            WHERE id IN ({placeholders})
+            ORDER BY total_return_pct DESC
+        """
+        
+        cursor.execute(query, strategy_ids)
+        columns = [description[0] for description in cursor.description]
+        rows = cursor.fetchall()
+        
+        strategies = []
+        for row in rows:
+            strategy = dict(zip(columns, row))
+            
+            # Calculate normalized scores for comparison
+            scores = {
+                'return_score': min(max(strategy['total_return_pct'] or 0, 0), 100),
+                'sharpe_score': min(max((strategy['sharpe_ratio'] or 0) * 25, 0), 100),
+                'drawdown_score': min(max(100 + (strategy['max_drawdown_pct'] or 0) * 2, 0), 100),
+                'winrate_score': min(max(strategy['win_rate_pct'] or 0, 0), 100),
+                'trades_score': min(max((strategy['total_trades'] or 0) * 2, 0), 100)
+            }
+            
+            # Overall comparison score
+            strategy['comparison_score'] = round(sum(scores.values()) / len(scores), 1)
+            strategy['individual_scores'] = scores
+            
+            strategies.append(strategy)
+        
+        # Sort by comparison score
+        strategies.sort(key=lambda x: x['comparison_score'], reverse=True)
+        
+        # Add ranking
+        for i, strategy in enumerate(strategies):
+            strategy['comparison_rank'] = i + 1
+        
+        # Calculate relative performance
+        if len(strategies) > 1:
+            best_score = strategies[0]['comparison_score']
+            for strategy in strategies:
+                strategy['relative_performance'] = round(
+                    (strategy['comparison_score'] / best_score) * 100, 1
+                ) if best_score > 0 else 0
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "comparison_data": {
+                "strategies": strategies,
+                "comparison_timestamp": datetime.now().isoformat(),
+                "best_strategy_id": strategies[0]['id'] if strategies else None,
+                "recommendation": "Consider graduating the top-ranked strategies with comparison scores above 60"
+            },
+            "message": f"Successfully compared {len(strategies)} strategies"
+        }
+        
+    except Exception as e:
+        logger.error(f"Strategy comparison error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/strategy/bulk-graduate")
+async def bulk_graduate_strategies(
+    strategy_ids: list[int],
+    graduation_type: str = "paper",
+    notes: str = ""
+):
+    """Graduate multiple strategies at once."""
+    try:
+        if not strategy_ids:
+            return {
+                "success": False,
+                "error": "No strategy IDs provided"
+            }
+            
+        if graduation_type not in ['paper', 'live']:
+            return {
+                "success": False,
+                "error": "graduation_type must be 'paper' or 'live'"
+            }
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        graduated_strategies = []
+        failed_graduations = []
+        
+        for strategy_id in strategy_ids:
+            try:
+                # Get strategy details
+                cursor.execute("SELECT * FROM backtest_results WHERE id = ?", (strategy_id,))
+                strategy = cursor.fetchone()
+                
+                if not strategy:
+                    failed_graduations.append({
+                        "id": strategy_id,
+                        "error": "Strategy not found"
+                    })
+                    continue
+                
+                columns = [description[0] for description in cursor.description]
+                strategy_dict = dict(zip(columns, strategy))
+                
+                # Create graduation record
+                graduation_timestamp = datetime.now().isoformat()
+                
+                cursor.execute("""
+                    INSERT OR REPLACE INTO graduated_strategies 
+                    (backtest_id, pair, timeframe, strategy_name, graduation_type,
+                     graduation_timestamp, starting_balance, performance_metrics,
+                     user_notes, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    strategy_id,
+                    strategy_dict['pair'],
+                    strategy_dict['timeframe'],
+                    strategy_dict.get('strategy_name', f'Strategy_{strategy_id}'),
+                    graduation_type,
+                    graduation_timestamp,
+                    strategy_dict['starting_balance'],
+                    json.dumps({
+                        'total_return_pct': strategy_dict['total_return_pct'],
+                        'sharpe_ratio': strategy_dict['sharpe_ratio'],
+                        'max_drawdown_pct': strategy_dict['max_drawdown_pct'],
+                        'win_rate_pct': strategy_dict['win_rate_pct']
+                    }),
+                    notes,
+                    'active',
+                    graduation_timestamp
+                ))
+                
+                # Update backtest status
+                cursor.execute(
+                    "UPDATE backtest_results SET status = ? WHERE id = ?",
+                    (f'graduated_{graduation_type}', strategy_id)
+                )
+                
+                graduated_strategies.append({
+                    "id": strategy_id,
+                    "pair": strategy_dict['pair'],
+                    "timeframe": strategy_dict['timeframe'],
+                    "graduation_type": graduation_type,
+                    "timestamp": graduation_timestamp
+                })
+                
+            except Exception as e:
+                failed_graduations.append({
+                    "id": strategy_id,
+                    "error": str(e)
+                })
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True,
+            "graduated_strategies": graduated_strategies,
+            "failed_graduations": failed_graduations,
+            "summary": {
+                "total_requested": len(strategy_ids),
+                "successful": len(graduated_strategies),
+                "failed": len(failed_graduations)
+            },
+            "message": f"Successfully graduated {len(graduated_strategies)} out of {len(strategy_ids)} strategies to {graduation_type}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Bulk graduation error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.delete("/api/strategy/graduated/{graduation_id}")
+async def remove_graduated_strategy(graduation_id: int):
+    """Remove a strategy from graduation (move back to backtest pool)."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get graduation details
+        cursor.execute(
+            "SELECT backtest_id FROM graduated_strategies WHERE id = ?", 
+            (graduation_id,)
+        )
+        result = cursor.fetchone()
+        
+        if not result:
+            return {
+                "success": False,
+                "error": "Graduated strategy not found"
+            }
+        
+        backtest_id = result[0]
+        
+        # Remove from graduated strategies
+        cursor.execute("DELETE FROM graduated_strategies WHERE id = ?", (graduation_id,))
+        
+        # Reset backtest status
+        cursor.execute(
+            "UPDATE backtest_results SET status = 'completed' WHERE id = ?",
+            (backtest_id,)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Strategy removed from graduation and returned to backtest pool",
+            "backtest_id": backtest_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Remove graduation error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.post("/api/positions/{symbol}/close")
 async def close_position(symbol: str):
     """Close a specific position"""
