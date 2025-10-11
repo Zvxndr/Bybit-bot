@@ -176,8 +176,8 @@ class SimplifiedDashboardAPI:
                         "metrics": {
                             "phase_duration": random.uniform(2, 48),  # Demo data
                             "trade_count": random.randint(5, 25),
-                            "ready_for_promotion": row[2] == 'backtest' and row[4] > 75,
-                            "ready_for_graduation": row[2] == 'paper' and row[5] > 100
+                            "ready_for_promotion": row[2] == 'backtest' and row[4] is not None and row[4] > 75,
+                            "ready_for_graduation": row[2] == 'paper' and row[5] is not None and row[5] > 100
                         }
                     }
                     strategies.append(strategy)

@@ -887,7 +887,7 @@ class TradingAPI:
                         market_data=mock_market_data
                     )
                     
-                    risk_level = portfolio_risk.overall_risk_level.value
+                    risk_level = getattr(portfolio_risk.overall_risk_level, 'value', 'MEDIUM') if hasattr(portfolio_risk, 'overall_risk_level') else 'MEDIUM'
                     max_position_size = portfolio_risk.recommended_position_size
                     
                     return {
@@ -1033,48 +1033,53 @@ class TradingAPI:
             )
             db_manager = DatabaseManager(db_config)
             
-            # Try to fetch strategies from database
+            # Try to fetch strategies from database manager first
             strategies = await db_manager.get_strategies_by_phase()
             if strategies:
+                logger.info(f"Loaded strategies from database manager: {strategies}")
+                return strategies
                 
-                # Try to fetch strategies (create table if not exists)
-                try:
-                    cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS strategies (
-                            id INTEGER PRIMARY KEY,
-                            name TEXT NOT NULL,
-                            phase TEXT NOT NULL,
-                            performance REAL DEFAULT 0.0,
-                            status TEXT DEFAULT 'active',
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        )
-                    """)
+            # Fallback to direct SQLite connection
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            try:
+                # Create table if not exists
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS strategies (
+                        id INTEGER PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        phase TEXT NOT NULL,
+                        performance REAL DEFAULT 0.0,
+                        status TEXT DEFAULT 'active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                cursor.execute("SELECT name, phase, performance, status FROM strategies WHERE status = 'active'")
+                rows = cursor.fetchall()
+                
+                # Group strategies by phase
+                strategies = {"discovery": [], "paper": [], "live": []}
+                for row in rows:
+                    name, phase, performance, status = row
+                    strategy_data = {
+                        "name": name,
+                        "performance": performance,
+                        "status": status
+                    }
+                    if phase in strategies:
+                        strategies[phase].append(strategy_data)
+                
+                # If we have real data, return it
+                if any(strategies.values()):
+                    logger.info(f"Loaded {sum(len(v) for v in strategies.values())} strategies from direct SQLite")
+                    return strategies
                     
-                    cursor.execute("SELECT name, phase, performance, status FROM strategies WHERE status = 'active'")
-                    rows = cursor.fetchall()
-                    
-                    # Group strategies by phase
-                    strategies = {"discovery": [], "paper": [], "live": []}
-                    for row in rows:
-                        name, phase, performance, status = row
-                        strategy_data = {
-                            "name": name,
-                            "performance": performance,
-                            "status": status
-                        }
-                        if phase in strategies:
-                            strategies[phase].append(strategy_data)
-                    
-                    conn.close()
-                    
-                    # If we have real data, return it
-                    if any(strategies.values()):
-                        logger.info(f"Loaded {sum(len(v) for v in strategies.values())} strategies from database")
-                        return strategies
-                        
-                except sqlite3.Error as e:
-                    logger.warning(f"Database query error: {e}")
-                    conn.close()
+            except sqlite3.Error as e:
+                logger.warning(f"Database query error: {e}")
+            finally:
+                conn.close()
             
             # Return empty data - strategies should only show up after ML discovery or backtesting
             logger.info("No strategies found in database - run ML discovery or backtesting to generate strategies")
@@ -1482,6 +1487,43 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Failed to initialize Pipeline Manager: {e}")
     
+    # Initialize missing database tables for graduation system
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Create graduated_strategies table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS graduated_strategies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                backtest_id INTEGER UNIQUE,
+                pair TEXT NOT NULL,
+                timeframe TEXT NOT NULL,
+                strategy_name TEXT,
+                graduation_type TEXT DEFAULT 'paper',
+                graduation_timestamp TEXT,
+                starting_balance REAL,
+                performance_metrics TEXT,
+                user_notes TEXT,
+                FOREIGN KEY (backtest_id) REFERENCES backtest_results (id)
+            )
+        """)
+        
+        # Ensure backtest_results table has strategy_name column
+        cursor.execute("PRAGMA table_info(backtest_results)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'strategy_name' not in columns:
+            cursor.execute("ALTER TABLE backtest_results ADD COLUMN strategy_name TEXT")
+            logger.info("✅ Added strategy_name column to backtest_results")
+        
+        conn.commit()
+        conn.close()
+        logger.info("✅ Database tables initialized for graduation system")
+        
+    except Exception as e:
+        logger.error(f"⚠️ Database table initialization error: {e}")
+
     # Start monitoring system
     if infrastructure_monitor:
         try:
@@ -2288,6 +2330,51 @@ async def get_backtest_results_for_graduation(
         
     except Exception as e:
         logger.error(f"Get graduation candidates error: {e}")
+        return {
+            "success": False,
+            "data": [],
+            "error": str(e)
+        }
+
+@app.get("/api/graduation/candidates")
+async def get_graduation_candidates(
+    limit: int = 20,
+    min_sharpe: float = 0.5,
+    min_trades: int = 5,
+    min_return: float = 0.0
+):
+    """Alias for backtest results suitable for graduation - ensures table creation."""
+    try:
+        # Ensure graduated_strategies table exists first
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Create graduated_strategies table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS graduated_strategies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                backtest_id INTEGER UNIQUE,
+                pair TEXT NOT NULL,
+                timeframe TEXT NOT NULL,
+                strategy_name TEXT,
+                graduation_type TEXT DEFAULT 'paper',
+                graduation_timestamp TEXT,
+                starting_balance REAL,
+                performance_metrics TEXT,
+                user_notes TEXT,
+                status TEXT DEFAULT 'active',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (backtest_id) REFERENCES backtest_results(id)
+            )
+        """)
+        conn.commit()
+        conn.close()
+        
+        # Call the existing graduation function
+        return await get_backtest_results_for_graduation(limit, min_sharpe, min_trades, min_return)
+        
+    except Exception as e:
+        logger.error(f"Graduation candidates endpoint error: {e}")
         return {
             "success": False,
             "data": [],

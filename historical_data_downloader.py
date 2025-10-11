@@ -640,6 +640,83 @@ class HistoricalDataDownloader:
     def get_status(self):
         """Get downloader status"""
         return {"status": "ready", "type": "full_implementation"}
+    
+    def get_historical_performance(self, symbol: str, timeframe: str, limit: int = 30) -> Dict:
+        """Get historical performance data for a symbol"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Get recent historical data
+                cursor.execute("""
+                    SELECT timestamp, open, high, low, close, volume 
+                    FROM historical_data 
+                    WHERE symbol = ? AND timeframe = ?
+                    ORDER BY timestamp DESC 
+                    LIMIT ?
+                """, (symbol, timeframe, limit))
+                
+                rows = cursor.fetchall()
+                if not rows:
+                    return {
+                        "symbol": symbol,
+                        "timeframe": timeframe,
+                        "data": [],
+                        "performance": {
+                            "total_return": 0,
+                            "volatility": 0,
+                            "max_drawdown": 0
+                        }
+                    }
+                
+                # Calculate performance metrics
+                prices = [row[4] for row in rows]  # closing prices
+                if len(prices) > 1:
+                    total_return = ((prices[0] - prices[-1]) / prices[-1]) * 100
+                    returns = [(prices[i] - prices[i+1]) / prices[i+1] for i in range(len(prices)-1)]
+                    volatility = (sum(r**2 for r in returns) / len(returns))**0.5 * 100 if returns else 0
+                    
+                    # Calculate max drawdown
+                    peak = prices[-1]
+                    max_drawdown = 0
+                    for price in reversed(prices):
+                        if price > peak:
+                            peak = price
+                        drawdown = ((peak - price) / peak) * 100
+                        max_drawdown = max(max_drawdown, drawdown)
+                else:
+                    total_return = volatility = max_drawdown = 0
+                
+                return {
+                    "symbol": symbol,
+                    "timeframe": timeframe,
+                    "data": [
+                        {
+                            "timestamp": row[0],
+                            "open": row[1],
+                            "high": row[2], 
+                            "low": row[3],
+                            "close": row[4],
+                            "volume": row[5]
+                        }
+                        for row in reversed(rows)
+                    ],
+                    "performance": {
+                        "total_return": round(total_return, 2),
+                        "volatility": round(volatility, 2),
+                        "max_drawdown": round(max_drawdown, 2)
+                    }
+                }
+                
+        except Exception as e:
+            logger.error(f"Error getting historical performance for {symbol}: {e}")
+            return {
+                "symbol": symbol,
+                "timeframe": timeframe,
+                "data": [],
+                "performance": {"total_return": 0, "volatility": 0, "max_drawdown": 0},
+                "error": str(e)
+            }
 
 
 # Global instance
