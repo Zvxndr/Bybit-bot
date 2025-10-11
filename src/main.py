@@ -1872,7 +1872,8 @@ async def run_historical_backtest(request: Request):
                 # Calculate period dates
                 period_mapping = {
                     '1w': 7, '2w': 14, '1m': 30, '3m': 90, 
-                    '6m': 180, '1y': 365, '2y': 730, '3y': 1095, 'all': 1095
+                    '6m': 180, '1y': 365, '2y': 730, '3y': 1095,
+                    '1825': 1825, '3650': 3650, 'all': 3650
                 }
                 days_back = period_mapping.get(period, 90)
                 
@@ -1937,12 +1938,17 @@ async def run_historical_backtest(request: Request):
             
             # Enhanced period handling for flexible backtesting
             period_mapping = {
+                '1w': 7,     # 1 week
+                '2w': 14,    # 2 weeks
                 '1m': 30,    # 1 month
                 '3m': 90,    # 3 months  
                 '6m': 180,   # 6 months
                 '1y': 365,   # 1 year
                 '2y': 730,   # 2 years
-                '3y': 1095   # 3 years
+                '3y': 1095,  # 3 years
+                '1825': 1825, # 5 years
+                '3650': 3650, # 10 years
+                'all': 3650  # All available (default to 10 years)
             }
             duration_days = period_mapping.get(period, 90)  # Default to 3 months
             
