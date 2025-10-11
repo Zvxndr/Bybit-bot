@@ -1989,8 +1989,13 @@
                 <div id="backtestStrategies">
                     <div class="text-center text-muted p-4">
                         <i class="bi bi-graph-up-arrow"></i><br>
-                        Click strategy cards for detailed backtesting results
+                        Run backtests to see detailed strategy results
                     </div>
+                </div>
+                
+                <!-- Backtest Results List Container -->
+                <div id="backtestResultsList" class="mt-3">
+                    <!-- Results will be populated here by JavaScript -->
                 </div>
             </div>
 
@@ -4734,13 +4739,25 @@
                     const result = await response.json();
                     
                     if (result.success) {
+                        // Show the result data in console for debugging
+                        console.log('Backtest result:', result.data);
+                        
                         // Refresh backtest history list
-                        this.refreshDetailedBacktestHistory();
+                        console.log('Refreshing backtest results...');
+                        await this.refreshDetailedBacktestHistory();
+                        
                         this.showToastNotification(
                             `✅ Historical backtest completed! ROI: ${result.data.total_return}%`, 
                             'success'
                         );
+                        
+                        // Force scroll to results
+                        const resultsContainer = document.getElementById('backtestResultsList');
+                        if (resultsContainer) {
+                            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+                        }
                     } else {
+                        console.error('Backtest failed:', result);
                         this.showToastNotification(`❌ Backtest failed: ${result.message}`, 'danger');
                     }
                 } catch (error) {
@@ -4830,12 +4847,17 @@
 
             async refreshDetailedBacktestHistory() {
                 try {
+                    console.log('Fetching backtest detailed history...');
                     const response = await fetch('/api/backtest/detailed-history?limit=20');
                     const result = await response.json();
                     
-                    if (result.success && result.data.length > 0) {
+                    console.log('Backtest history response:', result);
+                    
+                    if (result.success && result.data && result.data.length > 0) {
+                        console.log(`Found ${result.data.length} backtest results`);
                         this.displayDetailedBacktestResults(result.data);
                     } else {
+                        console.log('No backtest results found, showing empty state');
                         this.displayEmptyBacktestResults();
                     }
                 } catch (error) {
@@ -5112,8 +5134,12 @@
             }
 
             displayDetailedBacktestResults(results) {
+                console.log('Displaying backtest results:', results);
                 const container = document.getElementById('backtestResultsList');
-                if (!container) return;
+                if (!container) {
+                    console.error('backtestResultsList container not found!');
+                    return;
+                }
 
                 let html = '';
                 results.forEach(result => {
