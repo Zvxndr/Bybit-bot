@@ -100,13 +100,15 @@ class ProductionLogger:
         self.pipeline_logger = structlog.get_logger("pipeline")
         self.deployment_logger = structlog.get_logger("deployment")
         
-        self.deployment_logger.info(
-            "Production logging system initialized",
-            environment=self.environment,
-            deployment_id=self.deployment_id,
-            log_level=log_level,
-            log_directory=str(self.log_dir)
-        )
+        # Only log initialization in development or if there's an error
+        if self.environment == 'development' or self.log_level <= logging.WARNING:
+            self.deployment_logger.info(
+                "Production logging system initialized",
+                environment=self.environment,
+                deployment_id=self.deployment_id,
+                log_level=log_level,
+                log_directory=str(self.log_dir)
+            )
     
     def _setup_structured_logging(self):
         """Setup structured logging configuration"""
@@ -125,13 +127,13 @@ class ProductionLogger:
             cache_logger_on_first_use=True,
         )
         
-        # Setup file handlers
+        # Setup file handlers - only log errors to reduce verbosity
         log_files = {
-            'app.log': logging.INFO,
-            'api.log': logging.INFO,
-            'database.log': logging.DEBUG,
+            'app.log': logging.ERROR,     # Changed from INFO to ERROR
+            'api.log': logging.ERROR,     # Changed from INFO to ERROR  
+            'database.log': logging.ERROR, # Changed from DEBUG to ERROR
             'errors.log': logging.ERROR,
-            'performance.log': logging.INFO
+            'performance.log': logging.ERROR  # Changed from INFO to ERROR
         }
         
         for filename, level in log_files.items():
@@ -143,10 +145,12 @@ class ProductionLogger:
             )
             handler.setFormatter(formatter)
             
-            # Add handler to root logger
+            # Add handler to root logger - respect the main app's ERROR level
             root_logger = logging.getLogger()
             root_logger.addHandler(handler)
-            root_logger.setLevel(logging.DEBUG)
+            # Don't override the root logger level set in main.py
+            if root_logger.level == logging.NOTSET:
+                root_logger.setLevel(self.log_level)
     
     def generate_correlation_id(self) -> str:
         """Generate unique correlation ID for request tracking"""
@@ -383,9 +387,9 @@ class ProductionLogger:
         )
 
 
-# Global production logger instance
+# Global production logger instance - ERROR level only for production
 production_logger = ProductionLogger(
-    log_level=os.getenv('LOG_LEVEL', 'INFO'),
+    log_level=os.getenv('LOG_LEVEL', 'ERROR'),  # Changed to ERROR for less verbose output
     log_dir=os.getenv('LOG_DIR', '/app/logs')
 )
 

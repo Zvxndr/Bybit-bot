@@ -2877,6 +2877,9 @@
                 this.loadDashboardData();
                 this.refreshDetailedBacktestHistory();
                 
+                // Initialize historical data discovery and backtesting controls
+                this.initializeHistoricalDataControls();
+                
                 // Initialize Australian tax compliance
                 await this.initializeTaxCompliance();
                 
@@ -2884,6 +2887,23 @@
                 const isMobile = window.innerWidth <= 768;
                 const updateInterval = isMobile ? 10000 : 5000; // 10s on mobile, 5s on desktop
                 setInterval(() => this.updateData(), updateInterval);
+            }
+
+            initializeHistoricalDataControls() {
+                // Discover available historical data on page load
+                console.log('🔍 Initializing historical data controls...');
+                
+                // Call global discovery function if available
+                if (typeof window.discoverAvailableData === 'function') {
+                    window.discoverAvailableData();
+                } else {
+                    console.log('⚠️ discoverAvailableData function not found, retrying in 2 seconds...');
+                    setTimeout(() => {
+                        if (typeof window.discoverAvailableData === 'function') {
+                            window.discoverAvailableData();
+                        }
+                    }, 2000);
+                }
             }
 
             async initWebSocket() {
