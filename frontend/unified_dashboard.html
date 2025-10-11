@@ -1864,8 +1864,11 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Historical Period</label>
                             <select class="form-select form-select-sm" id="backtestPeriod">
+                                <option value="1m">Last 1 Month</option>
+                                <option value="3m" selected>Last 3 Months</option>
+                                <option value="6m">Last 6 Months</option>
                                 <option value="1y">Last 12 Months</option>
-                                <option value="2y" selected>Last 24 Months</option>
+                                <option value="2y">Last 24 Months</option>
                                 <option value="3y">Last 36 Months</option>
                             </select>
                         </div>
@@ -4363,12 +4366,12 @@
             
             formatPeriod(period) {
                 const formats = {
+                    '1m': 'Last 1 Month',
                     '3m': 'Last 3 Months',
                     '6m': 'Last 6 Months',
                     '1y': 'Last 12 Months',
                     '2y': 'Last 24 Months', 
-                    '3y': 'Last 36 Months',
-                    '5y': 'Last 60 Months'
+                    '3y': 'Last 36 Months'
                 };
                 return formats[period] || period;
             }
@@ -4391,12 +4394,12 @@
                                         <div class="col-md-6">
                                             <label class="form-label">Historical Data Period</label>
                                             <select class="form-select" id="backtestPeriod">
-                                                <option value="3m">Last 3 Months</option>
+                                                <option value="1m">Last 1 Month</option>
+                                                <option value="3m" selected>Last 3 Months</option>
                                                 <option value="6m">Last 6 Months</option>
                                                 <option value="1y">Last 12 Months</option>
-                                                <option value="2y" selected>Last 24 Months</option>
+                                                <option value="2y">Last 24 Months</option>
                                                 <option value="3y">Last 36 Months</option>
-                                                <option value="5y">Last 60 Months</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
