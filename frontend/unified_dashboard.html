@@ -4562,15 +4562,31 @@
 
             // Historical Data Management Functions
             showHistoricalDataControls() {
-                document.getElementById('historicalDataControls').style.display = 'block';
-                document.getElementById('historicalControlsBtn').innerHTML = '<i class="bi bi-chevron-up"></i> Hide';
-                document.getElementById('historicalControlsBtn').onclick = () => this.hideHistoricalDataControls();
+                const controlsElement = document.getElementById('historicalDataControls');
+                const btnElement = document.getElementById('historicalControlsBtn');
+                
+                if (controlsElement) {
+                    controlsElement.style.display = 'block';
+                }
+                
+                if (btnElement) {
+                    btnElement.innerHTML = '<i class="bi bi-chevron-up"></i> Hide';
+                    btnElement.onclick = () => this.hideHistoricalDataControls();
+                }
             }
 
             hideHistoricalDataControls() {
-                document.getElementById('historicalDataControls').style.display = 'none';
-                document.getElementById('historicalControlsBtn').innerHTML = '<i class="bi bi-download"></i> Configure';
-                document.getElementById('historicalControlsBtn').onclick = () => this.showHistoricalDataControls();
+                const controlsElement = document.getElementById('historicalDataControls');
+                const btnElement = document.getElementById('historicalControlsBtn');
+                
+                if (controlsElement) {
+                    controlsElement.style.display = 'none';
+                }
+                
+                if (btnElement) {
+                    btnElement.innerHTML = '<i class="bi bi-download"></i> Configure';
+                    btnElement.onclick = () => this.showHistoricalDataControls();
+                }
             }
 
             async downloadHistoricalData() {
@@ -4643,12 +4659,16 @@
                     const downloadBtn = document.getElementById('downloadDataBtn');
                     const progressBar = document.getElementById('downloadProgress');
                     
-                    downloadBtn.disabled = false;
-                    downloadBtn.innerHTML = '<i class="bi bi-cloud-download"></i> Download & Apply';
+                    if (downloadBtn) {
+                        downloadBtn.disabled = false;
+                        downloadBtn.innerHTML = '<i class="bi bi-cloud-download"></i> Download & Apply';
+                    }
                     
-                    setTimeout(() => {
-                        progressBar.style.display = 'none';
-                    }, 2000);
+                    if (progressBar) {
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 2000);
+                    }
                 }
             }
 
