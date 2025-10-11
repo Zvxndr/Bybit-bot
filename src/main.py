@@ -158,6 +158,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Database configuration
+DB_PATH = 'data/trading_bot.db'
+
 # Create logs directory
 Path('logs').mkdir(exist_ok=True)
 
@@ -1931,11 +1934,11 @@ async def get_detailed_backtest_history(
             params.append(status)
             
         if min_return is not None:
-            where_clauses.append("total_return_pct >= ?")
+            where_clauses.append("total_return_pct IS NOT NULL AND total_return_pct >= ?")
             params.append(min_return)
             
         if min_sharpe is not None:
-            where_clauses.append("sharpe_ratio >= ?")
+            where_clauses.append("sharpe_ratio IS NOT NULL AND sharpe_ratio >= ?")
             params.append(min_sharpe)
         
         where_clause = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
@@ -2217,9 +2220,9 @@ async def get_backtest_results_for_graduation(
                    CASE WHEN gs.id IS NOT NULL THEN 1 ELSE 0 END as is_graduated
             FROM backtest_results br
             LEFT JOIN graduated_strategies gs ON br.id = gs.backtest_id
-            WHERE br.total_trades >= ? 
-            AND br.sharpe_ratio >= ? 
-            AND br.total_return_pct >= ?
+            WHERE br.total_trades IS NOT NULL AND br.total_trades >= ? 
+            AND br.sharpe_ratio IS NOT NULL AND br.sharpe_ratio >= ? 
+            AND br.total_return_pct IS NOT NULL AND br.total_return_pct >= ?
             AND br.status NOT LIKE 'graduated_%'
             ORDER BY 
                 (br.sharpe_ratio * 0.3 + 
