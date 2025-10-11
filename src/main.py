@@ -2074,13 +2074,11 @@ async def get_detailed_backtest_history(
         
         query = f"""
         SELECT 
-            id, pair, timeframe, strategy_name, starting_balance, ending_balance,
-            total_return_pct, sharpe_ratio, sortino_ratio, calmar_ratio,
-            max_drawdown_pct, win_rate_pct, profit_factor, total_trades,
-            winning_trades, losing_trades, average_win_pct, average_loss_pct,
-            largest_win_pct, largest_loss_pct, annual_return_pct,
-            status, timestamp, trades_data, equity_curve_data,
-            risk_adjusted_return, volatility_pct, information_ratio
+            id, pair, timeframe, starting_balance, final_balance as ending_balance,
+            total_return_pct, sharpe_ratio, max_drawdown as max_drawdown_pct, 
+            win_rate as win_rate_pct, trades_count as total_trades,
+            total_pnl, timestamp, status, duration_days,
+            historical_period
         FROM backtest_results 
         {where_clause}
         ORDER BY timestamp DESC 
@@ -2348,7 +2346,7 @@ async def get_backtest_results_for_graduation(
                    'available' as graduation_status,
                    0 as is_graduated
             FROM backtest_results br
-            WHERE br.total_trades IS NOT NULL AND br.total_trades >= ? 
+            WHERE br.trades_count IS NOT NULL AND br.trades_count >= ? 
             AND br.sharpe_ratio IS NOT NULL AND br.sharpe_ratio >= ? 
             AND br.total_return_pct IS NOT NULL AND br.total_return_pct >= ?
             AND (br.status IS NULL OR br.status NOT LIKE 'graduated_%')
@@ -2381,10 +2379,11 @@ async def get_backtest_results_for_graduation(
                 
             result['graduation_score'] = round(graduation_score, 1)
             
-            # Graduation recommendation
-            if graduation_score >= 70 and result['total_trades'] >= 10:
+            # Graduation recommendation (using correct column name from query alias)
+            total_trades = result.get('total_trades', result.get('trades_count', 0))
+            if graduation_score >= 70 and total_trades >= 10:
                 result['graduation_recommendation'] = 'STRONG'
-            elif graduation_score >= 50 and result['total_trades'] >= 5:
+            elif graduation_score >= 50 and total_trades >= 5:
                 result['graduation_recommendation'] = 'MODERATE'
             else:
                 result['graduation_recommendation'] = 'WEAK'
