@@ -3286,6 +3286,62 @@ async def get_available_data_periods(symbol: str, timeframe: str):
         logger.error(f"Available periods error: {e}")
         return {"success": False, "message": str(e), "periods": []}
 
+@app.get("/api/historical-data/count/{symbol}/{timeframe}")
+async def get_data_count(symbol: str, timeframe: str):
+    """Get record count and basic info for a symbol/timeframe"""
+    try:
+        import sqlite3
+        from pathlib import Path
+        
+        db_path = Path("data/trading_bot.db")
+        if not db_path.exists():
+            return {"count": 0, "date_range": "No database", "quality": "No data"}
+        
+        with sqlite3.connect(str(db_path)) as conn:
+            cursor = conn.cursor()
+            
+            # Get record count
+            cursor.execute("""
+                SELECT COUNT(*), MIN(timestamp), MAX(timestamp)
+                FROM historical_data 
+                WHERE symbol = ? AND timeframe = ?
+            """, (symbol, timeframe))
+            
+            result = cursor.fetchone()
+            count = result[0] if result else 0
+            min_date = result[1] if result and result[1] else None
+            max_date = result[2] if result and result[2] else None
+            
+            # Format date range
+            date_range = "No data"
+            if min_date and max_date:
+                try:
+                    min_dt = datetime.fromisoformat(min_date.replace('Z', '+00:00'))
+                    max_dt = datetime.fromisoformat(max_date.replace('Z', '+00:00'))
+                    date_range = f"{min_dt.strftime('%Y-%m-%d')} to {max_dt.strftime('%Y-%m-%d')}"
+                except:
+                    date_range = f"{min_date} to {max_date}"
+            
+            # Determine quality
+            if count > 10000:
+                quality = "Excellent"
+            elif count > 1000:
+                quality = "Good"
+            elif count > 100:
+                quality = "Limited"
+            else:
+                quality = "Poor"
+            
+            return {
+                "count": count,
+                "date_range": date_range,
+                "quality": quality
+            }
+            
+    except Exception as e:
+        logger.error(f"Data count error: {e}")
+        return {"count": 0, "date_range": "Error", "quality": "Error"}
+
 # ==========================================
 # DATA PERSISTENCE & HARD RESET ENDPOINTS
 # ==========================================

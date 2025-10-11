@@ -598,6 +598,82 @@
             line-height: 1.4;
         }
 
+        /* Historical Data Period Cards */
+        .data-period-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-period-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(96, 165, 250, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(96, 165, 250, 0.1);
+        }
+
+        .data-period-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .period-title {
+            font-weight: 600;
+            color: #60a5fa;
+            font-size: 1.1em;
+        }
+
+        .period-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .meta-badge {
+            background: rgba(59, 130, 246, 0.1);
+            color: #93c5fd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .backtest-controls-mini {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .backtest-results-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            min-height: 60px;
+        }
+
+        .period-status-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .period-status-indicator.loading { background: #f59e0b; }
+        .period-status-indicator.error { background: #ef4444; }
+
         .console-header {
             background: #161b22;
             padding: 8px 16px;
@@ -1929,146 +2005,58 @@
                     </div>
                 </div>
 
-                <!-- Enhanced Strategy Backtesting Controls -->
-                <div class="backtest-controls mb-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <h6 class="text-light mb-3">
-                        <i class="bi bi-graph-up-arrow"></i> Strategy Backtesting
-                        <small class="text-muted ms-2">Comprehensive Historical Analysis</small>
-                    </h6>
-                    
-                    <!-- Main Controls Grid -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-lg-3 col-md-6">
-                            <label class="form-label text-muted small">Trading Pair</label>
-                            <select class="form-select form-select-sm" id="backtestPair" style="min-width: 120px;">
-                                <option value="BTCUSDT" selected>BTC/USDT</option>
-                                <option value="ETHUSDT">ETH/USDT</option>
-                                <option value="ADAUSDT">ADA/USDT</option>
-                                <option value="SOLUSDT">SOL/USDT</option>
-                                <option value="DOTUSDT">DOT/USDT</option>
-                                <option value="MATICUSDT">MATIC/USDT</option>
-                                <option value="AVAXUSDT">AVAX/USDT</option>
-                                <option value="LINKUSDT">LINK/USDT</option>
-                                <option value="UNIUSDT">UNI/USDT</option>
-                                <option value="LTCUSDT">LTC/USDT</option>
-                                <option value="BCHUSDT">BCH/USDT</option>
-                                <option value="XRPUSDT">XRP/USDT</option>
-                            </select>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <label class="form-label text-muted small">Timeframe</label>
-                            <select class="form-select form-select-sm" id="backtestTimeframe" style="min-width: 110px;">
-                                <option value="1m">1 Minute</option>
-                                <option value="5m">5 Minutes</option>
-                                <option value="15m" selected>15 Minutes</option>
-                                <option value="30m">30 Minutes</option>
-                                <option value="1h">1 Hour</option>
-                                <option value="4h">4 Hours</option>
-                                <option value="1d">1 Day</option>
-                            </select>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <label class="form-label text-muted small">Starting Balance</label>
-                            <select class="form-select form-select-sm" id="backtestStartingBalance" style="min-width: 100px;">
-                                <option value="1000">$1,000</option>
-                                <option value="5000">$5,000</option>
-                                <option value="10000" selected>$10,000</option>
-                                <option value="25000">$25,000</option>
-                                <option value="50000">$50,000</option>
-                                <option value="100000">$100,000</option>
-                            </select>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <label class="form-label text-muted small">Historical Period</label>
-                            <select class="form-select form-select-sm" id="backtestPeriod" style="min-width: 140px;">
-                                <option value="1w">1 Week</option>
-                                <option value="2w">2 Weeks</option>
-                                <option value="1m">1 Month</option>
-                                <option value="3m" selected>3 Months</option>
-                                <option value="6m">6 Months</option>
-                                <option value="1y">12 Months</option>
-                                <option value="2y">24 Months</option>
-                                <option value="3y">36 Months</option>
-                                <option value="1825">5 Years</option>
-                                <option value="3650">10 Years</option>
-                                <option value="all">All Available Data</option>
-                            </select>
-                        </div>
+                <!-- Downloaded Historical Data Management -->
+                <div class="historical-data-manager mb-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-light mb-0">
+                            <i class="bi bi-database-check"></i> Historical Data Management
+                            <small class="text-muted ms-2">Backtesting on Downloaded Data</small>
+                        </h6>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshHistoricalData()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                        </button>
                     </div>
 
-                    <!-- Advanced Settings Toggle -->
-                    <div class="row g-2 mb-2">
-                        <div class="col-12">
-                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#advancedBacktestSettings" aria-expanded="false" aria-controls="advancedBacktestSettings">
-                                <i class="bi bi-sliders"></i> Advanced Settings
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Settings Panel -->
-                    <div class="collapse" id="advancedBacktestSettings">
-                        <div class="card card-body bg-dark border-secondary mb-3" style="background: rgba(255,255,255,0.03) !important;">
-                            <div class="row g-2">
-                                <div class="col-md-4">
-                                    <label class="form-label text-muted small">Commission Rate (%)</label>
-                                    <input type="number" class="form-control form-control-sm" id="backtestCommission" value="0.1" step="0.01" min="0" max="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-muted small">Slippage (%)</label>
-                                    <input type="number" class="form-control form-control-sm" id="backtestSlippage" value="0.05" step="0.01" min="0" max="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-muted small">Max Drawdown (%)</label>
-                                    <input type="number" class="form-control form-control-sm" id="backtestMaxDrawdown" value="20" step="1" min="1" max="100">
-                                </div>
+                    <!-- Data Overview Panel -->
+                    <div class="data-overview mb-3 p-2" style="background: rgba(0,0,0,0.2); border-radius: 6px;">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small mb-1">Trading Pair</label>
+                                <select class="form-select form-select-sm" id="dataSymbolSelect" onchange="loadHistoricalDataPeriods()">
+                                    <option value="BTCUSDT">BTC/USDT</option>
+                                    <option value="ETHUSDT">ETH/USDT</option>
+                                    <option value="ADAUSDT">ADA/USDT</option>
+                                    <option value="SOLUSDT">SOL/USDT</option>
+                                </select>
                             </div>
-                            <div class="row g-2 mt-1">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="backtestIncludeSlippage" checked>
-                                        <label class="form-check-label text-light small" for="backtestIncludeSlippage">
-                                            Include Slippage in Calculations
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="backtestRealTimeData" checked>
-                                        <label class="form-check-label text-light small" for="backtestRealTimeData">
-                                            Use Real Market Data
-                                        </label>
-                                    </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small mb-1">Timeframe</label>
+                                <select class="form-select form-select-sm" id="dataTimeframeSelect" onchange="loadHistoricalDataPeriods()">
+                                    <option value="1m">1 Minute</option>
+                                    <option value="5m">5 Minutes</option>
+                                    <option value="15m" selected>15 Minutes</option>
+                                    <option value="30m">30 Minutes</option>
+                                    <option value="1h">1 Hour</option>
+                                    <option value="4h">4 Hours</option>
+                                    <option value="1d">1 Day</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-status-indicators">
+                                    <span class="badge bg-info me-2" id="dataRecordCount">Loading...</span>
+                                    <span class="badge bg-success me-2" id="dataDateRange">Loading...</span>
+                                    <span class="badge bg-warning" id="dataQualityStatus">Loading...</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <button class="btn btn-sm btn-primary w-100" onclick="dashboard.runHistoricalBacktest()" id="backtestRunBtn">
-                                <i class="bi bi-play-fill"></i> Run Backtest
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="dashboard.resetBacktestDefaults()">
-                                <i class="bi bi-arrow-clockwise"></i> Reset Defaults
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-sm btn-outline-info w-100" onclick="dashboard.showBacktestFilters()">
-                                <i class="bi bi-funnel"></i> Filters
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-sm btn-outline-success w-100" onclick="dashboard.exportBacktestResults()">
-                                <i class="bi bi-download"></i> Export
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-sm btn-outline-warning w-100" onclick="dashboard.compareBacktests()">
-                                <i class="bi bi-bar-chart"></i> Compare
-                            </button>
+                    <!-- Historical Data Periods Container -->
+                    <div id="historicalDataPeriods" class="historical-periods-container">
+                        <!-- Individual data periods will be populated here -->
+                        <div class="text-center text-muted p-4" id="loadingDataPeriods">
+                            <i class="bi bi-hourglass-split"></i><br>
+                            Loading available data periods...
                         </div>
                     </div>
                 </div>
@@ -7268,6 +7256,256 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             }
         }
 
+        // Global functions for historical data management (accessible from onclick handlers)
+        window.refreshHistoricalData = function() {
+            const symbol = document.getElementById('dataSymbolSelect')?.value || 'BTCUSDT';
+            const timeframe = document.getElementById('dataTimeframeSelect')?.value || '15m';
+            loadHistoricalDataPeriods(symbol, timeframe);
+        };
+
+        window.loadHistoricalDataPeriods = async function(symbol = null, timeframe = null) {
+            try {
+                const selectedSymbol = symbol || document.getElementById('dataSymbolSelect')?.value || 'BTCUSDT';
+                const selectedTimeframe = timeframe || document.getElementById('dataTimeframeSelect')?.value || '15m';
+                
+                console.log(`📊 Loading historical data periods for ${selectedSymbol} ${selectedTimeframe}...`);
+                
+                const response = await fetch(`/api/historical-data/available-periods/${selectedSymbol}/${selectedTimeframe}`);
+                const data = await response.json();
+                
+                const container = document.getElementById('historicalDataPeriods');
+                const loadingDiv = document.getElementById('loadingDataPeriods');
+                
+                if (data.success && data.periods && data.periods.length > 0) {
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    container.innerHTML = '';
+                    
+                    data.periods.forEach((period, index) => {
+                        const periodCard = createDataPeriodCard(period, selectedSymbol, selectedTimeframe, index);
+                        container.appendChild(periodCard);
+                    });
+                } else {
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    container.innerHTML = `
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-inbox"></i><br>
+                            No historical data available for ${selectedSymbol} ${selectedTimeframe}<br>
+                            <small class="text-muted">Download data first or select a different pair/timeframe</small>
+                        </div>
+                    `;
+                }
+                
+                // Update status indicators
+                updateDataStatusIndicators(selectedSymbol, selectedTimeframe);
+            } catch (error) {
+                console.error('❌ Failed to load historical data periods:', error);
+            }
+        };
+
+        window.runPeriodBacktest = async function(periodIndex, startDate, endDate, symbol, timeframe) {
+            try {
+                const statusIndicator = document.getElementById(`status-${periodIndex}`);
+                const resultsContainer = document.getElementById(`results-${periodIndex}`);
+                
+                statusIndicator.className = 'period-status-indicator loading';
+                resultsContainer.innerHTML = `<div class="text-center text-info"><div class="spinner-border spinner-border-sm me-2"></div>Running backtest...</div>`;
+
+                const balance = document.getElementById(`balance-${periodIndex}`)?.value || '10000';
+                const commission = document.getElementById(`commission-${periodIndex}`)?.value || '0.1';
+                const slippage = document.getElementById(`slippage-${periodIndex}`)?.value || '0.05';
+
+                const backtestData = {
+                    pair: symbol,
+                    timeframe: timeframe,
+                    period: startDate && endDate ? `${startDate}|${endDate}` : '3m',
+                    starting_balance: parseFloat(balance),
+                    commission: parseFloat(commission),
+                    slippage: parseFloat(slippage)
+                };
+
+                const response = await fetch('/api/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(backtestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusIndicator.className = 'period-status-indicator';
+                    displayBacktestResults(resultsContainer, result);
+                } else {
+                    statusIndicator.className = 'period-status-indicator error';
+                    resultsContainer.innerHTML = `<div class="text-center text-danger"><i class="bi bi-exclamation-triangle"></i><br><small>Backtest failed: ${result.error || 'Unknown error'}</small></div>`;
+                }
+            } catch (error) {
+                console.error('Backtest failed:', error);
+            }
+        };
+
+        window.exportPeriodData = function(periodIndex, symbol, timeframe, startDate, endDate) {
+            let url = `/api/historical-data/export/${symbol}/${timeframe}`;
+            if (startDate && endDate) {
+                url += `?start=${startDate}&end=${endDate}`;
+            }
+            window.open(url, '_blank');
+        };
+
+        // Helper functions for the new system
+        function createDataPeriodCard(period, symbol, timeframe, index) {
+            const card = document.createElement('div');
+            card.className = 'data-period-card';
+            card.id = `period-card-${index}`;
+            
+            card.innerHTML = `
+                <div class="period-status-indicator" id="status-${index}"></div>
+                <div class="data-period-header">
+                    <div class="period-title">${period.label || period.display_name || `Period ${index + 1}`}</div>
+                    <div class="text-muted small">
+                        <i class="bi bi-calendar-range"></i> 
+                        ${period.start_date && period.end_date ? 
+                            `${new Date(period.start_date).toLocaleDateString()} - ${new Date(period.end_date).toLocaleDateString()}` :
+                            'Date range not available'
+                        }
+                    </div>
+                </div>
+                
+                <div class="period-meta">
+                    <span class="meta-badge">
+                        <i class="bi bi-bar-chart"></i> ${period.record_count || period.candles || 'Unknown'} candles
+                    </span>
+                    <span class="meta-badge">
+                        <i class="bi bi-clock"></i> ${period.days || calculateDurationHelper(period.start_date, period.end_date)}
+                    </span>
+                    <span class="meta-badge">
+                        <i class="bi bi-graph-up"></i> ${symbol} ${timeframe}
+                    </span>
+                </div>
+
+                <div class="backtest-controls-mini">
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Starting Balance</label>
+                            <select class="form-select form-select-sm" id="balance-${index}">
+                                <option value="1000">$1,000</option>
+                                <option value="5000">$5,000</option>
+                                <option value="10000" selected>$10,000</option>
+                                <option value="25000">$25,000</option>
+                                <option value="50000">$50,000</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Commission (%)</label>
+                            <input type="number" class="form-control form-control-sm" id="commission-${index}" value="0.1" step="0.01" min="0" max="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Slippage (%)</label>
+                            <input type="number" class="form-control form-control-sm" id="slippage-${index}" value="0.05" step="0.01" min="0" max="1">
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <button class="btn btn-primary btn-sm w-100" onclick="runPeriodBacktest('${index}', '${period.start_date || ''}', '${period.end_date || ''}', '${symbol}', '${timeframe}')">
+                                <i class="bi bi-play-fill"></i> Run Backtest on This Period
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="exportPeriodData('${index}', '${symbol}', '${timeframe}', '${period.start_date || ''}', '${period.end_date || ''}')">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="backtest-results-section" id="results-${index}">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-play-circle"></i><br>
+                        <small>Run backtest to see results</small>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function displayBacktestResults(container, result) {
+            const metrics = result.metrics || result || {};
+            
+            container.innerHTML = `
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="metric-card small">
+                            <div class="metric-value small" style="color: ${(metrics.total_return || 0) >= 0 ? '#22c55e' : '#ef4444'}">
+                                ${((metrics.total_return || 0) * 100).toFixed(2)}%
+                            </div>
+                            <div class="metric-label">Total Return</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card small">
+                            <div class="metric-value small" style="color: ${(metrics.win_rate || 0) >= 50 ? '#22c55e' : '#ef4444'}">
+                                ${((metrics.win_rate || 0) * 100).toFixed(1)}%
+                            </div>
+                            <div class="metric-label">Win Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card small">
+                            <div class="metric-value small text-info">
+                                ${metrics.total_trades || 0}
+                            </div>
+                            <div class="metric-label">Trades</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card small">
+                            <div class="metric-value small text-warning">
+                                ${((metrics.max_drawdown || 0) * 100).toFixed(2)}%
+                            </div>
+                            <div class="metric-label">Max DD</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card small">
+                            <div class="metric-value small text-info">
+                                ${(metrics.sharpe_ratio || 0).toFixed(2)}
+                            </div>
+                            <div class="metric-label">Sharpe</div>
+                        </div>
+                    </div>
+                </div>
+                ${result.message ? `<div class="text-muted small mt-2">${result.message}</div>` : ''}
+            `;
+        }
+
+        function updateDataStatusIndicators(symbol, timeframe) {
+            // Simple implementation - could be enhanced with actual API call
+            document.getElementById('dataRecordCount').textContent = 'Loading...';
+            document.getElementById('dataDateRange').textContent = 'Loading...';  
+            document.getElementById('dataQualityStatus').textContent = 'Loading...';
+        }
+
+        function calculateDurationHelper(startDate, endDate) {
+            if (!startDate || !endDate) return 'Unknown';
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffMs = end - start;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 365) {
+                const years = Math.floor(diffDays / 365);
+                const months = Math.floor((diffDays % 365) / 30);
+                return `${years}y ${months}m`;
+            } else if (diffDays > 30) {
+                const months = Math.floor(diffDays / 30);
+                const days = diffDays % 30;
+                return `${months}m ${days}d`;
+            } else {
+                return `${diffDays}d`;
+            }
+        }
+
         // Initialize monitoring on page load
         document.addEventListener('DOMContentLoaded', function() {
             refreshMetrics();
@@ -7283,7 +7521,10 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     console.log(`📊 Loading available periods for ${symbol} ${timeframe}...`);
                     
                     const response = await fetch(`/api/historical-data/available-periods/${symbol}/${timeframe}`);
+                    console.log(`🔍 API Response status: ${response.status}`);
+                    
                     const data = await response.json();
+                    console.log(`🔍 API Response data:`, data);
                     
                     const periodSelect = document.getElementById('backtestPeriod');
                     if (!periodSelect) return;
@@ -7348,6 +7589,315 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                 }
             }
 
+            // Load and display historical data periods as individual cards with backtest controls
+            async function loadHistoricalDataPeriods(symbol = null, timeframe = null) {
+                try {
+                    // Get selected values from dropdowns
+                    const selectedSymbol = symbol || document.getElementById('dataSymbolSelect')?.value || 'BTCUSDT';
+                    const selectedTimeframe = timeframe || document.getElementById('dataTimeframeSelect')?.value || '15m';
+                    
+                    console.log(`📊 Loading historical data periods for ${selectedSymbol} ${selectedTimeframe}...`);
+                    
+                    // Update status indicators
+                    updateDataStatusIndicators(selectedSymbol, selectedTimeframe);
+                    
+                    const response = await fetch(`/api/historical-data/available-periods/${selectedSymbol}/${selectedTimeframe}`);
+                    console.log(`🔍 API Response status: ${response.status}`);
+                    
+                    const data = await response.json();
+                    console.log(`🔍 API Response data:`, data);
+
+                    const container = document.getElementById('historicalDataPeriods');
+                    const loadingDiv = document.getElementById('loadingDataPeriods');
+                    
+                    if (data.success && data.periods && data.periods.length > 0) {
+                        console.log(`✅ Found ${data.periods.length} periods for ${selectedSymbol} ${selectedTimeframe}`);
+                        
+                        // Hide loading indicator
+                        if (loadingDiv) loadingDiv.style.display = 'none';
+                        
+                        // Clear existing content and build period cards
+                        container.innerHTML = '';
+                        
+                        data.periods.forEach((period, index) => {
+                            const periodCard = createDataPeriodCard(period, selectedSymbol, selectedTimeframe, index);
+                            container.appendChild(periodCard);
+                        });
+                        
+                        console.log(`✅ Created ${data.periods.length} period cards`);
+                    } else {
+                        console.log(`⚠️ No periods available for ${selectedSymbol} ${selectedTimeframe}`);
+                        if (loadingDiv) loadingDiv.style.display = 'none';
+                        container.innerHTML = `
+                            <div class="text-center text-muted p-4">
+                                <i class="bi bi-inbox"></i><br>
+                                No historical data available for ${selectedSymbol} ${selectedTimeframe}<br>
+                                <small class="text-muted">Download data first or select a different pair/timeframe</small>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to load historical data periods:', error);
+                    const container = document.getElementById('historicalDataPeriods');
+                    const loadingDiv = document.getElementById('loadingDataPeriods');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    container.innerHTML = `
+                        <div class="text-center text-danger p-4">
+                            <i class="bi bi-exclamation-triangle"></i><br>
+                            Error loading historical data<br>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
+            }
+
+            // Create a data period card with embedded backtest controls
+            function createDataPeriodCard(period, symbol, timeframe, index) {
+                const card = document.createElement('div');
+                card.className = 'data-period-card';
+                card.id = `period-card-${index}`;
+                
+                card.innerHTML = `
+                    <div class="period-status-indicator" id="status-${index}"></div>
+                    <div class="data-period-header">
+                        <div class="period-title">${period.label || period.display_name || `Period ${index + 1}`}</div>
+                        <div class="text-muted small">
+                            <i class="bi bi-calendar-range"></i> 
+                            ${period.start_date && period.end_date ? 
+                                `${new Date(period.start_date).toLocaleDateString()} - ${new Date(period.end_date).toLocaleDateString()}` :
+                                'Date range not available'
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="period-meta">
+                        <span class="meta-badge">
+                            <i class="bi bi-bar-chart"></i> ${period.record_count || period.candles || 'Unknown'} candles
+                        </span>
+                        <span class="meta-badge">
+                            <i class="bi bi-clock"></i> ${period.days || calculateDuration(period.start_date, period.end_date)}
+                        </span>
+                        <span class="meta-badge">
+                            <i class="bi bi-graph-up"></i> ${symbol} ${timeframe}
+                        </span>
+                    </div>
+
+                    <div class="backtest-controls-mini">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">Starting Balance</label>
+                                <select class="form-select form-select-sm" id="balance-${index}">
+                                    <option value="1000">$1,000</option>
+                                    <option value="5000">$5,000</option>
+                                    <option value="10000" selected>$10,000</option>
+                                    <option value="25000">$25,000</option>
+                                    <option value="50000">$50,000</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">Commission (%)</label>
+                                <input type="number" class="form-control form-control-sm" id="commission-${index}" value="0.1" step="0.01" min="0" max="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">Slippage (%)</label>
+                                <input type="number" class="form-control form-control-sm" id="slippage-${index}" value="0.05" step="0.01" min="0" max="1">
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <button class="btn btn-primary btn-sm w-100" onclick="runPeriodBacktest('${index}', '${period.start_date || ''}', '${period.end_date || ''}', '${symbol}', '${timeframe}')">
+                                    <i class="bi bi-play-fill"></i> Run Backtest on This Period
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="exportPeriodData('${index}', '${symbol}', '${timeframe}', '${period.start_date || ''}', '${period.end_date || ''}')">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="backtest-results-section" id="results-${index}">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-play-circle"></i><br>
+                            <small>Run backtest to see results</small>
+                        </div>
+                    </div>
+                `;
+
+                return card;
+            }
+
+            // Update data status indicators
+            async function updateDataStatusIndicators(symbol, timeframe) {
+                try {
+                    // For now, use a simple count from the database
+                    const response = await fetch(`/api/historical-data/count/${symbol}/${timeframe}`);
+                    const data = await response.json();
+                    
+                    document.getElementById('dataRecordCount').textContent = data.count ? `${data.count} candles` : 'No data';
+                    document.getElementById('dataDateRange').textContent = data.date_range || 'N/A';
+                    document.getElementById('dataQualityStatus').textContent = data.count > 1000 ? 'Good' : 'Limited';
+                } catch (error) {
+                    console.error('Failed to update status indicators:', error);
+                    document.getElementById('dataRecordCount').textContent = 'Loading...';
+                    document.getElementById('dataDateRange').textContent = 'Loading...';
+                    document.getElementById('dataQualityStatus').textContent = 'Loading...';
+                }
+            }
+
+            // Calculate duration between two dates
+            function calculateDuration(startDate, endDate) {
+                if (!startDate || !endDate) return 'Unknown';
+                
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffMs = end - start;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 365) {
+                    const years = Math.floor(diffDays / 365);
+                    const months = Math.floor((diffDays % 365) / 30);
+                    return `${years}y ${months}m`;
+                } else if (diffDays > 30) {
+                    const months = Math.floor(diffDays / 30);
+                    const days = diffDays % 30;
+                    return `${months}m ${days}d`;
+                } else {
+                    return `${diffDays}d`;
+                }
+            }
+
+            // Run backtest for a specific period
+            async function runPeriodBacktest(periodIndex, startDate, endDate, symbol, timeframe) {
+                try {
+                    const statusIndicator = document.getElementById(`status-${periodIndex}`);
+                    const resultsContainer = document.getElementById(`results-${periodIndex}`);
+                    
+                    // Set loading state
+                    statusIndicator.className = 'period-status-indicator loading';
+                    resultsContainer.innerHTML = `
+                        <div class="text-center text-info">
+                            <div class="spinner-border spinner-border-sm me-2"></div>
+                            Running backtest...
+                        </div>
+                    `;
+
+                    // Get period-specific settings
+                    const balance = document.getElementById(`balance-${periodIndex}`)?.value || '10000';
+                    const commission = document.getElementById(`commission-${periodIndex}`)?.value || '0.1';
+                    const slippage = document.getElementById(`slippage-${periodIndex}`)?.value || '0.05';
+
+                    // Use the existing backtest endpoint with period-specific parameters
+                    const backtestData = {
+                        pair: symbol,
+                        timeframe: timeframe,
+                        period: startDate && endDate ? `${startDate}|${endDate}` : '3m',
+                        starting_balance: parseFloat(balance),
+                        commission: parseFloat(commission),
+                        slippage: parseFloat(slippage)
+                    };
+
+                    const response = await fetch('/api/backtest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(backtestData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        statusIndicator.className = 'period-status-indicator';
+                        displayBacktestResults(resultsContainer, result);
+                    } else {
+                        statusIndicator.className = 'period-status-indicator error';
+                        resultsContainer.innerHTML = `
+                            <div class="text-center text-danger">
+                                <i class="bi bi-exclamation-triangle"></i><br>
+                                <small>Backtest failed: ${result.error || 'Unknown error'}</small>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Backtest failed:', error);
+                    const statusIndicator = document.getElementById(`status-${periodIndex}`);
+                    const resultsContainer = document.getElementById(`results-${periodIndex}`);
+                    
+                    statusIndicator.className = 'period-status-indicator error';
+                    resultsContainer.innerHTML = `
+                        <div class="text-center text-danger">
+                            <i class="bi bi-exclamation-triangle"></i><br>
+                            <small>Error: ${error.message}</small>
+                        </div>
+                    `;
+                }
+            }
+
+            // Display backtest results in the period card
+            function displayBacktestResults(container, result) {
+                const metrics = result.metrics || result || {};
+                
+                container.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="metric-card small">
+                                <div class="metric-value small" style="color: ${(metrics.total_return || 0) >= 0 ? '#22c55e' : '#ef4444'}">
+                                    ${((metrics.total_return || 0) * 100).toFixed(2)}%
+                                </div>
+                                <div class="metric-label">Total Return</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="metric-card small">
+                                <div class="metric-value small" style="color: ${(metrics.win_rate || 0) >= 50 ? '#22c55e' : '#ef4444'}">
+                                    ${((metrics.win_rate || 0) * 100).toFixed(1)}%
+                                </div>
+                                <div class="metric-label">Win Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card small">
+                                <div class="metric-value small text-info">
+                                    ${metrics.total_trades || 0}
+                                </div>
+                                <div class="metric-label">Trades</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card small">
+                                <div class="metric-value small text-warning">
+                                    ${((metrics.max_drawdown || 0) * 100).toFixed(2)}%
+                                </div>
+                                <div class="metric-label">Max DD</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card small">
+                                <div class="metric-value small text-info">
+                                    ${(metrics.sharpe_ratio || 0).toFixed(2)}
+                                </div>
+                                <div class="metric-label">Sharpe</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${result.message ? `<div class="text-muted small mt-2">${result.message}</div>` : ''}
+                `;
+            }
+
+            // Refresh historical data
+            function refreshHistoricalData() {
+                loadHistoricalDataPeriods();
+            }
+
+            // Export period data
+            function exportPeriodData(periodIndex, symbol, timeframe, startDate, endDate) {
+                let url = `/api/historical-data/export/${symbol}/${timeframe}`;
+                if (startDate && endDate) {
+                    url += `?start=${startDate}&end=${endDate}`;
+                }
+                window.open(url, '_blank');
+            }
+
             function syncTimeframes() {
                 const historicalTimeframe = document.getElementById('historicalTimeframe');
                 const backtestTimeframe = document.getElementById('backtestTimeframe');
@@ -7388,16 +7938,16 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             // Initialize timeframe sync
             syncTimeframes();
             
-            // Load initial periods for default pair and timeframe
+            // Load initial historical data periods  
             setTimeout(() => {
-                const backtestPair = document.getElementById('backtestPair');
-                const backtestTimeframe = document.getElementById('backtestTimeframe');
-                const defaultPair = backtestPair?.value || 'BTCUSDT';
-                const defaultTimeframe = backtestTimeframe?.value || '15m';
+                const dataSymbol = document.getElementById('dataSymbolSelect');
+                const dataTimeframe = document.getElementById('dataTimeframeSelect');
+                const defaultPair = dataSymbol?.value || 'BTCUSDT';
+                const defaultTimeframe = dataTimeframe?.value || '15m';
                 
-                console.log(`🚀 Loading initial periods for ${defaultPair} ${defaultTimeframe}`);
-                loadAvailablePeriods(defaultPair, defaultTimeframe);
-            }, 100); // Small delay to ensure elements are ready
+                console.log(`🚀 Loading initial historical data periods for ${defaultPair} ${defaultTimeframe}`);
+                window.loadHistoricalDataPeriods(defaultPair, defaultTimeframe);
+            }, 500); // Small delay to ensure elements are ready
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);
