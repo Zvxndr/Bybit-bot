@@ -1931,8 +1931,10 @@ async def run_historical_backtest(request: Request):
         # Store backtest result in database
         try:
             import sqlite3
-            conn = sqlite3.connect('data/trading_bot.db')
+            conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
+            
+            logger.info(f"💾 Storing backtest result: {pair} {timeframe} {period} -> {total_return_pct:.2f}%")
             
             sharpe_ratio = round(random.uniform(0.5, 2.5), 2)
             
@@ -1965,10 +1967,14 @@ async def run_historical_backtest(request: Request):
                   round(win_rate, 1), trades_count, 75, period, status, duration_days))
             
             conn.commit()
+            logger.info(f"✅ Backtest result stored successfully in database")
             conn.close()
             
         except Exception as e:
-            logger.warning(f"Failed to store backtest result: {e}")
+            logger.error(f"❌ Failed to store backtest result: {e}")
+            logger.error(f"💡 Data attempted to insert: pair={pair}, timeframe={timeframe}, period={period}")
+            import traceback
+            logger.error(f"📋 Full traceback: {traceback.format_exc()}")
         
         result = {
             "success": True,
