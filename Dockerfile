@@ -35,10 +35,11 @@ COPY . .
 COPY src/data/ src/data/
 COPY src/bot/ src/bot/
 
-# Create necessary directories
-RUN mkdir -p logs backups data src/data
+# Create necessary directories and copy startup script
+RUN mkdir -p logs backups data src/data && \
+    chmod +x start_production.sh
 
-# Create non-root user for security
+# Create non-root user for security but keep app ownership of mounted volumes
 RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
@@ -50,5 +51,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Use enhanced startup with schema validation
-CMD ["python", "startup_with_schema_check.py"]
+# Use startup script to ensure persistent data setup
+CMD ["bash", "start_production.sh"]

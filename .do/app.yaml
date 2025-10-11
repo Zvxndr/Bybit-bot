@@ -18,6 +18,18 @@ services:
     failure_threshold: 10
     success_threshold: 2
     
+  # 💾 CRITICAL: Persistent storage volumes to prevent data loss on deployment
+  volumes:
+  - name: trading-data
+    mount_path: /app/data
+    size: 5GB
+  - name: trading-logs  
+    mount_path: /app/logs
+    size: 2GB
+  - name: trading-config
+    mount_path: /app/config
+    size: 1GB
+    
   envs:
   - key: NODE_ENV
     value: production

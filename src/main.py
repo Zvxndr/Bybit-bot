@@ -3342,6 +3342,84 @@ async def get_data_count(symbol: str, timeframe: str):
         logger.error(f"Data count error: {e}")
         return {"count": 0, "date_range": "Error", "quality": "Error"}
 
+@app.get("/api/historical-data/discover")
+async def discover_available_data():
+    """Discover what historical data actually exists in the database"""
+    try:
+        import sqlite3
+        from pathlib import Path
+        
+        db_path = Path("data/trading_bot.db")
+        if not db_path.exists():
+            return {"success": False, "message": "No database found", "datasets": []}
+        
+        with sqlite3.connect(str(db_path)) as conn:
+            cursor = conn.cursor()
+            
+            # Get all unique symbol/timeframe combinations with counts
+            cursor.execute("""
+                SELECT 
+                    symbol, 
+                    timeframe, 
+                    COUNT(*) as record_count,
+                    MIN(timestamp) as earliest,
+                    MAX(timestamp) as latest
+                FROM historical_data 
+                GROUP BY symbol, timeframe
+                HAVING COUNT(*) > 0
+                ORDER BY record_count DESC
+            """)
+            
+            results = cursor.fetchall()
+            datasets = []
+            
+            for row in results:
+                symbol, timeframe, count, earliest, latest = row
+                
+                # Try to parse timestamps
+                try:
+                    # Handle different timestamp formats
+                    if isinstance(earliest, (int, float)):
+                        # Assume milliseconds if > 1e10, else seconds
+                        if earliest > 1e10:
+                            earliest_dt = datetime.fromtimestamp(earliest / 1000)
+                            latest_dt = datetime.fromtimestamp(latest / 1000)
+                        else:
+                            earliest_dt = datetime.fromtimestamp(earliest)
+                            latest_dt = datetime.fromtimestamp(latest)
+                    else:
+                        # Try parsing as ISO string
+                        earliest_dt = datetime.fromisoformat(str(earliest).replace('Z', '+00:00'))
+                        latest_dt = datetime.fromisoformat(str(latest).replace('Z', '+00:00'))
+                    
+                    date_range = f"{earliest_dt.strftime('%Y-%m-%d')} to {latest_dt.strftime('%Y-%m-%d')}"
+                    duration_days = (latest_dt - earliest_dt).days
+                    
+                except Exception as e:
+                    logger.warning(f"Timestamp parsing failed: {e}")
+                    date_range = f"{earliest} to {latest}"
+                    duration_days = 0
+                
+                datasets.append({
+                    "symbol": symbol,
+                    "timeframe": timeframe,
+                    "record_count": count,
+                    "date_range": date_range,
+                    "duration_days": duration_days,
+                    "quality": "Excellent" if count > 10000 else "Good" if count > 1000 else "Limited"
+                })
+            
+            return {
+                "success": True,
+                "total_datasets": len(datasets),
+                "total_records": sum(d["record_count"] for d in datasets),
+                "datasets": datasets
+            }
+            
+    except Exception as e:
+        logger.error(f"Data discovery error: {e}")
+        return {"success": False, "message": str(e), "datasets": []}
+
 # ==========================================
 # DATA PERSISTENCE & HARD RESET ENDPOINTS
 # ==========================================

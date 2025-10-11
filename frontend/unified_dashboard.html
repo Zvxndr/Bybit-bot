@@ -2017,35 +2017,30 @@
                         </button>
                     </div>
 
-                    <!-- Data Overview Panel -->
-                    <div class="data-overview mb-3 p-2" style="background: rgba(0,0,0,0.2); border-radius: 6px;">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-md-3">
-                                <label class="form-label text-muted small mb-1">Trading Pair</label>
-                                <select class="form-select form-select-sm" id="dataSymbolSelect" onchange="loadHistoricalDataPeriods()">
-                                    <option value="BTCUSDT">BTC/USDT</option>
-                                    <option value="ETHUSDT">ETH/USDT</option>
-                                    <option value="ADAUSDT">ADA/USDT</option>
-                                    <option value="SOLUSDT">SOL/USDT</option>
-                                </select>
+                    <!-- Available Data Discovery Panel -->
+                    <div class="data-discovery mb-3 p-3" style="background: rgba(0,0,0,0.2); border-radius: 6px;">
+                        <div class="row g-2 align-items-center mb-2">
+                            <div class="col-md-8">
+                                <div class="text-muted small mb-1">📊 Your Downloaded Historical Data</div>
+                                <div id="availableDataSets" class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-search"></i> Scanning database...
+                                    </span>
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label text-muted small mb-1">Timeframe</label>
-                                <select class="form-select form-select-sm" id="dataTimeframeSelect" onchange="loadHistoricalDataPeriods()">
-                                    <option value="1m">1 Minute</option>
-                                    <option value="5m">5 Minutes</option>
-                                    <option value="15m" selected>15 Minutes</option>
-                                    <option value="30m">30 Minutes</option>
-                                    <option value="1h">1 Hour</option>
-                                    <option value="4h">4 Hours</option>
-                                    <option value="1d">1 Day</option>
-                                </select>
+                            <div class="col-md-4 text-end">
+                                <div class="data-summary">
+                                    <span class="badge bg-info me-1" id="totalDataSets">0 datasets</span>
+                                    <span class="badge bg-success" id="totalRecords">0 records</span>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="data-status-indicators">
-                                    <span class="badge bg-info me-2" id="dataRecordCount">Loading...</span>
-                                    <span class="badge bg-success me-2" id="dataDateRange">Loading...</span>
-                                    <span class="badge bg-warning" id="dataQualityStatus">Loading...</span>
+                        </div>
+                        
+                        <!-- Currently Viewing -->
+                        <div class="row g-2" id="currentViewingSection" style="display: none;">
+                            <div class="col-12">
+                                <div class="alert alert-info py-2 mb-0" id="currentDataInfo">
+                                    <i class="bi bi-eye"></i> Currently viewing: <span id="currentDataDisplay">Select a dataset above</span>
                                 </div>
                             </div>
                         </div>
@@ -7258,19 +7253,94 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
 
         // Global functions for historical data management (accessible from onclick handlers)
         window.refreshHistoricalData = function() {
-            const symbol = document.getElementById('dataSymbolSelect')?.value || 'BTCUSDT';
-            const timeframe = document.getElementById('dataTimeframeSelect')?.value || '15m';
-            loadHistoricalDataPeriods(symbol, timeframe);
+            discoverAvailableData();
         };
 
-        window.loadHistoricalDataPeriods = async function(symbol = null, timeframe = null) {
+        // Discover what historical data actually exists
+        window.discoverAvailableData = async function() {
             try {
-                const selectedSymbol = symbol || document.getElementById('dataSymbolSelect')?.value || 'BTCUSDT';
-                const selectedTimeframe = timeframe || document.getElementById('dataTimeframeSelect')?.value || '15m';
+                console.log('🔍 Discovering available historical data...');
                 
-                console.log(`📊 Loading historical data periods for ${selectedSymbol} ${selectedTimeframe}...`);
+                const response = await fetch('/api/historical-data/discover');
+                const data = await response.json();
                 
-                const response = await fetch(`/api/historical-data/available-periods/${selectedSymbol}/${selectedTimeframe}`);
+                const availableDataSets = document.getElementById('availableDataSets');
+                const totalDataSets = document.getElementById('totalDataSets');
+                const totalRecords = document.getElementById('totalRecords');
+                
+                if (data.success && data.datasets && data.datasets.length > 0) {
+                    console.log(`✅ Found ${data.datasets.length} datasets with ${data.total_records} total records`);
+                    
+                    // Update summary
+                    totalDataSets.textContent = `${data.datasets.length} datasets`;
+                    totalRecords.textContent = `${data.total_records.toLocaleString()} records`;
+                    
+                    // Create dataset badges
+                    availableDataSets.innerHTML = '';
+                    data.datasets.forEach((dataset, index) => {
+                        const badge = document.createElement('span');
+                        badge.className = `badge bg-primary me-2 mb-1 dataset-badge`;
+                        badge.style.cursor = 'pointer';
+                        badge.id = `dataset-${index}`;
+                        badge.innerHTML = `
+                            <i class="bi bi-database-fill"></i> 
+                            ${dataset.symbol} ${dataset.timeframe} 
+                            <small>(${dataset.record_count.toLocaleString()})</small>
+                        `;
+                        
+                        // Click handler to load this specific dataset
+                        badge.onclick = () => loadSpecificDataset(dataset.symbol, dataset.timeframe);
+                        availableDataSets.appendChild(badge);
+                    });
+                    
+                    // Auto-load the first/largest dataset
+                    if (data.datasets.length > 0) {
+                        const firstDataset = data.datasets[0];
+                        loadSpecificDataset(firstDataset.symbol, firstDataset.timeframe);
+                    }
+                } else {
+                    console.log('❌ No historical data found');
+                    availableDataSets.innerHTML = `
+                        <span class="badge bg-warning">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            No historical data found - download data first
+                        </span>
+                    `;
+                    totalDataSets.textContent = '0 datasets';
+                    totalRecords.textContent = '0 records';
+                }
+            } catch (error) {
+                console.error('❌ Failed to discover data:', error);
+                document.getElementById('availableDataSets').innerHTML = `
+                    <span class="badge bg-danger">
+                        <i class="bi bi-x-circle"></i> Error loading data
+                    </span>
+                `;
+            }
+        };
+
+        // Load periods for a specific dataset
+        window.loadSpecificDataset = async function(symbol, timeframe) {
+            try {
+                console.log(`📊 Loading periods for ${symbol} ${timeframe}...`);
+                
+                // Update current viewing indicator
+                const currentDataDisplay = document.getElementById('currentDataDisplay');
+                const currentViewingSection = document.getElementById('currentViewingSection');
+                
+                if (currentDataDisplay) {
+                    currentDataDisplay.textContent = `${symbol} ${timeframe}`;
+                    currentViewingSection.style.display = 'block';
+                }
+                
+                // Highlight selected dataset
+                document.querySelectorAll('.dataset-badge').forEach(badge => {
+                    badge.classList.remove('bg-success');
+                    badge.classList.add('bg-primary');
+                });
+                
+                // Load periods using existing API
+                const response = await fetch(`/api/historical-data/available-periods/${symbol}/${timeframe}`);
                 const data = await response.json();
                 
                 const container = document.getElementById('historicalDataPeriods');
@@ -7281,24 +7351,21 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     container.innerHTML = '';
                     
                     data.periods.forEach((period, index) => {
-                        const periodCard = createDataPeriodCard(period, selectedSymbol, selectedTimeframe, index);
+                        const periodCard = createDataPeriodCard(period, symbol, timeframe, index);
                         container.appendChild(periodCard);
                     });
                 } else {
                     if (loadingDiv) loadingDiv.style.display = 'none';
                     container.innerHTML = `
                         <div class="text-center text-muted p-4">
-                            <i class="bi bi-inbox"></i><br>
-                            No historical data available for ${selectedSymbol} ${selectedTimeframe}<br>
-                            <small class="text-muted">Download data first or select a different pair/timeframe</small>
+                            <i class="bi bi-clock-history"></i><br>
+                            Processing data for ${symbol} ${timeframe}...<br>
+                            <small class="text-muted">Data exists but periods are being calculated</small>
                         </div>
                     `;
                 }
-                
-                // Update status indicators
-                updateDataStatusIndicators(selectedSymbol, selectedTimeframe);
             } catch (error) {
-                console.error('❌ Failed to load historical data periods:', error);
+                console.error('❌ Failed to load dataset:', error);
             }
         };
 
@@ -7938,15 +8005,10 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             // Initialize timeframe sync
             syncTimeframes();
             
-            // Load initial historical data periods  
+            // Discover available data on startup
             setTimeout(() => {
-                const dataSymbol = document.getElementById('dataSymbolSelect');
-                const dataTimeframe = document.getElementById('dataTimeframeSelect');
-                const defaultPair = dataSymbol?.value || 'BTCUSDT';
-                const defaultTimeframe = dataTimeframe?.value || '15m';
-                
-                console.log(`🚀 Loading initial historical data periods for ${defaultPair} ${defaultTimeframe}`);
-                window.loadHistoricalDataPeriods(defaultPair, defaultTimeframe);
+                console.log('🚀 Discovering available historical data...');
+                window.discoverAvailableData();
             }, 500); // Small delay to ensure elements are ready
             
             // Update ML metrics every 10 seconds
