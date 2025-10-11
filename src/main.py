@@ -3272,6 +3272,20 @@ async def validate_data_integrity(symbol: str, timeframe: str):
         logger.error(f"Data validation error: {e}")
         return {"success": False, "message": str(e)}
 
+@app.get("/api/historical-data/available-periods/{symbol}/{timeframe}")
+async def get_available_data_periods(symbol: str, timeframe: str):
+    """Get available data periods for a specific symbol and timeframe"""
+    if not historical_downloader:
+        return {"success": False, "message": "Historical data downloader not available", "periods": []}
+    
+    try:
+        result = historical_downloader.get_available_periods(symbol, timeframe)
+        return result
+        
+    except Exception as e:
+        logger.error(f"Available periods error: {e}")
+        return {"success": False, "message": str(e), "periods": []}
+
 # ==========================================
 # DATA PERSISTENCE & HARD RESET ENDPOINTS
 # ==========================================

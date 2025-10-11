@@ -463,6 +463,96 @@ class HistoricalDataDownloader:
                 'error': str(e)
             }
 
+    def get_available_periods(self, symbol: str, timeframe: str) -> Dict:
+        """Get available data periods for backtesting for a specific symbol and timeframe"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT MIN(timestamp) as earliest, MAX(timestamp) as latest, COUNT(*) as count
+                    FROM historical_data 
+                    WHERE symbol = ? AND timeframe = ?
+                """, (symbol, timeframe))
+                
+                result = cursor.fetchone()
+                if not result or result[0] is None:
+                    return {
+                        'success': True,
+                        'periods': [],
+                        'message': f'No data available for {symbol} {timeframe}'
+                    }
+                
+                earliest_ts, latest_ts, total_candles = result
+                earliest_date = datetime.fromtimestamp(earliest_ts / 1000)
+                latest_date = datetime.fromtimestamp(latest_ts / 1000)
+                
+                # Calculate available periods based on actual data
+                periods = []
+                now = latest_date
+                
+                # Generate meaningful periods based on available data
+                time_ranges = [
+                    ("7 Days", 7),
+                    ("14 Days", 14), 
+                    ("30 Days", 30),
+                    ("2 Months", 60),
+                    ("3 Months", 90),
+                    ("6 Months", 180),
+                    ("1 Year", 365),
+                    ("2 Years", 730),
+                    ("All Available Data", None)
+                ]
+                
+                for label, days in time_ranges:
+                    if days is None:
+                        # All available data
+                        periods.append({
+                            'label': f"{label} ({earliest_date.strftime('%Y-%m-%d')} to {latest_date.strftime('%Y-%m-%d')})",
+                            'value': 'all',
+                            'days': (latest_date - earliest_date).days,
+                            'start_date': earliest_date.isoformat(),
+                            'end_date': latest_date.isoformat(),
+                            'estimated_candles': total_candles
+                        })
+                    else:
+                        start_date = now - timedelta(days=days)
+                        if start_date >= earliest_date:
+                            # Check if we have enough data for this period
+                            cursor.execute("""
+                                SELECT COUNT(*) FROM historical_data 
+                                WHERE symbol = ? AND timeframe = ?
+                                AND timestamp >= ? AND timestamp <= ?
+                            """, (symbol, timeframe, int(start_date.timestamp() * 1000), int(now.timestamp() * 1000)))
+                            
+                            candle_count = cursor.fetchone()[0]
+                            if candle_count > 0:
+                                periods.append({
+                                    'label': f"{label} ({start_date.strftime('%Y-%m-%d')} to {now.strftime('%Y-%m-%d')})",
+                                    'value': f"{days}d",
+                                    'days': days,
+                                    'start_date': start_date.isoformat(),
+                                    'end_date': now.isoformat(), 
+                                    'estimated_candles': candle_count
+                                })
+                
+                return {
+                    'success': True,
+                    'periods': periods,
+                    'total_available_days': (latest_date - earliest_date).days,
+                    'data_range': {
+                        'earliest': earliest_date.isoformat(),
+                        'latest': latest_date.isoformat(),
+                        'total_candles': total_candles
+                    }
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting available periods for {symbol} {timeframe}: {e}")
+            return {
+                'success': False,
+                'periods': [],
+                'error': str(e)
+            }
+
     def delete_symbol_data(self, symbol: str, timeframe: str = None) -> Dict:
         """Delete historical data for a specific symbol and optionally timeframe"""
         try:

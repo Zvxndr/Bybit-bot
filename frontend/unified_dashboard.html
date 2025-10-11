@@ -7277,27 +7277,127 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             dashboard.loadPipelineConfig();
             
             // Sync timeframes between historical data and backtesting
+            // Load available periods for backtest based on downloaded data
+            async function loadAvailablePeriods(symbol = 'BTCUSDT', timeframe = '15m') {
+                try {
+                    console.log(`📊 Loading available periods for ${symbol} ${timeframe}...`);
+                    
+                    const response = await fetch(`/api/historical-data/available-periods/${symbol}/${timeframe}`);
+                    const data = await response.json();
+                    
+                    const periodSelect = document.getElementById('backtestPeriod');
+                    if (!periodSelect) return;
+                    
+                    // Clear existing options
+                    periodSelect.innerHTML = '';
+                    
+                    if (data.success && data.periods && data.periods.length > 0) {
+                        console.log(`✅ Found ${data.periods.length} available periods`);
+                        
+                        // Add periods from API
+                        data.periods.forEach(period => {
+                            const option = document.createElement('option');
+                            option.value = period.value;
+                            option.textContent = period.label;
+                            
+                            // Set default selection for 3 months if available
+                            if (period.value === '90d' || (period.days && period.days >= 90 && period.days <= 180)) {
+                                option.selected = true;
+                            }
+                            
+                            periodSelect.appendChild(option);
+                        });
+                        
+                        // Display data range info
+                        if (data.data_range) {
+                            console.log(`📅 Data available from ${data.data_range.earliest} to ${data.data_range.latest} (${data.data_range.total_candles} candles)`);
+                        }
+                    } else {
+                        console.log('⚠️ No periods available, using fallback options');
+                        
+                        // Fallback to default periods if no data available
+                        const fallbackPeriods = [
+                            { value: '7d', label: '7 Days (no data available)' },
+                            { value: '30d', label: '30 Days (no data available)' },
+                            { value: '90d', label: '3 Months (no data available)', selected: true }
+                        ];
+                        
+                        fallbackPeriods.forEach(period => {
+                            const option = document.createElement('option');
+                            option.value = period.value;
+                            option.textContent = period.label;
+                            if (period.selected) option.selected = true;
+                            periodSelect.appendChild(option);
+                        });
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error loading available periods:', error);
+                    
+                    // Fallback periods in case of error
+                    const periodSelect = document.getElementById('backtestPeriod');
+                    if (periodSelect) {
+                        periodSelect.innerHTML = `
+                            <option value="7d">7 Days</option>
+                            <option value="30d">30 Days</option>
+                            <option value="90d" selected>3 Months</option>
+                            <option value="180d">6 Months</option>
+                            <option value="365d">1 Year</option>
+                        `;
+                    }
+                }
+            }
+
             function syncTimeframes() {
                 const historicalTimeframe = document.getElementById('historicalTimeframe');
                 const backtestTimeframe = document.getElementById('backtestTimeframe');
+                const backtestPair = document.getElementById('backtestPair');
                 
                 if (historicalTimeframe && backtestTimeframe) {
-                    // Sync historical -> backtest
+                    // Sync historical -> backtest and reload periods
                     historicalTimeframe.addEventListener('change', function() {
                         backtestTimeframe.value = this.value;
                         console.log(`🔄 Synced timeframes: ${this.value}`);
+                        
+                        // Reload periods for new timeframe
+                        const pair = backtestPair?.value || 'BTCUSDT';
+                        loadAvailablePeriods(pair, this.value);
                     });
                     
-                    // Sync backtest -> historical  
+                    // Sync backtest -> historical and reload periods  
                     backtestTimeframe.addEventListener('change', function() {
                         historicalTimeframe.value = this.value;
                         console.log(`🔄 Synced timeframes: ${this.value}`);
+                        
+                        // Reload periods for new timeframe
+                        const pair = backtestPair?.value || 'BTCUSDT';
+                        loadAvailablePeriods(pair, this.value);
+                    });
+                }
+                
+                // Also reload periods when pair changes
+                if (backtestPair) {
+                    backtestPair.addEventListener('change', function() {
+                        const timeframe = backtestTimeframe?.value || '15m';
+                        loadAvailablePeriods(this.value, timeframe);
+                        console.log(`🔄 Pair changed: ${this.value}, reloading periods for ${timeframe}`);
                     });
                 }
             }
             
             // Initialize timeframe sync
             syncTimeframes();
+            
+            // Load initial periods for default pair and timeframe
+            setTimeout(() => {
+                const backtestPair = document.getElementById('backtestPair');
+                const backtestTimeframe = document.getElementById('backtestTimeframe');
+                const defaultPair = backtestPair?.value || 'BTCUSDT';
+                const defaultTimeframe = backtestTimeframe?.value || '15m';
+                
+                console.log(`🚀 Loading initial periods for ${defaultPair} ${defaultTimeframe}`);
+                loadAvailablePeriods(defaultPair, defaultTimeframe);
+            }, 100); // Small delay to ensure elements are ready
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);
