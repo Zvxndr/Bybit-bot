@@ -2711,35 +2711,52 @@
             }
 
             async loadDashboardData() {
+                console.log('🔄 Starting loadDashboardData...');
                 try {
-                    // Load portfolio data
-                    const portfolio = await fetch('/api/portfolio').then(r => r.json());
+                    // Load portfolio data with detailed logging
+                    console.log('📊 Fetching portfolio data...');
+                    const portfolioResponse = await fetch('/api/portfolio');
+                    console.log('📊 Portfolio response status:', portfolioResponse.status);
+                    
+                    if (!portfolioResponse.ok) {
+                        throw new Error(`Portfolio API failed: ${portfolioResponse.status}`);
+                    }
+                    
+                    const portfolio = await portfolioResponse.json();
+                    console.log('📊 Portfolio data received:', portfolio);
                     this.updatePortfolioStats(portfolio);
                     this.updateLivePortfolioStatus(portfolio);
 
                     // Load strategies
+                    console.log('🎯 Fetching strategies...');
                     const strategies = await fetch('/api/strategies').then(r => r.json());
                     this.updateStrategiesDisplay(strategies);
 
                     // Load pipeline metrics
+                    console.log('📈 Fetching pipeline metrics...');
                     const pipelineMetrics = await fetch('/api/pipeline-metrics').then(r => r.json());
                     this.updatePipelineMetrics(pipelineMetrics);
 
                     // Load performance
+                    console.log('💹 Fetching performance...');
                     const performance = await fetch('/api/performance').then(r => r.json());
                     this.updatePerformanceChart(performance);
 
                     // Load paper performance
+                    console.log('📑 Fetching paper performance...');
                     const paperPerformance = await fetch('/api/paper-performance').then(r => r.json());
                     this.updatePaperPerformanceChart(paperPerformance);
                     this.updatePaperTradingStats(paperPerformance.stats);
 
                     // Load activity
+                    console.log('📝 Fetching activity...');
                     const activity = await fetch('/api/activity').then(r => r.json());
                     this.updateActivityFeed(activity.activities);
+                    
+                    console.log('✅ Dashboard data loading complete!');
 
                 } catch (error) {
-                    console.error('Error loading dashboard data:', error);
+                    console.error('❌ Error loading dashboard data:', error);
                     this.showConnectionError();
                 }
             }
@@ -2749,7 +2766,7 @@
                 // portfolio.paper_testnet = Phase 2 balance
                 // portfolio.live = Phase 3 balance
                 
-                console.log('Portfolio data:', portfolio);
+                console.log('💰 Updating portfolio stats with data:', portfolio);
                 
                 // Update Paper/Testnet Balance (Phase 2)
                 const paper = portfolio.paper_testnet || {};
@@ -2757,12 +2774,37 @@
                 const paperAvailable = paper.available_balance || 0;
                 const paperUsed = paper.used_balance || 0;
                 
-                document.getElementById('paperBalance').textContent = 
-                    paperBalance > 0 ? `$${paperBalance.toLocaleString()}` : 'No Data';
-                document.getElementById('paperAvailable').textContent = 
-                    paperAvailable > 0 ? `$${paperAvailable.toLocaleString()}` : 'No Data';
-                document.getElementById('paperUsed').textContent = 
-                    paperUsed > 0 ? `$${paperUsed.toLocaleString()}` : 'No Data';
+                console.log('📊 Paper balance values:', {
+                    paperBalance, paperAvailable, paperUsed
+                });
+                
+                const paperBalanceElement = document.getElementById('paperBalance');
+                const paperAvailableElement = document.getElementById('paperAvailable');
+                const paperUsedElement = document.getElementById('paperUsed');
+                
+                console.log('🎯 DOM elements found:', {
+                    paperBalanceElement: !!paperBalanceElement,
+                    paperAvailableElement: !!paperAvailableElement,
+                    paperUsedElement: !!paperUsedElement
+                });
+                
+                if (paperBalanceElement) {
+                    const balanceText = paperBalance > 0 ? `$${paperBalance.toLocaleString()}` : 'No Data';
+                    paperBalanceElement.textContent = balanceText;
+                    console.log('✅ Set paperBalance to:', balanceText);
+                }
+                
+                if (paperAvailableElement) {
+                    const availableText = paperAvailable > 0 ? `$${paperAvailable.toLocaleString()}` : 'No Data';
+                    paperAvailableElement.textContent = availableText;
+                    console.log('✅ Set paperAvailable to:', availableText);
+                }
+                
+                if (paperUsedElement) {
+                    const usedText = paperUsed > 0 ? `$${paperUsed.toLocaleString()}` : 'No Data';
+                    paperUsedElement.textContent = usedText;
+                    console.log('✅ Set paperUsed to:', usedText);
+                }
                 
                 const paperPnl = paper.unrealized_pnl || 0;
                 const hasPaperData = paperBalance > 0 || paperPnl !== 0;
@@ -4532,15 +4574,23 @@
             }
 
             async downloadHistoricalData() {
+                console.log('📥 Starting downloadHistoricalData...');
                 try {
                     const pair = document.getElementById('historicalPair').value;
                     const timeframe = document.getElementById('historicalTimeframe').value;
                     const period = parseInt(document.getElementById('historicalPeriod').value);
                     
+                    console.log('📊 Download parameters:', { pair, timeframe, period });
+                    
                     // Show loading state
                     const downloadBtn = document.getElementById('downloadDataBtn');
                     const progressBar = document.getElementById('downloadProgress');
                     const originalText = downloadBtn.innerHTML;
+                    
+                    console.log('🎯 DOM elements found:', {
+                        downloadBtn: !!downloadBtn,
+                        progressBar: !!progressBar
+                    });
                     
                     downloadBtn.disabled = true;
                     downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Downloading...';
