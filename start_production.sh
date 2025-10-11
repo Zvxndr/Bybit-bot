@@ -40,5 +40,15 @@ fi
 echo "📊 Data directory contents:"
 ls -la /app/data/
 
-echo "🎯 Starting main application..."
+# Run production startup validation and diagnostics
+echo "🔍 Running production startup validation..."
+python src/production_startup_integration.py
+
+if [ $? -eq 0 ]; then
+    echo "✅ Startup validation passed - launching application"
+else
+    echo "⚠️ Startup validation issues detected - proceeding with caution"
+fi
+
+echo "🎯 Starting main application with enhanced monitoring..."
 exec python src/main.py

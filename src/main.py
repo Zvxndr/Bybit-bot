@@ -43,6 +43,42 @@ import asyncio
 import logging
 import random
 from datetime import datetime, timedelta
+import sqlite3
+import time
+
+# Import production logging and monitoring systems
+try:
+    from src.production_logger import production_logger, log_endpoint_performance, log_database_operation_decorator
+    PRODUCTION_LOGGING_AVAILABLE = True
+    print("✅ Production logging system loaded")
+except ImportError:
+    PRODUCTION_LOGGING_AVAILABLE = False
+    production_logger = logging.getLogger(__name__)
+    logging.warning("⚠️ Production logging not available, using basic logging")
+    
+    # Create no-op decorators if production logging not available
+    def log_endpoint_performance(func):
+        return func
+    def log_database_operation_decorator(operation_type: str, table_name: str):
+        def decorator(func):
+            return func
+        return decorator
+
+try:
+    from src.enhanced_health_check import health_checker, get_health_status
+    ENHANCED_HEALTH_CHECK_AVAILABLE = True
+    print("✅ Enhanced health check system loaded")
+except ImportError:
+    ENHANCED_HEALTH_CHECK_AVAILABLE = False
+    logging.warning("⚠️ Enhanced health check not available")
+
+try:
+    from src.data_discovery_diagnostic import DataDiscoveryDiagnostic
+    DATA_DIAGNOSTIC_AVAILABLE = True
+    print("✅ Data discovery diagnostic system loaded")
+except ImportError:
+    DATA_DIAGNOSTIC_AVAILABLE = False
+    logging.warning("⚠️ Data discovery diagnostic not available")
 
 # Load environment variables for production deployment
 try:
@@ -1741,14 +1777,53 @@ async def send_test_email():
     return {"status": "monitoring_unavailable"}
 
 @app.get("/health")
+@log_endpoint_performance
 async def health_check():
-    """System health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "monitoring_active": infrastructure_monitor.is_monitoring if infrastructure_monitor else False,
-        "api_connected": bool(trading_api.api_key and trading_api.api_secret)
-    }
+    """Enhanced system health check endpoint with comprehensive diagnostics"""
+    
+    if ENHANCED_HEALTH_CHECK_AVAILABLE:
+        try:
+            # Run comprehensive health check
+            health_status = await get_health_status()
+            
+            # Log health check results for monitoring
+            production_logger.deployment_logger.info(
+                "Health check requested",
+                overall_status=health_status.get('overall_status', 'UNKNOWN'),
+                total_data_points=health_status.get('data_availability', {}).get('total_data_points', 0),
+                warnings_count=len(health_status.get('warnings', [])),
+                errors_count=len(health_status.get('errors', []))
+            )
+            
+            return health_status
+            
+        except Exception as e:
+            production_logger.log_error(
+                "Enhanced health check failed",
+                error_type=type(e).__name__,
+                endpoint="/health",
+                method="GET",
+                error_details={"message": str(e)}
+            )
+            
+            # Fallback to basic health check
+            return {
+                "status": "ERROR", 
+                "timestamp": datetime.now().isoformat(),
+                "error": "Enhanced health check failed",
+                "fallback": True,
+                "monitoring_active": infrastructure_monitor.is_monitoring if infrastructure_monitor else False,
+                "api_connected": bool(trading_api.api_key and trading_api.api_secret)
+            }
+    else:
+        # Basic health check if enhanced system not available
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "monitoring_active": infrastructure_monitor.is_monitoring if infrastructure_monitor else False,
+            "api_connected": bool(trading_api.api_key and trading_api.api_secret),
+            "enhanced_health_check": "unavailable"
+        }
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -3343,18 +3418,61 @@ async def get_data_count(symbol: str, timeframe: str):
         return {"count": 0, "date_range": "Error", "quality": "Error"}
 
 @app.get("/api/historical-data/discover")
+@log_endpoint_performance
 async def discover_available_data():
-    """Discover what historical data actually exists in the database"""
+    """Discover what historical data actually exists in the database with comprehensive logging"""
+    
+    start_time = time.time()
+    
     try:
-        import sqlite3
-        from pathlib import Path
+        # Multiple database paths to check for DigitalOcean deployment
+        database_paths = [
+            "/app/data/trading_bot.db",
+            "data/trading_bot.db",
+            "src/data/speed_demon_cache/market_data.db",
+            "/app/src/data/speed_demon_cache/market_data.db"
+        ]
         
-        db_path = Path("data/trading_bot.db")
-        if not db_path.exists():
-            return {"success": False, "message": "No database found", "datasets": []}
+        db_path = None
+        for path in database_paths:
+            path_obj = Path(path)
+            if path_obj.exists():
+                db_path = path_obj
+                production_logger.database_logger.info(
+                    f"Database found at: {path}",
+                    size_bytes=path_obj.stat().st_size if path_obj.exists() else 0
+                )
+                break
         
-        with sqlite3.connect(str(db_path)) as conn:
+        if not db_path:
+            production_logger.log_error(
+                "No database found for data discovery",
+                endpoint="/api/historical-data/discover",
+                method="GET",
+                error_details={"searched_paths": database_paths}
+            )
+            return {"success": False, "message": "No database found", "datasets": [], "searched_paths": database_paths}
+        
+        with sqlite3.connect(str(db_path), timeout=30) as conn:
             cursor = conn.cursor()
+            
+            # First, check if historical_data table exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='historical_data'")
+            table_exists = cursor.fetchone() is not None
+            
+            if not table_exists:
+                production_logger.log_error(
+                    "historical_data table not found in database",
+                    endpoint="/api/historical-data/discover",
+                    method="GET",
+                    error_details={"database_path": str(db_path)}
+                )
+                return {
+                    "success": False, 
+                    "message": "historical_data table not found", 
+                    "datasets": [],
+                    "database_path": str(db_path)
+                }
             
             # Get all unique symbol/timeframe combinations with counts
             cursor.execute("""
@@ -3373,10 +3491,17 @@ async def discover_available_data():
             results = cursor.fetchall()
             datasets = []
             
+            production_logger.log_database_operation(
+                operation="DATA_DISCOVERY_QUERY",
+                table="historical_data",
+                record_count=len(results),
+                execution_time_ms=(time.time() - start_time) * 1000
+            )
+            
             for row in results:
                 symbol, timeframe, count, earliest, latest = row
                 
-                # Try to parse timestamps
+                # Try to parse timestamps with comprehensive error handling
                 try:
                     # Handle different timestamp formats
                     if isinstance(earliest, (int, float)):
@@ -3396,7 +3521,11 @@ async def discover_available_data():
                     duration_days = (latest_dt - earliest_dt).days
                     
                 except Exception as e:
-                    logger.warning(f"Timestamp parsing failed: {e}")
+                    production_logger.log_error(
+                        f"Timestamp parsing failed for {symbol} {timeframe}",
+                        error_type=type(e).__name__,
+                        error_details={"earliest": earliest, "latest": latest, "symbol": symbol, "timeframe": timeframe}
+                    )
                     date_range = f"{earliest} to {latest}"
                     duration_days = 0
                 
@@ -3409,20 +3538,250 @@ async def discover_available_data():
                     "quality": "Excellent" if count > 10000 else "Good" if count > 1000 else "Limited"
                 })
             
-            return {
+            total_records = sum(d["record_count"] for d in datasets)
+            discovery_time_ms = (time.time() - start_time) * 1000
+            
+            # Log successful data discovery
+            production_logger.log_data_discovery(
+                datasets_found=len(datasets),
+                total_records=total_records,
+                discovery_time_ms=discovery_time_ms
+            )
+            
+            production_logger.api_logger.info(
+                "Data discovery completed successfully",
+                datasets_found=len(datasets),
+                total_records=total_records,
+                database_path=str(db_path),
+                discovery_time_ms=discovery_time_ms
+            )
+            
+            response_data = {
                 "success": True,
                 "total_datasets": len(datasets),
-                "total_records": sum(d["record_count"] for d in datasets),
-                "datasets": datasets
+                "total_records": total_records,
+                "datasets": datasets,
+                "database_path": str(db_path),
+                "discovery_time_ms": discovery_time_ms
             }
             
+            return response_data
+            
+    except sqlite3.Error as e:
+        production_logger.log_error(
+            f"SQLite database error during data discovery: {str(e)}",
+            error_type="SQLiteError",
+            endpoint="/api/historical-data/discover",
+            method="GET",
+            error_details={"database_path": str(db_path) if 'db_path' in locals() else "unknown"}
+        )
+        return {"success": False, "message": f"Database error: {str(e)}", "datasets": []}
+        
     except Exception as e:
-        logger.error(f"Data discovery error: {e}")
-        return {"success": False, "message": str(e), "datasets": []}
+        discovery_time_ms = (time.time() - start_time) * 1000
+        production_logger.log_error(
+            f"Data discovery failed: {str(e)}",
+            error_type=type(e).__name__,
+            endpoint="/api/historical-data/discover",
+            method="GET",
+            error_details={
+                "message": str(e),
+                "discovery_time_ms": discovery_time_ms
+            }
+        )
+        return {"success": False, "message": f"Data discovery error: {str(e)}", "datasets": []}
 
 # ==========================================
-# DATA PERSISTENCE & HARD RESET ENDPOINTS
+# DATA PERSISTENCE & DIAGNOSTIC ENDPOINTS
 # ==========================================
+
+@app.get("/api/data/diagnostic")
+@log_endpoint_performance 
+async def run_data_diagnostic():
+    """Run comprehensive data discovery diagnostic for debugging production issues"""
+    
+    if not DATA_DIAGNOSTIC_AVAILABLE:
+        return {
+            "success": False,
+            "message": "Data diagnostic system not available",
+            "recommendation": "Check if src/data_discovery_diagnostic.py exists"
+        }
+    
+    try:
+        # Create diagnostic instance
+        diagnostic = DataDiscoveryDiagnostic(
+            base_url="http://localhost:8080"
+        )
+        
+        # Run comprehensive diagnostic
+        report = await diagnostic.run_comprehensive_diagnostic()
+        
+        # Log diagnostic results
+        production_logger.deployment_logger.info(
+            "Data diagnostic completed",
+            pipeline_health=report.data_pipeline_health,
+            total_datasets=len(report.database_status.tables) if hasattr(report.database_status, 'tables') else 0,
+            critical_issues_count=len(report.critical_issues),
+            repair_actions_count=len(report.repair_actions_taken)
+        )
+        
+        # Convert to dict for JSON response
+        from dataclasses import asdict
+        return {
+            "success": True,
+            "diagnostic_report": asdict(report),
+            "summary": diagnostic.generate_report_summary(report)
+        }
+        
+    except Exception as e:
+        production_logger.log_error(
+            f"Data diagnostic failed: {str(e)}",
+            error_type=type(e).__name__,
+            endpoint="/api/data/diagnostic",
+            method="GET"
+        )
+        return {
+            "success": False,
+            "message": f"Diagnostic failed: {str(e)}",
+            "error_type": type(e).__name__
+        }
+
+@app.get("/api/data/status")
+@log_endpoint_performance
+async def get_data_persistence_status():
+    """Get detailed data persistence status for production monitoring"""
+    
+    try:
+        # Check multiple database locations
+        database_locations = [
+            "/app/data/trading_bot.db",
+            "data/trading_bot.db",
+            "src/data/speed_demon_cache/market_data.db"
+        ]
+        
+        status = {
+            "timestamp": datetime.now().isoformat(),
+            "persistent_volumes": {},
+            "databases": {},
+            "data_summary": {
+                "total_historical_records": 0,
+                "total_backtest_results": 0,
+                "available_symbols": [],
+                "available_timeframes": []
+            }
+        }
+        
+        # Check persistent volume status
+        volume_paths = {
+            "/app/data": "data_volume",
+            "/app/logs": "logs_volume", 
+            "/app/config": "config_volume"
+        }
+        
+        for path, name in volume_paths.items():
+            path_obj = Path(path)
+            status["persistent_volumes"][name] = {
+                "path": path,
+                "exists": path_obj.exists(),
+                "writable": False,
+                "size_bytes": 0
+            }
+            
+            if path_obj.exists():
+                try:
+                    # Test write access
+                    test_file = path_obj / f"test_{int(time.time())}.tmp"
+                    test_file.write_text("test")
+                    test_file.unlink()
+                    status["persistent_volumes"][name]["writable"] = True
+                    
+                    # Get size
+                    status["persistent_volumes"][name]["size_bytes"] = sum(
+                        f.stat().st_size for f in path_obj.rglob('*') if f.is_file()
+                    )
+                except:
+                    pass
+        
+        # Check database status
+        for db_path in database_locations:
+            path_obj = Path(db_path)
+            db_status = {
+                "path": db_path,
+                "exists": path_obj.exists(),
+                "accessible": False,
+                "tables": [],
+                "record_counts": {}
+            }
+            
+            if path_obj.exists():
+                try:
+                    with sqlite3.connect(db_path, timeout=10) as conn:
+                        cursor = conn.cursor()
+                        
+                        # Test connectivity
+                        cursor.execute("SELECT 1")
+                        db_status["accessible"] = True
+                        
+                        # Get tables
+                        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                        db_status["tables"] = [row[0] for row in cursor.fetchall()]
+                        
+                        # Get record counts
+                        for table in ['historical_data', 'backtest_results']:
+                            if table in db_status["tables"]:
+                                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                                count = cursor.fetchone()[0]
+                                db_status["record_counts"][table] = count
+                                
+                                if table == 'historical_data':
+                                    status["data_summary"]["total_historical_records"] += count
+                                elif table == 'backtest_results':
+                                    status["data_summary"]["total_backtest_results"] += count
+                        
+                        # Get unique symbols and timeframes from historical_data
+                        if 'historical_data' in db_status["tables"]:
+                            cursor.execute("SELECT DISTINCT symbol FROM historical_data")
+                            symbols = [row[0] for row in cursor.fetchall()]
+                            status["data_summary"]["available_symbols"].extend(symbols)
+                            
+                            cursor.execute("SELECT DISTINCT timeframe FROM historical_data")
+                            timeframes = [row[0] for row in cursor.fetchall()]
+                            status["data_summary"]["available_timeframes"].extend(timeframes)
+                
+                except Exception as e:
+                    db_status["error"] = str(e)
+            
+            status["databases"][db_path] = db_status
+        
+        # Remove duplicates from summary
+        status["data_summary"]["available_symbols"] = list(set(status["data_summary"]["available_symbols"]))
+        status["data_summary"]["available_timeframes"] = list(set(status["data_summary"]["available_timeframes"]))
+        
+        # Log status check
+        production_logger.deployment_logger.info(
+            "Data persistence status checked",
+            total_historical_records=status["data_summary"]["total_historical_records"],
+            available_symbols_count=len(status["data_summary"]["available_symbols"]),
+            persistent_volumes_ok=sum(1 for v in status["persistent_volumes"].values() if v["exists"] and v["writable"])
+        )
+        
+        return {
+            "success": True,
+            **status
+        }
+        
+    except Exception as e:
+        production_logger.log_error(
+            f"Data persistence status check failed: {str(e)}",
+            error_type=type(e).__name__,
+            endpoint="/api/data/status",
+            method="GET"
+        )
+        return {
+            "success": False,
+            "message": f"Status check failed: {str(e)}",
+            "error_type": type(e).__name__
+        }
 
 @app.post("/api/data/hard-reset")
 async def production_hard_reset(confirm: bool = False):
