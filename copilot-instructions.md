@@ -3,6 +3,22 @@
 ## Project Overview
 This is a production-ready, enterprise-grade algorithmic trading system that combines multiple data sources (cross-exchange, sentiment, on-chain) with advanced machine learning models for cryptocurrency trading on Bybit. The system has completed all 4 implementation phases and includes comprehensive infrastructure, monitoring, and deployment capabilities.
 
+## Critical User Context & Requirements
+**CURRENT FOCUS**: ML algorithmic trading platform starting with backtesting on downloaded historical data, graduating strategies to paper trading on bybit testnet for validation before live trading. 
+
+**CORE PIPELINE**: Historical Data Download → Backtesting Controls → Strategy Graduation → Paper Trading (Testnet) → Live Trading
+
+**CRITICAL ISSUES TO AVOID**:
+- Historical data downloading successfully but not showing in backtesting controls (REPEAT PROBLEM)
+- Data being cleared on every DigitalOcean deployment (REPEAT PROBLEM) 
+- Mock data being used in production testing (NOT ACCEPTABLE)
+- Verbose console logging that obscures actual errors (FOCUS ON ERRORS ONLY)
+- Missing/broken backtesting UI controls after updates
+
+**DEPLOYMENT ENVIRONMENT**: DigitalOcean App Platform with testnet API keys configured for production testing. DO NOT test locally.
+
+**WORKFLOW GAP ANALYSIS**: Refer to `WORKFLOW_GAP_ANALYSIS.md` for comprehensive production readiness tracking and identified gaps.
+
 ## Architecture Philosophy
 - **Multi-Data Integration:** Combine exchange data, sentiment, and alternative data sources
 - **Model Diversity:** Use different ML models that make uncorrelated errors
@@ -10,6 +26,8 @@ This is a production-ready, enterprise-grade algorithmic trading system that com
 - **Uncertainty Awareness:** Prefer models that provide confidence estimates
 - **Statistical First:** Every decision must be backed by statistical evidence
 - **Database-Centric:** All actions, decisions, and results must be persisted for audit trails
+- **Production First:** Always prioritize real data over mock data in production environments
+- **Error-Focused Logging:** Only log errors and critical failures to avoid console noise
 
 ## Code Style & Quality Guidelines
 

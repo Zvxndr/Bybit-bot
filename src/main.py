@@ -187,10 +187,10 @@ from collections import defaultdict, deque
 import uvicorn
 import sqlite3
 
-# Setup logging
+# Production logging - ERROR/WARNING only to reduce console noise
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.ERROR,  # Only show errors and warnings
+    format='%(levelname)s: %(message)s'  # Simplified format
 )
 logger = logging.getLogger(__name__)
 
@@ -204,8 +204,8 @@ except ImportError as e:
     BACKTEST_ENGINE_AVAILABLE = False
     logger.warning(f"⚠️ Backtest engine not available: {e}")
 
-# Database configuration
-DB_PATH = 'data/trading_bot.db'
+# Database configuration - use persistent volume path
+DB_PATH = '/app/data/trading_bot.db' if Path('/app/data').exists() else 'data/trading_bot.db'
 
 # Create logs directory
 Path('logs').mkdir(exist_ok=True)
@@ -1934,74 +1934,57 @@ async def run_historical_backtest(request: Request):
         starting_balance = data.get('starting_balance', 10000)
         period = data.get('period', '2y')
         
-        # Use proper backtest engine if available, otherwise fallback to mock data
-        if BACKTEST_ENGINE_AVAILABLE:
-            try:
-                # Initialize backtest engine with proper configuration
-                from bot.config_manager import ConfigurationManager
-                config_manager = ConfigurationManager()
-                
-                # Create backtest engine instance
-                backtest_engine = BacktestEngine(config_manager)
-                
-                # Calculate period dates
-                period_mapping = {
-                    '1w': 7, '2w': 14, '1m': 30, '3m': 90, 
-                    '6m': 180, '1y': 365, '2y': 730, '3y': 1095,
-                    '1825': 1825, '3650': 3650, 'all': 3650
+        # PRODUCTION FIX: Use real historical data only, no mock fallbacks
+        try:
+            # Check if we have real historical data in the database
+            import sqlite3
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            # Check for actual historical data first - try multiple table names
+            data_count = 0
+            for table_name in ['historical_data', 'market_data', 'data_cache']:
+                try:
+                    cursor.execute(f"""
+                        SELECT COUNT(*) FROM {table_name} 
+                        WHERE symbol = ? AND timeframe = ?
+                    """, (pair, timeframe))
+                    result = cursor.fetchone()
+                    if result:
+                        data_count = result[0]
+                        logger.error(f"✓ Found {data_count} records in table '{table_name}'")
+                        break
+                except sqlite3.OperationalError:
+                    continue  # Table doesn't exist, try next one
+            conn.close()
+            
+            if data_count == 0:
+                logger.error(f"❌ No historical data for {pair} {timeframe}")
+                return {
+                    "success": False,
+                    "error": f"No historical data available for {pair} {timeframe}. Download data first using the Historical Data controls."
                 }
-                days_back = period_mapping.get(period, 90)
+            
+            # We have real data - now try to use it with the backtest engine
+            if BACKTEST_ENGINE_AVAILABLE:
+                logger.error(f"❌ Real backtest engine integration incomplete")
+                return {
+                    "success": False,
+                    "error": "Real backtest engine integration in progress. Historical data exists but engine needs real data integration."
+                }
+            else:
+                logger.error(f"❌ Backtest engine not available")
+                return {
+                    "success": False,
+                    "error": "Backtest engine not imported. Check engine imports and dependencies."
+                }
                 
-                end_date = datetime.now()
-                start_date = end_date - timedelta(days=days_back)
-                
-                # Run actual backtest (this would need proper strategy implementation)
-                logger.info(f"Running backtest for {pair} {timeframe} from {start_date} to {end_date}")
-                
-                # For now, use enhanced mock data that's more realistic
-                import random
-                random.seed(hash(f"{pair}{timeframe}{period}"))  # Deterministic based on parameters
-                
-                # More realistic return calculation based on market conditions
-                market_volatility = {'1m': 0.8, '5m': 1.0, '15m': 1.2, '30m': 1.4, '1h': 1.6, '4h': 2.0, '1d': 3.0}
-                vol_multiplier = market_volatility.get(timeframe, 1.0)
-                
-                # Base returns influenced by pair and timeframe
-                if pair in ['BTCUSDT', 'ETHUSDT']:
-                    base_return = random.uniform(-15, 35) * vol_multiplier
-                else:
-                    base_return = random.uniform(-25, 45) * vol_multiplier
-                
-                total_return_pct = base_return
-                total_pnl = (starting_balance * total_return_pct / 100)
-                final_balance = starting_balance + total_pnl
-                
-                # More realistic metrics
-                trades_count = random.randint(int(days_back/5), int(days_back/2))
-                win_rate = random.uniform(40, 65) if total_return_pct > 0 else random.uniform(30, 50)
-                max_drawdown = abs(random.uniform(2, min(20, abs(total_return_pct) + 5)))
-                
-            except Exception as e:
-                logger.warning(f"Backtest engine error, using fallback: {e}")
-                # Fallback to basic mock data
-                import random
-                random.seed(42)
-                total_return_pct = random.uniform(-10, 20)
-                total_pnl = (starting_balance * total_return_pct / 100)
-                final_balance = starting_balance + total_pnl
-                trades_count = random.randint(50, 150)
-                win_rate = random.uniform(45, 65)
-                max_drawdown = random.uniform(5, 15)
-        else:
-            # Fallback mock data when engine not available
-            import random
-            random.seed(42)
-            total_return_pct = random.uniform(-10, 20)
-            total_pnl = (starting_balance * total_return_pct / 100)
-            final_balance = starting_balance + total_pnl
-            trades_count = random.randint(50, 150)
-            win_rate = random.uniform(45, 65)
-            max_drawdown = random.uniform(5, 15)
+        except Exception as e:
+            logger.error(f"❌ Database connection failed: {e}")
+            return {
+                "success": False,
+                "error": f"Cannot access historical data: {str(e)}"
+            }
         
         # Store backtest result in database
         try:
@@ -3456,33 +3439,54 @@ async def discover_available_data():
         with sqlite3.connect(str(db_path), timeout=30) as conn:
             cursor = conn.cursor()
             
-            # First, check if historical_data table exists
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='historical_data'")
-            table_exists = cursor.fetchone() is not None
+            # Check if any data table exists (multiple possible table names)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            all_tables = [row[0] for row in cursor.fetchall()]
             
-            if not table_exists:
-                production_logger.log_error(
-                    "historical_data table not found in database",
-                    endpoint="/api/historical-data/discover",
-                    method="GET",
-                    error_details={"database_path": str(db_path)}
-                )
+            # Look for tables that might contain historical data
+            data_tables = [t for t in all_tables if any(keyword in t.lower() 
+                          for keyword in ['historical', 'market', 'data', 'cache'])]
+            
+            if not data_tables:
+                logger.error(f"❌ No data tables found in database. Available tables: {all_tables}")
                 return {
                     "success": False, 
-                    "message": "historical_data table not found", 
+                    "message": f"No data tables found. Available: {all_tables}", 
                     "datasets": [],
                     "database_path": str(db_path)
                 }
             
-            # Get all unique symbol/timeframe combinations with counts
-            cursor.execute("""
+            # Try to find data in any of the possible tables
+            table_to_use = None
+            for table in data_tables:
+                try:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                    count = cursor.fetchone()[0]
+                    if count > 0:
+                        table_to_use = table
+                        logger.error(f"✓ Using table '{table}' with {count} records")
+                        break
+                except sqlite3.OperationalError:
+                    continue
+            
+            if not table_to_use:
+                logger.error(f"❌ No data found in any table: {data_tables}")
+                return {
+                    "success": False,
+                    "message": f"No data found in tables: {data_tables}",
+                    "datasets": [],
+                    "database_path": str(db_path)
+                }
+            
+            # Get all unique symbol/timeframe combinations with counts from the correct table
+            cursor.execute(f"""
                 SELECT 
                     symbol, 
                     timeframe, 
                     COUNT(*) as record_count,
                     MIN(timestamp) as earliest,
                     MAX(timestamp) as latest
-                FROM historical_data 
+                FROM {table_to_use}
                 GROUP BY symbol, timeframe
                 HAVING COUNT(*) > 0
                 ORDER BY record_count DESC
