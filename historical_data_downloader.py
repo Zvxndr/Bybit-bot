@@ -105,6 +105,8 @@ class HistoricalDataDownloader:
             start_time = end_time - timedelta(days=days)
             
             logger.info(f"📥 Starting download: {ccxt_symbol} {timeframe} from {start_time} to {end_time}")
+            logger.info(f"📊 Expected total candles: ~{int((days * 24 * 60) / timeframe_minutes.get(timeframe, 60))}")
+            logger.info(f"🧩 Using chunk size: {chunk_days} days per chunk ({total_chunks} total chunks)")
             
             # Get exchange instance
             exchange_obj = self.exchanges.get(exchange)
@@ -113,7 +115,18 @@ class HistoricalDataDownloader:
             
             # Download data in chunks to avoid rate limits
             all_data = []
-            chunk_days = min(30, days)  # Download in 30-day chunks
+            # Calculate optimal chunk size based on timeframe to stay within API limits
+            max_candles_per_chunk = 999  # Bybit's actual limit
+            timeframe_minutes = {
+                '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+                '1h': 60, '2h': 120, '4h': 240, '6h': 360,
+                '8h': 480, '12h': 720, '1d': 1440
+            }
+            minutes_per_candle = timeframe_minutes.get(timeframe, 60)
+            max_minutes_per_chunk = max_candles_per_chunk * minutes_per_candle
+            chunk_days = min(days, max_minutes_per_chunk / (24 * 60))  # Dynamic chunk size
+            chunk_days = max(1, int(chunk_days))  # Ensure at least 1 day chunks
+            
             current_start = start_time
             
             total_chunks = (days // chunk_days) + (1 if days % chunk_days > 0 else 0)
@@ -197,8 +210,10 @@ class HistoricalDataDownloader:
         
         minutes_in_period = days * 24 * 60
         minutes_per_candle = timeframe_minutes.get(timeframe, 60)
+        calculated_candles = int(minutes_in_period / minutes_per_candle)
         
-        return min(1000, int(minutes_in_period / minutes_per_candle))  # Limit to 1000 candles per request
+        # Use Bybit's actual limit of 999 candles per request
+        return min(999, calculated_candles)
     
     async def _fetch_with_retry(
         self, 
