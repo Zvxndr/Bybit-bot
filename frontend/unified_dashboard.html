@@ -4639,7 +4639,11 @@
                         // Update detailed status
                         this.updateDataStatus(result, pair, timeframe, period);
                         
-                        this.showToastNotification(`✅ Successfully loaded ${result.data_points || 'N/A'} data points for ${pair}`, 'success');
+                        // Show coverage-aware notification
+                        const coverageInfo = result.existing_coverage !== undefined 
+                            ? ` (${result.existing_coverage}% existing)` 
+                            : '';
+                        this.showToastNotification(`✅ ${result.message || `Loaded ${result.data_points} data points`}${coverageInfo}`, 'success');
                         this.hideHistoricalDataControls();
                     } else {
                         throw new Error(result.message || 'Failed to download data');
@@ -5902,6 +5906,29 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             
             // Load saved pipeline configuration
             dashboard.loadPipelineConfig();
+            
+            // Sync timeframes between historical data and backtesting
+            function syncTimeframes() {
+                const historicalTimeframe = document.getElementById('historicalTimeframe');
+                const backtestTimeframe = document.getElementById('backtestTimeframe');
+                
+                if (historicalTimeframe && backtestTimeframe) {
+                    // Sync historical -> backtest
+                    historicalTimeframe.addEventListener('change', function() {
+                        backtestTimeframe.value = this.value;
+                        console.log(`🔄 Synced timeframes: ${this.value}`);
+                    });
+                    
+                    // Sync backtest -> historical  
+                    backtestTimeframe.addEventListener('change', function() {
+                        historicalTimeframe.value = this.value;
+                        console.log(`🔄 Synced timeframes: ${this.value}`);
+                    });
+                }
+            }
+            
+            // Initialize timeframe sync
+            syncTimeframes();
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);

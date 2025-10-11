@@ -62,6 +62,64 @@ class HistoricalDataDownloader:
             
             logger.info(f"✅ Historical data database initialized: {self.db_path}")
     
+    def _check_existing_data_coverage(self, symbol: str, timeframe: str, start_time: datetime, end_time: datetime) -> Dict:
+        """Check how much data already exists for the requested period"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # Get the date range of existing data
+                cursor = conn.execute("""
+                    SELECT MIN(timestamp) as earliest, MAX(timestamp) as latest, COUNT(*) as count
+                    FROM historical_data
+                    WHERE symbol = ? AND timeframe = ?
+                """, (symbol, timeframe))
+                
+                result = cursor.fetchone()
+                if not result or not result[0]:
+                    return {"coverage_percent": 0, "existing_count": 0, "message": "No existing data found"}
+                
+                existing_earliest = datetime.fromtimestamp(result[0] / 1000)
+                existing_latest = datetime.fromtimestamp(result[1] / 1000)
+                existing_count = result[2]
+                
+                # Calculate expected total candles for requested period
+                timeframe_minutes = {
+                    '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+                    '1h': 60, '2h': 120, '4h': 240, '6h': 360,
+                    '8h': 480, '12h': 720, '1d': 1440
+                }
+                minutes_per_candle = timeframe_minutes.get(timeframe, 60)
+                total_minutes = (end_time - start_time).total_seconds() / 60
+                expected_candles = int(total_minutes / minutes_per_candle)
+                
+                # Check overlap with requested period
+                overlap_start = max(start_time, existing_earliest)
+                overlap_end = min(end_time, existing_latest)
+                
+                if overlap_start >= overlap_end:
+                    return {"coverage_percent": 0, "existing_count": 0, "message": "No data overlap with requested period"}
+                
+                # Count actual data points in the requested range
+                cursor = conn.execute("""
+                    SELECT COUNT(*) FROM historical_data
+                    WHERE symbol = ? AND timeframe = ? 
+                    AND timestamp >= ? AND timestamp <= ?
+                """, (symbol, timeframe, int(start_time.timestamp() * 1000), int(end_time.timestamp() * 1000)))
+                
+                overlapping_count = cursor.fetchone()[0]
+                coverage_percent = min(100, (overlapping_count / expected_candles) * 100) if expected_candles > 0 else 0
+                
+                return {
+                    "coverage_percent": round(coverage_percent, 1),
+                    "existing_count": overlapping_count,
+                    "total_expected": expected_candles,
+                    "existing_range": f"{existing_earliest.strftime('%Y-%m-%d')} to {existing_latest.strftime('%Y-%m-%d')}",
+                    "message": f"Found {overlapping_count} existing candles ({coverage_percent:.1f}% coverage)"
+                }
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Error checking existing data: {e}")
+            return {"coverage_percent": 0, "existing_count": 0, "message": "Error checking existing data"}
+
     async def download_historical_data(
         self, 
         symbol: str, 
@@ -104,9 +162,26 @@ class HistoricalDataDownloader:
             end_time = datetime.now()
             start_time = end_time - timedelta(days=days)
             
+            # Define timeframe minutes for calculations
+            timeframe_minutes = {
+                '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+                '1h': 60, '2h': 120, '4h': 240, '6h': 360,
+                '8h': 480, '12h': 720, '1d': 1440
+            }
+            
             logger.info(f"📥 Starting download: {ccxt_symbol} {timeframe} from {start_time} to {end_time}")
             logger.info(f"📊 Expected total candles: ~{int((days * 24 * 60) / timeframe_minutes.get(timeframe, 60))}")
-            logger.info(f"🧩 Using chunk size: {chunk_days} days per chunk ({total_chunks} total chunks)")
+            
+            # Check existing data coverage
+            coverage_info = self._check_existing_data_coverage(ccxt_symbol, timeframe, start_time, end_time)
+            logger.info(f"🔍 Data coverage check: {coverage_info['message']}")
+            
+            # If we have high coverage (>90%), offer to download only missing data
+            if coverage_info['coverage_percent'] >= 90:
+                logger.info(f"📚 Already downloaded ({coverage_info['coverage_percent']:.1f}%), downloading remaining data...")
+                # Continue with download to fill gaps, but let user know
+            elif coverage_info['coverage_percent'] >= 50:
+                logger.info(f"📊 Partial data exists ({coverage_info['coverage_percent']:.1f}%), downloading to complete dataset...")
             
             # Get exchange instance
             exchange_obj = self.exchanges.get(exchange)
@@ -117,11 +192,6 @@ class HistoricalDataDownloader:
             all_data = []
             # Calculate optimal chunk size based on timeframe to stay within API limits
             max_candles_per_chunk = 999  # Bybit's actual limit
-            timeframe_minutes = {
-                '1m': 1, '5m': 5, '15m': 15, '30m': 30,
-                '1h': 60, '2h': 120, '4h': 240, '6h': 360,
-                '8h': 480, '12h': 720, '1d': 1440
-            }
             minutes_per_candle = timeframe_minutes.get(timeframe, 60)
             max_minutes_per_chunk = max_candles_per_chunk * minutes_per_candle
             chunk_days = min(days, max_minutes_per_chunk / (24 * 60))  # Dynamic chunk size
@@ -180,11 +250,20 @@ class HistoricalDataDownloader:
             # Store in database
             stored_count = await self._store_data(symbol, timeframe, unique_data)
             
+            # Create success message based on coverage
+            if coverage_info['coverage_percent'] >= 90:
+                message = f"Already downloaded ({coverage_info['coverage_percent']:.1f}%), added {stored_count} new data points"
+            elif coverage_info['coverage_percent'] >= 50:
+                message = f"Updated existing dataset ({coverage_info['coverage_percent']:.1f}% → now complete), added {stored_count} new data points"
+            else:
+                message = f"Successfully downloaded {len(unique_data)} data points"
+            
             return {
                 "success": True,
-                "message": f"Successfully downloaded {len(unique_data)} data points",
+                "message": message,
                 "data_points": len(unique_data),
                 "stored_count": stored_count,
+                "existing_coverage": coverage_info['coverage_percent'],
                 "symbol": symbol,
                 "timeframe": timeframe,
                 "period_days": days,
