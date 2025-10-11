@@ -5265,20 +5265,6 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     }, 300);
                 }, 3000);
             }
-        }
-
-        // Console Management Functions
-        let consoleData = [];
-        let consolePaused = false;
-        let autoScroll = true;
-
-        function initializeConsole() {
-            const consoleOutput = document.getElementById('consoleOutput');
-            if (consoleOutput) {
-                consoleOutput.innerHTML = '';
-                addConsoleLog('INFO', 'Dashboard initialized - Bot Activity Console ready');
-                addConsoleLog('INFO', 'Waiting for bot activity...');
-            }
 
             // ====================================
             // DATA PERSISTENCE MANAGEMENT METHODS  
@@ -5297,62 +5283,24 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                         
                         let html = '<div class="small text-light">';
                         html += `<h6>💾 Data Overview (${status.total_size_mb} MB total)</h6>`;
+                        html += `<p><strong>Strategies:</strong> ${status.strategies_count}<br>`;
+                        html += `<strong>Historical Data:</strong> ${status.historical_data_mb} MB<br>`;
+                        html += `<strong>Models:</strong> ${status.models_count}<br>`;
+                        html += `<strong>Cache:</strong> ${status.cache_mb} MB</p>`;
                         
-                        // Database files
-                        html += '<h6 class="mt-2">📂 Database Files:</h6><ul>';
-                        Object.entries(status.files).forEach(([file, info]) => {
-                            const status_icon = info.exists ? '✅' : '❌';
-                            const size_info = info.exists ? ` (${info.size_mb} MB)` : '';
-                            html += `<li>${status_icon} ${file}${size_info}</li>`;
-                        });
-                        html += '</ul>';
-                        
-                        // Directories
-                        html += '<h6 class="mt-2">📁 Data Directories:</h6><ul>';
-                        Object.entries(status.directories).forEach(([dir, info]) => {
-                            const status_icon = info.exists ? '✅' : '❌';
-                            const file_info = info.exists ? ` (${info.file_count} files, ${info.size_mb} MB)` : '';
-                            html += `<li>${status_icon} ${dir}${file_info}</li>`;
-                        });
-                        html += '</ul>';
-                        
-                        // Backups
-                        if (status.backups && status.backups.length > 0) {
-                            html += '<h6 class="mt-2">💾 Available Backups:</h6><ul>';
-                            status.backups.slice(0, 3).forEach(backup => {
-                                html += `<li>📦 ${backup.name} (${backup.files + backup.directories} items)</li>`;
-                            });
-                            html += '</ul>';
-                        }
-                        
-                        // Validation status
-                        const health_icon = validation.overall_status === 'healthy' ? '✅' : 
-                                          validation.overall_status === 'warning' ? '⚠️' : '❌';
-                        html += `<h6 class="mt-2">${health_icon} Data Health: ${validation.overall_status.toUpperCase()}</h6>`;
-                        
-                        if (validation.issues && validation.issues.length > 0) {
-                            html += '<div class="text-warning">Issues found:</div><ul>';
-                            validation.issues.forEach(issue => {
-                                html += `<li class="text-warning">⚠️ ${issue}</li>`;
-                            });
-                            html += '</ul>';
-                        }
-                        
+                        html += `<h6>🔍 Validation Status</h6>`;
+                        html += `<p><strong>Health:</strong> ${validation.health}<br>`;
+                        html += `<strong>Issues:</strong> ${validation.issues_found}</p>`;
                         html += '</div>';
                         
-                        // Show in data status results area
-                        const resultsDiv = document.getElementById('dataStatusResults');
-                        const contentDiv = document.getElementById('dataStatusContent');
-                        contentDiv.innerHTML = html;
-                        resultsDiv.style.display = 'block';
-                        
-                        this.showToastNotification('📊 Data status loaded', 'success');
+                        document.getElementById('dataStatusContent').innerHTML = html;
+                        this.showToastNotification('✅ Data status loaded successfully', 'success');
                     } else {
-                        this.showToastNotification(`❌ Failed to load data status: ${result.message}`, 'danger');
+                        throw new Error(result.message || 'Failed to get data status');
                     }
                 } catch (error) {
-                    console.error('Data status error:', error);
-                    this.showToastNotification('❌ Failed to load data status', 'danger');
+                    console.error('Error getting data status:', error);
+                    this.showToastNotification(`❌ Failed to get data status: ${error.message}`, 'error');
                 }
             }
 
@@ -5364,94 +5312,116 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     const result = await response.json();
                     
                     if (result.success) {
-                        const backup_name = result.backup_info.backup_name;
-                        this.showToastNotification(`✅ Backup created: ${backup_name}`, 'success');
+                        this.showToastNotification(`✅ Backup created: ${result.backup_file}`, 'success');
+                        await this.getDataStatus(); // Refresh status
                     } else {
-                        this.showToastNotification(`❌ Backup failed: ${result.message}`, 'danger');
+                        throw new Error(result.message || 'Failed to create backup');
                     }
                 } catch (error) {
-                    console.error('Backup error:', error);
-                    this.showToastNotification('❌ Backup creation failed', 'danger');
+                    console.error('Error creating backup:', error);
+                    this.showToastNotification(`❌ Backup failed: ${error.message}`, 'error');
                 }
             }
 
             async restoreFromBackup() {
-                if (!confirm('🔄 Restore data from latest backup? This will overwrite current data.')) {
+                const backupFile = document.getElementById('backupFileSelect').value;
+                if (!backupFile) {
+                    this.showToastNotification('⚠️ Please select a backup file', 'error');
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to restore from backup: ${backupFile}?\n\nThis will overwrite current data!`)) {
                     return;
                 }
 
                 try {
                     this.showToastNotification('🔄 Restoring from backup...', 'info');
                     
-                    const response = await fetch('/api/data/restore', { method: 'POST' });
+                    const response = await fetch('/api/data/restore', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ backup_file: backupFile })
+                    });
                     const result = await response.json();
                     
                     if (result.success) {
-                        const backup_used = result.restore_info.backup_used;
-                        this.showToastNotification(`✅ Data restored from: ${backup_used}`, 'success');
-                        // Refresh page to show restored data
-                        setTimeout(() => location.reload(), 2000);
+                        this.showToastNotification('✅ Backup restored successfully', 'success');
+                        setTimeout(() => window.location.reload(), 2000);
                     } else {
-                        this.showToastNotification(`❌ Restore failed: ${result.message}`, 'danger');
+                        throw new Error(result.message || 'Failed to restore backup');
                     }
                 } catch (error) {
-                    console.error('Restore error:', error);
-                    this.showToastNotification('❌ Data restore failed', 'danger');
+                    console.error('Error restoring backup:', error);
+                    this.showToastNotification(`❌ Restore failed: ${error.message}`, 'error');
                 }
             }
 
             async validatePersistentData() {
                 try {
-                    this.showToastNotification('🔍 Validating persistent data...', 'info');
+                    this.showToastNotification('🔍 Validating data integrity...', 'info');
                     
-                    // Use the same data status endpoint which includes validation
-                    await this.getDataStatus();
+                    const response = await fetch('/api/data/validate', { method: 'POST' });
+                    const result = await response.json();
                     
+                    const status = result.valid ? 'success' : 'error';
+                    const message = result.valid ? '✅ Data validation passed' : `❌ Validation failed: ${result.message}`;
+                    this.showToastNotification(message, status);
+                    
+                    await this.getDataStatus(); // Refresh status
                 } catch (error) {
-                    console.error('Persistent data validation error:', error);
-                    this.showToastNotification('❌ Data validation failed', 'danger');
+                    console.error('Error validating data:', error);
+                    this.showToastNotification(`❌ Validation error: ${error.message}`, 'error');
                 }
             }
 
             async productionHardReset() {
-                // Double confirmation for hard reset
-                if (!confirm('⚠️ DANGER: This will DELETE ALL data (strategies, historical data, models, cache).\n\nAn emergency backup will be created first.\n\nAre you absolutely sure?')) {
-                    return;
-                }
-
-                if (!confirm('🔥 FINAL WARNING: This action is IRREVERSIBLE!\n\nType "CONFIRM" in the next dialog to proceed.')) {
-                    return;
-                }
-
-                const confirmation = prompt('Type "CONFIRM" to proceed with hard reset:');
-                if (confirmation !== 'CONFIRM') {
-                    this.showToastNotification('❌ Hard reset cancelled', 'warning');
+                // Multi-level confirmation for production safety
+                if (!confirm('⚠️ DANGER: This will delete ALL strategies, historical data, and models!\n\nAre you absolutely sure?')) return;
+                if (!confirm('🚨 FINAL WARNING: This action cannot be undone!\n\nType YES in the next prompt to confirm.')) return;
+                
+                const confirmation = prompt('Type "DELETE ALL DATA" to confirm (case sensitive):');
+                if (confirmation !== 'DELETE ALL DATA') {
+                    this.showToastNotification('❌ Hard reset cancelled - incorrect confirmation', 'error');
                     return;
                 }
 
                 try {
-                    this.showToastNotification('🔥 HARD RESET IN PROGRESS...', 'warning');
+                    this.showToastNotification('🗑️ Performing production hard reset...', 'info');
                     
-                    const response = await fetch('/api/data/hard-reset?confirm=true', { method: 'POST' });
+                    const response = await fetch('/api/data/hard-reset', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            confirmation: 'DELETE_ALL_DATA',
+                            emergency_backup: true 
+                        })
+                    });
                     const result = await response.json();
                     
                     if (result.success) {
-                        const backup_name = result.reset_info.emergency_backup;
-                        this.showToastNotification(`🔥 HARD RESET COMPLETE! Emergency backup: ${backup_name}`, 'success');
-                        
-                        // Reload page after 3 seconds to show clean state
-                        setTimeout(() => {
-                            alert('Hard reset complete. Page will reload to show clean state.');
-                            location.reload();
-                        }, 3000);
-                        
+                        this.showToastNotification('✅ Production hard reset complete', 'success');
+                        setTimeout(() => window.location.reload(), 3000);
                     } else {
-                        this.showToastNotification(`❌ Hard reset failed: ${result.message}`, 'danger');
+                        throw new Error(result.message || 'Hard reset failed');
                     }
                 } catch (error) {
-                    console.error('Hard reset error:', error);
-                    this.showToastNotification('❌ Hard reset failed', 'danger');
+                    console.error('Error during hard reset:', error);
+                    this.showToastNotification(`❌ Hard reset failed: ${error.message}`, 'error');
                 }
+            }
+        }
+
+        // Console Management Functions
+        let consoleData = [];
+        let consolePaused = false;
+        let autoScroll = true;
+
+        function initializeConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = '';
+                addConsoleLog('INFO', 'Dashboard initialized - Bot Activity Console ready');
+                addConsoleLog('INFO', 'Waiting for bot activity...');
             }
         }
 
