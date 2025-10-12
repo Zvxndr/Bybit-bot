@@ -529,64 +529,17 @@ class DataDiscoveryDiagnostic:
             return False
     
     async def _create_sample_data(self) -> bool:
-        """Create sample historical data for testing if database is empty"""
+        """PRODUCTION FIX: No mock data creation - fail gracefully instead"""
         
-        try:
-            database_path = "/app/data/trading_bot.db"
-            
-            with sqlite3.connect(database_path) as conn:
-                cursor = conn.cursor()
-                
-                # Check if data already exists
-                cursor.execute("SELECT COUNT(*) FROM historical_data")
-                existing_count = cursor.fetchone()[0]
-                
-                if existing_count > 0:
-                    return False  # Data already exists
-                
-                # Create sample data for testing
-                sample_data = []
-                base_time = int(datetime.now().timestamp()) - (30 * 24 * 60 * 60)  # 30 days ago
-                base_price = 50000.0
-                
-                for i in range(1000):  # 1000 sample records
-                    timestamp = base_time + (i * 900)  # 15 minute intervals
-                    price_variation = 1 + (i % 100 - 50) * 0.001  # Small price variation
-                    price = base_price * price_variation
-                    
-                    sample_data.append((
-                        'BTCUSDT',
-                        '15m', 
-                        timestamp,
-                        price * 0.999,  # open
-                        price * 1.001,  # high
-                        price * 0.998,  # low
-                        price,           # close
-                        100.0 + (i % 50)  # volume
-                    ))
-                
-                cursor.executemany("""
-                    INSERT INTO historical_data (symbol, timeframe, timestamp, open, high, low, close, volume)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, sample_data)
-                
-                conn.commit()
-                
-                production_logger.database_logger.info(
-                    "Sample data created for testing",
-                    records_created=len(sample_data),
-                    symbol="BTCUSDT",
-                    timeframe="15m"
-                )
-                
-                return True
-                
-        except Exception as e:
-            production_logger.log_error(
-                f"Sample data creation failed: {str(e)}",
-                error_type=type(e).__name__
-            )
-            return False
+        production_logger.log_error(
+            "PRODUCTION ERROR: No historical data found in database",
+            error_type="MissingHistoricalData",
+            solution="Use DigitalOcean historical data download or manual data import",
+            database_path="/app/data/trading_bot.db"
+        )
+        
+        # PRODUCTION RULE: Never create fake data, always fail with clear instructions
+        return False
     
     def _calculate_data_quality_score(self, 
                                     historical_count: int, 

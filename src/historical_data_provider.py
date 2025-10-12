@@ -296,6 +296,7 @@ class HistoricalDataProvider:
     def get_market_data_sample(self, symbol: str = "BTCUSDT", hours: int = 24) -> Dict[str, Any]:
         """Get recent market data for realistic price feeds"""
         if not self.connection:
+            logger.error("[PRODUCTION ERROR] No database connection for market data")
             return self._generate_mock_market_data()
         
         try:
@@ -380,17 +381,12 @@ class HistoricalDataProvider:
         ]
     
     def _generate_mock_market_data(self) -> Dict[str, Any]:
-        """Generate mock market data when no historical data is available"""
+        """PRODUCTION FIX: No mock data - return error instead"""
+        logger.error("[PRODUCTION ERROR] No real historical data available")
         return {
-            'symbol': 'BTCUSDT',
-            'current_price': 66000.00,
-            'high_24h': 67000.00,
-            'low_24h': 65000.00,
-            'avg_price': 66000.00,
-            'volume_24h': 1000000.00,
-            'price_change': 1000.00,
-            'price_change_percent': 1.5,
-            'data_points': 100,
+            'error': 'No historical data found',
+            'message': 'Use DigitalOcean data download to populate database',
+            'data_points': 0,
             'last_update': datetime.now().isoformat()
         }
     
