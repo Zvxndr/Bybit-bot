@@ -18,6 +18,14 @@ echo "🔧 Setting up database permissions..."
 touch /app/data/trading_bot.db
 chmod 664 /app/data/trading_bot.db
 
+# Fix database schema if needed (fixes the phase_start_time column errors)
+echo "🔍 Checking and fixing database schema..."
+python container_schema_check.py
+
+# Apply comprehensive logging fix to reduce console noise
+echo "🔧 Applying emergency logging fix..."
+python emergency_logging_fix.py
+
 # Create backup directory for tax logs and live trading data  
 mkdir -p /app/data/backups
 mkdir -p /app/data/tax_logs
@@ -50,5 +58,5 @@ else
     echo "⚠️ Startup validation issues detected - proceeding with caution"
 fi
 
-echo "🎯 Starting main application with enhanced monitoring..."
-exec python src/main.py
+echo "🎯 Starting main application with minimal logging (ERROR only)..."
+exec uvicorn src.main:app --host 0.0.0.0 --port 8080 --log-level error --access-log --no-use-colors
