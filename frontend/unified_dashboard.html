@@ -8085,11 +8085,15 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             // Discover available data on startup
             setTimeout(() => {
                 console.log('🚀 Discovering available historical data...');
-                window.discoverAvailableData();
+                discoverAvailableDataEnhanced();
+                loadBacktestResultsEnhanced();
             }, 500); // Small delay to ensure elements are ready
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);
+            
+            // Refresh backtest results every 30 seconds
+            setInterval(loadBacktestResultsEnhanced, 30000);
             
             // Initialize manual graduation on page load
             loadManualGraduation();
@@ -8339,6 +8343,254 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                 }
             }, 5000);
         }
+
+        // 🔧 ENHANCED DATA DISCOVERY & BACKTESTING INTEGRATION
+        // Enhanced data discovery function that fixes the persistent integration issue
+        async function discoverAvailableDataEnhanced() {
+            try {
+                console.log('🔍 Enhanced discovery: Finding available historical data...');
+                
+                const response = await fetch('/api/historical-data/discover');
+                const data = await response.json();
+                
+                if (data.success && data.datasets && data.datasets.length > 0) {
+                    console.log(`✅ Enhanced discovery: Found ${data.datasets.length} datasets:`, data.datasets);
+                    
+                    // Update backtesting controls with discovered data
+                    updateBacktestingControlsEnhanced(data.datasets);
+                    
+                    // Show success message
+                    showNotification(`📊 Historical Data Ready: ${data.datasets.length} datasets available for backtesting`, 'success');
+                    
+                    // Also trigger the original discovery function for backward compatibility
+                    if (window.discoverAvailableData) {
+                        window.discoverAvailableData();
+                    }
+                    
+                } else {
+                    console.log('⚠️ Enhanced discovery: No historical data found:', data);
+                    showNotification('📥 No historical data found. Use Download controls to get data first.', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ Enhanced discovery error:', error);
+                showNotification('❌ Error discovering data. Check API connection.', 'error');
+            }
+        }
+
+        // Update backtesting controls with available data
+        function updateBacktestingControlsEnhanced(datasets) {
+            console.log('🔧 Updating backtesting controls with datasets:', datasets);
+            
+            // Update pair selector
+            const pairSelect = document.getElementById('backtestPair');
+            if (pairSelect) {
+                // Store current selection
+                const currentPair = pairSelect.value;
+                
+                pairSelect.innerHTML = '<option value="">Select Trading Pair</option>';
+                
+                const uniquePairs = [...new Set(datasets.map(d => d.symbol))];
+                uniquePairs.forEach(pair => {
+                    const option = document.createElement('option');
+                    option.value = pair;
+                    option.textContent = pair;
+                    pairSelect.appendChild(option);
+                });
+                
+                // Restore selection if it still exists
+                if (currentPair && uniquePairs.includes(currentPair)) {
+                    pairSelect.value = currentPair;
+                }
+                
+                console.log(`✅ Updated pair selector with ${uniquePairs.length} pairs:`, uniquePairs);
+            }
+            
+            // Update timeframe selector based on selected pair
+            const updateTimeframes = () => {
+                const timeframeSelect = document.getElementById('backtestTimeframe');
+                const selectedPair = pairSelect?.value;
+                
+                if (timeframeSelect && selectedPair) {
+                    const currentTimeframe = timeframeSelect.value;
+                    
+                    timeframeSelect.innerHTML = '<option value="">Select Timeframe</option>';
+                    
+                    const availableTimeframes = datasets
+                        .filter(d => d.symbol === selectedPair)
+                        .map(d => d.timeframe);
+                    
+                    availableTimeframes.forEach(timeframe => {
+                        const option = document.createElement('option');
+                        option.value = timeframe;
+                        option.textContent = timeframe;
+                        timeframeSelect.appendChild(option);
+                    });
+                    
+                    // Restore selection if it still exists
+                    if (currentTimeframe && availableTimeframes.includes(currentTimeframe)) {
+                        timeframeSelect.value = currentTimeframe;
+                    }
+                    
+                    console.log(`✅ Updated timeframe selector for ${selectedPair}:`, availableTimeframes);
+                }
+            };
+            
+            if (pairSelect) {
+                pairSelect.addEventListener('change', updateTimeframes);
+                // Trigger update if pair is already selected
+                if (pairSelect.value) {
+                    updateTimeframes();
+                }
+            }
+        }
+
+        // Enhanced backtest results loading
+        async function loadBacktestResultsEnhanced() {
+            try {
+                console.log('📊 Enhanced loading: Fetching backtest results...');
+                
+                const response = await fetch('/api/backtest/history');
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    console.log(`✅ Enhanced loading: Found ${data.data.length} backtest results`);
+                    updateBacktestResultsDisplayEnhanced(data.data);
+                } else {
+                    console.log('📈 Enhanced loading: No backtest results yet - showing guidance');
+                    showEmptyBacktestResultsEnhanced();
+                }
+                
+            } catch (error) {
+                console.error('❌ Enhanced backtest results loading error:', error);
+                showEmptyBacktestResultsEnhanced();
+            }
+        }
+
+        // Update backtest results display
+        function updateBacktestResultsDisplayEnhanced(results) {
+            console.log('🎨 Updating backtest results display with', results.length, 'results');
+            
+            // Try multiple possible container IDs
+            const possibleContainers = [
+                'backtestResultsContainer',
+                'backtest-results',
+                'historicalBacktestResults',
+                'backtestHistory'
+            ];
+            
+            let container = null;
+            for (const id of possibleContainers) {
+                container = document.getElementById(id);
+                if (container) {
+                    console.log(`✅ Found results container: ${id}`);
+                    break;
+                }
+            }
+            
+            if (!container) {
+                console.log('⚠️ No backtest results container found, creating one');
+                // Find a place to add results - look for backtest sections
+                const backtestSection = document.querySelector('[id*="backtest"], [class*="backtest"]');
+                if (backtestSection) {
+                    container = document.createElement('div');
+                    container.id = 'backtestResultsContainer';
+                    container.className = 'mt-3';
+                    backtestSection.appendChild(container);
+                }
+            }
+            
+            if (container) {
+                container.innerHTML = `
+                    <div class="card bg-dark">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Recent Backtest Results</h5>
+                        </div>
+                        <div class="card-body">
+                            ${results.map(result => `
+                                <div class="border border-secondary rounded p-3 mb-2 bg-dark">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2">
+                                            <strong class="text-white">${result.pair}</strong> 
+                                            <div><span class="badge bg-secondary">${result.timeframe}</span></div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="${(result.total_return || 0) >= 0 ? 'text-success' : 'text-danger'} fw-bold">
+                                                    ${(result.total_return || 0) >= 0 ? '+' : ''}${(result.total_return || 0).toFixed(1)}%
+                                                </div>
+                                                <small class="text-muted">Return</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="text-white">${(result.win_rate || 0).toFixed(1)}%</div>
+                                                <small class="text-muted">Win Rate</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="text-white">${result.trades_count || 0}</div>
+                                                <small class="text-muted">Trades</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="text-info">${(result.sharpe_ratio || 0).toFixed(2)}</div>
+                                                <small class="text-muted">Sharpe</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted">${new Date(result.timestamp).toLocaleString()}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                console.log('✅ Backtest results display updated successfully');
+            } else {
+                console.log('❌ Could not find or create results container');
+            }
+        }
+
+        // Show enhanced empty state for backtest results
+        function showEmptyBacktestResultsEnhanced() {
+            console.log('🎨 Showing empty backtest results state');
+            
+            const possibleContainers = [
+                'backtestResultsContainer',
+                'backtest-results',
+                'historicalBacktestResults',
+                'backtestHistory'
+            ];
+            
+            let container = null;
+            for (const id of possibleContainers) {
+                container = document.getElementById(id);
+                if (container) break;
+            }
+            
+            if (container) {
+                container.innerHTML = `
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-graph-up fs-1 text-muted"></i>
+                            <h5 class="text-white mt-3">No Backtest Results Yet</h5>
+                            <p class="text-muted">Historical data is available! Run backtests to see performance results here.</p>
+                            <div class="mt-3">
+                                <span class="badge bg-success me-2">📊 Data Ready</span>
+                                <span class="badge bg-info">🚀 Ready to Backtest</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        console.log('🔧 Enhanced Historical Data & Backtesting Integration Loaded Successfully');
     </script>
 
     <!-- Modal Containers for Graduation Dashboard -->
