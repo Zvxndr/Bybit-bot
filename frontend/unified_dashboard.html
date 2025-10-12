@@ -2055,6 +2055,74 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Backtesting Controls Section -->
+                <div class="backtest-controls-section mb-3 p-3" style="background: rgba(139,69,19,0.1); border: 1px solid rgba(139,69,19,0.2); border-radius: 8px;">
+                    <h6 class="text-warning mb-3">
+                        <i class="bi bi-graph-up-arrow"></i> Backtesting Configuration
+                    </h6>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Trading Pair</label>
+                            <select class="form-select form-select-sm" id="backtestPair">
+                                <option value="">-- Select from your data --</option>
+                                <option value="BTCUSDT">BTC/USDT</option>
+                                <option value="ETHUSDT">ETH/USDT</option>
+                                <option value="SOLUSDT">SOL/USDT</option>
+                                <option value="ADAUSDT">ADA/USDT</option>
+                                <option value="DOGEUSDT">DOGE/USDT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Timeframe</label>
+                            <select class="form-select form-select-sm" id="backtestTimeframe">
+                                <option value="">-- Select timeframe --</option>
+                                <option value="1m">1 Minute</option>
+                                <option value="5m">5 Minutes</option>
+                                <option value="15m">15 Minutes</option>
+                                <option value="1h">1 Hour</option>
+                                <option value="4h">4 Hours</option>
+                                <option value="1d">1 Day</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Strategy Type</label>
+                            <select class="form-select form-select-sm" id="backtestStrategy">
+                                <option value="ml_enhanced">ML Enhanced Strategy</option>
+                                <option value="momentum">Momentum Strategy</option>
+                                <option value="mean_reversion">Mean Reversion</option>
+                                <option value="breakout">Breakout Strategy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Initial Balance</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="backtestBalance" value="10000" min="1000" step="1000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-warning btn-sm" id="runBacktestBtn" onclick="dashboard.runBacktest()">
+                            <i class="bi bi-play-fill"></i> Run Backtest
+                        </button>
+                        <div class="progress mt-2" id="backtestProgress" style="display: none;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Availability Status -->
+                    <div class="mt-3 p-2" style="background: rgba(0,0,0,0.2); border-radius: 4px;">
+                        <div class="small text-muted" id="backtestDataStatus">
+                            <i class="bi bi-info-circle"></i> Select pair and timeframe to check data availability
+                        </div>
+                    </div>
+                </div>
                 
                 <div id="backtestStrategies">
                     <div class="text-center text-muted p-4">
@@ -7350,7 +7418,7 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     
                     // Update summary
                     totalDataSets.textContent = `${data.datasets.length} datasets`;
-                    totalRecords.textContent = `${data.total_records.toLocaleString()} records`;
+                    totalRecords.textContent = `${data.total_records?.toLocaleString() || 'N/A'} records`;
                     
                     // Create dataset badges
                     availableDataSets.innerHTML = '';
@@ -7370,10 +7438,24 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                         availableDataSets.appendChild(badge);
                     });
                     
+                    // 🎯 ENHANCED: Update backtesting controls with available data
+                    updateBacktestingControls(data.datasets);
+                    
                     // Auto-load the first/largest dataset
                     if (data.datasets.length > 0) {
                         const firstDataset = data.datasets[0];
                         loadSpecificDataset(firstDataset.symbol, firstDataset.timeframe);
+                        
+                        // Set default values for backtesting
+                        const backtestPair = document.getElementById('backtestPair');
+                        const backtestTimeframe = document.getElementById('backtestTimeframe');
+                        if (backtestPair && !backtestPair.value) {
+                            backtestPair.value = firstDataset.symbol;
+                        }
+                        if (backtestTimeframe && !backtestTimeframe.value) {
+                            backtestTimeframe.value = firstDataset.timeframe;
+                        }
+                        updateBacktestDataStatus();
                     }
                 } else {
                     console.log('❌ No historical data found');
@@ -7385,6 +7467,9 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                     `;
                     totalDataSets.textContent = '0 datasets';
                     totalRecords.textContent = '0 records';
+                    
+                    // Clear backtesting controls
+                    updateBacktestingControls([]);
                 }
             } catch (error) {
                 console.error('❌ Failed to discover data:', error);
@@ -7393,6 +7478,133 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
                         <i class="bi bi-x-circle"></i> Error loading data
                     </span>
                 `;
+                updateBacktestingControls([]);
+            }
+        };
+
+        // 🎯 NEW FUNCTION: Update backtesting controls with available data
+        window.updateBacktestingControls = function(datasets) {
+            const backtestPair = document.getElementById('backtestPair');
+            const backtestTimeframe = document.getElementById('backtestTimeframe');
+            const backtestDataStatus = document.getElementById('backtestDataStatus');
+            
+            if (!backtestPair || !backtestTimeframe) return;
+            
+            // Get unique pairs and timeframes from datasets
+            const uniquePairs = [...new Set(datasets.map(d => d.symbol))];
+            const uniqueTimeframes = [...new Set(datasets.map(d => d.timeframe))];
+            
+            // Store current values
+            const currentPair = backtestPair.value;
+            const currentTimeframe = backtestTimeframe.value;
+            
+            // Update pair options
+            backtestPair.innerHTML = '<option value="">-- Select from your data --</option>';
+            uniquePairs.forEach(pair => {
+                const option = document.createElement('option');
+                option.value = pair;
+                option.textContent = pair;
+                if (pair === currentPair) option.selected = true;
+                backtestPair.appendChild(option);
+            });
+            
+            // Update timeframe options
+            backtestTimeframe.innerHTML = '<option value="">-- Select timeframe --</option>';
+            const timeframeOrder = ['1m', '5m', '15m', '1h', '4h', '1d'];
+            uniqueTimeframes.sort((a, b) => {
+                const indexA = timeframeOrder.indexOf(a);
+                const indexB = timeframeOrder.indexOf(b);
+                return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+            }).forEach(tf => {
+                const option = document.createElement('option');
+                option.value = tf;
+                option.textContent = tf === '1m' ? '1 Minute' :
+                                   tf === '5m' ? '5 Minutes' :
+                                   tf === '15m' ? '15 Minutes' :
+                                   tf === '1h' ? '1 Hour' :
+                                   tf === '4h' ? '4 Hours' :
+                                   tf === '1d' ? '1 Day' : tf;
+                if (tf === currentTimeframe) option.selected = true;
+                backtestTimeframe.appendChild(option);
+            });
+            
+            // Update status
+            if (datasets.length > 0) {
+                backtestDataStatus.innerHTML = `
+                    <i class="bi bi-check-circle text-success"></i> 
+                    Found data for ${uniquePairs.length} pairs, ${uniqueTimeframes.length} timeframes
+                `;
+                
+                // Add event listeners for real-time validation
+                backtestPair.addEventListener('change', updateBacktestDataStatus);
+                backtestTimeframe.addEventListener('change', updateBacktestDataStatus);
+            } else {
+                backtestDataStatus.innerHTML = `
+                    <i class="bi bi-exclamation-circle text-warning"></i> 
+                    No historical data available - download data first
+                `;
+            }
+        };
+
+        // 🎯 NEW FUNCTION: Update backtest data status based on selection
+        window.updateBacktestDataStatus = function() {
+            const backtestPair = document.getElementById('backtestPair');
+            const backtestTimeframe = document.getElementById('backtestTimeframe');
+            const backtestDataStatus = document.getElementById('backtestDataStatus');
+            const runBacktestBtn = document.getElementById('runBacktestBtn');
+            
+            if (!backtestPair || !backtestTimeframe || !backtestDataStatus) return;
+            
+            const pair = backtestPair.value;
+            const timeframe = backtestTimeframe.value;
+            
+            if (pair && timeframe) {
+                // Check if this combination exists
+                fetch(`/api/historical-data/discover`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.datasets) {
+                            const matchingDataset = data.datasets.find(d => 
+                                d.symbol === pair && d.timeframe === timeframe
+                            );
+                            
+                            if (matchingDataset) {
+                                backtestDataStatus.innerHTML = `
+                                    <i class="bi bi-check-circle text-success"></i> 
+                                    Ready: ${matchingDataset.record_count.toLocaleString()} records (${matchingDataset.date_range})
+                                `;
+                                if (runBacktestBtn) {
+                                    runBacktestBtn.disabled = false;
+                                    runBacktestBtn.innerHTML = '<i class="bi bi-play-fill"></i> Run Backtest';
+                                }
+                            } else {
+                                backtestDataStatus.innerHTML = `
+                                    <i class="bi bi-x-circle text-danger"></i> 
+                                    No data available for ${pair} ${timeframe} - download data first
+                                `;
+                                if (runBacktestBtn) {
+                                    runBacktestBtn.disabled = true;
+                                    runBacktestBtn.innerHTML = '<i class="bi bi-download"></i> Download Data First';
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking data status:', error);
+                        backtestDataStatus.innerHTML = `
+                            <i class="bi bi-exclamation-circle text-warning"></i> 
+                            Error checking data availability
+                        `;
+                    });
+            } else {
+                backtestDataStatus.innerHTML = `
+                    <i class="bi bi-info-circle"></i> 
+                    Select pair and timeframe to check data availability
+                `;
+                if (runBacktestBtn) {
+                    runBacktestBtn.disabled = true;
+                    runBacktestBtn.innerHTML = '<i class="bi bi-gear"></i> Configure First';
+                }
             }
         };
 
