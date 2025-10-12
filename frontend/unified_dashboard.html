@@ -2098,6 +2098,63 @@
             </div>
         </div>
 
+        <!-- Manual Strategy Graduation Controls -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">🎯 Manual Strategy Graduation</h3>
+                <p class="text-muted mb-0">Manually promote successful strategies or retire underperforming ones</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-success">
+                            <div class="card-header bg-success bg-opacity-25">
+                                <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Ready for Promotion</h5>
+                            </div>
+                            <div class="card-body" id="promotableStrategies">
+                                <div class="text-center text-muted p-3">
+                                    <i class="bi bi-hourglass-split"></i><br>
+                                    Loading promotable strategies...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-danger">
+                            <div class="card-header bg-danger bg-opacity-25">
+                                <h5 class="mb-0"><i class="bi bi-arrow-down-circle"></i> Candidates for Retirement</h5>
+                            </div>
+                            <div class="card-body" id="retirementCandidates">
+                                <div class="text-center text-muted p-3">
+                                    <i class="bi bi-hourglass-split"></i><br>
+                                    Loading retirement candidates...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="loadManualGraduation()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Strategies
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100" onclick="promoteAllQualified()">
+                            <i class="bi bi-arrow-up-circle-fill"></i> Promote All Qualified
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning w-100" onclick="showGraduationHistory()">
+                            <i class="bi bi-clock-history"></i> Graduation History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Performance Charts Section -->
         <div class="row mb-4">
             <div class="col-lg-8">
@@ -8033,7 +8090,255 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
             
             // Update ML metrics every 10 seconds
             setInterval(updateMLRiskMetrics, 10000);
+            
+            // Initialize manual graduation on page load
+            loadManualGraduation();
         });
+
+        // Manual Strategy Graduation Functions
+        async function loadManualGraduation() {
+            try {
+                console.log('📊 Loading manual graduation data...');
+                
+                // Get all strategies from the database
+                const response = await fetch('/api/strategies/all');
+                const strategies = await response.json();
+                
+                if (strategies.success) {
+                    updateGraduationInterface(strategies.strategies || []);
+                } else {
+                    throw new Error(strategies.message || 'Failed to load strategies');
+                }
+            } catch (error) {
+                console.error('❌ Error loading graduation data:', error);
+                document.getElementById('promotableStrategies').innerHTML = 
+                    `<div class="alert alert-danger">Error loading strategies: ${error.message}</div>`;
+                document.getElementById('retirementCandidates').innerHTML = 
+                    `<div class="alert alert-danger">Error loading strategies: ${error.message}</div>`;
+            }
+        }
+
+        function updateGraduationInterface(strategies) {
+            const promotableContainer = document.getElementById('promotableStrategies');
+            const retirementContainer = document.getElementById('retirementCandidates');
+            
+            // Filter strategies for promotion (demo with good performance)
+            const promotable = strategies.filter(s => 
+                s.status === 'demo' && 
+                (s.win_rate || 0) >= 0.6 && 
+                (s.total_return || 0) > 0.05 &&
+                (s.trades_count || 0) >= 10
+            );
+            
+            // Filter strategies for retirement (poor performance)
+            const retirable = strategies.filter(s => 
+                (s.status === 'demo' || s.status === 'live') && 
+                ((s.win_rate || 0) < 0.4 || (s.total_return || 0) < -0.1) &&
+                (s.trades_count || 0) >= 5
+            );
+            
+            // Update promotable strategies
+            if (promotable.length === 0) {
+                promotableContainer.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="bi bi-check-circle"></i><br>
+                        No strategies ready for promotion
+                    </div>`;
+            } else {
+                promotableContainer.innerHTML = promotable.map(strategy => `
+                    <div class="border border-success rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${strategy.strategy_name}</strong>
+                                <br><small class="text-success">
+                                    Win Rate: ${((strategy.win_rate || 0) * 100).toFixed(1)}% | 
+                                    Return: ${((strategy.total_return || 0) * 100).toFixed(1)}% |
+                                    Trades: ${strategy.trades_count || 0}
+                                </small>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="promoteStrategy('${strategy.strategy_name}')">
+                                <i class="bi bi-arrow-up"></i> Promote
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update retirement candidates
+            if (retirable.length === 0) {
+                retirementContainer.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="bi bi-shield-check"></i><br>
+                        All strategies performing well
+                    </div>`;
+            } else {
+                retirementContainer.innerHTML = retirable.map(strategy => `
+                    <div class="border border-danger rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${strategy.strategy_name}</strong>
+                                <br><small class="text-danger">
+                                    Win Rate: ${((strategy.win_rate || 0) * 100).toFixed(1)}% | 
+                                    Return: ${((strategy.total_return || 0) * 100).toFixed(1)}% |
+                                    Trades: ${strategy.trades_count || 0}
+                                </small>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="retireStrategy('${strategy.strategy_name}')">
+                                <i class="bi bi-arrow-down"></i> Retire
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function promoteStrategy(strategyName) {
+            try {
+                console.log(`🚀 Promoting strategy: ${strategyName}`);
+                
+                const response = await fetch('/api/strategies/promote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ strategy_name: strategyName })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`✅ Strategy "${strategyName}" promoted to live trading!`, 'success');
+                    loadManualGraduation(); // Refresh the interface
+                    updateDashboard(); // Refresh main dashboard
+                } else {
+                    throw new Error(result.message || 'Failed to promote strategy');
+                }
+            } catch (error) {
+                console.error('❌ Error promoting strategy:', error);
+                showNotification(`❌ Error promoting strategy: ${error.message}`, 'danger');
+            }
+        }
+
+        async function retireStrategy(strategyName) {
+            if (!confirm(`Are you sure you want to retire "${strategyName}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                console.log(`🛑 Retiring strategy: ${strategyName}`);
+                
+                const response = await fetch('/api/strategies/retire', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ strategy_name: strategyName })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`🛑 Strategy "${strategyName}" retired successfully!`, 'warning');
+                    loadManualGraduation(); // Refresh the interface
+                    updateDashboard(); // Refresh main dashboard
+                } else {
+                    throw new Error(result.message || 'Failed to retire strategy');
+                }
+            } catch (error) {
+                console.error('❌ Error retiring strategy:', error);
+                showNotification(`❌ Error retiring strategy: ${error.message}`, 'danger');
+            }
+        }
+
+        async function promoteAllQualified() {
+            if (!confirm('Promote ALL qualified strategies to live trading?')) {
+                return;
+            }
+            
+            try {
+                console.log('🚀 Promoting all qualified strategies...');
+                
+                const response = await fetch('/api/strategies/promote-all');
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`✅ Promoted ${result.promoted_count || 0} strategies to live trading!`, 'success');
+                    loadManualGraduation(); // Refresh the interface
+                    updateDashboard(); // Refresh main dashboard
+                } else {
+                    throw new Error(result.message || 'Failed to promote strategies');
+                }
+            } catch (error) {
+                console.error('❌ Error promoting all strategies:', error);
+                showNotification(`❌ Error promoting strategies: ${error.message}`, 'danger');
+            }
+        }
+
+        async function showGraduationHistory() {
+            try {
+                const response = await fetch('/api/strategies/graduation-history');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const historyHtml = (result.history || []).map(event => `
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>${event.strategy_name}</strong>
+                                <br><small class="text-muted">${event.action} - ${new Date(event.timestamp).toLocaleString()}</small>
+                            </div>
+                            <span class="badge ${event.action === 'promoted' ? 'bg-success' : 'bg-warning'}">
+                                ${event.action}
+                            </span>
+                        </div>
+                    `).join('');
+                    
+                    const modal = `
+                        <div class="modal fade" id="graduationHistoryModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">📜 Graduation History</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        ${historyHtml || '<p class="text-muted">No graduation history found</p>'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Remove existing modal and add new one
+                    const existingModal = document.getElementById('graduationHistoryModal');
+                    if (existingModal) existingModal.remove();
+                    
+                    document.body.insertAdjacentHTML('beforeend', modal);
+                    const modalEl = new bootstrap.Modal(document.getElementById('graduationHistoryModal'));
+                    modalEl.show();
+                } else {
+                    throw new Error(result.message || 'Failed to load graduation history');
+                }
+            } catch (error) {
+                console.error('❌ Error loading graduation history:', error);
+                showNotification(`❌ Error loading history: ${error.message}`, 'danger');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
     </script>
 
     <!-- Modal Containers for Graduation Dashboard -->

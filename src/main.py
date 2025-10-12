@@ -220,8 +220,9 @@ Path('logs').mkdir(exist_ok=True)
 # Import historical data downloader
 try:
     from historical_data_downloader import HistoricalDataDownloader
-    historical_downloader = HistoricalDataDownloader()
-    logger.info("✅ Historical data downloader initialized")
+    # 🔧 FIX: Use the same database path as the main app
+    historical_downloader = HistoricalDataDownloader(db_path=DB_PATH)
+    logger.info(f"✅ Historical data downloader initialized with DB: {DB_PATH}")
 except ImportError as e:
     logger.warning(f"⚠️ Historical data downloader not available: {e}")
     historical_downloader = None
@@ -3400,9 +3401,12 @@ async def discover_available_data():
     
     try:
         # Multiple database paths to check for DigitalOcean deployment
+        # 🔧 FIX: Include the main DB_PATH at the top of the search list
         database_paths = [
+            DB_PATH,  # Primary database path (matches downloader)
             "/app/data/trading_bot.db",
-            "data/trading_bot.db",
+            "data/trading_bot.db", 
+            "data/historical_data.db",  # Historical downloader legacy path
             "src/data/speed_demon_cache/market_data.db",
             "/app/src/data/speed_demon_cache/market_data.db"
         ]
@@ -3434,20 +3438,38 @@ async def discover_available_data():
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             all_tables = [row[0] for row in cursor.fetchall()]
             
-            # Look for tables that might contain historical data
-            data_tables = [t for t in all_tables if any(keyword in t.lower() 
-                          for keyword in ['historical', 'market', 'data', 'cache'])]
+            # Look for tables that might contain historical data - PRODUCTION FIX
+            # First check for exact table names that we know contain historical data
+            priority_tables = ['historical_data', 'market_data', 'data_cache']
+            data_tables = []
+            
+            # First priority: exact matches from our known table names
+            for table_name in priority_tables:
+                if table_name in all_tables:
+                    data_tables.append(table_name)
+            
+            # Second priority: keyword matching for other potential tables
+            if not data_tables:
+                data_tables = [t for t in all_tables if any(keyword in t.lower() 
+                              for keyword in ['historical', 'market', 'data', 'cache'])]
             
             if not data_tables:
-                logger.error(f"❌ No data tables found in database. Available tables: {all_tables}")
+                production_logger.log_error(
+                    "PRODUCTION ERROR: No historical data tables found in database",
+                    available_tables=all_tables,
+                    expected_tables=priority_tables,
+                    database_path=str(db_path)
+                )
                 return {
                     "success": False, 
-                    "message": f"No data tables found. Available: {all_tables}", 
+                    "message": f"No historical data found - use download controls. Available tables: {all_tables}", 
                     "datasets": [],
-                    "database_path": str(db_path)
+                    "database_path": str(db_path),
+                    "available_tables": all_tables,
+                    "expected_tables": priority_tables
                 }
             
-            # Try to find data in any of the possible tables
+            # Try to find data in any of the possible tables (prioritized order)
             table_to_use = None
             for table in data_tables:
                 try:
@@ -3455,18 +3477,28 @@ async def discover_available_data():
                     count = cursor.fetchone()[0]
                     if count > 0:
                         table_to_use = table
-                        logger.error(f"✓ Using table '{table}' with {count} records")
+                        production_logger.database_logger.info(
+                            f"Historical data found in table: {table}",
+                            record_count=count,
+                            database_path=str(db_path)
+                        )
                         break
-                except sqlite3.OperationalError:
+                except sqlite3.OperationalError as e:
+                    production_logger.log_error(f"Error checking table {table}: {str(e)}")
                     continue
             
             if not table_to_use:
-                logger.error(f"❌ No data found in any table: {data_tables}")
+                production_logger.log_error(
+                    "PRODUCTION ERROR: Data tables exist but contain no records",
+                    empty_tables=data_tables,
+                    database_path=str(db_path)
+                )
                 return {
                     "success": False,
-                    "message": f"No data found in tables: {data_tables}",
+                    "message": f"No data found in database tables - use download controls to populate data",
                     "datasets": [],
-                    "database_path": str(db_path)
+                    "database_path": str(db_path),
+                    "empty_tables": data_tables
                 }
             
             # Get all unique symbol/timeframe combinations with counts from the correct table
