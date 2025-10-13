@@ -5841,8 +5841,26 @@
             }
 
             async deleteCurrentSymbolData() {
-                const pair = document.getElementById('historicalPair').value;
-                const timeframe = document.getElementById('historicalTimeframe').value;
+                // Try multiple ways to get current pair and timeframe
+                let pair = 'BTCUSDT';  // Default fallback
+                let timeframe = '15m'; // Default fallback
+                
+                // Try to get from various possible elements
+                const pairElement = document.getElementById('historicalPair') || 
+                                  document.getElementById('backtestPair') ||
+                                  document.querySelector('select[id*="pair" i]');
+                const timeframeElement = document.getElementById('historicalTimeframe') || 
+                                       document.getElementById('backtestTimeframe') ||
+                                       document.querySelector('select[id*="timeframe" i]');
+                
+                if (pairElement && pairElement.value) {
+                    pair = pairElement.value;
+                }
+                if (timeframeElement && timeframeElement.value) {
+                    timeframe = timeframeElement.value;
+                }
+                
+                console.log(`🗑️ Delete request: ${pair} ${timeframe}`);
                 
                 if (!confirm(`Are you sure you want to delete all ${pair} ${timeframe} data? This action cannot be undone.`)) {
                     return;
@@ -5854,7 +5872,13 @@
                     const response = await fetch(`/api/historical-data/symbol/${pair}?timeframe=${timeframe}`, {
                         method: 'DELETE'
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const result = await response.json();
+                    console.log('🗑️ Delete response:', result);
                     
                     if (result.success) {
                         this.showToastNotification(`✅ Deleted ${result.deleted_count} candles for ${pair} ${timeframe}`, 'success');
@@ -5871,27 +5895,53 @@
                         }
                         
                         // Hide validation results
-                        document.getElementById('validationResults').style.display = 'none';
+                        const validationResults = document.getElementById('validationResults');
+                        if (validationResults) {
+                            validationResults.style.display = 'none';
+                        }
+                        
+                        // Refresh data discovery
+                        if (this.discoverAvailableData) {
+                            setTimeout(() => this.discoverAvailableData(), 1000);
+                        }
                         
                     } else {
-                        this.showToastNotification(`❌ Failed to delete data: ${result.message}`, 'danger');
+                        this.showToastNotification(`❌ Failed to delete data: ${result.message || result.error || 'Unknown error'}`, 'danger');
                     }
                 } catch (error) {
                     console.error('Delete symbol data error:', error);
-                    this.showToastNotification('❌ Failed to delete symbol data', 'danger');
+                    this.showToastNotification(`❌ Network error: ${error.message}`, 'danger');
                 }
             }
 
             async clearAllHistoricalData() {
-                if (!confirm('Are you sure you want to delete ALL historical data? This action cannot be undone and will remove data for all symbols and timeframes.')) {
+                if (!confirm('⚠️ DANGER: Are you sure you want to delete ALL historical data?\n\nThis action cannot be undone and will remove data for all symbols and timeframes.\n\nType "DELETE ALL" in the next prompt to confirm.')) {
+                    return;
+                }
+                
+                const confirmation = prompt('Type "DELETE ALL" to confirm complete data deletion:');
+                if (confirmation !== 'DELETE ALL') {
+                    this.showToastNotification('❌ Deletion cancelled - confirmation failed', 'warning');
                     return;
                 }
                 
                 try {
                     this.showToastNotification('🗑️ Clearing all historical data...', 'info');
+                    console.log('🗑️ Initiating clear all data request...');
                     
-                    const response = await fetch('/api/historical-data/clear-all', { method: 'DELETE' });
+                    const response = await fetch('/api/historical-data/clear-all', { 
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const result = await response.json();
+                    console.log('🗑️ Clear all response:', result);
                     
                     if (result.success) {
                         this.showToastNotification(`✅ Cleared all data: ${result.deleted_count} candles deleted`, 'success');
@@ -5908,14 +5958,22 @@
                         }
                         
                         // Hide validation results
-                        document.getElementById('validationResults').style.display = 'none';
+                        const validationResults = document.getElementById('validationResults');
+                        if (validationResults) {
+                            validationResults.style.display = 'none';
+                        }
+                        
+                        // Refresh data discovery
+                        if (this.discoverAvailableData) {
+                            setTimeout(() => this.discoverAvailableData(), 1000);
+                        }
                         
                     } else {
-                        this.showToastNotification(`❌ Failed to clear all data: ${result.message}`, 'danger');
+                        this.showToastNotification(`❌ Failed to clear all data: ${result.message || result.error || 'Unknown error'}`, 'danger');
                     }
                 } catch (error) {
                     console.error('Clear all data error:', error);
-                    this.showToastNotification('❌ Failed to clear all data', 'danger');
+                    this.showToastNotification(`❌ Network error: ${error.message}`, 'danger');
                 }
             }
 
@@ -7054,14 +7112,93 @@ Generated: ${new Date(summary.generated_at).toLocaleString('en-AU')}
         }
 
         function deleteCurrentSymbolData() {
-            if (dashboard) {
-                dashboard.deleteCurrentSymbolData();
+            console.log('🗑️ Delete button clicked - testing delete functionality');
+            
+            // Add visual feedback
+            const deleteBtn = document.getElementById('deleteSymbolBtn');
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting...';
+                deleteBtn.disabled = true;
+            }
+            
+            if (dashboard && dashboard.deleteCurrentSymbolData) {
+                dashboard.deleteCurrentSymbolData().finally(() => {
+                    // Reset button
+                    if (deleteBtn) {
+                        deleteBtn.innerHTML = '<i class="bi bi-trash"></i> Delete Symbol';
+                        deleteBtn.disabled = false;
+                    }
+                });
+            } else {
+                console.error('❌ Dashboard deleteCurrentSymbolData not available');
+                
+                // Fallback: Direct API call
+                console.log('🔄 Trying direct API call...');
+                fetch('/api/historical-data/symbol/BTCUSDT?timeframe=15m', { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log('✅ Direct delete result:', result);
+                        alert(`Delete result: ${result.success ? 'Success' : 'Failed'} - ${result.message || result.deleted_count + ' records deleted'}`);
+                    })
+                    .catch(error => {
+                        console.error('❌ Direct delete error:', error);
+                        alert(`Delete error: ${error.message}`);
+                    })
+                    .finally(() => {
+                        if (deleteBtn) {
+                            deleteBtn.innerHTML = '<i class="bi bi-trash"></i> Delete Symbol';
+                            deleteBtn.disabled = false;
+                        }
+                    });
             }
         }
 
         function clearAllHistoricalData() {
-            if (dashboard) {
-                dashboard.clearAllHistoricalData();
+            console.log('🗑️ Clear All button clicked');
+            
+            // Add visual feedback
+            const clearBtn = document.getElementById('clearAllBtn');
+            if (clearBtn) {
+                clearBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Clearing...';
+                clearBtn.disabled = true;
+            }
+            
+            if (dashboard && dashboard.clearAllHistoricalData) {
+                dashboard.clearAllHistoricalData().finally(() => {
+                    // Reset button
+                    if (clearBtn) {
+                        clearBtn.innerHTML = '<i class="bi bi-trash-fill"></i> Clear All';
+                        clearBtn.disabled = false;
+                    }
+                });
+            } else {
+                console.error('❌ Dashboard clearAllHistoricalData not available');
+                
+                // Fallback: Direct API call
+                if (confirm('⚠️ Delete ALL historical data? This cannot be undone!')) {
+                    console.log('🔄 Trying direct clear all API call...');
+                    fetch('/api/historical-data/clear-all', { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log('✅ Direct clear all result:', result);
+                            alert(`Clear All result: ${result.success ? 'Success' : 'Failed'} - ${result.message || result.deleted_count + ' records deleted'}`);
+                        })
+                        .catch(error => {
+                            console.error('❌ Direct clear all error:', error);
+                            alert(`Clear All error: ${error.message}`);
+                        })
+                        .finally(() => {
+                            if (clearBtn) {
+                                clearBtn.innerHTML = '<i class="bi bi-trash-fill"></i> Clear All';
+                                clearBtn.disabled = false;
+                            }
+                        });
+                } else {
+                    if (clearBtn) {
+                        clearBtn.innerHTML = '<i class="bi bi-trash-fill"></i> Clear All';
+                        clearBtn.disabled = false;
+                    }
+                }
             }
         }
 
