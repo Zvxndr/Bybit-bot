@@ -1,5 +1,7 @@
-// API service to connect to existing working_api_server.py
-const API_BASE_URL = 'http://localhost:8080/api'
+// API service to connect to FastAPI backend
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '/api'  // DigitalOcean will serve from same domain
+  : 'http://localhost:8080/api'  // Local development
 
 class ApiService {
   async get(endpoint) {
