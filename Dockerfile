@@ -35,6 +35,10 @@ COPY . .
 COPY src/data/ src/data/
 COPY src/bot/ src/bot/
 
+# Build frontend for production
+RUN chmod +x build_frontend.sh && \
+    bash build_frontend.sh
+
 # Create necessary directories and copy startup script
 RUN mkdir -p logs backups data src/data && \
     chmod +x start_production.sh

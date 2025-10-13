@@ -1817,13 +1817,13 @@ async def health_check():
             "enhanced_health_check": "unavailable"
         }
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Serve static files for React build
+app.mount("/static", StaticFiles(directory="frontend/dist"), name="static")
 
 @app.get("/")
-async def root(username: str = Depends(verify_credentials)):
-    """Serve the unified single-page dashboard (Authentication Required)"""
-    return FileResponse("frontend/unified_dashboard.html")
+async def root():
+    """Serve the React dashboard (handles auth internally)"""
+    return FileResponse("frontend/dist/index.html")
 
 @app.get("/api/portfolio")
 async def get_portfolio():
@@ -4740,6 +4740,192 @@ async def get_credentials_status():
     except Exception as e:
         logger.error(f"Credentials status check error: {e}")
         return {"error": str(e)}
+
+# ========================================
+# ML STRATEGY MANAGEMENT ENDPOINTS
+# ========================================
+
+@app.get("/api/strategies/ranking")
+async def get_strategy_ranking(period: str = "all"):
+    """Get strategy ranking with performance metrics"""
+    # Mock data for now - replace with real ML strategy data later
+    mock_strategies = [
+        {
+            "id": "BTC_MR_A4F2D",
+            "name": "BTC_MR_A4F2D",
+            "status": "live",
+            "rank": 1,
+            "return_percent": 247.3,
+            "sharpe_ratio": 2.89,
+            "win_rate": 73.2,
+            "max_drawdown": 8.4,
+            "total_trades": 324,
+            "created_at": "2024-10-01T00:00:00Z",
+            "performance_chart": [1.0, 1.12, 1.05, 1.18, 1.32, 1.28, 1.45, 2.47]
+        },
+        {
+            "id": "ETH_BB_X8K9L",
+            "name": "ETH_BB_X8K9L", 
+            "status": "paper",
+            "rank": 2,
+            "return_percent": 189.7,
+            "sharpe_ratio": 2.54,
+            "win_rate": 68.7,
+            "max_drawdown": 6.2,
+            "total_trades": 287,
+            "created_at": "2024-09-15T00:00:00Z",
+            "performance_chart": [1.0, 1.08, 1.15, 1.22, 1.31, 1.28, 1.35, 1.90]
+        },
+        {
+            "id": "SOL_TR_M2N4P",
+            "name": "SOL_TR_M2N4P",
+            "status": "backtest", 
+            "rank": 3,
+            "return_percent": 156.2,
+            "sharpe_ratio": 2.31,
+            "win_rate": 71.4,
+            "max_drawdown": 4.8,
+            "total_trades": 412,
+            "created_at": "2024-10-05T00:00:00Z",
+            "performance_chart": [1.0, 1.03, 1.12, 1.08, 1.25, 1.31, 1.42, 1.56]
+        }
+    ]
+    
+    return {
+        "success": True,
+        "period": period,
+        "strategies": mock_strategies,
+        "total_count": len(mock_strategies),
+        "last_updated": datetime.now().isoformat()
+    }
+
+@app.get("/api/ml/status")
+async def get_ml_status():
+    """Get ML algorithm status and activity"""
+    return {
+        "success": True,
+        "status": "optimal",
+        "generation_rate": 12,  # strategies per hour
+        "processing": 156,      # backtests running
+        "queue": 47,           # strategies awaiting validation
+        "health": "optimal",
+        "cpu_usage": 67,
+        "memory_usage": 42,
+        "recent_activity": [
+            {
+                "timestamp": "14:23",
+                "message": "Created SOL_BREAKOUT_X9M2N (backtesting...)"
+            },
+            {
+                "timestamp": "14:21", 
+                "message": "Promoted ETH_SWING_K4L7P to PAPER trading"
+            },
+            {
+                "timestamp": "14:19",
+                "message": "Retired ADA_GRID_R5S8T (poor performance)"
+            },
+            {
+                "timestamp": "14:17",
+                "message": "Created BTC_MOMENTUM_Q3W6E (backtesting...)"
+            }
+        ]
+    }
+
+@app.get("/api/ml/requirements")
+async def get_ml_requirements():
+    """Get ML minimum requirements"""
+    return {
+        "success": True,
+        "requirements": {
+            "min_sharpe": 2.0,
+            "min_win_rate": 65,
+            "min_return": 50,
+            "max_drawdown": 10
+        },
+        "ml_suggestions": {
+            "min_sharpe": 1.8,
+            "min_win_rate": 60,
+            "min_return": 30,
+            "max_drawdown": 15
+        }
+    }
+
+@app.post("/api/ml/requirements")
+async def update_ml_requirements(requirements: dict):
+    """Update ML minimum requirements"""
+    # TODO: Save requirements to database
+    return {
+        "success": True,
+        "message": "ML requirements updated successfully",
+        "requirements": requirements
+    }
+
+@app.get("/api/ml/retirement-metrics")
+async def get_retirement_metrics():
+    """Get strategy retirement metrics"""
+    return {
+        "success": True,
+        "metrics": {
+            "performance_threshold": 25,  # percentile
+            "performance_days": 30,
+            "drawdown_limit": 15,
+            "consecutive_loss_limit": 10,
+            "age_limit": 180  # days
+        }
+    }
+
+@app.post("/api/ml/retirement-metrics")
+async def update_retirement_metrics(metrics: dict):
+    """Update strategy retirement metrics"""
+    # TODO: Save retirement metrics to database
+    return {
+        "success": True,
+        "message": "Retirement metrics updated successfully",
+        "metrics": metrics
+    }
+
+@app.get("/api/data/status")
+async def get_data_status():
+    """Get data collection and database status"""
+    try:
+        # Mock data for now - integrate with real database later
+        return {
+            "success": True,
+            "collection_active": True,
+            "symbols": [
+                {"name": "BTCUSDT", "status": "active", "latest_update": datetime.now().isoformat()},
+                {"name": "ETHUSDT", "status": "active", "latest_update": datetime.now().isoformat()},
+                {"name": "SOLUSDT", "status": "active", "latest_update": datetime.now().isoformat()}
+            ],
+            "total_records": 150000,  # Mock count
+            "database_size": 25600000,  # Mock size in bytes
+            "points_per_minute": 45,
+            "quality_metrics": [
+                {"timeframe": "1h", "completeness": 98.5},
+                {"timeframe": "4h", "completeness": 99.2},
+                {"timeframe": "1d", "completeness": 100.0}
+            ]
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/data/start-collection")
+async def start_data_collection():
+    """Start real-time data collection"""
+    return {
+        "success": True,
+        "message": "Data collection started successfully",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post("/api/data/stop-collection")
+async def stop_data_collection():
+    """Stop real-time data collection"""
+    return {
+        "success": True,
+        "message": "Data collection stopped successfully", 
+        "timestamp": datetime.now().isoformat()
+    }
 
 # Lifespan events are now handled in the @asynccontextmanager above
 

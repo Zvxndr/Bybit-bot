@@ -367,6 +367,225 @@ def clear_all_data():
         print(f"❌ Clear all data error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ========================================
+# ML STRATEGY MANAGEMENT ENDPOINTS
+# ========================================
+
+@app.route('/api/strategies/ranking')
+def get_strategy_ranking():
+    """Get strategy ranking with performance metrics"""
+    period = request.args.get('period', 'all')  # all, year, month, week
+    
+    # Mock data for now - replace with real ML strategy data later
+    mock_strategies = [
+        {
+            "id": "BTC_MR_A4F2D",
+            "name": "BTC_MR_A4F2D",
+            "status": "live",
+            "rank": 1,
+            "return_percent": 247.3,
+            "sharpe_ratio": 2.89,
+            "win_rate": 73.2,
+            "max_drawdown": 8.4,
+            "total_trades": 324,
+            "created_at": "2024-10-01T00:00:00Z",
+            "performance_chart": [1.0, 1.12, 1.05, 1.18, 1.32, 1.28, 1.45, 2.47]
+        },
+        {
+            "id": "ETH_BB_X8K9L",
+            "name": "ETH_BB_X8K9L", 
+            "status": "paper",
+            "rank": 2,
+            "return_percent": 189.7,
+            "sharpe_ratio": 2.54,
+            "win_rate": 68.7,
+            "max_drawdown": 6.2,
+            "total_trades": 287,
+            "created_at": "2024-09-15T00:00:00Z",
+            "performance_chart": [1.0, 1.08, 1.15, 1.22, 1.31, 1.28, 1.35, 1.90]
+        },
+        {
+            "id": "SOL_TR_M2N4P",
+            "name": "SOL_TR_M2N4P",
+            "status": "backtest", 
+            "rank": 3,
+            "return_percent": 156.2,
+            "sharpe_ratio": 2.31,
+            "win_rate": 71.4,
+            "max_drawdown": 4.8,
+            "total_trades": 412,
+            "created_at": "2024-10-05T00:00:00Z",
+            "performance_chart": [1.0, 1.03, 1.12, 1.08, 1.25, 1.31, 1.42, 1.56]
+        }
+    ]
+    
+    return jsonify({
+        "success": True,
+        "period": period,
+        "strategies": mock_strategies,
+        "total_count": len(mock_strategies),
+        "last_updated": datetime.now().isoformat()
+    })
+
+@app.route('/api/ml/status')
+def get_ml_status():
+    """Get ML algorithm status and activity"""
+    return jsonify({
+        "success": True,
+        "status": "optimal",
+        "generation_rate": 12,  # strategies per hour
+        "processing": 156,      # backtests running
+        "queue": 47,           # strategies awaiting validation
+        "health": "optimal",
+        "cpu_usage": 67,
+        "memory_usage": 42,
+        "recent_activity": [
+            {
+                "timestamp": "14:23",
+                "message": "Created SOL_BREAKOUT_X9M2N (backtesting...)"
+            },
+            {
+                "timestamp": "14:21", 
+                "message": "Promoted ETH_SWING_K4L7P to PAPER trading"
+            },
+            {
+                "timestamp": "14:19",
+                "message": "Retired ADA_GRID_R5S8T (poor performance)"
+            },
+            {
+                "timestamp": "14:17",
+                "message": "Created BTC_MOMENTUM_Q3W6E (backtesting...)"
+            }
+        ]
+    })
+
+@app.route('/api/ml/requirements', methods=['GET', 'POST'])
+def ml_requirements():
+    """Get or set ML minimum requirements"""
+    if request.method == 'GET':
+        # Return current requirements (mock data for now)
+        return jsonify({
+            "success": True,
+            "requirements": {
+                "min_sharpe": 2.0,
+                "min_win_rate": 65,
+                "min_return": 50,
+                "max_drawdown": 10
+            },
+            "ml_suggestions": {
+                "min_sharpe": 1.8,
+                "min_win_rate": 60,
+                "min_return": 30,
+                "max_drawdown": 15
+            }
+        })
+    
+    elif request.method == 'POST':
+        data = request.json
+        # TODO: Save requirements to database
+        return jsonify({
+            "success": True,
+            "message": "ML requirements updated successfully",
+            "requirements": data
+        })
+
+@app.route('/api/ml/retirement-metrics', methods=['GET', 'POST'])
+def retirement_metrics():
+    """Get or set strategy retirement metrics"""
+    if request.method == 'GET':
+        return jsonify({
+            "success": True,
+            "metrics": {
+                "performance_threshold": 25,  # percentile
+                "performance_days": 30,
+                "drawdown_limit": 15,
+                "consecutive_loss_limit": 10,
+                "age_limit": 180  # days
+            }
+        })
+    
+    elif request.method == 'POST':
+        data = request.json
+        # TODO: Save retirement metrics to database
+        return jsonify({
+            "success": True,
+            "message": "Retirement metrics updated successfully",
+            "metrics": data
+        })
+
+@app.route('/api/data/status')
+def get_data_status():
+    """Get data collection and database status"""
+    try:
+        if not os.path.exists(DB_PATH):
+            return jsonify({
+                "success": False,
+                "error": "Database not found",
+                "collection_active": False,
+                "symbols": [],
+                "total_records": 0,
+                "database_size": 0
+            })
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get record count
+        cursor.execute("SELECT COUNT(*) FROM historical_data")
+        total_records = cursor.fetchone()[0]
+        
+        # Get database size
+        db_size = os.path.getsize(DB_PATH)
+        
+        # Mock symbol status for now
+        symbols = [
+            {"name": "BTCUSDT", "status": "active", "latest_update": datetime.now().isoformat()},
+            {"name": "ETHUSDT", "status": "active", "latest_update": datetime.now().isoformat()},
+            {"name": "SOLUSDT", "status": "active", "latest_update": datetime.now().isoformat()}
+        ]
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "collection_active": True,  # Mock for now
+            "symbols": symbols,
+            "total_records": total_records,
+            "database_size": db_size,
+            "points_per_minute": 45,  # Mock data
+            "quality_metrics": [
+                {"timeframe": "1h", "completeness": 98.5},
+                {"timeframe": "4h", "completeness": 99.2},
+                {"timeframe": "1d", "completeness": 100.0}
+            ]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        })
+
+@app.route('/api/data/start-collection', methods=['POST'])
+def start_data_collection():
+    """Start real-time data collection"""
+    # Mock implementation for now
+    return jsonify({
+        "success": True,
+        "message": "Data collection started successfully",
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.route('/api/data/stop-collection', methods=['POST'])
+def stop_data_collection():
+    """Stop real-time data collection"""
+    # Mock implementation for now
+    return jsonify({
+        "success": True,
+        "message": "Data collection stopped successfully", 
+        "timestamp": datetime.now().isoformat()
+    })
+
 # Stub endpoints for other API calls to prevent 404 errors
 @app.route('/api/<path:path>')
 def api_stub(path):

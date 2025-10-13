@@ -4,7 +4,7 @@ services:
   source_dir: /
   github:
     repo: Zvxndr/Bybit-bot-fresh
-    branch: main
+    branch: feature/new-dashboard
     deploy_on_push: true
   
   dockerfile_path: Dockerfile
