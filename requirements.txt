@@ -77,8 +77,6 @@ yfinance>=0.2.18
 
 # Additional utilities for Phase 1 & 2
 cryptography>=41.0.0
-hmac
-hashlib
 
 # Logging
 loguru>=0.7.0
