@@ -89,6 +89,31 @@ class ApiService {
   async setRetirementMetrics(metrics) {
     return this.post('/ml/retirement-metrics', metrics)
   }
+
+  // API Status endpoints
+  async getApiStatus() {
+    return this.get('/status/apis')
+  }
+
+  async getNewsSentiment() {
+    return this.get('/status/news-sentiment')
+  }
+
+  async getCorrelationData() {
+    return this.get('/correlation/data')
+  }
+
+  async sendDailyReport() {
+    return this.post('/reports/email', {})
+  }
+
+  async testBybitConnection(testnet = true) {
+    return this.post(`/test/bybit-connection?testnet=${testnet}`, {})
+  }
+
+  async getFutureMarketsStatus() {
+    return this.get('/status/future-markets')
+  }
 }
 
 export const apiService = new ApiService()

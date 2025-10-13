@@ -55,6 +55,44 @@ services:
   # - key: BYBIT_TESTNET_API_SECRET
   #   value: your_testnet_secret_here
   
+  # 🏦 Optional: Cross-exchange correlation data (READ-ONLY APIs)
+  # - key: OKX_API_KEY
+  #   value: your_okx_api_key_here
+  # - key: OKX_API_SECRET
+  #   value: your_okx_secret_here
+  # - key: OKX_PASSPHRASE
+  #   value: your_okx_passphrase
+  # - key: BINANCE_API_KEY
+  #   value: your_binance_api_key_here
+  # - key: BINANCE_API_SECRET
+  #   value: your_binance_secret_here
+  
+  # 📧 Optional: Daily email reports
+  # - key: EMAIL_ENABLED
+  #   value: "true"
+  # - key: EMAIL_HOST
+  #   value: smtp.gmail.com
+  # - key: EMAIL_PORT
+  #   value: "587"
+  # - key: EMAIL_USERNAME
+  #   value: your_email@gmail.com
+  # - key: EMAIL_PASSWORD
+  #   value: your_gmail_app_password
+  # - key: EMAIL_TO
+  #   value: your_reports@gmail.com
+  
+  # 📰 Optional: News sentiment analysis
+  # - key: NEWS_API_KEY
+  #   value: your_newsapi_org_key
+  
+  # 🔮 Optional: Future market expansion
+  # - key: ALPHA_VANTAGE_KEY
+  #   value: your_alpha_vantage_key
+  # - key: POLYGON_API_KEY
+  #   value: your_polygon_io_key
+  # - key: COMMODITIES_API_KEY
+  #   value: your_commodities_api_key
+  
   # Security & Risk Management
   - key: SECRET_KEY
     value: change_this_to_random_32_character_string

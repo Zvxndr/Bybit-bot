@@ -76,16 +76,46 @@ LOG_LEVEL=INFO
 
 ---
 
-## 📧 **EMAIL NOTIFICATIONS** (Optional)
+## 🏦 **CORRELATION DATA APIs** (Optional - for better ML analysis)
 
 ```bash
-# If you want email alerts (optional)
-EMAIL_ENABLED=false
+# OKX API (for cross-exchange correlation - READ ONLY)
+OKX_API_KEY=your_okx_api_key_here
+OKX_API_SECRET=your_okx_secret_here
+OKX_PASSPHRASE=your_okx_passphrase
+
+# Binance API (for cross-exchange correlation - READ ONLY)
+BINANCE_API_KEY=your_binance_api_key_here
+BINANCE_API_SECRET=your_binance_secret_here
+```
+
+## 📧 **EMAIL DAILY REPORTS** (Optional)
+
+```bash
+# Enable daily financial reports via email
+EMAIL_ENABLED=true
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USERNAME=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-EMAIL_TO=your_alerts@gmail.com
+EMAIL_PASSWORD=your_gmail_app_password
+EMAIL_TO=your_reports@gmail.com
+```
+
+## 📰 **NEWS SENTIMENT ANALYSIS** (Optional)
+
+```bash
+# For market sentiment analysis
+NEWS_API_KEY=your_newsapi_org_key
+SENTIMENT_PROVIDER=newsapi  # or 'alpha_vantage'
+```
+
+## 🔮 **FUTURE MARKETS** (Optional - for expansion)
+
+```bash
+# For future stock market expansion
+ALPHA_VANTAGE_KEY=your_alpha_vantage_key
+POLYGON_API_KEY=your_polygon_io_key  
+COMMODITIES_API_KEY=your_commodities_api_key
 ```
 
 ---
