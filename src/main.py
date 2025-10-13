@@ -2393,7 +2393,7 @@ async def get_graduated_strategies():
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT gs.*, br.total_return_pct, br.sharpe_ratio, br.win_rate_pct
+            SELECT gs.*, br.total_return_pct, br.sharpe_ratio, br.win_rate_pct, br.trades_count
             FROM graduated_strategies gs
             LEFT JOIN backtest_results br ON gs.backtest_id = br.id
             ORDER BY gs.graduation_timestamp DESC
@@ -4782,7 +4782,7 @@ async def get_strategy_ranking(period: str = "all"):
             SELECT gs.id, gs.strategy_name, gs.graduation_type as status, 
                    gs.graduation_timestamp, gs.performance_metrics,
                    br.total_return_pct, br.sharpe_ratio, br.win_rate, 
-                   br.max_drawdown, br.total_trades, br.pair
+                   br.max_drawdown, br.trades_count, br.pair
             FROM graduated_strategies gs
             LEFT JOIN backtest_results br ON gs.backtest_id = br.id
             ORDER BY br.total_return_pct DESC NULLS LAST
