@@ -92,7 +92,7 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        setDownloadProgress({ isDownloading: false, progress: 100, status: `Download completed! ${result.total_downloaded || 0} data points added.` });
+                        setDownloadProgress({ isDownloading: false, progress: 100, status: `Download completed! ${result.data_points || result.stored_count || 0} data points added.` });
                         
                         // Refresh data status immediately without page reload
                         try {
@@ -102,7 +102,14 @@
                             ]);
 
                             const dataStatusData = await dataStatusResponse.json();
-                            const dataDiscoverData = await dataDiscoverResponse.json();
+                            let dataDiscoverData = { success: false, data: [] };
+                            
+                            // Handle discover API gracefully if it fails
+                            try {
+                                dataDiscoverData = await dataDiscoverResponse.json();
+                            } catch (discoverError) {
+                                console.warn('Discover API failed, using status data only:', discoverError);
+                            }
 
                             const combinedDataStatus = {
                                 total_datasets: dataStatusData.total_datasets || 0,
@@ -210,7 +217,13 @@
                         const strategiesData = await strategiesResponse.json();
                         const mlStatusData = await mlStatusResponse.json();
                         const dataStatusData = await dataStatusResponse.json();
-                        const dataDiscoverData = await dataDiscoverResponse.json();
+                        
+                        let dataDiscoverData = { success: false, data: [] };
+                        try {
+                            dataDiscoverData = await dataDiscoverResponse.json();
+                        } catch (discoverError) {
+                            console.warn('Discover API failed during initial load, using status data only:', discoverError);
+                        }
 
                         setStrategies(strategiesData.strategies || []);
                         setMlStatus(mlStatusData);

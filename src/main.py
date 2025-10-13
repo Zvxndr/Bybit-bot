@@ -3515,8 +3515,7 @@ async def discover_available_data():
             if not table_to_use:
                 production_logger.log_error(
                     "PRODUCTION ERROR: Data tables exist but contain no records",
-                    empty_tables=data_tables,
-                    database_path=str(db_path)
+                    error_details={"empty_tables": data_tables, "database_path": str(db_path)}
                 )
                 return {
                     "success": False,
