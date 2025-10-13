@@ -54,6 +54,11 @@
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [loginForm, setLoginForm] = useState({ username: '', password: '' });
             
+            // Historical Data Management State
+            const [dataStatus, setDataStatus] = useState({ total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
+            const [downloadForm, setDownloadForm] = useState({ symbol: 'BTCUSDT', timeframe: '1h', days: '30' });
+            const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0, status: 'Ready to download' });
+            
             // Authentication handlers
             const handleLogin = (e) => {
                 e.preventDefault();
@@ -68,6 +73,57 @@
                 localStorage.removeItem('isAuthenticated');
             };
 
+            // Historical Data Management Functions
+            const handleDownloadData = async () => {
+                setDownloadProgress({ isDownloading: true, progress: 0, status: 'Starting download...' });
+                
+                try {
+                    const response = await fetch('/api/historical-data/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(downloadForm)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setDownloadProgress({ isDownloading: false, progress: 100, status: 'Download completed!' });
+                        // Refresh data status
+                        setTimeout(() => {
+                            setDownloadProgress({ isDownloading: false, progress: 0, status: 'Ready to download' });
+                            // This will trigger a re-fetch of all data
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        setDownloadProgress({ isDownloading: false, progress: 0, status: `Error: ${result.message}` });
+                    }
+                } catch (error) {
+                    console.error('Download error:', error);
+                    setDownloadProgress({ isDownloading: false, progress: 0, status: `Error: ${error.message}` });
+                }
+            };
+
+            const handleClearData = async () => {
+                if (!confirm('Are you sure you want to clear all historical data? This cannot be undone.')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/historical-data/clear', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setDataStatus({ total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
+                        alert('Historical data cleared successfully!');
+                    } else {
+                        alert(`Error clearing data: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Clear error:', error);
+                    alert(`Error clearing data: ${error.message}`);
+                }
+            };
+
             // Check authentication on mount
             useEffect(() => {
                 setIsAuthenticated(localStorage.getItem('isAuthenticated') === 'true');
@@ -79,16 +135,19 @@
 
                 const fetchData = async () => {
                     try {
-                        const [strategiesResponse, mlStatusResponse] = await Promise.all([
+                        const [strategiesResponse, mlStatusResponse, dataStatusResponse] = await Promise.all([
                             fetch(`/api/strategies/ranking?period=${selectedPeriod}`),
-                            fetch('/api/ml/status')
+                            fetch('/api/ml/status'),
+                            fetch('/api/historical-data/status')
                         ]);
 
                         const strategiesData = await strategiesResponse.json();
                         const mlStatusData = await mlStatusResponse.json();
+                        const dataStatusData = await dataStatusResponse.json();
 
                         setStrategies(strategiesData.strategies || []);
                         setMlStatus(mlStatusData);
+                        setDataStatus(dataStatusData.success ? dataStatusData : { total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
                         setLoading(false);
                     } catch (error) {
                         console.error('Error fetching data:', error);
@@ -268,6 +327,118 @@
                             </div>
                         )}
 
+                        {/* Historical Data Management - Phase 1 Core Feature */}
+                        <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 overflow-hidden backdrop-blur-sm mb-6">
+                            <div className="px-6 py-4 border-b border-gray-700 bg-gray-750 bg-opacity-50">
+                                <h2 className="text-xl font-semibold text-white">
+                                    📡 Historical Data Management
+                                </h2>
+                                <p className="text-gray-300 text-sm mt-1">Download and manage market data for backtesting</p>
+                            </div>
+                            
+                            <div className="p-6">
+                                {/* Data Download Controls */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                    <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                                        <h3 className="text-lg font-medium text-white mb-4">💾 Download New Data</h3>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-2">Symbol</label>
+                                                <select 
+                                                    value={downloadForm.symbol}
+                                                    onChange={(e) => setDownloadForm({...downloadForm, symbol: e.target.value})}
+                                                    className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
+                                                >
+                                                    <option value="BTCUSDT">BTC/USDT</option>
+                                                    <option value="ETHUSDT">ETH/USDT</option>
+                                                    <option value="ADAUSDT">ADA/USDT</option>
+                                                    <option value="SOLUSDT">SOL/USDT</option>
+                                                    <option value="DOTUSDT">DOT/USDT</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-2">Timeframe</label>
+                                                <select 
+                                                    value={downloadForm.timeframe}
+                                                    onChange={(e) => setDownloadForm({...downloadForm, timeframe: e.target.value})}
+                                                    className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
+                                                >
+                                                    <option value="1h">1 Hour</option>
+                                                    <option value="4h">4 Hours</option>
+                                                    <option value="1d">1 Day</option>
+                                                    <option value="1w">1 Week</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-2">Days of History</label>
+                                                <select 
+                                                    value={downloadForm.days}
+                                                    onChange={(e) => setDownloadForm({...downloadForm, days: e.target.value})}
+                                                    className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
+                                                >
+                                                    <option value="30">30 Days</option>
+                                                    <option value="90">90 Days</option>
+                                                    <option value="180">180 Days</option>
+                                                    <option value="365">1 Year</option>
+                                                    <option value="730">2 Years</option>
+                                                </select>
+                                            </div>
+                                            <button 
+                                                onClick={handleDownloadData}
+                                                disabled={downloadProgress.isDownloading}
+                                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-3 rounded-lg font-medium transition-colors"
+                                            >
+                                                {downloadProgress.isDownloading ? '⏳ Downloading...' : '📡 Download Data'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                                        <h3 className="text-lg font-medium text-white mb-4">📊 Current Data Status</h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Total Datasets:</span>
+                                                <span className="text-white font-medium">{dataStatus.total_datasets || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Data Points:</span>
+                                                <span className="text-white font-medium">{dataStatus.total_data_points?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Last Updated:</span>
+                                                <span className="text-white font-medium text-xs">
+                                                    {dataStatus.last_updated === 'Never' ? 'Never' : new Date(dataStatus.last_updated).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <button 
+                                                onClick={handleClearData}
+                                                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium transition-colors"
+                                            >
+                                                🗑️ Clear All Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Download Progress */}
+                                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-white font-medium">Download Progress</span>
+                                        <span className="text-gray-400 text-sm">{downloadProgress.status}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-600 rounded-full h-2">
+                                        <div 
+                                            className={`h-2 rounded-full transition-all duration-300 ${
+                                                downloadProgress.isDownloading ? 'bg-yellow-500' : 
+                                                downloadProgress.progress === 100 ? 'bg-green-500' : 'bg-blue-600'
+                                            }`}
+                                            style={{width: `${downloadProgress.progress}%`}}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Strategy Rankings */}
                         <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 overflow-hidden backdrop-blur-sm">
                             <div className="px-6 py-4 border-b border-gray-700 bg-gray-750 bg-opacity-50">
@@ -282,8 +453,7 @@
                                     <div className="text-6xl mb-4">🤖</div>
                                     <div className="text-xl text-gray-300 mb-2">No Active Strategies</div>
                                     <div className="text-gray-400 text-sm max-w-md mx-auto">
-                                        The ML pipeline is ready to generate trading strategies. 
-                                        Historical data needs to be downloaded and backtesting initiated to create your first strategies.
+                                        Download historical data above, then start the ML pipeline to generate trading strategies.
                                     </div>
                                     <div className="mt-6">
                                         <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
