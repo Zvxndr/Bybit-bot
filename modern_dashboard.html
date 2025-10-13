@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bybit Trading Bot - Modern Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a1a2e',
+                        secondary: '#16213e',
+                        accent: '#0f3460',
+                        success: '#28a745',
+                        warning: '#ffc107',
+                        danger: '#dc3545',
+                        gray: {
+                            750: '#374151',
+                            850: '#1f2937',
+                            950: '#111827'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0f172a;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Dashboard = () => {
+            const [strategies, setStrategies] = useState([]);
+            const [mlStatus, setMlStatus] = useState(null);
+            const [selectedPeriod, setSelectedPeriod] = useState('all');
+            const [loading, setLoading] = useState(true);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+            
+            // Authentication handlers
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (loginForm.username === 'admin' && loginForm.password === 'password') {
+                    setIsAuthenticated(true);
+                    localStorage.setItem('isAuthenticated', 'true');
+                }
+            };
+
+            const handleLogout = () => {
+                setIsAuthenticated(false);
+                localStorage.removeItem('isAuthenticated');
+            };
+
+            // Check authentication on mount
+            useEffect(() => {
+                setIsAuthenticated(localStorage.getItem('isAuthenticated') === 'true');
+            }, []);
+
+            // Fetch data from APIs
+            useEffect(() => {
+                if (!isAuthenticated) return;
+
+                const fetchData = async () => {
+                    try {
+                        const [strategiesResponse, mlStatusResponse] = await Promise.all([
+                            fetch(`/api/strategies/ranking?period=${selectedPeriod}`),
+                            fetch('/api/ml/status')
+                        ]);
+
+                        const strategiesData = await strategiesResponse.json();
+                        const mlStatusData = await mlStatusResponse.json();
+
+                        setStrategies(strategiesData.strategies || []);
+                        setMlStatus(mlStatusData);
+                        setLoading(false);
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                        setLoading(false);
+                    }
+                };
+
+                fetchData();
+                const interval = setInterval(fetchData, 5000);
+                return () => clearInterval(interval);
+            }, [selectedPeriod, isAuthenticated]);
+
+            // Login screen
+            if (!isAuthenticated) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center px-4">
+                        <div className="max-w-md w-full">
+                            <div className="text-center mb-8">
+                                <h1 className="text-3xl font-bold text-white mb-2">🚀 Bybit Trading Bot</h1>
+                                <p className="text-gray-300">Modern ML-Driven Trading Dashboard</p>
+                            </div>
+                            <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 p-6 backdrop-blur-sm">
+                                <form onSubmit={handleLogin} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                                        <input
+                                            type="text"
+                                            value={loginForm.username}
+                                            onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Enter username"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                                        <input
+                                            type="password"
+                                            value={loginForm.password}
+                                            onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Enter password"
+                                            required
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+                                    >
+                                        🔐 Sign In
+                                    </button>
+                                </form>
+                                <div className="mt-6 p-4 bg-gray-750 rounded-lg border border-gray-600">
+                                    <p className="text-xs text-gray-400 text-center">
+                                        Demo Credentials: <span className="font-mono">admin / password</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Loading screen
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <div className="text-white text-lg">Loading Dashboard...</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Main Dashboard
+            return (
+                <div className="min-h-screen">
+                    {/* Header */}
+                    <nav className="bg-gray-800 bg-opacity-90 border-b border-gray-700 px-6 py-4 backdrop-blur-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <h1 className="text-xl font-bold text-white">🚀 ML Trading Dashboard</h1>
+                                <div className="text-sm text-gray-400">
+                                    {mlStatus?.status === 'idle' ? '⏸️ Ready' : '🤖 Active'}
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                            >
+                                🔓 Logout
+                            </button>
+                        </div>
+                    </nav>
+
+                    <main className="p-6 space-y-6">
+                        {/* Header Section */}
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h1 className="text-4xl font-bold text-white mb-2">Strategy Dashboard</h1>
+                                <p className="text-gray-300">ML-generated autonomous trading strategies ranked by performance</p>
+                            </div>
+                            
+                            <div className="flex space-x-3 mt-4 lg:mt-0">
+                                {['all', 'year', 'month', 'week'].map((period) => (
+                                    <button
+                                        key={period}
+                                        onClick={() => setSelectedPeriod(period)}
+                                        className={`px-6 py-3 rounded-lg text-sm font-medium uppercase tracking-wide transition-all duration-200 ${
+                                            selectedPeriod === period
+                                                ? 'bg-blue-600 text-white shadow-lg transform scale-105'
+                                                : 'bg-gray-700 bg-opacity-60 text-gray-300 hover:bg-gray-600 hover:text-white'
+                                        }`}
+                                    >
+                                        {period === 'all' ? '📊 All Time' : `📅 ${period.charAt(0).toUpperCase() + period.slice(1)}`}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ML Algorithm Status */}
+                        {mlStatus && (
+                            <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 p-6 backdrop-blur-sm">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-semibold text-white flex items-center">
+                                        🤖 ML Algorithm Status
+                                    </h3>
+                                    <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                                        mlStatus.status === 'idle' ? 'bg-purple-900 bg-opacity-50 text-purple-300' :
+                                        mlStatus.status === 'active' ? 'bg-green-900 bg-opacity-50 text-green-300' :
+                                        'bg-yellow-900 bg-opacity-50 text-yellow-300'
+                                    }`}>
+                                        {mlStatus.status === 'idle' ? '⏸️ Idle' : 
+                                         mlStatus.status === 'active' ? '🟢 Active' : '⚡ Processing'}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-purple-400">{mlStatus.status}</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wide">Status</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-blue-400">{mlStatus.generation_rate}</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wide">Strategies/Hour</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-green-400">{mlStatus.processing}</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wide">Processing</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-yellow-400">{mlStatus.queue}</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wide">In Queue</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-red-400">{mlStatus.cpu_usage}%</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wide">CPU Usage</div>
+                                    </div>
+                                </div>
+
+                                {mlStatus.recent_activity && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                                            📋 Recent Activity
+                                        </h4>
+                                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                                            {mlStatus.recent_activity.map((activity, index) => (
+                                                <div key={index} className="flex items-center space-x-3 text-sm bg-gray-700 bg-opacity-30 rounded-lg p-3">
+                                                    <span className="text-gray-400 font-mono min-w-12">{activity.timestamp}</span>
+                                                    <span className="text-gray-200">{activity.message}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Strategy Rankings */}
+                        <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 overflow-hidden backdrop-blur-sm">
+                            <div className="px-6 py-4 border-b border-gray-700 bg-gray-750 bg-opacity-50">
+                                <h2 className="text-xl font-semibold text-white">
+                                    🏆 Strategy Rankings - {selectedPeriod === 'all' ? 'All Time' : selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)}
+                                </h2>
+                                <p className="text-gray-300 text-sm mt-1">{strategies.length} active strategies</p>
+                            </div>
+
+                            {strategies.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <div className="text-6xl mb-4">🤖</div>
+                                    <div className="text-xl text-gray-300 mb-2">No Active Strategies</div>
+                                    <div className="text-gray-400 text-sm max-w-md mx-auto">
+                                        The ML pipeline is ready to generate trading strategies. 
+                                        Historical data needs to be downloaded and backtesting initiated to create your first strategies.
+                                    </div>
+                                    <div className="mt-6">
+                                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                            🚀 Start ML Pipeline
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-750 bg-opacity-50">
+                                            <tr className="text-left">
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Rank</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Strategy</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Return</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Sharpe</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Max DD</th>
+                                                <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Trades</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-700">
+                                            {strategies.map((strategy) => (
+                                                <tr key={strategy.id} className="hover:bg-gray-700 hover:bg-opacity-30 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <span className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                                                            strategy.rank === 1 ? 'bg-yellow-500 text-black' :
+                                                            strategy.rank === 2 ? 'bg-gray-400 text-black' :
+                                                            strategy.rank === 3 ? 'bg-orange-600 text-white' :
+                                                            'bg-gray-600 text-gray-300'
+                                                        }`}>
+                                                            {strategy.rank}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-white font-medium">{strategy.name}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
+                                                            strategy.status === 'live' ? 'bg-green-900 bg-opacity-50 text-green-300' :
+                                                            strategy.status === 'paper' ? 'bg-blue-900 bg-opacity-50 text-blue-300' :
+                                                            'bg-yellow-900 bg-opacity-50 text-yellow-300'
+                                                        }`}>
+                                                            {strategy.status === 'live' ? '🚀 Live' :
+                                                             strategy.status === 'paper' ? '📊 Paper' : '🧪 Test'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-green-400 font-medium">
+                                                            +{strategy.return_percent?.toFixed(1) || '0.0'}%
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-white">{strategy.sharpe_ratio?.toFixed(2) || '0.00'}</td>
+                                                    <td className="px-6 py-4 text-white">{strategy.win_rate?.toFixed(1) || '0.0'}%</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-red-400">
+                                                            -{strategy.max_drawdown?.toFixed(1) || '0.0'}%
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-white">{strategy.total_trades?.toLocaleString() || '0'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -49,5 +49,36 @@ joblib>=1.3.0
 # Database
 sqlalchemy>=2.0.0
 
+# PHASE 1 & 2 NEW FEATURES
+# News Sentiment Analysis
+newsapi-python>=0.2.6
+feedparser>=6.0.10
+textblob>=0.17.1
+vaderSentiment>=3.3.2
+
+# Multi-Exchange Integration  
+pybit>=5.7.0
+okx>=1.2.0
+python-binance>=1.0.17
+ccxt>=4.1.0
+
+# Email Reporting System
+secure-smtplib>=0.1.1
+
+# Cross-Exchange Correlation
+scipy>=1.11.0
+numpy>=1.24.0
+
+# Future Markets Framework
+alpha-vantage>=2.3.1
+polygon-api-client>=1.12.3
+finnhub-python>=2.4.18
+yfinance>=0.2.18
+
+# Additional utilities for Phase 1 & 2
+cryptography>=41.0.0
+hmac
+hashlib
+
 # Logging
 loguru>=0.7.0
