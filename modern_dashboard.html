@@ -55,7 +55,7 @@
             const [loginForm, setLoginForm] = useState({ username: '', password: '' });
             
             // Historical Data Management State
-            const [dataStatus, setDataStatus] = useState({ total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
+            const [dataStatus, setDataStatus] = useState({ total_datasets: 0, total_data_points: 0, last_updated: 'Never', data: [] });
             const [downloadForm, setDownloadForm] = useState({ symbol: 'BTCUSDT', timeframe: '1h', days: '30' });
             const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0, status: 'Ready to download' });
             
@@ -92,13 +92,33 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        setDownloadProgress({ isDownloading: false, progress: 100, status: 'Download completed!' });
-                        // Refresh data status
+                        setDownloadProgress({ isDownloading: false, progress: 100, status: `Download completed! ${result.total_downloaded || 0} data points added.` });
+                        
+                        // Refresh data status immediately without page reload
+                        try {
+                            const [dataStatusResponse, dataDiscoverResponse] = await Promise.all([
+                                fetch('/api/historical-data/status'),
+                                fetch('/api/historical-data/discover')
+                            ]);
+
+                            const dataStatusData = await dataStatusResponse.json();
+                            const dataDiscoverData = await dataDiscoverResponse.json();
+
+                            const combinedDataStatus = {
+                                total_datasets: dataStatusData.total_datasets || 0,
+                                total_data_points: dataStatusData.total_data_points || 0,
+                                last_updated: dataStatusData.last_updated || 'Never',
+                                data: dataDiscoverData.success ? (dataDiscoverData.data || []) : []
+                            };
+                            
+                            setDataStatus(combinedDataStatus);
+                        } catch (refreshError) {
+                            console.error('Error refreshing data status:', refreshError);
+                        }
+                        
                         setTimeout(() => {
                             setDownloadProgress({ isDownloading: false, progress: 0, status: 'Ready to download' });
-                            // This will trigger a re-fetch of all data
-                            window.location.reload();
-                        }, 2000);
+                        }, 3000);
                     } else {
                         setDownloadProgress({ isDownloading: false, progress: 0, status: `Error: ${result.message}` });
                     }
@@ -118,7 +138,7 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        setDataStatus({ total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
+                        setDataStatus({ total_datasets: 0, total_data_points: 0, last_updated: 'Never', data: [] });
                         alert('Historical data cleared successfully!');
                     } else {
                         alert(`Error clearing data: ${result.message}`);
@@ -180,19 +200,30 @@
 
                 const fetchData = async () => {
                     try {
-                        const [strategiesResponse, mlStatusResponse, dataStatusResponse] = await Promise.all([
+                        const [strategiesResponse, mlStatusResponse, dataStatusResponse, dataDiscoverResponse] = await Promise.all([
                             fetch(`/api/strategies/ranking?period=${selectedPeriod}`),
                             fetch('/api/ml/status'),
-                            fetch('/api/historical-data/status')
+                            fetch('/api/historical-data/status'),
+                            fetch('/api/historical-data/discover')
                         ]);
 
                         const strategiesData = await strategiesResponse.json();
                         const mlStatusData = await mlStatusResponse.json();
                         const dataStatusData = await dataStatusResponse.json();
+                        const dataDiscoverData = await dataDiscoverResponse.json();
 
                         setStrategies(strategiesData.strategies || []);
                         setMlStatus(mlStatusData);
-                        setDataStatus(dataStatusData.success ? dataStatusData : { total_datasets: 0, total_data_points: 0, last_updated: 'Never' });
+                        
+                        // Combine status and discovery data for comprehensive view
+                        const combinedDataStatus = {
+                            total_datasets: dataStatusData.total_datasets || 0,
+                            total_data_points: dataStatusData.total_data_points || 0,
+                            last_updated: dataStatusData.last_updated || 'Never',
+                            data: dataDiscoverData.success ? (dataDiscoverData.data || []) : []
+                        };
+                        
+                        setDataStatus(combinedDataStatus);
                         setLoading(false);
                     } catch (error) {
                         console.error('Error fetching data:', error);
@@ -484,6 +515,88 @@
                             </div>
                         </div>
 
+                        {/* Available Data for Backtesting - Critical Missing Feature */}
+                        <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 overflow-hidden backdrop-blur-sm mb-6">
+                            <div className="px-6 py-4 border-b border-gray-700 bg-gray-750 bg-opacity-50">
+                                <h2 className="text-xl font-semibold text-white">
+                                    📊 Available Data for Backtesting
+                                </h2>
+                                <p className="text-gray-300 text-sm mt-1">View what historical data is available for strategy backtesting</p>
+                            </div>
+                            
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Data Summary */}
+                                    <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                                        <h3 className="text-lg font-medium text-white mb-4">📈 Data Summary</h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Available Trading Pairs:</span>
+                                                <span className="text-white font-medium">{dataStatus.data?.length || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Total Data Points:</span>
+                                                <span className="text-white font-medium">{dataStatus.total_data_points?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Data Status:</span>
+                                                <span className={`font-medium ${dataStatus.total_data_points > 0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                                    {dataStatus.total_data_points > 0 ? '✅ Ready for Backtesting' : '⚠️ No Data Available'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-gray-600 bg-opacity-50 rounded">
+                                                <span className="text-gray-300">Last Updated:</span>
+                                                <span className="text-white font-medium text-xs">
+                                                    {dataStatus.last_updated === 'Never' ? 'Never' : new Date(dataStatus.last_updated).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Available Trading Pairs */}
+                                    <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                                        <h3 className="text-lg font-medium text-white mb-4">🎯 Available Trading Pairs</h3>
+                                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                                            {dataStatus.data && dataStatus.data.length > 0 ? (
+                                                dataStatus.data.map((dataset, index) => (
+                                                    <div key={index} className="p-3 bg-gray-600 bg-opacity-50 rounded border-l-4 border-blue-500">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-white font-medium">{dataset.symbol || dataset.pair || 'Unknown Pair'}</span>
+                                                            <span className="text-green-400 text-sm">
+                                                                {dataset.data_points?.toLocaleString() || 0} points
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-300 mt-1">
+                                                            Timeframe: {dataset.timeframe || '1h'} | 
+                                                            Start: {dataset.start_date ? new Date(dataset.start_date).toLocaleDateString() : 'N/A'} | 
+                                                            End: {dataset.end_date ? new Date(dataset.end_date).toLocaleDateString() : 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center py-8">
+                                                    <div className="text-gray-400 text-lg">📭</div>
+                                                    <div className="text-gray-400 mt-2">No historical data available</div>
+                                                    <div className="text-gray-500 text-sm mt-1">Download some data above to enable backtesting</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {dataStatus.data && dataStatus.data.length > 0 && (
+                                            <div className="mt-4 p-3 bg-blue-600 bg-opacity-20 rounded border border-blue-500">
+                                                <div className="flex items-center">
+                                                    <span className="text-blue-400 text-sm">💡</span>
+                                                    <span className="text-blue-300 text-sm ml-2">
+                                                        Ready for backtesting! Select a pair below to test strategies.
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Historical Backtesting Controls - Phase 1 Core Feature */}
                         <div className="bg-gray-800 bg-opacity-80 rounded-xl border border-gray-600 overflow-hidden backdrop-blur-sm mb-6">
                             <div className="px-6 py-4 border-b border-gray-700 bg-gray-750 bg-opacity-50">
@@ -505,11 +618,18 @@
                                                     value={backtestForm.pair}
                                                     onChange={(e) => setBacktestForm({...backtestForm, pair: e.target.value})}
                                                     className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
+                                                    disabled={!dataStatus.data || dataStatus.data.length === 0}
                                                 >
-                                                    <option value="BTCUSDT">BTC/USDT</option>
-                                                    <option value="ETHUSDT">ETH/USDT</option>
-                                                    <option value="ADAUSDT">ADA/USDT</option>
-                                                    <option value="SOLUSDT">SOL/USDT</option>
+                                                    {dataStatus.data && dataStatus.data.length > 0 ? (
+                                                        dataStatus.data.map((dataset, index) => (
+                                                            <option key={index} value={dataset.symbol || dataset.pair}>
+                                                                {(dataset.symbol || dataset.pair || 'Unknown').replace('USDT', '/USDT')} 
+                                                                ({dataset.data_points?.toLocaleString() || 0} points)
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <option value="">No data available - please download data first</option>
+                                                    )}
                                                 </select>
                                             </div>
                                             <div>
@@ -549,11 +669,24 @@
                                             </div>
                                             <button 
                                                 onClick={handleStartBacktest}
-                                                disabled={backtestProgress.isRunning}
+                                                disabled={backtestProgress.isRunning || !dataStatus.data || dataStatus.data.length === 0}
                                                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white py-3 rounded-lg font-medium transition-colors"
                                             >
-                                                {backtestProgress.isRunning ? '⏳ Running...' : '🚀 Start Backtest'}
+                                                {backtestProgress.isRunning ? '⏳ Running...' : 
+                                                 (!dataStatus.data || dataStatus.data.length === 0) ? '📥 Download Data First' :
+                                                 '🚀 Start Backtest'}
                                             </button>
+                                            
+                                            {(!dataStatus.data || dataStatus.data.length === 0) && (
+                                                <div className="mt-3 p-3 bg-yellow-600 bg-opacity-20 rounded border border-yellow-500">
+                                                    <div className="flex items-center">
+                                                        <span className="text-yellow-400">⚠️</span>
+                                                        <span className="text-yellow-300 text-sm ml-2">
+                                                            No historical data available. Download data above to enable backtesting.
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     
